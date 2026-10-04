@@ -1,11 +1,14 @@
 # PROGRESS
 
 ## Current phase
-Phase 1: Ingestion and classification. Status: in progress
+Phase 2: Counting rules. Status: in progress
 
 ## Done
 - [x] Read the full handoff before writing code; preserve it in `docs/HANDOFF.md`.
 - [x] Created local Git repository, Python src layout, CLI entry point and development checks.
+
+- [x] Phase 1 exit: four input modes, merge-base/upstream/fallback resolution,
+  staged vs working content, new/deleted/renamed/binary files, classification; 19 tests pass.
 
 ## Next up
 - [x] Phase 0 exit: editable install, version, ruff and pytest passed (1 test).
@@ -30,3 +33,6 @@ Phase 1: Ingestion and classification. Status: in progress
 
 ## Session log
 - 2026-10-04: Began Phase 0 from empty checkout. Phase 0 complete; Ruff clean, pytest 1 passed.
+
+- 2026-10-04: Phase 1 complete; Ruff clean, pytest 19 passed. Working mode also
+  includes untracked supported-language files, so hooks can review newly created code.
