@@ -84,6 +84,19 @@ def _path(path: str) -> str | None:
     return path
 
 
+def _quoted_chunk(chunk: str) -> tuple[str, tuple[str | None, str | None] | None]:
+    """Work around unidiff's greedy Git-header parsing for quoted filenames."""
+    token = r'"(?:\\.|[^"\\])*"'
+    header = re.match(r"^diff --git (" + token + r"|a/[^\n]*?) (" + token + r"|b/[^\n]*)\n", chunk)
+    if not header or not (header[1].startswith('"') or header[2].startswith('"')):
+        return chunk, None
+    original = (_path(header[1]), _path(header[2]))
+    chunk = "diff --git a/__goodhart_file__ b/__goodhart_file__\n" + chunk[header.end() :]
+    chunk = re.sub(r"^--- (?!/dev/null)([^\n]+)$", "--- a/__goodhart_file__", chunk, flags=re.M)
+    chunk = re.sub(r"^\+\+\+ (?!/dev/null)([^\n]+)$", "+++ b/__goodhart_file__", chunk, flags=re.M)
+    return chunk, original
+
+
 def parse_diff(text: str, config: Config | None = None) -> list[FileChange]:
     """Parse independent files; preserve a diagnostic for each malformed chunk."""
     config = config or Config()
@@ -98,13 +111,18 @@ def parse_diff(text: str, config: Config | None = None) -> list[FileChange]:
         if not chunk.strip():
             continue
         try:
-            patch = PatchSet(chunk)
+            normalized, original = _quoted_chunk(chunk)
+            patch = PatchSet(normalized)
             if not patch:
                 raise UnidiffParseError("No unified-diff file headers found")
             for file in patch:
+                old_path, new_path = _path(file.source_file), _path(file.target_file)
+                if original:
+                    old_path = original[0] if old_path is not None else None
+                    new_path = original[1] if new_path is not None else None
                 change = FileChange(
-                    _path(file.source_file),
-                    _path(file.target_file),
+                    old_path,
+                    new_path,
                     [
                         Hunk(
                             [

@@ -1,0 +1,11 @@
+diff --git a/src/task.py b/src/task.py
+--- a/src/task.py
++++ b/src/task.py
+@@ -1,2 +1,6 @@
+ def work():
+-    run()
++    try:
++        run()
++    except Exception:
++        pass
++        logger.warning("best effort")

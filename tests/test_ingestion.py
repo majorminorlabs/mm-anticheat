@@ -133,3 +133,24 @@ def test_cli_bad_input(monkeypatch, repo):
     with pytest.raises(SystemExit) as error:
         main(["scan", "--working", "--base", "HEAD"])
     assert error.value.code == 3
+
+
+def test_untracked_empty_no_newline_and_special_paths(repo):
+    (repo / "empty.py").write_text("")
+    (repo / 'odd "name" é.py').write_text("value = 42")
+    (repo / "note.md").write_text('// goodhart: allow GH012 reason="reviewed"\n')
+    data = load_git(cwd=repo, working=True)
+    changes = {change.path: change for change in data.changes}
+    assert set(changes) == {"empty.py", 'odd "name" é.py', "note.md"}
+    assert changes['odd "name" é.py'].head_content == "value = 42"
+    assert not any(change.parse_error for change in data.changes)
+
+
+def test_ignored_files_not_scanned():
+    from goodhart.engine import scan
+
+    patch = "--- a/vendor/broken.py\n+++ b/vendor/broken.py\n@@ -1 +1 @@\n-x = 3\n+def broken(:\n"
+    data = load_patch(patch)
+    data.mode = "full"
+    data.changes[0].head_content = "def broken(:\n"
+    assert scan(data).findings == []

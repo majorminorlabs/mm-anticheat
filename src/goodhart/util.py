@@ -73,3 +73,69 @@ def assertion_line(text: str) -> bool:
             text,
         )
     )
+
+
+def without_comments(text: str, py: bool) -> str:
+    """Mask comments without masking strings used as literal evidence."""
+    if not py:
+        from goodhart.lang.jsts import mask
+
+        return mask(text)
+    lines = text.splitlines(keepends=True)
+    try:
+        for token in tokenize.generate_tokens(io.StringIO(text).readline):
+            if token.type == tokenize.COMMENT:
+                row, start = token.start
+                end = token.end[1]
+                line = lines[row - 1]
+                lines[row - 1] = line[:start] + " " * (end - start) + line[end:]
+    except (tokenize.TokenError, IndentationError, IndexError):
+        pass
+    return "".join(lines)
+
+
+def comment_text(text: str, py: bool) -> dict[int, str]:
+    """Extract actual comments, so directive-looking string literals do not match."""
+    result: dict[int, str] = {}
+    if py:
+        try:
+            for token in tokenize.generate_tokens(io.StringIO(text).readline):
+                if token.type == tokenize.COMMENT:
+                    result[token.start[0]] = token.string
+        except (tokenize.TokenError, IndentationError):
+            pass
+    else:
+        pattern = (
+            r"//[^\n]*|/\*[\s\S]*?\*/|'(?:\\.|[^'\\])*'|\"(?:\\.|[^\"\\])*\"|`(?:\\.|[^`\\])*`"
+        )
+        for match in re.finditer(pattern, text):
+            if match[0].startswith(("//", "/*")):
+                start = text.count("\n", 0, match.start()) + 1
+                for index, line in enumerate(match[0].splitlines()):
+                    result[start + index] = line
+    return result
+
+
+def added_comments(change: FileChange, full: bool) -> dict[int, str]:
+    """Return comments on added lines with actual diff line coordinates."""
+    comments = visible_comments(change, full)
+    return {
+        line.new_line or 1: comments[line.new_line or 1]
+        for line in change.added
+        if (line.new_line or 1) in comments
+    }
+
+
+def visible_comments(change: FileChange, full: bool) -> dict[int, str]:
+    """Return head-side comments with actual file line coordinates."""
+    py = is_python(change.path)
+    if full and change.head_content is not None:
+        return comment_text(change.head_content, py)
+    result = {}
+    for hunk in change.hunks:
+        lines = [line for line in hunk.lines if line.kind != "-"]
+        comments = comment_text("\n".join(line.value for line in lines), py)
+        for index, line in enumerate(lines, 1):
+            if index in comments:
+                result[line.new_line or 1] = comments[index]
+    return result

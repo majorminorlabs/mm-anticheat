@@ -1,12 +1,16 @@
 """Read Git state with subprocesses; never execute repository code."""
 
+import ast
 import difflib
+import json
+import posixpath
+import re
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
 
-from goodhart.classify import classify
+from goodhart.classify import classify, matches
 from goodhart.config import Config
 from goodhart.diffmodel import FileChange, parse_diff
 
@@ -98,6 +102,127 @@ def load_patch(text: str, config: Config | None = None) -> ScanInput:
     return ScanInput("patch", parse_diff(text, config), None, None)
 
 
+def _imports_touched(content: str, path: str, sources: set[str]) -> bool:
+    if path.endswith(".py"):
+        modules = {
+            source.removesuffix(".py").replace("/", ".")
+            for source in sources
+            if source.endswith(".py")
+        }
+        modules |= {module.removeprefix("src.") for module in modules}
+        try:
+            tree = ast.parse(content)
+        except SyntaxError:
+            return False
+        for node in ast.walk(tree):
+            imported = []
+            if isinstance(node, ast.Import):
+                imported = [alias.name for alias in node.names]
+            elif isinstance(node, ast.ImportFrom):
+                parent = node.module or ""
+                imported = [parent] + [parent + "." + alias.name for alias in node.names]
+            if any(module in modules for module in imported):
+                return True
+        return False
+    for module in re.findall(r"(?:from\s*|require\s*\(\s*|import\s*)['\"]([^'\"]+)['\"]", content):
+        resolved = (
+            posixpath.normpath(posixpath.join(posixpath.dirname(path), module))
+            if module.startswith(".")
+            else module
+        )
+        if any(resolved == source or resolved == source.rsplit(".", 1)[0] for source in sources):
+            return True
+    return False
+
+
+def _related_tests(
+    root: Path,
+    head: str,
+    changes: list[FileChange],
+    config: Config,
+) -> tuple[dict[str, str], list[tuple[str, str]]]:
+    sources = {change.path for change in changes if "source" in change.new_kinds}
+    if not sources:
+        return {}, []
+    if head in {"INDEX", "WORKTREE"}:
+        paths = _git(root, "ls-files", "-z").split(b"\0")
+        if head == "WORKTREE":
+            paths += _git(root, "ls-files", "--others", "--exclude-standard", "-z").split(b"\0")
+    else:
+        paths = _git(root, "ls-tree", "-r", "--name-only", "-z", head).split(b"\0")
+    changed = {change.path for change in changes}
+    candidates = []
+    for raw in sorted(set(paths)):
+        if not raw:
+            continue
+        path = raw.decode("utf8", errors="surrogateescape")
+        if path in changed or not path.endswith(
+            (".py", ".js", ".ts", ".tsx", ".jsx", ".mjs", ".cjs")
+        ):
+            continue
+        if classify(path, None, config) == frozenset({"other"}):
+            continue
+        candidates.append(path)
+    contents, errors = _batch_contents(root, "" if head == "INDEX" else head, candidates)
+    result = {}
+    diagnostics = [
+        (path, reason) for path, reason in errors if "test" in classify(path, None, config)
+    ]
+    for path, content in contents.items():
+        if "test" in classify(path, content, config) and _imports_touched(content, path, sources):
+            result[path] = content
+    return result, diagnostics
+
+
+def _batch_contents(
+    root: Path,
+    ref: str,
+    paths: list[str],
+) -> tuple[dict[str, str], list[tuple[str, str]]]:
+    """Read related-file candidates in one Git process for large repositories."""
+    contents, errors = {}, []
+    if not paths:
+        return contents, errors
+    if ref == "WORKTREE":
+        for path in paths:
+            try:
+                contents[path] = _read_content(root, ref, path)
+            except InputError as exc:
+                errors.append((path, str(exc)))
+        return contents, errors
+    safe = [path for path in paths if "\n" not in path and "\r" not in path]
+    query = "".join(f"{ref}:{path}\n" for path in safe).encode("utf8", errors="surrogateescape")
+    result = subprocess.run(
+        ["git", "-C", str(root), "cat-file", "--batch"],
+        input=query,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode:
+        raise InputError(result.stderr.decode("utf8", errors="replace"))
+    raw, offset = result.stdout, 0
+    for path in safe:
+        end = raw.find(b"\n", offset)
+        header = raw[offset:end].split()
+        offset = end + 1
+        if not header or header[-1] == b"missing":
+            errors.append((path, "Content is unavailable at the scanned head"))
+            continue
+        size = int(header[-1])
+        body = raw[offset : offset + size]
+        offset += size + 1
+        try:
+            contents[path] = _decode(body, path)
+        except InputError as exc:
+            errors.append((path, str(exc)))
+    for path in set(paths) - set(safe):
+        try:
+            contents[path] = _read_content(root, ref, path)
+        except InputError as exc:
+            errors.append((path, str(exc)))
+    return contents, errors
+
+
 def load_git(
     *,
     base: str | None = None,
@@ -138,23 +263,23 @@ def load_git(
             if not item:
                 continue
             path = item.decode("utf8", errors="surrogateescape")
-            if classify(path, None, config) == frozenset({"other"}):
+            if any(matches(path, pattern) for pattern in config.ignore_globs):
                 continue
             try:
                 content = _read_content(root, "WORKTREE", path)
             except InputError as exc:
                 diagnostics.append((path, str(exc)))
                 continue
+            old_name, new_name = json.dumps("a/" + path), json.dumps("b/" + path)
+            text += f"diff --git {old_name} {new_name}\nnew file mode 100644\n"
             text += "".join(
                 difflib.unified_diff(
                     [],
-                    content.splitlines(keepends=True),
+                    [line + "\n" for line in content.splitlines()],
                     fromfile="/dev/null",
-                    tofile=f"b/{path}",
+                    tofile=new_name,
                 )
             )
-            if content and not content.endswith("\n"):
-                text += "\n"
     changes = parse_diff(text, config)
     for change in changes:
         if change.is_binary or change.parse_error:
@@ -182,4 +307,13 @@ def load_git(
             change.head_content,
             config,
         )
-    return ScanInput("full", changes, base_sha, head_label, root, diagnostics=diagnostics)
+    related, errors = _related_tests(root, head_label, changes, config)
+    return ScanInput(
+        "full",
+        changes,
+        base_sha,
+        head_label,
+        root,
+        extra_tests=related,
+        diagnostics=diagnostics + errors,
+    )

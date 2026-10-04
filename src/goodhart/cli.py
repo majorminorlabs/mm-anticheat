@@ -66,6 +66,9 @@ def main(argv: list[str] | None = None) -> int:
     except (InputError, OSError, UnicodeError) as exc:
         print(f"goodhart: error: {exc}", file=sys.stderr)
         return 3
+    except Exception as exc:
+        print(f"goodhart: internal error: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return 3
 
 
 if __name__ == "__main__":

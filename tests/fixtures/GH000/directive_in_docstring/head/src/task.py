@@ -1,0 +1,3 @@
+"""
+# goodhart: allow GH008
+"""

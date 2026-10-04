@@ -1,0 +1,8 @@
+diff --git a/tests/test_parser.py b/tests/test_parser.py
+--- a/tests/test_parser.py
++++ b/tests/test_parser.py
+@@ -1,2 +1,4 @@
++import os
+ def test_a():
+     assert parse("nested") == 42
++    assert os.environ.get("PYTEST_CURRENT_TEST")

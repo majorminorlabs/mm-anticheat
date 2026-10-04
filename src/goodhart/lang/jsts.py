@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 TEST_PATTERN = re.compile(
     r"(?<![\w$.])(?:it|test)(?:\.(?:skip|only|todo))?"
-    r"(?:\.each\s*\([^;]*?\)\s*)?\s*\(\s*(['\"`])([^'\"`\n]+)\1",
+    r"(?:\.each\s*(?:\([^;]*?\)|`[\s\S]*?`)\s*)?\s*\(\s*(['\"`])([^'\"`\n]+)\1",
     re.S,
 )
 ASSERT_PATTERN = re.compile(r"\bexpect\s*\(|\bassert\s*(?:\.|\()")
