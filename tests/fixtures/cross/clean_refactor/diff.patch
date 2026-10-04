@@ -1,0 +1,26 @@
+diff --git a/src/parser.py b/src/parsing.py
+rename from src/parser.py
+rename to src/parsing.py
+--- a/src/parser.py
++++ b/src/parsing.py
+@@ -1,2 +1,5 @@
++def clean(x):
++    return x.strip()
++
+ def parse(x):
+-    return x.strip()
++    return clean(x)
+diff --git a/tests/test_parser.py b/tests/test_parsing.py
+rename from tests/test_parser.py
+rename to tests/test_parsing.py
+--- a/tests/test_parser.py
++++ b/tests/test_parsing.py
+@@ -1,4 +1,7 @@
+-from src.parser import parse
++from src.parsing import parse
+ 
+ def test_trim():
+     assert parse(" a ") == "a"
++
++def test_plain():
++    assert parse("b") == "b"

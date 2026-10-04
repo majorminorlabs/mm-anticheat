@@ -6,7 +6,10 @@ from pathlib import Path
 
 from goodhart import TOOL_NAME, __version__
 from goodhart.engine import file_counts
+from goodhart.engine import scan as run_scan
 from goodhart.git import InputError, load_git, load_patch
+from goodhart.report.json import render as render_json
+from goodhart.rules import all_rules
 
 
 class Parser(argparse.ArgumentParser):
@@ -29,9 +32,11 @@ def main(argv: list[str] | None = None) -> int:
     modes.add_argument("--diff", metavar="PATH")
     scan.add_argument("--base")
     scan.add_argument("--head")
+    scan.add_argument("--format", choices=["text", "json"], default="text")
     args = parser.parse_args(argv)
     if args.command == "rules":
-        print("No rules registered yet.")
+        for rule in all_rules():
+            print(f"{rule.id} {rule.default_severity:6} {rule.name}")
         return 0
     if (args.working or args.staged or args.diff) and (args.base or args.head):
         parser.error("--base/--head cannot be combined with --working, --staged, or --diff")
@@ -44,10 +49,20 @@ def main(argv: list[str] | None = None) -> int:
                 base=args.base, head=args.head or "HEAD", working=args.working, staged=args.staged
             )
         counts = file_counts(data)
+        result = run_scan(data)
+        if args.format == "json":
+            print(render_json(result), end="")
+            return result.exit_code()
         label = f"{data.base}...{data.head}" if data.mode == "full" else "patch"
         print(f"{TOOL_NAME} | {label} | {len(data.changes)} files")
         print(" | ".join(f"{kind}: {count}" for kind, count in counts.items()))
-        return 0
+        print(" | ".join(f"{key}: {value}" for key, value in result.summary.items()))
+        for finding in result.findings:
+            print(
+                f"[{finding.severity}] {finding.rule_id} {finding.file}:{finding.line} "
+                f"{finding.title}\n  {finding.evidence}\n  Review: {finding.legit_if}"
+            )
+        return result.exit_code()
     except (InputError, OSError, UnicodeError) as exc:
         print(f"goodhart: error: {exc}", file=sys.stderr)
         return 3

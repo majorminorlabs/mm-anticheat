@@ -1,0 +1,10 @@
+diff --git a/tests/test_parser.py b/tests/test_parser.py
+--- a/tests/test_parser.py
++++ b/tests/test_parser.py
+@@ -1,2 +1,6 @@
+ def test_a():
+     assert parse("nested") == 42
++
++@pytest.mark.skip(reason="future feature")
++def test_new():
++    assert 4 == 4

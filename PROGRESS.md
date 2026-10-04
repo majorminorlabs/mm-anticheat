@@ -1,7 +1,7 @@
 # PROGRESS
 
 ## Current phase
-Phase 2: Counting rules. Status: in progress
+Phase 3: Pattern rules. Status: in progress
 
 ## Done
 - [x] Read the full handoff before writing code; preserve it in `docs/HANDOFF.md`.
@@ -9,6 +9,9 @@ Phase 2: Counting rules. Status: in progress
 
 - [x] Phase 1 exit: four input modes, merge-base/upstream/fallback resolution,
   staged vs working content, new/deleted/renamed/binary files, classification; 19 tests pass.
+
+- [x] Phase 2 exit: GH001–GH004, Python AST/JS regex helpers, JSON and fixture harness.
+  20 individual rule fixtures plus clean-refactor pass; Ruff clean, pytest 40 passed.
 
 ## Next up
 - [x] Phase 0 exit: editable install, version, ruff and pytest passed (1 test).
@@ -36,3 +39,6 @@ Phase 2: Counting rules. Status: in progress
 
 - 2026-10-04: Phase 1 complete; Ruff clean, pytest 19 passed. Working mode also
   includes untracked supported-language files, so hooks can review newly created code.
+
+- 2026-10-04: Phase 2 complete. Fixture source is data: excluded from pytest module
+  collection and Ruff rewriting; the harness scans it without executing repository code.

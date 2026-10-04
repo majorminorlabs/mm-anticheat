@@ -1,0 +1,12 @@
+diff --git a/tests/test_parser.py b/tests/test_parser.py
+--- a/tests/test_parser.py
++++ b/tests/test_parser.py
+@@ -1,5 +1,3 @@
+-def test_a():
+-    assert parse("nested") == 42
+-
+-def test_b():
+-    assert parse("flat") == 43
++@pytest.mark.parametrize("value", [42, 43])
++def test_a(value):
++    assert parse(value) == value

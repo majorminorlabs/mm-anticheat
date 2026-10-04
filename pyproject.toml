@@ -22,10 +22,12 @@ where = ["src"]
 [tool.ruff]
 target-version = "py311"
 line-length = 100
+extend-exclude = ["tests/fixtures"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+norecursedirs = ["fixtures"]
 markers = ["performance: laptop performance check; omit with -m 'not performance'"]
