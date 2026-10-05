@@ -11,6 +11,13 @@ from goodhart.util import first_line
 
 
 class TestFileDeleted(RuleBase):
+    details = (
+        "Flags deletion or renaming out of the suite only when the base defines tests. "
+        "Same-path classification changes never count as deletion. Matching source "
+        "deletion lowers severity to low. Name-matched moves require substantive "
+        "assertions: complete moves covering at least 80% are info; partial or weakened "
+        "moves are medium; empty destinations do not corroborate movement."
+    )
     id = "GH001"
     name = "test-file-deleted"
     default_severity = "high"
@@ -29,11 +36,12 @@ class TestFileDeleted(RuleBase):
             matches(change.old_path or "", glob) for glob in ctx.config.test_globs
         ):
             return []
-        removed = names(change, "base", ctx.mode == "full")
+        cache = ctx.cache.setdefault("move_inventories", {})
+        removed = names(change, "base", ctx.mode == "full", cache)
         if not removed:
             return []
-        overlap, targets = destinations(removed, change, ctx.changes, ctx.mode == "full")
-        severity = "info" if overlap >= 0.8 else "medium" if overlap > 0 else "high"
+        moves = destinations(removed, change, ctx.changes, ctx.mode == "full", cache)
+        severity = moves.severity
         stem = PurePosixPath(change.old_path or change.path).stem
         subject = stem.removeprefix("test_").removesuffix("_test")
         subject = subject.removesuffix(".test").removesuffix(".spec")
@@ -44,9 +52,7 @@ class TestFileDeleted(RuleBase):
             and "source" in item.old_kinds
             and PurePosixPath(item.path).stem == subject
         ]
-        why = self.why_flagged
-        if targets:
-            why += " Tests appear to have moved to: " + ", ".join(targets) + "."
+        why = self.why_flagged + moves.explanation()
         if matching:
             severity = "low" if severity != "info" else severity
             why += " Matching source was also deleted: " + ", ".join(matching) + "."

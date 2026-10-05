@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 
 from goodhart.classify import matches
-from goodhart.config import Config
+from goodhart.config import Config, apply_allows
 from goodhart.diffmodel import FileChange
 from goodhart.git import ScanInput
 from goodhart.rules.base import SEVERITY_ORDER, Finding, Rule
@@ -103,6 +103,7 @@ def scan(
                                 f"{rule.id}: {type(exc).__name__}: {exc}",
                             )
                         )
+    apply_allows(findings, data.changes, config, data.mode == "full")
     findings.sort(
         key=lambda item: (
             SEVERITY_ORDER[item.severity],

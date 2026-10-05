@@ -51,6 +51,12 @@ def _weaker(before: str, after: str) -> bool:
 
 
 class AssertionWeakened(RuleBase):
+    details = (
+        "Pairs removed and added assertion lines by position in a hunk. Flags exact "
+        "checks replaced by truthiness, trivial checks, loose numerical tolerances, or "
+        "broad exception expectations, including pytest.raises. Pairing can misalign "
+        "reordered checks and does not prove semantic weakening."
+    )
     id = "GH005"
     name = "assertion-weakened"
     default_severity = "medium"

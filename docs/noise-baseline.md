@@ -1,12 +1,20 @@
 # Gate 1 noise baseline
 
-Measured 2026-10-04 on Python 3.14.7 after REVIEW_01 fixes. These are maintainer
-histories, used to measure review noise; findings do not establish cheating.
-**Gate 1 remains stopped:** 10 of 680 commits flag high, versus the requested
-maximum of eight. This is down from 23 in REVIEW_01. Each remaining high commit
-removes named tests; all ten are listed below with the maintenance context.
-The scanner keeps the specified test-loss severity where names do not corroborate
-a move or new parametrization. Semantic replacement/obsolescence needs review.
+Measured 2026-10-05 on Python 3.14.7 after REVIEW_01b M11. These are maintainer
+histories used to measure review noise; findings do not establish cheating.
+**Gate 1 release conditions pass:** 10/680 high-flagged commits, GH006 high 0,
+scan/rule errors 0 and stderr lines 0. REVIEW_01b waived the former eight-commit
+budget and set **≤10/680** as the regression limit. No rule was loosened to reach it.
+
+M11 only corroborates a move when the destination has assertions. Full matches
+retain at least the removed assertion count; reduced counts give medium; empty
+stubs never corroborate movement. The Pydantic `69fd688e` move changed GH002 from
+info to medium because a destination has fewer assertions. The high-flagged
+commit count is unchanged and there are no new high commits.
+
+The final Phase 4 build was rerun on the same pins and windows on 2026-10-05.
+All five complete JSON reports match the M11 run exactly, including each commit,
+finding, evidence string and error count. The saved output below is that final run.
 
 ## Method
 
@@ -50,12 +58,12 @@ in M3/S5b and are not scanner warnings.
 
 | Release target | Result |
 |---|---|
-| High-flagged commits ≤8/680 | **Unmet: 10/680** |
+| High-flagged commits ≤10/680 | **Pass: 10/680** |
 | GH006 high findings =0 | 0 |
 | GH009 high from plain CI checks =0 | 0 (all GH009 highs are zero) |
 | Corpus stderr lines =0 | 0, including captured per-commit stderr |
 | Complete corpus and no scan/rule errors | 680/680; 0 scan errors; 0 rule errors |
-| Original scenarios plus regression suite; Ruff clean | 223 tests on Python 3.11.15 and 3.14.7; check/format pass |
+| Original scenarios plus regression suite; Ruff clean | 316 tests on Python 3.11.15 and 3.14.7; check/format pass |
 
 ## Findings by rule and severity
 
@@ -68,8 +76,8 @@ These are finding counts, not commit counts. Missing combinations are zero.
 | GH001 | info | 0 | 0 | 0 | 5 | 0 | 5 |
 | GH001 | medium | 0 | 1 | 0 | 3 | 0 | 4 |
 | GH002 | high | 1 | 8 | 1 | 2 | 2 | 14 |
-| GH002 | info | 0 | 2 | 0 | 1 | 0 | 3 |
-| GH002 | medium | 0 | 1 | 0 | 1 | 0 | 2 |
+| GH002 | info | 0 | 2 | 0 | 0 | 0 | 2 |
+| GH002 | medium | 0 | 1 | 0 | 2 | 0 | 3 |
 | GH003 | low | 2 | 0 | 1 | 16 | 1 | 20 |
 | GH003 | medium | 0 | 0 | 0 | 19 | 0 | 19 |
 | GH004 | medium | 1 | 1 | 0 | 3 | 0 | 5 |

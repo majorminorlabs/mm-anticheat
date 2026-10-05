@@ -11,6 +11,12 @@ PATTERN = re.compile(r"(?:#|//)\s*goodhart:\s*allow\b")
 
 
 class AllowCommentAdded(RuleBase):
+    details = (
+        "Reports any actual allow comment added in the scanned diff at medium severity. "
+        "This finding cannot be allowed inline, including by an inline GH012 directive. "
+        "An explicit .goodhart.toml path allowance can mark it allowed. Other findings "
+        "may still be allowed inline with a nonempty reason, but GH012 remains visible."
+    )
     id = "GH012"
     name = "allow-comment-added"
     default_severity = "medium"

@@ -8,6 +8,13 @@ from goodhart.util import assertion_line, first_line, is_python
 
 
 class AssertionCountDecreased(RuleBase):
+    details = (
+        "Compares assertion counts inside surviving tests: Python assert, self.assert*, "
+        "pytest.raises and mock called/awaited checks; JS/TS expect and assert calls. "
+        "JS identities include describe path, decoded name and ordinal. Patch mode "
+        "compares assertion lines per hunk with reduced confidence. Helper extraction "
+        "can be legitimate."
+    )
     id = "GH004"
     name = "assertion-count-decreased"
     default_severity = "medium"

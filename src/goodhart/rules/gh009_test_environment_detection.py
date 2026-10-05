@@ -30,6 +30,13 @@ CI = re.compile(
 
 
 class TestEnvironmentDetection(RuleBase):
+    details = (
+        "Flags source code that detects pytest, unittest, Jest or Vitest runners, "
+        "including runner env variables, sys.modules/argv and import.meta. Runner "
+        "detection is high; plain CI checks are medium; conventional settings files are "
+        "low. Comments and help strings are excluded. Resource isolation and timeout "
+        "configuration can be legitimate."
+    )
     id = "GH009"
     name = "test-environment-detection"
     default_severity = "high"

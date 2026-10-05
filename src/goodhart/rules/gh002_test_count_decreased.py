@@ -11,6 +11,13 @@ from goodhart.util import first_line
 
 
 class TestCountDecreased(RuleBase):
+    details = (
+        "Compares per-file test counts, listing removed names. Deleted files belong to "
+        "GH001. Full mode counts Python tests with AST and JS/TS calls with lexical "
+        "heuristics; patch mode counts visible definitions with reduced confidence. "
+        "Added parametrization yields medium. Substantive moves can yield info; weaker "
+        "destination assertions yield medium; empty stubs preserve high."
+    )
     id = "GH002"
     name = "test-count-decreased"
     default_severity = "high"
@@ -21,9 +28,10 @@ class TestCountDecreased(RuleBase):
     def check(self, change: FileChange, ctx: ScanContext) -> list[Finding]:
         if change.new_path is None:
             return []  # GH001 covers deleted test files without duplicate findings.
+        cache = ctx.cache.setdefault("move_inventories", {})
         if ctx.mode == "full":
-            before = names(change, "base", True)
-            after = names(change, "head", True)
+            before = names(change, "base", True, cache)
+            after = names(change, "head", True, cache)
         else:
             from goodhart.lang import jsts, python
             from goodhart.util import is_python
@@ -48,10 +56,9 @@ class TestCountDecreased(RuleBase):
             " Parametrization was added in this file." if consolidated else ""
         )
         removed = list((Counter(before) - Counter(after)).elements())
-        overlap, targets = destinations(removed, change, ctx.changes, ctx.mode == "full")
-        severity = "info" if overlap >= 0.8 else "medium" if overlap > 0 or consolidated else "high"
-        if targets:
-            why += " Tests appear to have moved to: " + ", ".join(targets) + "."
+        moves = destinations(removed, change, ctx.changes, ctx.mode == "full", cache)
+        severity = "medium" if consolidated and moves.severity == "high" else moves.severity
+        why += moves.explanation()
         return [
             self.finding(
                 change,

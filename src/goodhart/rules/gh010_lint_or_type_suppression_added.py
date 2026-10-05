@@ -14,6 +14,11 @@ PATTERN = re.compile(
 
 
 class LintOrTypeSuppressionAdded(RuleBase):
+    details = (
+        "Flags newly added Python, JS or TS lint/type suppression directives in actual "
+        "comments. Excludes directive-looking strings. Low severity reflects common "
+        "legitimate tool limitations; comments require review rather than a verdict."
+    )
     id = "GH010"
     name = "lint-or-type-suppression-added"
     default_severity = "low"

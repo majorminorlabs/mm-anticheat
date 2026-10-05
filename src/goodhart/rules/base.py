@@ -40,6 +40,7 @@ class Rule(Protocol):
     supports_patch_mode: bool
     why_flagged: str
     legit_if: str
+    details: str
 
     def check(self, change: FileChange, ctx: "ScanContext") -> list[Finding]: ...
 
@@ -54,6 +55,7 @@ class RuleBase:
     supports_patch_mode = True
     why_flagged: str
     legit_if: str
+    details = ""
 
     def finding(
         self,

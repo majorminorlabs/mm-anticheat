@@ -2,17 +2,58 @@
 
 ## Current phase
 
-Phase 3 is complete. REVIEW_01 fixes are complete; **Gate 1 remains stopped for
-REVIEW_01b.md and Dippo's release**. Phase 4 has not started. The refreshed artifact
-is `dist/goodhart-check-gate1.zip`.
+Phase 4: output, config and allowlisting. **Status: done; stopped at Gate 2.**
+REVIEW_01b M11 is fixed, its fixtures pass, and Gate 1's release conditions passed:
+all 680 pinned commits rerun, with 10 high commits (limit ≤10), GH006 high 0,
+no errors and no stderr. Phase 5 has not started.
 
-The five pinned repositories cover 680 commits. The baseline is in
-[docs/noise-baseline.md](docs/noise-baseline.md). High-flagged commits fell from
-23 to 10; the release target of at most 8 remains unmet. The ten commits remove
-actual tests, including obsolete or redundant cases. Their justifications are
-listed individually. GH006 highs, GH009 CI highs, rule errors, scan errors, and
-stderr lines are all zero. No severity exception was added for a repository or
-commit.
+The baseline is in [docs/noise-baseline.md](docs/noise-baseline.md). The old ≤8
+noise budget was waived by REVIEW_01b. No repository or commit exceptions were
+introduced.
+
+## Phase 4 completed
+
+- Text groups findings by severity, shows file/classification counts and reviewed
+  exceptions, and uses ANSI only on a TTY unless --no-color is set. Markdown
+  includes escaped collapsible details and safely fenced evidence. GH010 stays
+  grouped per file; evidence defaults to six lines with an explicit truncation note.
+- Load validated repo-root .goodhart.toml or --config. CLI threshold/skip settings
+  replace file settings, --rules selects rules before skips, and an empty
+  --skip-rules clears configured skips. Custom path arrays replace defaults.
+- Config path and same/previous-line inline allowances require a reason. Allowed
+  findings remain visible and do not fail thresholds. Python/JS strings cannot
+  masquerade as comments. Missing reasons emit low GH000; added allow comments
+  emit medium GH012, which only config allowances can suppress.
+- All requested CLI flags, rules descriptions and goodhart explain are implemented.
+  Rule behavior metadata generates docs/rules.md through scripts/generate_rules.py.
+- JSON v1 is frozen in docs/json-v1.md, with exact-key/type regression tests. It
+  retains the Review 1 files array, all findings and complete evidence. No new
+  fields were added. --quiet and evidence caps apply only to text/Markdown so JSON
+  consumers always receive the same complete contract.
+- CLI tests cover every flag, configuration precedence, all input modes, TTY
+  behavior, and exit codes 0/1/3, including injected internal failure. Exit 2 stays
+  unused. Config tests cover path/inline allowances, missing reasons and GH012.
+
+## REVIEW_01b M11
+
+- Empty same-name stubs never corroborate a move. Full-mode destinations require
+  at least one assertion and retain the removed test's assertion count for info;
+  fewer assertions yield medium. Patch destinations need actual assertion lines
+  in their added test hunk. Strings/docstrings and unrelated test assertions do
+  not count as evidence. Rejected names are listed in why_flagged.
+- Added move_to_empty_stub_full, move_to_empty_stub_patch,
+  move_with_fewer_assertions and real_move fixtures. The real Pydantic move still
+  passes. Extra Python/JS adversarial tests cover deleted-file GH001, docstring
+  stubs, adjacent unrelated tests and existing same-name destinations.
+- Cache assertion inventories per scan to avoid repeating AST counts for split
+  moves. Cached entries retain only names and counts.
+- Noise rerun: click 1, HTTPX 3, Ky 2, Pydantic 2, Vitest 2 = 10/680 high commits.
+  Pydantic 69fd688e changes from info to medium, without a new high commit.
+- C5: record negated platform gates as a v1.1 evidence/severity candidate; keep
+  v1's medium policy until Gate 2 data supports changing it.
+- C6: record the reviewer's 1.5s direct 3,000-it-call result. The current bounded
+  scan and forward-lexer tests remain; do not widen scope for an unrealistic case.
+- C1/C2 remain v1.1 candidates for early return and equal-count trivial replacement.
 
 ## REVIEW_01 must items
 
@@ -41,7 +82,7 @@ commit.
 | S6 | GH005 recognizes pytest.raises broadening. Python and patch assertion counters include raises, self.assertRaises, called/awaited/not_called mock checks. Fixtures cover full and patch counts. |
 | S7 | Collect static Python parametrize rows and JS each array rows. Named expected/want/output/result columns take precedence; otherwise the last column is expected. Python pytest.param rows are supported. Computed tables and tagged-template/object-form JS tables remain outside the static scalar heuristic. |
 | S8 | Test scripts that stop invoking a recognized runner now flag, including jest to echo. Added pytest -m selection. Both have fixtures. |
-| S9 | Provisional JSON v1 includes a sorted files array with file, effective kinds, base_kinds and head_kinds. Schema freezing remains Phase 4. |
+| S9 | JSON v1 includes a sorted files array with file, effective kinds, base_kinds and head_kinds. Phase 4 freezes the contract with exact-key/type regression tests and docs/json-v1.md. |
 
 ## Optional items and handoff v1.1
 
@@ -51,8 +92,9 @@ commit.
   would change GH002's specified count-decrease contract and add rename noise.
 - C3: full-mode Python broad tuple catches are handled and tested. Patch mode
   retains the bounded simple-handler heuristic.
-- C4: defer commit-level GH010 grouping to Phase 4 report work; low findings are
-  counted transparently in the baseline.
+- C4: GH010 is grouped per file in reports with bounded evidence, while the
+  baseline preserves complete per-file finding counts. No history-only severity
+  or suppression policy was introduced.
 - Accepted REVIEW_01 answers: legitimate scenarios assert their specified
   downgrades; GH006 patch confidence stays reduced; expanded JS globs and working
   mode untracked files stay; ZIP remains the Gate 1 review vehicle.
@@ -67,24 +109,53 @@ commit.
 
 - Ruff check and format check pass. Formatter excludes prose Markdown and inert
   fixture source so supplied review/handoff code blocks are preserved.
-- 223 tests pass on Python 3.11.15 and 3.14.7, including the original 126 scenarios.
-- 133 individual rule fixtures and six cross-rule fixtures; the per-rule minimum
+- 316 tests pass on Python 3.11.15 and 3.14.7, including the original scenarios.
+- 137 individual rule fixtures and six cross-rule fixtures; the per-rule minimum
   positive/negative and patch positive/negative requirements still pass.
-- Python 3.11 performance: 5,000-line full Git scan 0.301s; all hostile JS probes
+- Python 3.11 performance: 5,000-line full Git scan 0.194s; all hostile JS probes
   together 0.015s. Required limits are 2s and 1s respectively.
 - All 680 pinned first-parent non-merge commits were scanned in full mode. No
   scanner rule error or corpus scan failure was omitted from the denominator.
-- The refreshed ZIP includes the review, updated handoff, scripts, baseline and
+- The final Phase 4 corpus run exactly matches the M11 JSON reports for all five
+  repositories: 10/680 high commits, GH006 high 0, no errors or stderr.
+- The Gate 2 ZIP includes both reviews, updated handoff, scripts, baseline and
   regression data, excluding environments, caches and Git internals.
+
+## Fixture counts
+
+| Rule | Cases |
+|---|---:|
+| GH000 | 8 |
+| GH001 | 12 |
+| GH002 | 14 |
+| GH003 | 21 |
+| GH004 | 7 |
+| GH005 | 8 |
+| GH006 | 12 |
+| GH007 | 14 |
+| GH008 | 12 |
+| GH009 | 14 |
+| GH010 | 6 |
+| GH011 | 4 |
+| GH012 | 5 |
+| Cross-rule | 6 |
+| **Total** | **143** |
+
+## Gate 2: input needed from Dippo
+
+- REVIEW_02 against the Gate 2 ZIP, including M11 and Phase 4 behavior.
+- Labeled real-world diffs from own history, local ImpossibleBench, METR examples
+  or public agent PRs, including expected flags and false positives. Nine trimmed
+  maintainer-history regressions measure noise; they are not an agent-cheat eval.
+- After those arrive, add real fixtures and docs/real-world-eval.md and tune only
+  without breaking the frozen contract or regression corpus. No real-world hit
+  rate has been claimed and no synthetic expected labels stand in for Dippo's data.
 
 ## Next up
 
-- Claude reruns the probes/corpus and writes REVIEW_01b.md. Resolve the remaining
-  ten-versus-eight release threshold through that review; the builder has stopped.
-- Only after Dippo releases Gate 1: Phase 4 reports, config, allowlisting and CLI
-  flags. Gate 2 corpus labeling and Phases 5–6 remain unstarted.
-- Nothing has been pushed, published or tagged. Naming, license confirmation,
-  private GitHub provisioning and releases remain Dippo's decisions.
+- Wait at Gate 2 for REVIEW_02 and Dippo's labeled corpus.
+- Phase 5 integrations and Phase 6 release preparation remain unstarted. Naming,
+  license confirmation, private remote setup and publication stay with Dippo.
 
 ## Known limitations
 
@@ -112,3 +183,14 @@ findings retain reduced confidence. Intent always requires human review.
   56 new fixtures and pinned noise baseline added. Rule-error diagnostics caught
   and helped fix Python ternary AST handling during the corpus audit. Gate 1
   stays stopped for REVIEW_01b because 10 real-removal commits exceed the target 8.
+
+- 2026-10-05: M11 complete; full/patch stubs stay high, weaker moves medium, real
+  moves info. The 680-commit rerun meets ≤10/680 and GH006 high 0. Gate 1 released
+  under REVIEW_01b; proceeding into Phase 4 without another review stop.
+
+- 2026-10-05: Phase 4 complete. All flags, config/allow interactions and three
+  report formats pass; JSON v1 frozen; generated rule explanations and docs added.
+  Ruff check/format clean, 316 tests pass on Python 3.11 and 3.14. Performance
+  0.194s full scan / 0.015s hostile probes on Python 3.11. Final corpus output
+  matches M11 exactly. Built Gate 2 ZIP with complete docs and regressions;
+  stopped for REVIEW_02 and labeled data before integrations or release work.

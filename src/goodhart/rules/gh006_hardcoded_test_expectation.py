@@ -65,6 +65,14 @@ def _output(text: str) -> list[object]:
 
 
 class HardcodedTestExpectation(RuleBase):
+    details = (
+        "Collects significant scalar test inputs and expectations, including static "
+        "parametrize/each rows. High requires a new output literal absent from the "
+        "base, an input-specific branch and matching input/expectation from the same "
+        "test. Condition literals cannot serve as outputs. Literal-only matches are "
+        "medium; patch findings have reduced confidence. Computed tables, imports and "
+        "expectations can be missed."
+    )
     id = "GH006"
     name = "hardcoded-test-expectation"
     default_severity = "high"

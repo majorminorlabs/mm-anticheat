@@ -7,6 +7,11 @@ from goodhart.util import first_line
 
 
 class SnapshotUpdatedWithSource(RuleBase):
+    details = (
+        "Reports changed snapshot files when source also changes in the same diff. Info "
+        "only: check that generated expected output reflects intended behavior. "
+        "Test-only or snapshot-only edits do not trigger this cross-file hint."
+    )
     id = "GH011"
     name = "snapshot-updated-with-source"
     default_severity = "info"

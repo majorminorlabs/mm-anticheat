@@ -27,6 +27,13 @@ def _silent(statement: ast.stmt) -> bool:
 
 
 class ExceptionSwallowed(RuleBase):
+    details = (
+        "Flags broad Python handlers that only discard failures, including broad "
+        "members of exception tuples in full mode. Bound JS catches that discard "
+        "failures are medium; bare empty optional-binding catches are low. Changed-line "
+        "attribution excludes edits after an existing catch. Logging and re-raising "
+        "handlers are not flagged."
+    )
     id = "GH008"
     name = "exception-swallowed"
     default_severity = "medium"

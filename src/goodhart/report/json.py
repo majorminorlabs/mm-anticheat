@@ -1,4 +1,4 @@
-"""Provisional schema v1 serializer; freezes in Phase 4."""
+"""Frozen JSON schema v1 serializer; field changes require a schema-version bump."""
 
 import json
 from dataclasses import asdict

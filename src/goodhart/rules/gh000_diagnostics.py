@@ -25,6 +25,12 @@ def parse_skipped(path: str, reason: str, line: int = 1) -> Finding:
 
 
 class Diagnostics(RuleBase):
+    details = (
+        "Reports unavailable, binary, oversized or malformed content and caught rule "
+        "errors without hiding later findings. Inline directives without a nonempty "
+        "quoted reason add a low allow-missing-reason diagnostic. Analysis bounds are 1 "
+        "MB per file and 20,000 characters per line."
+    )
     id = "GH000"
     name = "parse-skipped / allow-missing-reason"
     default_severity = "info"

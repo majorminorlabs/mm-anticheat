@@ -134,6 +134,13 @@ def _selectors(value: object) -> set[str]:
 
 
 class TestConfigTampered(RuleBase):
+    details = (
+        "Flags explicit test exclusions, narrower test paths, lower coverage "
+        "thresholds, disabled pytest plugins or marker selection, pass-with-no-tests "
+        "and test scripts or CI steps that remove checks or mask failures. Uses stdlib "
+        "config parsers in full mode and local heuristics for incomplete patches or "
+        "computed JS/YAML configuration."
+    )
     id = "GH007"
     name = "test-config-tampered"
     default_severity = "high"

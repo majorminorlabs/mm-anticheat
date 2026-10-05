@@ -105,6 +105,13 @@ def _markers(content: str) -> list[tuple[ast.Call, str, bool, str]]:
 
 
 class SkipMarkerAdded(RuleBase):
+    details = (
+        "Flags skip, xfail, todo and exclusive-focus markers added to existing tests, "
+        "including module pytestmark and imported mark aliases. Unconditional skips and "
+        "constant skipif conditions are high. Platform, Python-version and "
+        "optional-dependency gates are medium. Markers on new tests are low; formatting "
+        "or reason-only changes to existing Python markers are ignored."
+    )
     id = "GH003"
     name = "skip-marker-added"
     default_severity = "high"
