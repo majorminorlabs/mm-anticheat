@@ -1,4 +1,4 @@
-"""Frozen JSON schema v1 serializer; field changes require a schema-version bump."""
+"""JSON schema v2 adds trusted config provenance; v1 field meanings are retained."""
 
 import json
 from dataclasses import asdict
@@ -10,11 +10,12 @@ from goodhart.engine import ScanResult
 def render(result: ScanResult) -> str:
     """Serialize stable field names and sorted findings."""
     data = {
-        "schema_version": "1",
+        "schema_version": "2",
         "tool": TOOL_NAME,
         "tool_version": __version__,
         "mode": result.data.mode,
         "range": {"base": result.data.base, "head": result.data.head},
+        "config": {"source": result.data.config.source},
         "summary": {**result.summary, "files_scanned": result.files_scanned},
         "files": [
             {

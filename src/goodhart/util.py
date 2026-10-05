@@ -124,16 +124,52 @@ def added_comments(change: FileChange, full: bool) -> dict[int, str]:
     }
 
 
-def visible_comments(change: FileChange, full: bool) -> dict[int, str]:
-    """Return head-side comments with actual file line coordinates."""
-    py = is_python(change.path)
-    if full and change.head_content is not None:
-        return comment_text(change.head_content, py)
+def visible_comments(change: FileChange, full: bool, side: str = "head") -> dict[int, str]:
+    """Return comments with actual base/head file line coordinates."""
+    py = is_python((change.old_path if side == "base" else change.new_path) or change.path)
+    content = getattr(change, side + "_content")
+    if full and content is not None:
+        return comment_text(content, py)
     result = {}
     for hunk in change.hunks:
-        lines = [line for line in hunk.lines if line.kind != "-"]
+        lines = [line for line in hunk.lines if line.kind != ("+" if side == "base" else "-")]
         comments = comment_text("\n".join(line.value for line in lines), py)
         for index, line in enumerate(lines, 1):
             if index in comments:
-                result[line.new_line or 1] = comments[index]
+                result[(line.old_line if side == "base" else line.new_line) or 1] = comments[index]
     return result
+
+
+def base_line(change: FileChange, head_line: int, replacements: bool = False) -> int | None:
+    """Map context or full-mode replacement lines; pure additions have no trusted base."""
+    delta = 0
+    for hunk in change.hunks:
+        new_rows = [line.new_line for line in hunk.lines if line.new_line is not None]
+        old_rows = [line.old_line for line in hunk.lines if line.old_line is not None]
+        start = min(new_rows) if new_rows else min(old_rows, default=1) + delta
+        if head_line < start:
+            return head_line - delta
+        for line in hunk.lines:
+            if line.new_line == head_line:
+                if line.kind == " ":
+                    return line.old_line
+                if not replacements:
+                    return None
+                break
+        if replacements:
+            # Pair lines only inside a contiguous replacement block. The caller
+            # must still verify the exact directive against complete base text.
+            removed, added = [], []
+            for line in [*hunk.lines, None]:
+                if line is None or line.kind == " ":
+                    for index, item in enumerate(added):
+                        if item.new_line == head_line:
+                            return removed[index].old_line if index < len(removed) else None
+                    removed, added = [], []
+                elif line.kind == "-":
+                    removed.append(line)
+                elif line.kind == "+":
+                    added.append(line)
+        delta += sum(line.kind == "+" for line in hunk.lines)
+        delta -= sum(line.kind == "-" for line in hunk.lines)
+    return head_line - delta

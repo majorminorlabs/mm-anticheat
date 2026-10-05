@@ -155,7 +155,7 @@ def test_json_deterministic_and_schema():
     first = render(result)
     assert first == render(result)
     payload = json.loads(first)
-    assert payload["schema_version"] == "1"
+    assert payload["schema_version"] == "2"
     assert payload["summary"] == {"high": 0, "medium": 1, "low": 0, "info": 0, "files_scanned": 1}
     assert set(payload["findings"][0]) == {
         "rule_id",

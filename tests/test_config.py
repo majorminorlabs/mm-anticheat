@@ -83,7 +83,7 @@ def test_unreadable_and_nonutf8_config(tmp_path):
 
 @pytest.mark.parametrize("full", [True, False])
 @pytest.mark.parametrize("placement", ["above", "same"])
-def test_inline_allow_with_reason(full, placement):
+def test_added_inline_allow_with_reason_is_deferred(full, placement):
     base = "def test_a():\n    assert 3 == 3\n"
     allow = '# goodhart: allow GH003 reason="reviewed flaky test in #88"'
     after = (
@@ -94,9 +94,9 @@ def test_inline_allow_with_reason(full, placement):
     result = changed_skip(after=after, full=full)
     skip = next(f for f in result.findings if f.rule_id == "GH003")
     added = next(f for f in result.findings if f.rule_id == "GH012")
-    assert skip.allowed and "#88" in skip.why_flagged
+    assert not skip.allowed and "applies only after it is merged" in skip.why_flagged
     assert not added.allowed
-    assert result.exit_code("high") == 0
+    assert result.exit_code("high") == 1
     assert result.exit_code("medium") == 1
 
 
@@ -132,9 +132,9 @@ def test_js_inline_allow(full, placement):
     comment = '// goodhart: allow GH009 reason="runner integration"'
     after = comment + "\n" + code if placement == "above" else code + " " + comment
     result = run_changes([("src/a.ts", "", after + "\n")], full=full)
-    assert next(f for f in result.findings if f.rule_id == "GH009").allowed
+    assert not next(f for f in result.findings if f.rule_id == "GH009").allowed
     assert not next(f for f in result.findings if f.rule_id == "GH012").allowed
-    assert result.exit_code() == 0 and result.exit_code("medium") == 1
+    assert result.exit_code() == 1 and result.exit_code("medium") == 1
 
 
 def test_path_allow_and_rule_scope():

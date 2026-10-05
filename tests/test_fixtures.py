@@ -7,19 +7,26 @@ from pathlib import Path
 import pytest
 
 from goodhart.classify import classify
-from goodhart.config import Config
+from goodhart.config import Config, parse_config
 from goodhart.engine import scan
 from goodhart.git import load_patch
 from goodhart.rules import all_rules
 
 FIXTURES = Path(__file__).parent / "fixtures"
-CASES = sorted(path.parent for path in FIXTURES.rglob("meta.toml"))
+CASES = sorted(
+    path.parent
+    for path in FIXTURES.rglob("meta.toml")
+    if "real_candidates" not in path.relative_to(FIXTURES).parts
+)
 
 
 def fixture_input(case: Path):
     meta = tomllib.loads((case / "meta.toml").read_text())
     data = load_patch((case / "diff.patch").read_text())
     data.mode = meta["mode"]
+    settings = case / "base/.goodhart.toml"
+    if data.mode == "full" and settings.exists():
+        data.config = parse_config(settings.read_text(), "base:fixture")
     if data.mode == "full":
         for change in data.changes:
             for side, path in (("base", change.old_path), ("head", change.new_path)):
@@ -27,10 +34,10 @@ def fixture_input(case: Path):
                 content = source.read_text() if source and source.exists() else None
                 setattr(change, f"{side}_content", content)
             change.old_kinds = classify(
-                change.old_path or change.path, change.base_content, Config()
+                change.old_path or change.path, change.base_content, data.config
             )
             change.new_kinds = classify(
-                change.new_path or change.path, change.head_content, Config()
+                change.new_path or change.path, change.head_content, data.config
             )
         data.extra_tests = {
             path.relative_to(case / "head").as_posix(): path.read_text()
@@ -51,17 +58,26 @@ def test_fixture(case):
     selected = meta.get("rules")
     rules = [rule for rule in all_rules() if selected is None or rule.id in selected]
     result = scan(data, rules=rules)
+    expected = json.loads((case / "expected.json").read_text())
+    with_allowed = any("allowed" in item for item in expected)
     actual = [
-        {"rule_id": item.rule_id, "file": item.file, "line": item.line, "severity": item.severity}
+        {
+            "rule_id": item.rule_id,
+            "file": item.file,
+            "line": item.line,
+            "severity": item.severity,
+            **({"allowed": item.allowed} if with_allowed else {}),
+        }
         for item in result.findings
     ]
-    expected = json.loads((case / "expected.json").read_text())
 
     def sort_key(item):
         return (item["rule_id"], item["file"], item["line"], item["severity"])
 
     assert sorted(actual, key=sort_key) == sorted(expected, key=sort_key)
     assert bool(actual) == meta["expect_fire"]
+    if "expect_exit" in meta:
+        assert result.exit_code() == meta["expect_exit"]
     if data.mode == "patch":
         assert all(
             item.confidence == "reduced"

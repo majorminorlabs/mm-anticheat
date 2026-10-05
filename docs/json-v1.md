@@ -1,5 +1,9 @@
 # JSON v1 contract
 
+This is the historical frozen contract. Current scans emit [JSON v2](json-v2.md)
+to add config provenance required by REVIEW_02 M12. All v1 fields retain their
+types and meanings in v2.
+
 Phase 4 freezes `schema_version: "1"`. Changes to the field names, types or
 meanings below require a new schema version. `tool_version` follows the package
 version independently. The serializer emits one JSON object and a final newline;

@@ -91,6 +91,8 @@ def test_rules_and_explain(capsys):
 
 def test_default_config_root_cli_override_and_skip_clear(repo, monkeypatch, capsys):
     (repo / ".goodhart.toml").write_text('fail_on = "medium"\nskip_rules = ["GH009"]\n')
+    git(repo, "add", ".goodhart.toml")
+    git(repo, "commit", "-m", "trusted config")
     (repo / "src").mkdir()
     (repo / "src/a.py").write_text('flag = os.getenv("CI")\n')
     monkeypatch.chdir(repo / "src")
@@ -106,7 +108,7 @@ def test_explicit_config_outside_git(ci_patch, tmp_path, monkeypatch, capsys):
     monkeypatch.chdir(tmp_path)
     (tmp_path / ".goodhart.toml").write_text('fail_on = "medium"\n')
     (tmp_path / "custom.toml").write_text('fail_on = "never"\n')
-    assert main(["scan", "--diff", ci_patch]) == 1
+    assert main(["scan", "--diff", ci_patch]) == 0
     capsys.readouterr()
     assert main(["scan", "--diff", ci_patch, "--config", "custom.toml"]) == 0
     assert not capsys.readouterr().err

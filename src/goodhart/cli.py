@@ -7,7 +7,7 @@ from pathlib import Path
 from goodhart import TOOL_NAME, __version__
 from goodhart.config import ConfigError, load_config, rule_ids
 from goodhart.engine import scan as run_scan
-from goodhart.git import InputError, load_git, load_patch, repository_root
+from goodhart.git import InputError, load_git, load_patch
 from goodhart.report.json import render as render_json
 from goodhart.report.markdown import render as render_markdown
 from goodhart.report.rules import explain
@@ -81,20 +81,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.rules is not None and not args.rules:
         parser.error("--rules requires at least one rule ID")
     try:
-        try:
-            root = repository_root()
-        except InputError:
-            if not args.diff:
-                raise
-            root = Path.cwd()
-        path = args.config
-        if path is None and (root / ".goodhart.toml").exists():
-            path = root / ".goodhart.toml"
-        config = load_config(path)
-        if args.fail_on is not None:
-            config.fail_on = args.fail_on
-        if args.skip_rules is not None:
-            config.skip_rules = args.skip_rules
+        config = load_config(args.config) if args.config is not None else None
         active = [rule for rule in registry if args.rules is None or rule.id in args.rules]
         if args.diff:
             text = sys.stdin.read() if args.diff == "-" else Path(args.diff).read_text()
@@ -107,6 +94,11 @@ def main(argv: list[str] | None = None) -> int:
                 staged=args.staged,
                 config=config,
             )
+        config = data.config
+        if args.fail_on is not None:
+            config.fail_on = args.fail_on
+        if args.skip_rules is not None:
+            config.skip_rules = args.skip_rules
         for notice in data.notices:
             print(f"goodhart: {notice}", file=sys.stderr)
         if len(data.changes) > 300:

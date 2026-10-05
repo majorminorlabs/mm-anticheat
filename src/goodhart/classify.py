@@ -20,6 +20,7 @@ CONFIG_NAMES = {
     "Makefile",
     ".coveragerc",
     "codecov.yml",
+    ".goodhart.toml",
 }
 
 
@@ -32,6 +33,8 @@ def matches(path: str, pattern: str) -> bool:
 
 def classify(path: str, content: str | None, config: Config) -> frozenset[FileKind]:
     """Return all applicable kinds; conftest participates in two rule families."""
+    if path == ".goodhart.toml":
+        return frozenset({"config"})  # The control file cannot hide its own audit.
     if any(matches(path, pattern) for pattern in config.ignore_globs):
         return frozenset({"other"})
     p = PurePosixPath(path)

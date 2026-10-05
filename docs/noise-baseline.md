@@ -1,6 +1,6 @@
 # Gate 1 noise baseline
 
-Measured 2026-10-05 on Python 3.14.7 after REVIEW_01b M11. These are maintainer
+Measured 2026-10-05 on Python 3.14.7 after REVIEW_02 M12/M13. These are maintainer
 histories used to measure review noise; findings do not establish cheating.
 **Gate 1 release conditions pass:** 10/680 high-flagged commits, GH006 high 0,
 scan/rule errors 0 and stderr lines 0. REVIEW_01b waived the former eight-commit
@@ -12,9 +12,12 @@ stubs never corroborate movement. The Pydantic `69fd688e` move changed GH002 fro
 info to medium because a destination has fewer assertions. The high-flagged
 commit count is unchanged and there are no new high commits.
 
-The final Phase 4 build was rerun on the same pins and windows on 2026-10-05.
-All five complete JSON reports match the M11 run exactly, including each commit,
-finding, evidence string and error count. The saved output below is that final run.
+The Phase 4 and REVIEW_02 builds were rerun on the same pins and windows on
+2026-10-05. All five complete JSON reports match the M11 run exactly, including
+each commit, finding, evidence string and error count. S11 passes: none of the
+corpus repos has a root `.goodhart.toml`, so trusted config loading and inline
+approval validation leave these results unchanged. The saved output below is
+byte-identical to the REVIEW_02 rerun.
 
 ## Method
 
@@ -63,7 +66,7 @@ in M3/S5b and are not scanner warnings.
 | GH009 high from plain CI checks =0 | 0 (all GH009 highs are zero) |
 | Corpus stderr lines =0 | 0, including captured per-commit stderr |
 | Complete corpus and no scan/rule errors | 680/680; 0 scan errors; 0 rule errors |
-| Original scenarios plus regression suite; Ruff clean | 316 tests on Python 3.11.15 and 3.14.7; check/format pass |
+| Original scenarios plus regression suite; Ruff clean | 363 tests on Python 3.11.15 and 3.14.7; check/format pass |
 
 ## Findings by rule and severity
 

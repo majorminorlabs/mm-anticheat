@@ -6,9 +6,9 @@ explanation to consider; they do not prove intent. The scanner is deterministic,
 makes no network or LLM calls, and collects no telemetry. It supports Python and
 JS/TS, uses Python 3.11+, and has one runtime dependency: `unidiff`.
 
-This is the **Gate 2 review build** (Phases 0–4). Gate 1 passed REVIEW_01b's M11
-conditions. Phase 4 includes configuration, allowlisting and reports; development
-stops at Gate 2 for review and labeled real-world diffs. See
+**Gate 2 remains open** after REVIEW_02. M12/M13 fix config and inline approvals;
+the local benchmark runner is ready, but real runs need the model and repository
+inputs. Gate 1 passed REVIEW_01b's M11 conditions. See
 [PROGRESS.md](PROGRESS.md), [Gate 2](docs/GATE_2.md) and [the handoff](docs/HANDOFF.md).
 
 ## Install
@@ -52,13 +52,14 @@ and `explain GH005`. Formats are `text`, `json` and `markdown`. Text groups find
 by severity and uses color only on a TTY; `--no-color` forces plain output.
 Markdown includes collapsible evidence per finding. `--quiet` prints a summary
 line in text/Markdown; `--max-evidence-lines N` limits their evidence (default 6).
-JSON retains all evidence and findings with the [frozen v1 contract](docs/json-v1.md).
+JSON retains all evidence and findings with the [v2 contract](docs/json-v2.md),
+which adds config provenance to the frozen v1 fields.
 When no Git
 base is given, the scanner uses the upstream/main/master merge base or `HEAD~1`.
 If that merge base is head, it uses head's first parent. An empty range prints a
 stderr notice naming the resolved range; scans with over 300 changed files print
 a size notice.
-The header prints the resolved range. Working and staged heads are labelled
+The header prints the resolved range and config source. Working and staged heads are labelled
 `WORKTREE` and `INDEX`; patch range fields are null.
 JSON's `files` array exposes effective, base and head classifications.
 
@@ -68,9 +69,15 @@ analysis coverage even when rule selection is restricted.
 
 ## Configuration and reviewed exceptions
 
-The CLI loads `.goodhart.toml` at the repository root when present, or in the
-current directory for patch scans outside Git. `--config path` selects an explicit
-file relative to the current directory. CLI `--fail-on` and `--skip-rules` replace
+Git range scans load the root `.goodhart.toml` from the resolved merge base.
+Working and staged scans load it from HEAD. Patch scans use defaults unless
+`--config path` selects a file relative to the current directory. The header and
+JSON report `base:<sha>`, `HEAD`, `--config path`, or `defaults` as the source.
+When `.goodhart.toml` changes in the diff, a stderr notice names that change and
+the config source. Hooks and CI should use the base-side default or an explicit
+config in a location the agent cannot edit.
+
+CLI `--fail-on` and `--skip-rules` replace
 the corresponding file settings; `--skip-rules ''` clears configured skips.
 `--rules` selects from the registry before effective skips are applied.
 
@@ -90,7 +97,14 @@ matches the root; `*` can match directory separators. The
 [example config](docs/example-goodhart.toml) shows the syntax. Unknown keys,
 unknown rule IDs and missing allowance reasons are errors.
 
-An actual comment on the flagged line or the line above can allow that rule:
+GH007 flags changes to root `.goodhart.toml` at high when they add or widen
+allowances, add skips or ignored paths, raise the fail threshold, or change test
+globs in any way. Tightening changes produce no GH007. Malformed head TOML adds
+GH000 info and GH007 medium. When GH007 is selected, config allows, skips and
+ignored paths cannot suppress its audit of the root config itself.
+
+An actual comment on the flagged line or the line above can allow that rule when
+it already existed on the base side:
 
 ```python
 # goodhart: allow GH003 reason="flaky test tracked in #88"
@@ -102,9 +116,13 @@ def test_remote_service():
 JS/TS uses `// goodhart: allow GH008 reason="best-effort telemetry"`. Reasons must
 be nonempty quoted text. A missing reason leaves the flag active and adds low
 GH000. Adding any allow comment in the scanned diff adds medium GH012, which can
-only be allowed by a config path exception. Deleted files need a config allowance.
+only be allowed by a trusted config path exception. A newly added comment leaves
+its target finding active; the approval applies after the comment is merged.
+Full scans validate the mapped comment against base content; patch scans honor
+only context comments. Deleted files need a config allowance.
 Allowed findings remain visible, with `allowed: true` in JSON, and are excluded
-from the exit threshold. Summary severity counts include them.
+from the exit threshold. Summary severity counts show the allowed subset, for
+example `high: 1 (1 allowed)`.
 
 ## Rules
 
@@ -185,3 +203,9 @@ findings are not expected-result oracles. See the pinned
 [noise baseline](docs/noise-baseline.md): 10 of 680 commits flag high and GH006
 highs are zero, passing REVIEW_01b's release limit of at most ten. The original
 eight-commit target was waived. Gate 2 awaits review and Dippo's labeled corpus.
+
+The [local ImpossibleBench runner](docs/impossiblebench-local.md) uses a separate
+environment and Ollama through Inspect. It exports complete snapshots and
+benchmark-defined labels without adding model libraries to the scanner runtime.
+History candidates remain unreviewed for the independent reviewer. Current
+case counts and metrics are in [real-world-eval.md](docs/real-world-eval.md).

@@ -19,10 +19,19 @@ def label(result: ScanResult) -> str:
 
 def summary_line(result: ScanResult) -> str:
     """One concise line for quiet output."""
-    counts = " | ".join(f"{key}: {value}" for key, value in result.summary.items())
+    counts = " | ".join(
+        f"{key}: {value}"
+        + (
+            f" ({count} allowed)"
+            if (count := sum(f.allowed and f.severity == key for f in result.findings))
+            else ""
+        )
+        for key, value in result.summary.items()
+    )
     allowed = sum(f.allowed for f in result.findings)
     return safe(
-        f"{TOOL_NAME} | {label(result)} | {result.files_scanned} files | "
+        f"{TOOL_NAME} | {label(result)} | config: {result.data.config.source} | "
+        f"{result.files_scanned} files | "
         f"{counts} | allowed: {allowed}"
     )
 

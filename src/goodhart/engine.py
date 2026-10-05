@@ -58,14 +58,18 @@ def scan(
     from goodhart.rules.gh000_diagnostics import parse_skipped
     from goodhart.util import is_python
 
-    config = config or Config()
+    config = config or data.config
+    data.config = config
     ctx = ScanContext(data.mode, data.changes, config, data.extra_tests)
     findings = [parse_skipped(path, reason) for path, reason in data.diagnostics]
     active = all_rules() if rules is None else rules
     for change in data.changes:
         paths = [path for path in (change.old_path, change.new_path) if path]
-        if paths and all(
-            any(matches(path, glob) for glob in config.ignore_globs) for path in paths
+        control_change = ".goodhart.toml" in paths
+        if (
+            paths
+            and not control_change
+            and all(any(matches(path, glob) for glob in config.ignore_globs) for path in paths)
         ):
             continue
         contents = [
@@ -92,7 +96,9 @@ def scan(
         for rule in active:
             if change.parse_error and rule.id not in {"GH000", "GH012"}:
                 continue
-            if change.kinds & rule.applies_to and rule.id not in config.skip_rules:
+            if change.kinds & rule.applies_to and (
+                rule.id not in config.skip_rules or (control_change and rule.id == "GH007")
+            ):
                 try:
                     findings.extend(rule.check(change, ctx))
                 except Exception as exc:

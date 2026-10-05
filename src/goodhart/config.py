@@ -36,6 +36,7 @@ class Config:
     ignore_globs: tuple[str, ...] = ("vendor/**", "node_modules/**", "**/*.min.js")
     skip_rules: set[str] = field(default_factory=set)
     allows: list["Allow"] = field(default_factory=list)
+    source: str = "defaults"
 
 
 @dataclass(frozen=True)
@@ -74,14 +75,23 @@ def _strings(value: object, label: str) -> tuple[str, ...]:
 
 def load_config(path: "Path | None" = None) -> Config:
     """Load a TOML file, or use defaults when no path was selected."""
-    import tomllib
-
     if path is None:
         return Config()
     try:
-        data = tomllib.loads(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, tomllib.TOMLDecodeError) as exc:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
         raise ConfigError(f"Cannot read config {path}: {exc}") from exc
+    return parse_config(text, f"--config {path}")
+
+
+def parse_config(text: str, source: str = "defaults") -> Config:
+    """Validate complete TOML settings, including trusted Git-side content."""
+    import tomllib
+
+    try:
+        data = tomllib.loads(text)
+    except tomllib.TOMLDecodeError as exc:
+        raise ConfigError(f"Invalid config ({source}): {exc}") from exc
     unknown = data.keys() - {"fail_on", "skip_rules", "paths", "allow"}
     if unknown:
         raise ConfigError("Unknown config keys: " + ", ".join(sorted(unknown)))
@@ -94,7 +104,7 @@ def load_config(path: "Path | None" = None) -> Config:
     paths = data.get("paths", {})
     if not isinstance(paths, dict) or paths.keys() - {"test_globs", "ignore_globs"}:
         raise ConfigError("paths only accepts test_globs and ignore_globs arrays")
-    config = Config(fail_on=fail_on, skip_rules=set(skips))
+    config = Config(fail_on=fail_on, skip_rules=set(skips), source=source)
     for key in ("test_globs", "ignore_globs"):
         if key in paths:
             setattr(config, key, _strings(paths[key], "paths." + key))
@@ -134,29 +144,47 @@ def apply_allows(
     """Mark exceptions after rules run, preserving findings and GH012 self-protection."""
     from goodhart.classify import matches
     from goodhart.lang import limit_reason
-    from goodhart.util import visible_comments
+    from goodhart.util import base_line, visible_comments
 
     lookup = {change.path: change for change in changes}
     comments = {}
     for finding in findings:
         reason, source = None, ""
-        for allow in config.allows:
+        # The scanner's own config cannot silence its GH007 modification audit.
+        control_change = (
+            finding.rule_id == "GH007"
+            and finding.file in lookup
+            and ".goodhart.toml" in {lookup[finding.file].old_path, lookup[finding.file].new_path}
+        )
+        for allow in [] if control_change else config.allows:
             if finding.rule_id == allow.rule and matches(finding.file, allow.path):
                 reason, source = allow.reason, ".goodhart.toml"
                 break
-        if reason is None and finding.rule_id != "GH012" and finding.file in lookup:
+        if finding.rule_id != "GH012" and finding.file in lookup and not control_change:
             content = (
                 lookup[finding.file].head_content if full else lookup[finding.file].visible("head")
             )
-            if not content or "goodhart:" not in content or limit_reason(content):
-                continue
-            if finding.file not in comments:
-                comments[finding.file] = visible_comments(lookup[finding.file], full)
-            for row in (finding.line, finding.line - 1):
-                parsed = inline_allow(comments[finding.file].get(row, ""))
-                if parsed and parsed[0] == finding.rule_id:
-                    reason, source = parsed[1], "inline comment"
-                    break
+            if content and "goodhart:" in content and not limit_reason(content):
+                if finding.file not in comments:
+                    comments[finding.file] = (
+                        visible_comments(lookup[finding.file], full),
+                        visible_comments(lookup[finding.file], full, side="base"),
+                    )
+                head_comments, old_comments = comments[finding.file]
+                for row in (finding.line, finding.line - 1):
+                    comment = head_comments.get(row, "")
+                    parsed = inline_allow(comment)
+                    if parsed and parsed[0] == finding.rule_id:
+                        old_row = base_line(lookup[finding.file], row, replacements=full)
+                        existing = old_row is not None and old_comments.get(old_row) == comment
+                        if existing and reason is None:
+                            reason, source = parsed[1], "preexisting inline comment"
+                        elif not existing:
+                            finding.why_flagged += (
+                                " An allow comment was added in this diff; "
+                                "it applies only after it is merged."
+                            )
+                        break
         if reason is not None:
             finding.allowed = True
             finding.why_flagged += f" Allowed by {source}: {reason}"

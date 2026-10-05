@@ -1,4 +1,4 @@
-"""Frozen JSON v1 contract and human-report presentation boundaries."""
+"""JSON v2 compatibility contract and human-report presentation boundaries."""
 
 import json
 from pathlib import Path
@@ -23,7 +23,7 @@ def result():
 
 
 @pytest.mark.parametrize("full", [True, False])
-def test_frozen_json_v1_contract(full):
+def test_json_v2_preserves_v1_fields_and_adds_config_source(full):
     result = run_changes([("src/a.py", "", 'flag = os.getenv("PYTEST_CURRENT_TEST")\n')], full=full)
     result = scan(result.data, Config(allows=[Allow("GH009", "src/**", "Reviewed runner probe")]))
     payload = json.loads(json_report.render(result))
@@ -36,8 +36,10 @@ def test_frozen_json_v1_contract(full):
         "summary",
         "files",
         "findings",
+        "config",
     }
-    assert payload["schema_version"] == "1" and payload["tool"] == "goodhart-check"
+    assert payload["schema_version"] == "2" and payload["tool"] == "goodhart-check"
+    assert payload["config"] == {"source": "defaults"}
     assert isinstance(payload["tool_version"], str)
     assert payload["mode"] == ("full" if full else "patch")
     assert set(payload["range"]) == {"base", "head"}
@@ -93,6 +95,7 @@ def test_default_evidence_cap_and_allowed_visibility(result, renderer):
     assert "row5" in output and "row6" not in output
     assert "3 more evidence lines" in output and "[allowed]" in output
     assert "allowed: 1" in output
+    assert "high: 1 (1 allowed)" in renderer(result, quiet=True)
     assert finding.evidence.endswith("row8")
     assert "row8" in renderer(result, max_evidence_lines=9)
 

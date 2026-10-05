@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Literal
 
 from goodhart.classify import classify, matches
-from goodhart.config import Config
+from goodhart.config import Config, parse_config
 from goodhart.diffmodel import FileChange, parse_diff
 
 
@@ -31,6 +31,7 @@ class ScanInput:
     extra_tests: dict[str, str] = field(default_factory=dict)
     diagnostics: list[tuple[str, str]] = field(default_factory=list)
     notices: list[str] = field(default_factory=list)
+    config: Config = field(default_factory=Config)
 
 
 def _git(root: Path, *args: str, check: bool = True) -> bytes:
@@ -101,7 +102,15 @@ def _read_content(root: Path, ref: str, path: str) -> str:
 
 def load_patch(text: str, config: Config | None = None) -> ScanInput:
     """Load a standalone patch without accessing repository content."""
-    return ScanInput("patch", parse_diff(text, config), None, None)
+    config = config or Config()
+    return ScanInput("patch", parse_diff(text, config), None, None, config=config)
+
+
+def trusted_config(root: Path, ref: str, source: str) -> Config:
+    """Use only the tracked .goodhart.toml on the trusted side, never the worktree."""
+    if not _git(root, "ls-tree", "--name-only", ref, "--", ".goodhart.toml").strip():
+        return Config()
+    return parse_config(_read_content(root, ref, ".goodhart.toml"), source)
 
 
 def _imports_touched(content: str, path: str, sources: set[str]) -> bool:
@@ -243,7 +252,6 @@ def load_git(
     config: Config | None = None,
 ) -> ScanInput:
     """Load a range, working tree, or index with both sides' file contents."""
-    config = config or Config()
     root = repository_root(cwd)
     if working or staged:
         base_sha = resolve_ref(root, "HEAD")
@@ -254,6 +262,9 @@ def load_git(
         requested = resolve_ref(root, base) if base else default_base(root, head_label)
         base_sha = _git(root, "merge-base", requested, head_label).decode().strip()
         args = [f"{base_sha}...{head_label}"]
+    config = config or trusted_config(
+        root, base_sha, "HEAD" if working or staged else f"base:{base_sha}"
+    )
     raw = _git(
         root,
         "diff",
@@ -319,6 +330,12 @@ def load_git(
         )
     related, errors = _related_tests(root, head_label, changes, config)
     notices = [f"No changes in resolved range {base_sha}...{head_label}"] if not changes else []
+    if any(".goodhart.toml" in {change.old_path, change.new_path} for change in changes):
+        notices.append(
+            "using base-side config; .goodhart.toml changed in this diff"
+            if not config.source.startswith("--config ")
+            else "using explicit config; .goodhart.toml changed in this diff"
+        )
     return ScanInput(
         "full",
         changes,
@@ -328,4 +345,5 @@ def load_git(
         extra_tests=related,
         diagnostics=diagnostics + errors,
         notices=notices,
+        config=config,
     )

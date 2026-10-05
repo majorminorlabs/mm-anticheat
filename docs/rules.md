@@ -127,7 +127,7 @@ visible and do not count toward the configured exit threshold.
 
 **Patch mode:** supported
 
-**How checked:** Flags explicit test exclusions, narrower test paths, lower coverage thresholds, disabled pytest plugins or marker selection, pass-with-no-tests and test scripts or CI steps that remove checks or mask failures. Uses stdlib config parsers in full mode and local heuristics for incomplete patches or computed JS/YAML configuration.
+**How checked:** Flags explicit test exclusions, narrower test paths, lower coverage thresholds, disabled pytest plugins or marker selection, pass-with-no-tests and test scripts or CI steps that remove checks or mask failures. Uses stdlib config parsers in full mode and local heuristics for incomplete patches or computed JS/YAML configuration. Scanner policy changes that add/widen exceptions, skip rules, ignore paths or raise the failure threshold are high; any test_globs change is high. Malformed head TOML adds GH000 info and GH007 medium. The root scanner policy cannot suppress its own modification audit.
 
 **Why flagged:** Configuration changes reduce what is tested or let failing checks pass.
 

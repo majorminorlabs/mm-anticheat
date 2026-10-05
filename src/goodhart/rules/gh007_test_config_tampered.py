@@ -8,6 +8,7 @@ import shlex
 import tomllib
 from pathlib import PurePosixPath
 
+from goodhart.config import ConfigError, parse_config
 from goodhart.diffmodel import FileChange
 from goodhart.engine import ScanContext
 from goodhart.rules.base import Finding, RuleBase
@@ -26,6 +27,45 @@ TEST_RUN = re.compile(
     r"\bpytest\b|\b(?:npm|pnpm|yarn)\s+(?:run\s+)?test\b|"
     r"\bpython(?:3)?\s+-m\s+unittest\b|\b(?:jest|vitest|mocha)\b"
 )
+
+
+def _covered_allow(path: str, previous: str) -> bool:
+    """Prove safe narrowing for equal, literal or simple subtree exception paths."""
+    from goodhart.classify import matches
+
+    if path == previous or previous in {"*", "**"}:
+        return True
+    if not any(char in path for char in "*?["):
+        return matches(path, previous)
+    prefix = previous.removesuffix("/**")
+    return (
+        previous.endswith("/**")
+        and not any(c in prefix for c in "*?[")
+        and (path.startswith(prefix + "/"))
+    )
+
+
+def _goodhart_reasons(before: str, after: str) -> list[str]:
+    """Compare complete effective scanner policy without counting reason-only edits."""
+    old, new = parse_config(before), parse_config(after)
+    old_data, new_data = tomllib.loads(before), tomllib.loads(after)
+    order = {"low": 0, "medium": 1, "high": 2, "never": 3}
+    reasons = []
+    if order[new.fail_on] > order[old.fail_on]:
+        reasons.append(f"fail_on loosened from {old.fail_on} to {new.fail_on}")
+    if new.skip_rules - old.skip_rules:
+        reasons.append("skip_rules gained skipped rules")
+    if set(new.ignore_globs) - set(old.ignore_globs):
+        reasons.append("ignore_globs gained ignored paths")
+    if old_data.get("paths", {}).get("test_globs") != new_data.get("paths", {}).get("test_globs"):
+        reasons.append("test_globs changed")
+    for allow in new.allows:
+        if not any(
+            allow.rule == previous.rule and _covered_allow(allow.path, previous.path)
+            for previous in old.allows
+        ):
+            reasons.append(f"allow added or widened: {allow.rule} {allow.path}")
+    return reasons
 
 
 def _flatten(data: dict, prefix: str = "") -> dict[str, object]:
@@ -139,7 +179,10 @@ class TestConfigTampered(RuleBase):
         "thresholds, disabled pytest plugins or marker selection, pass-with-no-tests "
         "and test scripts or CI steps that remove checks or mask failures. Uses stdlib "
         "config parsers in full mode and local heuristics for incomplete patches or "
-        "computed JS/YAML configuration."
+        "computed JS/YAML configuration. Scanner policy changes that add/widen "
+        "exceptions, skip rules, ignore paths or raise the failure threshold are high; "
+        "any test_globs change is high. Malformed head TOML adds GH000 info and GH007 "
+        "medium. The root scanner policy cannot suppress its own modification audit."
     )
     id = "GH007"
     name = "test-config-tampered"
@@ -151,6 +194,8 @@ class TestConfigTampered(RuleBase):
     def check(self, change: FileChange, ctx: ScanContext) -> list[Finding]:
         before = change.base_content or "" if ctx.mode == "full" else change.visible("base")
         after = change.head_content or "" if ctx.mode == "full" else change.visible("head")
+        if ".goodhart.toml" in {change.old_path, change.new_path}:
+            return self._scanner_config(change, before, after, ctx.mode == "full")
         # Patch fragments need not be valid JSON/TOML/INI; use local property heuristics.
         if ctx.mode == "full":
             old, new = _structured(before, change.path), _structured(after, change.path)
@@ -231,5 +276,53 @@ class TestConfigTampered(RuleBase):
                 "Test configuration reduces checks",
                 evidence,
                 why=self.why_flagged + " " + "; ".join(sorted(set(reasons))),
+            )
+        ]
+
+    def _scanner_config(
+        self, change: FileChange, before: str, after: str, full: bool
+    ) -> list[Finding]:
+        if full:
+            before = before if change.old_path == ".goodhart.toml" else ""
+            after = after if change.new_path == ".goodhart.toml" else ""
+        try:
+            reasons = _goodhart_reasons(before, after)
+        except ConfigError as exc:
+            # Patch TOML can be incomplete. Preserve the loss of analysis instead
+            # of silently treating a malformed policy as a clean/tightening edit.
+            diagnostic = Finding(
+                "GH000",
+                "parse-skipped",
+                "info",
+                "normal",
+                change.path,
+                first_line(change),
+                "Scanner configuration could not be parsed",
+                str(exc),
+                "Scanner policy comparison is incomplete; review this change separately.",
+                "A patch can omit required TOML context; complete input permits comparison.",
+            )
+            return [
+                diagnostic,
+                self.finding(
+                    change,
+                    first_line(change),
+                    "Scanner configuration could not be compared",
+                    after,
+                    severity="medium",
+                    why=str(exc),
+                    reduced=not full,
+                ),
+            ]
+        if not reasons:
+            return []
+        return [
+            self.finding(
+                change,
+                first_line(change),
+                "Scanner configuration loosens checks",
+                "\n".join(line.value for line in change.removed + change.added),
+                why=self.why_flagged + " " + "; ".join(sorted(set(reasons))),
+                reduced=not full,
             )
         ]

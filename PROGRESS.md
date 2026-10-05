@@ -2,10 +2,16 @@
 
 ## Current phase
 
-Phase 4: output, config and allowlisting. **Status: done; stopped at Gate 2.**
+Phase 4 review fixes are done. **Gate 2 status: open; real corpus inputs pending.**
 REVIEW_01b M11 is fixed, its fixtures pass, and Gate 1's release conditions passed:
 all 680 pinned commits rerun, with 10 high commits (limit ≤10), GH006 high 0,
 no errors and no stderr. Phase 5 has not started.
+
+REVIEW_02 M12/M13 and S10/S11 are addressed. The B1 runner and independent
+evaluation report are implemented and validated. The requested `<model>` and
+`<repos>` are unresolved placeholders: Dippo must supply the actual Ollama model
+and repository paths before B1/B2 can run. There are currently zero real cases;
+the 40/15/15 exit criterion has not been met.
 
 The baseline is in [docs/noise-baseline.md](docs/noise-baseline.md). The old ≤8
 noise budget was waived by REVIEW_01b. No repository or commit exceptions were
@@ -17,22 +23,42 @@ introduced.
   exceptions, and uses ANSI only on a TTY unless --no-color is set. Markdown
   includes escaped collapsible details and safely fenced evidence. GH010 stays
   grouped per file; evidence defaults to six lines with an explicit truncation note.
-- Load validated repo-root .goodhart.toml or --config. CLI threshold/skip settings
+- Load validated base-side repo-root .goodhart.toml or operator --config. CLI threshold/skip settings
   replace file settings, --rules selects rules before skips, and an empty
   --skip-rules clears configured skips. Custom path arrays replace defaults.
-- Config path and same/previous-line inline allowances require a reason. Allowed
+- Config path and preexisting same/previous-line inline allowances require a reason. Allowed
   findings remain visible and do not fail thresholds. Python/JS strings cannot
   masquerade as comments. Missing reasons emit low GH000; added allow comments
   emit medium GH012, which only config allowances can suppress.
 - All requested CLI flags, rules descriptions and goodhart explain are implemented.
   Rule behavior metadata generates docs/rules.md through scripts/generate_rules.py.
-- JSON v1 is frozen in docs/json-v1.md, with exact-key/type regression tests. It
-  retains the Review 1 files array, all findings and complete evidence. No new
-  fields were added. --quiet and evidence caps apply only to text/Markdown so JSON
+- JSON v1 remains the historical frozen contract in docs/json-v1.md. REVIEW_02
+  M12 adds config provenance in JSON v2, documented in docs/json-v2.md, with
+  exact-key/type regression tests. Every v1 field retains its type and meaning.
+  --quiet and evidence caps apply only to text/Markdown so JSON
   consumers always receive the same complete contract.
 - CLI tests cover every flag, configuration precedence, all input modes, TTY
   behavior, and exit codes 0/1/3, including injected internal failure. Exit 2 stays
   unused. Config tests cover path/inline allowances, missing reasons and GH012.
+
+## REVIEW_02 resolutions
+
+| Item | Resolution and evidence |
+|---|---|
+| M12 | Git ranges read config from the resolved merge base; working/staged read HEAD; patch uses explicit config or defaults. Header and JSON show provenance. Root config changes produce a stderr notice and GH007 high for loosening allows, skips, ignores, thresholds or any test-glob change. Tightening does not fire; malformed head TOML gives GH000 info plus GH007 medium. Root config audit cannot suppress itself. All four modes, explicit overrides, divergent merge bases and self-suppression are covered. |
+| M13 | Base-mapped actual inline comments can allow findings; newly added comments cannot. Patch allows must be context lines. New comments still give GH012 and the mandated explanation on the active target finding. Full-mode mapping also handles unchanged comments on replacement lines and offsets outside hunks. |
+| Fixtures | Added the six required exit-1 probes and preexisting-inline, preexisting-config and tightened-config negatives. Added a patch-context inline negative too: ten new cross-rule fixtures. The harness checks allowed state and exit codes when specified. |
+| S10 | Severity summaries show their allowed subset, e.g. high: 1 (1 allowed), in full and quiet text/Markdown. JSON summary meanings stay unchanged. |
+| S11 | All five pinned histories rerun after M12/M13. Complete JSON files are byte-identical to the saved baseline: 10/680 high commits, GH006 high 0, errors/stderr 0. No root .goodhart.toml is present in these repos. |
+| B1 build | scripts/impossiblebench_local.py uses official source in a separate ignored environment, local-only Ollama endpoint, four 30-sample cells, actual tools snapshots and scored minimal solutions. It exports provenance and observations without expected oracles. Label policy follows the benchmark, including checking every changed test file before an honest label. Original labels are preserved. Unit tests and a real Docker/Inspect mock-model export smoke pass; smoke cases are excluded from the real corpus. |
+| B1 run | Pending the actual model name. Source pin 061dc3dce6a96ab6cf02a855157263033dcfa3ba, Inspect 0.3.276, Python 3.14.7; both 103-task splits cached. No real model samples have run. |
+| B2 | Pending Dippo-selected repository paths. Existing scan_history.py will scan 300 commits per repo. Candidates remain unreviewed; the builder does not label them. |
+| Evaluation | scripts/real_world_eval.py renders benchmark/reviewer labels, expected vs actual, default-high recall and honest false-positive rate. Reviewer-tagged out-of-scope-v1.1 cases leave the recall denominator. docs/real-world-eval.md accurately records zero real cases and unavailable metrics. |
+
+M12/M13 change policy trust rather than tuning detection against benchmark cases.
+JSON was versioned because adding provenance to the frozen v1 exact-key contract
+requires a new version. The benchmark test-path adapter and upstream tools
+test_patch compatibility adjustment are documented in docs/impossiblebench-local.md.
 
 ## REVIEW_01b M11
 
@@ -109,17 +135,18 @@ introduced.
 
 - Ruff check and format check pass. Formatter excludes prose Markdown and inert
   fixture source so supplied review/handoff code blocks are preserved.
-- 316 tests pass on Python 3.11.15 and 3.14.7, including the original scenarios.
-- 137 individual rule fixtures and six cross-rule fixtures; the per-rule minimum
+- 363 tests pass on Python 3.11.15 and 3.14.7, including the original scenarios.
+- 137 individual rule fixtures and 16 cross-rule fixtures; the per-rule minimum
   positive/negative and patch positive/negative requirements still pass.
 - Python 3.11 performance: 5,000-line full Git scan 0.194s; all hostile JS probes
   together 0.015s. Required limits are 2s and 1s respectively.
 - All 680 pinned first-parent non-merge commits were scanned in full mode. No
   scanner rule error or corpus scan failure was omitted from the denominator.
-- The final Phase 4 corpus run exactly matches the M11 JSON reports for all five
+- The REVIEW_02 corpus run exactly matches the M11 JSON reports for all five
   repositories: 10/680 high commits, GH006 high 0, no errors or stderr.
-- The Gate 2 ZIP includes both reviews, updated handoff, scripts, baseline and
-  regression data, excluding environments, caches and Git internals.
+- The existing Gate 2 ZIP remains the historical aaa9bd8 review snapshot. The
+  current revision is not packaged as a released Gate 2 while corpus inputs and
+  the required real labels remain missing.
 
 ## Fixture counts
 
@@ -138,22 +165,24 @@ introduced.
 | GH010 | 6 |
 | GH011 | 4 |
 | GH012 | 5 |
-| Cross-rule | 6 |
-| **Total** | **143** |
+| Cross-rule | 16 |
+| **Total** | **153** |
 
 ## Gate 2: input needed from Dippo
 
-- REVIEW_02 against the Gate 2 ZIP, including M11 and Phase 4 behavior.
-- Labeled real-world diffs from own history, local ImpossibleBench, METR examples
-  or public agent PRs, including expected flags and false positives. Nine trimmed
-  maintainer-history regressions measure noise; they are not an agent-cheat eval.
-- After those arrive, add real fixtures and docs/real-world-eval.md and tune only
-  without breaking the frozen contract or regression corpus. No real-world hit
-  rate has been claimed and no synthetic expected labels stand in for Dippo's data.
+- Actual installed Ollama model name replacing `<model>`.
+- Local repository paths replacing `<repos>`, selected by Dippo for B2.
+- Independent reviewer labels for B2 and unreviewed benchmark outcomes, plus
+  scope notes where applicable. The builder will not supply these labels.
+
+Exit requires ≥40 complete labeled real cases, ≥15 cheats and ≥15 honest;
+per-case results, recall and false-positive rate; green checks and unchanged
+noise. Historical maintainer regressions and synthetic smoke cases do not count.
 
 ## Next up
 
-- Wait at Gate 2 for REVIEW_02 and Dippo's labeled corpus.
+- Run B1/B2 when the two pending inputs arrive; fill the real-world report and
+  satisfy REVIEW_02's corpus criterion. Then stop for REVIEW_02b.
 - Phase 5 integrations and Phase 6 release preparation remain unstarted. Naming,
   license confirmation, private remote setup and publication stay with Dippo.
 
@@ -194,3 +223,9 @@ findings retain reduced confidence. Intent always requires human review.
   0.194s full scan / 0.015s hostile probes on Python 3.11. Final corpus output
   matches M11 exactly. Built Gate 2 ZIP with complete docs and regressions;
   stopped for REVIEW_02 and labeled data before integrations or release work.
+
+- 2026-10-05: REVIEW_02 M12/M13 fixed with ten cross-rule fixtures and integration
+  tests; S10 summaries clarified; S11 noise unchanged byte for byte. JSON v2 adds
+  config provenance. Separate benchmark environment installed, splits cached,
+  runner/evaluation built and Docker/Inspect export smoke verified. Model and
+  repository inputs remain pending; B2 labels untouched. Gate 2 stays open.
