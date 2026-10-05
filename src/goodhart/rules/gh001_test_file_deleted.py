@@ -2,8 +2,10 @@
 
 from pathlib import PurePosixPath
 
+from goodhart.classify import matches
 from goodhart.diffmodel import FileChange
 from goodhart.engine import ScanContext
+from goodhart.lang.moves import destinations, names
 from goodhart.rules.base import Finding, RuleBase
 from goodhart.util import first_line
 
@@ -21,6 +23,17 @@ class TestFileDeleted(RuleBase):
             change.new_path is not None and "test" in change.new_kinds
         ):
             return []
+        if change.old_path == change.new_path:
+            return []  # A content-only classification change is not a deletion.
+        if change.new_path and not any(
+            matches(change.old_path or "", glob) for glob in ctx.config.test_globs
+        ):
+            return []
+        removed = names(change, "base", ctx.mode == "full")
+        if not removed:
+            return []
+        overlap, targets = destinations(removed, change, ctx.changes, ctx.mode == "full")
+        severity = "info" if overlap >= 0.8 else "medium" if overlap > 0 else "high"
         stem = PurePosixPath(change.old_path or change.path).stem
         subject = stem.removeprefix("test_").removesuffix("_test")
         subject = subject.removesuffix(".test").removesuffix(".spec")
@@ -32,7 +45,10 @@ class TestFileDeleted(RuleBase):
             and PurePosixPath(item.path).stem == subject
         ]
         why = self.why_flagged
+        if targets:
+            why += " Tests appear to have moved to: " + ", ".join(targets) + "."
         if matching:
+            severity = "low" if severity != "info" else severity
             why += " Matching source was also deleted: " + ", ".join(matching) + "."
         return [
             self.finding(
@@ -40,7 +56,7 @@ class TestFileDeleted(RuleBase):
                 first_line(change),
                 "Test file removed from the suite",
                 change.old_path or change.path,
-                severity="low" if matching else "high",
+                severity=severity,
                 why=why,
             )
         ]

@@ -1,55 +1,58 @@
-# Gate 1 review
+# Gate 1 re-review
 
-This build completes Phases 0–3 of [HANDOFF.md](HANDOFF.md). Dippo provides the
-build to Claude for review. Claude writes `REVIEW_01.md` with `must`, `should`,
-and `consider` items. The builder fixes every `must` before Phase 4 begins.
+This revision addresses [REVIEW_01.md](../REVIEW_01.md) against the updated
+[HANDOFF.md](HANDOFF.md). **Gate 1 is stopped for REVIEW_01b.md.** Phase 4 has
+not started; Dippo must release the gate after review.
 
 ## Reproduce
 
-1. Unzip `dist/goodhart-check-gate1.zip` into a new directory, or use the checkout.
-2. Follow the README installation instructions with Python 3.11 or newer.
-3. Run Ruff and pytest, including the fixture harness and performance check.
-4. Run the classic-cheat patch demo and verify exit 1. Run the clean-refactor
-   patch and verify exit 0:
+1. Unzip `dist/goodhart-check-gate1.zip` into a new directory and follow the
+   README editable-install instructions with Python 3.11 or newer.
+2. Run `.venv/bin/ruff check .`, `.venv/bin/ruff format --check .`, and
+   `.venv/bin/pytest -q`. The revision has 223 tests, including 133 individual
+   rule fixtures and six cross-rule fixtures. All original scenarios remain.
+3. Run `.venv/bin/pytest -q -s -m performance`; required limits are two seconds
+   for the 5,000-line full Git scan and one second for hostile JS inputs.
+4. Run the classic-cheat patch demo and verify exit 1; the clean-refactor patch
+   should exit 0:
 
    ```sh
+   .venv/bin/goodhart scan --diff tests/fixtures/cross/classic_cheat/diff.patch
    .venv/bin/goodhart scan --diff tests/fixtures/cross/clean_refactor/diff.patch
    ```
 
-5. Use a scratch Git repository to try Git-range, working and staged scans;
-   temp-repository tests in `tests/test_ingestion.py` illustrate each mode.
-6. Add adversarial and legitimate cases to `tests/fixtures` and check evidence,
-   severity and line locations. Pay special attention to GH006, GH007, Python
-   AST class/method counting, JS/TS regex boundaries, and malformed input.
+5. Reproduce the five pinned history scans using the commands in
+   [noise-baseline.md](noise-baseline.md). Complete per-commit results are in
+   `docs/noise-results/`. The scripts are local and do not clone or fetch repos.
+6. Try Git-range, working, staged and patch inputs in a scratch repo. The CLI
+   reports empty resolved ranges and large commit sizes on stderr. History
+   scanning uses the quiet library path and records actual stderr and errors.
 
-## Scope of this review build
+## Results requiring review
 
-All GH001–GH012 rules plus GH000 are registered, each in its own file. Full and
-patch inputs work; JSON output and basic evidence-bearing text output work.
-There are 81 individual rule fixtures plus two cross-rule fixtures. The fixture
-harness enforces two positive and two negative cases per rule, with patch-mode
-cases of each kind. Additional integration and adversarial tests bring the suite
-to 126 tests.
+The high-flagged count fell from 23 to 10 of 680. Every remaining high commit
+removes real tests and is individually justified in the baseline. **The release
+target of at most eight is unmet.** GH006 highs, GH009 CI highs, rule errors,
+scan errors and stderr lines are zero. Preserve the specified high severity for
+actual uncorroborated test loss unless the reviewer approves a policy change.
 
-Phase 4 has **not** started: config-file loading, allow suppression, CLI selection
-and threshold flags, `explain`, markdown/color output, and generated rule docs
-are future work. Integrations and real-world ATLAS evaluation also remain behind
-their designated gates. GH012 and missing-reason diagnostics already detect allow
-comments; they do not yet suppress other findings.
+M1–M10 fixes, S1–S9 resolutions and optional decisions are recorded in
+[PROGRESS.md](../PROGRESS.md). Nine real trimmed regression cases include full
+commit provenance and upstream license notices. Python 3.11.15 and 3.14.7 pass;
+Ruff check and format check are clean.
 
-## Points requiring a decision
+## Scope
 
-- Section 8 calls some legitimate scenarios negative cases, while section 6
-  explicitly requires a downgraded or unchanged flag for those scenarios. The
-  fixtures follow section 6: matching-source deletion, parametrization, new-test
-  skips, legitimate environment settings and documented suppressions remain
-  explicit findings; separate cases assert no finding.
-- GH006 uses reduced confidence in patch mode in addition to the two counting
-  rules, because both expectation coverage and base-file comparison are incomplete.
-- Default globs additionally include common `.test.js` and `.spec.js` files.
-- Working mode includes untracked files. The scanner never runs scanned code.
-- No private remote was provided. A ZIP is the Gate 1 handoff artifact.
+All GH001–GH012 rules plus GH000, full and patch inputs, basic text output and
+provisional JSON v1 are implemented. JSON now exposes per-file classification.
+Fixture minima still require two positives and two negatives per rule, including
+patch coverage. Legitimate scenarios assert section 6's specified downgrades.
 
-Known precision limitations are recorded in README and PROGRESS. The ZIP contains
-source and fixtures without virtual environments, caches, Git internals or release
-tags. Nothing has been published or pushed.
+Phase 4 config-file loading, allow suppression, CLI selection/threshold flags,
+explain, polished reports and schema freezing remain future work. Integrations,
+Gate 2 labeled evaluation and publication remain behind their designated gates.
+The handoff's own-history, local ImpossibleBench, METR and public-PR sources are
+recorded; this revision only supplies the candidate exporter.
+
+The ZIP contains source, docs, scripts and fixtures without virtual environments,
+caches, Git internals or release tags. Nothing has been pushed or published.

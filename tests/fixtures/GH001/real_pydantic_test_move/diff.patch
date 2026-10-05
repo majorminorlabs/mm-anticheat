@@ -1,0 +1,26 @@
+diff --git a/pydantic-core/tests/test_build.py b/pydantic-core/tests/test_build.py
+deleted file mode 100644
+--- a/pydantic-core/tests/test_build.py
++++ /dev/null
+@@ -1,8 +0,0 @@
+-@pytest.mark.parametrize('pickle_protocol', range(1, pickle.HIGHEST_PROTOCOL + 1))
+-def test_pickle(pickle_protocol: int) -> None:
+-    v1 = SchemaValidator(cs.bool_schema())
+-    assert v1.validate_python('tRuE') is True
+-    p = pickle.dumps(v1, protocol=pickle_protocol)
+-    v2 = pickle.loads(p)
+-    assert v2.validate_python('tRuE') is True
+-    assert repr(v1) == repr(v2)
+diff --git a/tests/pydantic_core/test_build.py b/tests/pydantic_core/test_build.py
+new file mode 100644
+--- /dev/null
++++ b/tests/pydantic_core/test_build.py
+@@ -0,0 +1,8 @@
++@pytest.mark.parametrize('pickle_protocol', range(1, pickle.HIGHEST_PROTOCOL + 1))
++def test_pickle(pickle_protocol: int) -> None:
++    v1 = SchemaValidator(cs.bool_schema())
++    assert v1.validate_python('tRuE') is True
++    p = pickle.dumps(v1, protocol=pickle_protocol)
++    v2 = pickle.loads(p)
++    assert v2.validate_python('tRuE') is True
++    assert repr(v1) == repr(v2)

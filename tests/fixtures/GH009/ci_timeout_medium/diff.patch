@@ -1,0 +1,6 @@
+diff --git a/src/probe.ts b/src/probe.ts
+--- a/src/probe.ts
++++ b/src/probe.ts
+@@ -1 +1 @@
+-const timeout = 5000;
++const timeout = process.env.CI ? 20_000 : 5000;

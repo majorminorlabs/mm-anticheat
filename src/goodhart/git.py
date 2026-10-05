@@ -30,6 +30,7 @@ class ScanInput:
     repository: Path | None = None
     extra_tests: dict[str, str] = field(default_factory=dict)
     diagnostics: list[tuple[str, str]] = field(default_factory=list)
+    notices: list[str] = field(default_factory=list)
 
 
 def _git(root: Path, *args: str, check: bool = True) -> bytes:
@@ -69,10 +70,11 @@ def default_base(root: Path, head: str) -> str:
     for candidate in candidates:
         try:
             target = resolve_ref(root, candidate)
-            return _git(root, "merge-base", target, head).decode().strip()
+            merged = _git(root, "merge-base", target, head).decode().strip()
+            return resolve_ref(root, f"{head}~1") if merged == head else merged
         except InputError:
             continue
-    return resolve_ref(root, "HEAD~1")
+    return resolve_ref(root, f"{head}~1")
 
 
 def _decode(raw: bytes, path: str) -> str:
@@ -111,8 +113,10 @@ def _imports_touched(content: str, path: str, sources: set[str]) -> bool:
         }
         modules |= {module.removeprefix("src.") for module in modules}
         try:
-            tree = ast.parse(content)
-        except SyntaxError:
+            from goodhart.lang import python
+
+            tree = python.parse(content)
+        except (SyntaxError, RecursionError, ValueError):
             return False
         for node in ast.walk(tree):
             imported = []
@@ -157,7 +161,7 @@ def _related_tests(
             continue
         path = raw.decode("utf8", errors="surrogateescape")
         if path in changed or not path.endswith(
-            (".py", ".js", ".ts", ".tsx", ".jsx", ".mjs", ".cjs")
+            (".py", ".js", ".ts", ".tsx", ".jsx", ".mjs", ".cjs", ".mts", ".cts")
         ):
             continue
         if classify(path, None, config) == frozenset({"other"}):
@@ -169,6 +173,12 @@ def _related_tests(
         (path, reason) for path, reason in errors if "test" in classify(path, None, config)
     ]
     for path, content in contents.items():
+        from goodhart.lang import limit_reason
+
+        if reason := limit_reason(content):
+            if "test" in classify(path, None, config):
+                diagnostics.append((path, reason))
+            continue
         if "test" in classify(path, content, config) and _imports_touched(content, path, sources):
             result[path] = content
     return result, diagnostics
@@ -308,6 +318,7 @@ def load_git(
             config,
         )
     related, errors = _related_tests(root, head_label, changes, config)
+    notices = [f"No changes in resolved range {base_sha}...{head_label}"] if not changes else []
     return ScanInput(
         "full",
         changes,
@@ -316,4 +327,5 @@ def load_git(
         root,
         extra_tests=related,
         diagnostics=diagnostics + errors,
+        notices=notices,
     )

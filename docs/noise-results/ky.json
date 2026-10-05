@@ -1,0 +1,2146 @@
+{
+  "repository": "ky",
+  "head": "0d59458a0a58e1c3d7c6db0ab17ed5c7cd671e47",
+  "requested_commits": 150,
+  "commits_scanned": 150,
+  "commits_with_high": 2,
+  "commits_with_high_or_medium": 4,
+  "counts": [
+    {
+      "rule_id": "GH001",
+      "severity": "high",
+      "count": 1
+    },
+    {
+      "rule_id": "GH002",
+      "severity": "high",
+      "count": 1
+    },
+    {
+      "rule_id": "GH003",
+      "severity": "low",
+      "count": 1
+    },
+    {
+      "rule_id": "GH008",
+      "severity": "low",
+      "count": 3
+    },
+    {
+      "rule_id": "GH008",
+      "severity": "medium",
+      "count": 5
+    },
+    {
+      "rule_id": "GH010",
+      "severity": "low",
+      "count": 51
+    }
+  ],
+  "examples": {
+    "GH001": [
+      {
+        "commit": "1f2ad7f20dcb778a4f0758432e8a8eb5c597a3e9",
+        "subject": "Add `baseUrl` option, rename `prefixUrl` to `prefix`, and allow leading slashes in input (#606)",
+        "rule_id": "GH001",
+        "rule_name": "test-file-deleted",
+        "severity": "high",
+        "confidence": "normal",
+        "file": "test/prefix-url.ts",
+        "line": 1,
+        "title": "Test file removed from the suite",
+        "evidence": "test/prefix-url.ts",
+        "why_flagged": "Removing a test file can remove coverage of behavior that still exists.",
+        "legit_if": "The code under test was also deleted, or coverage moved to another test file.",
+        "allowed": false
+      }
+    ],
+    "GH002": [
+      {
+        "commit": "433febd55cc19c98c7a643be934693927ac38503",
+        "subject": "Strip Ky-specific properties from normalized options passed to hooks (#826)",
+        "rule_id": "GH002",
+        "rule_name": "test-count-decreased",
+        "severity": "high",
+        "confidence": "normal",
+        "file": "test/main.ts",
+        "line": 528,
+        "title": "Test count decreased: 55 \u2192 54",
+        "evidence": "Removed tests: throwHttpErrors preserves original type in hooks",
+        "why_flagged": "Fewer test definitions may leave previously checked behavior untested.",
+        "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+        "allowed": false
+      }
+    ],
+    "GH003": [
+      {
+        "commit": "cd1dba0e4502d95be93846e6c77bf0479dc0e385",
+        "subject": "More tests",
+        "rule_id": "GH003",
+        "rule_name": "skip-marker-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "test/response-consumption.ts",
+        "line": 10,
+        "title": "Skip/focus marker added to a new test",
+        "evidence": "\tconst run = method === 'bytes' && typeof Response.prototype.bytes !== 'function' ? test.skip : test;",
+        "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
+        "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
+        "allowed": false
+      }
+    ],
+    "GH008": [
+      {
+        "commit": "06ebf18e1927b3772726037bda5a78d4b7eb6dba",
+        "subject": "Handle unsupported streaming uploads gracefully",
+        "rule_id": "GH008",
+        "rule_name": "exception-swallowed",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "source/core/constants.ts",
+        "line": 21,
+        "title": "Catch handler discards failures",
+        "evidence": "catch {\n\t\t\t                                                                                                                                      \n\t\t\treturn false;\n\t\t}",
+        "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+        "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+        "allowed": false
+      },
+      {
+        "commit": "4b37c9636a601b8f121d47485f794dcd404d0984",
+        "subject": "Minor tweaks",
+        "rule_id": "GH008",
+        "rule_name": "exception-swallowed",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "source/core/Ky.ts",
+        "line": 296,
+        "title": "Catch handler discards failures",
+        "evidence": "catch {}",
+        "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+        "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+        "allowed": false
+      },
+      {
+        "commit": "1341f5ca56c96c9440e6e8d0d624c871bb1b7929",
+        "subject": "Add `data` property to `HTTPError` with pre-parsed response body (#823)",
+        "rule_id": "GH008",
+        "rule_name": "exception-swallowed",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "source/core/Ky.ts",
+        "line": 441,
+        "title": "Catch handler discards failures",
+        "evidence": "catch {\n\t\t\t\treturn undefined;\n\t\t\t}",
+        "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+        "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+        "allowed": false
+      },
+      {
+        "commit": "1341f5ca56c96c9440e6e8d0d624c871bb1b7929",
+        "subject": "Add `data` property to `HTTPError` with pre-parsed response body (#823)",
+        "rule_id": "GH008",
+        "rule_name": "exception-swallowed",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "source/core/Ky.ts",
+        "line": 449,
+        "title": "Catch handler discards failures",
+        "evidence": "catch {\n\t\t\t                                              \n\t\t\treturn undefined;\n\t\t}",
+        "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+        "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+        "allowed": false
+      },
+      {
+        "commit": "1341f5ca56c96c9440e6e8d0d624c871bb1b7929",
+        "subject": "Add `data` property to `HTTPError` with pre-parsed response body (#823)",
+        "rule_id": "GH008",
+        "rule_name": "exception-swallowed",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "source/core/Ky.ts",
+        "line": 475,
+        "title": "Catch handler discards failures",
+        "evidence": "catch {\n\t\t\t\treturn undefined;\n\t\t\t}",
+        "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+        "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+        "allowed": false
+      }
+    ],
+    "GH010": [
+      {
+        "commit": "0d59458a0a58e1c3d7c6db0ab17ed5c7cd671e47",
+        "subject": "Add `maxResponseSize` option",
+        "rule_id": "GH010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "test-d/response-size.ts",
+        "line": 21,
+        "title": "1 lint/type suppression(s) added",
+        "evidence": "// @ts-expect-error - The size limit must be a number.",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      },
+      {
+        "commit": "0d59458a0a58e1c3d7c6db0ab17ed5c7cd671e47",
+        "subject": "Add `maxResponseSize` option",
+        "rule_id": "GH010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "test/browser.ts",
+        "line": 107,
+        "title": "2 lint/type suppression(s) added",
+        "evidence": "\t\t\t// eslint-disable-next-line no-await-in-loop\n\t\t\t\t\t// eslint-disable-next-line no-await-in-loop",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      },
+      {
+        "commit": "a8753dcc9a4e8771d4226f9b6d196064325a0fbc",
+        "subject": "Preserve symbol-keyed context in init hooks",
+        "rule_id": "GH010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "test/headers.ts",
+        "line": 1100,
+        "title": "1 lint/type suppression(s) added",
+        "evidence": "\t\t// eslint-disable-next-line @typescript-eslint/no-confusing-void-expression -- replaceOption(undefined) returns a replacement marker at runtime.",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      },
+      {
+        "commit": "b28ba903c322b84b5d9cf47a6fc0af6a61d5954f",
+        "subject": "Simplify request state and retry normalization",
+        "rule_id": "GH010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "source/utils/normalize.ts",
+        "line": 69,
+        "title": "1 lint/type suppression(s) added",
+        "evidence": "\t\t\t// eslint-disable-next-line unicorn/prefer-type-error -- Preserve the existing error type.",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      },
+      {
+        "commit": "cd1dba0e4502d95be93846e6c77bf0479dc0e385",
+        "subject": "More tests",
+        "rule_id": "GH010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "test/http-metadata.ts",
+        "line": 45,
+        "title": "1 lint/type suppression(s) added",
+        "evidence": "\t\t\t// eslint-disable-next-line no-await-in-loop",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      }
+    ]
+  },
+  "errors": 0,
+  "stderr_lines": 0,
+  "rule_errors": 0,
+  "commits": [
+    {
+      "commit": "0d59458a0a58e1c3d7c6db0ab17ed5c7cd671e47",
+      "subject": "Add `maxResponseSize` option",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test-d/response-size.ts",
+          "line": 21,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "// @ts-expect-error - The size limit must be a number.",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/browser.ts",
+          "line": 107,
+          "title": "2 lint/type suppression(s) added",
+          "evidence": "\t\t\t// eslint-disable-next-line no-await-in-loop\n\t\t\t\t\t// eslint-disable-next-line no-await-in-loop",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "071a9b97d3d149a576c91e0b92532f11aab456c5",
+      "subject": "Preserve Request input abort signals",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d6e049a690c7562a72e22d0b1eb57a2d4d19745e",
+      "subject": "Resolve retry replacements without parent retry options",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "323b98f0a326f3967dc16acd34f2755da3ebd63a",
+      "subject": "Run beforeError hooks for body reader failures",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a8753dcc9a4e8771d4226f9b6d196064325a0fbc",
+      "subject": "Preserve symbol-keyed context in init hooks",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/headers.ts",
+          "line": 1100,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "\t\t// eslint-disable-next-line @typescript-eslint/no-confusing-void-expression -- replaceOption(undefined) returns a replacement marker at runtime.",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b28ba903c322b84b5d9cf47a6fc0af6a61d5954f",
+      "subject": "Simplify request state and retry normalization",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "source/utils/normalize.ts",
+          "line": 69,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "\t\t\t// eslint-disable-next-line unicorn/prefer-type-error -- Preserve the existing error type.",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "cd1dba0e4502d95be93846e6c77bf0479dc0e385",
+      "subject": "More tests",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/http-metadata.ts",
+          "line": 45,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "\t\t\t// eslint-disable-next-line no-await-in-loop",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH003",
+          "rule_name": "skip-marker-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/response-consumption.ts",
+          "line": 10,
+          "title": "Skip/focus marker added to a new test",
+          "evidence": "\tconst run = method === 'bytes' && typeof Response.prototype.bytes !== 'function' ? test.skip : test;",
+          "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
+          "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e58817d490cba99c97820a39f239272ffdb92881",
+      "subject": "Type custom fetch callbacks with Request inputs",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/fetch.ts",
+          "line": 11,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "\t\t\t// eslint-disable-next-line no-await-in-loop",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "52b8f93e076e1614a3f62162052a8723b10ca5ac",
+      "subject": "Allow customizing error names in TypeScript",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f4886ca8f58c1f9f950124d9edef6bb0f60bb6ef",
+      "subject": "Preserve JSON types when cloning requests and responses",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "51b31777058c13f24b640a0ef1a47565f011e080",
+      "subject": "Support readonly inputs and explicit undefined in TypeScript options",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "source/types/options.ts",
+          "line": 416,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "export interface Options extends KyOptions, RequestOptions { // eslint-disable-line @typescript-eslint/consistent-type-definitions -- This must stay an interface so that it can be extended outside of Ky for use in `ky.create`.",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test-d/init-search-params.ts",
+          "line": 7,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "\t\t// @ts-expect-error - Search parameter values must remain scalar.",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test-d/json-undefined-schema.ts",
+          "line": 18,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "// @ts-expect-error - Non-schema objects must not match either overload.",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test-d/network-error-cause.ts",
+          "line": 11,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "// @ts-expect-error - Supplied causes must still be Error instances.",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test-d/request-options.ts",
+          "line": 30,
+          "title": "2 lint/type suppression(s) added",
+          "evidence": "// @ts-expect-error - Allowing resets must not accept invalid credentials.\n// @ts-expect-error - Allowing resets must not accept invalid bodies.",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "481f6f731b0c311bc2f677604aca3595558b22d1",
+      "subject": "Fix bytes shortcut return type for Blob and Response compatibility",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "96a25cce552a0128653ca8833e95291ae5082509",
+      "subject": "Preserve abort reasons while reading HTTP error bodies",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e4269f070384e60e1c3fd3be4de9e199c07814c9",
+      "subject": "Respect custom HTTP method case when matching retries",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "82fa84c7d114f7987ed019be61417288ccc0876e",
+      "subject": "Enforce total timeout after fetch and body processing",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d636438b2dde678f153af2c21f37116f4d064271",
+      "subject": "Avoid misidentifying unrelated errors as Ky errors",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "87a96db81480f1cb71e2cd51bce8c454d32b29ee",
+      "subject": "Preserve non-Error values in retry errors and hooks",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/retry.ts",
+          "line": 3421,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "\t\t\t\t\t// eslint-disable-next-line @typescript-eslint/only-throw-error",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "06ebf18e1927b3772726037bda5a78d4b7eb6dba",
+      "subject": "Handle unsupported streaming uploads gracefully",
+      "findings": [
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "source/core/constants.ts",
+          "line": 21,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n\t\t\t                                                                                                                                      \n\t\t\treturn false;\n\t\t}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f87efe6f5d8d6067756a80c5120e7782f4ed847e",
+      "subject": "Preserve request referrer options",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "8cf26e0e78d7a734f5e2846bdd65b66a936c13b3",
+      "subject": "Fix stale array entries when merging JSON objects",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "854608078545442344a29a0714a50b978e6d77e9",
+      "subject": "Fix UTF-8 decoding of JSON error responses",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3e2d81ab7c4d80f0f22741c64bdc3923bcba4427",
+      "subject": "Simulate unsupported request streams in browser tests",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6520f642c2a237ac39cde0ce8ce02b6e1ecf4db9",
+      "subject": "Fix retry abort propagation and uploads without request stream support",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "88e24329ed447b46f73183352e6fbce800f585d1",
+      "subject": "Fix `init` hook mutations to nested `json` and `context` values leaking across requests",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "830ab472fa18e1ba48861b2f36214d4c20a10f5d",
+      "subject": "Tweaks",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0e2501bc9dbb7da2ed46d51504873a5a7fda1c40",
+      "subject": "Fix `init` hooks receiving `undefined` for `headers` when no headers were provided",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d5bacefa0bf46315aa9964f7df02726bee3c3469",
+      "subject": "Fix headers set to `undefined` not removing the header from a `Request` input",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/headers.ts",
+          "line": 998,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "\t\t// @ts-expect-error Headers does not support undefined values",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "91ea8a947747b406273df45777a62f2d91fef5c3",
+      "subject": "Fix a search parameter removed with `undefined` staying in the input URL when a later layer re-adds it",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7c1272ba0100feab8d62ccb913e7b5c8123dda99",
+      "subject": "Fix a user abort in Chromium being reported as `NetworkError` and retried",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/retry.ts",
+          "line": 3728,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "\t\t// eslint-disable-next-line no-await-in-loop",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "92ef60e2eea5b2a1aa5999937a7536924407ce00",
+      "subject": "Fix `fetch: window.fetch` throwing \"Illegal invocation\" in browsers",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/browser.ts",
+          "line": 663,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "\t/* eslint-disable unicorn/prefer-global-this */",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0f2e28172c3f29c5cc97caed7e160efb23ca4b20",
+      "subject": "Fix a stale timeout timer aborting the retried attempt when a custom `fetch` throws synchronously",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/fetch.ts",
+          "line": 320,
+          "title": "5 lint/type suppression(s) added",
+          "evidence": "\t\t\t// eslint-disable-next-line @typescript-eslint/only-throw-error\n\t\t// eslint-disable-next-line @typescript-eslint/promise-function-async\n\t\t// eslint-disable-next-line @typescript-eslint/promise-function-async\n\t\t// eslint-disable-next-line @typescript-eslint/promise-function-async\n\t\t// eslint-disable-next-line @typescript-eslint/promise-function-async",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e1b088e3c1e9c66e68c66ed8fffa821ce3cfbcfb",
+      "subject": "Fix timeouts and user aborts not cancelling a `Request` returned from `beforeRequest` or `beforeRetry` hooks",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/hooks.ts",
+          "line": 2775,
+          "title": "3 lint/type suppression(s) added",
+          "evidence": "\t// eslint-disable-next-line @typescript-eslint/no-empty-function\n\t// eslint-disable-next-line @typescript-eslint/no-empty-function\n\t// eslint-disable-next-line @typescript-eslint/no-empty-function",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ee3dec1ac01db18a6ea245109d2f616433b25660",
+      "subject": "Fix extending an object `retry` with a number dropping the other retry options",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0655b9d581869ff3ac0e2ecae432b605c2f45199",
+      "subject": "Fix header overrides and removals in `.extend()` ignoring header name case with plain objects",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/headers.ts",
+          "line": 626,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "\t\t\t// @ts-expect-error Headers does not support undefined values",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b99fb794bcd8ded50df73d0c7aa161c432577284",
+      "subject": "Document that `null` is intentionally rejected by the `searchParams` type",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test-d/normalized-options.ts",
+          "line": 86,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "// @ts-expect-error - `null` is not an allowed search parameter value.",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e087b0cebcb2c2931b6b3047df59eadc7427b70c",
+      "subject": "Fix `beforeError` hooks running again when a body fails after the body read timed out",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "178767e4a0307c2d6bc95adcbde0164391eea7a8",
+      "subject": "Fix `shouldRetry` type rejecting functions that return nothing",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "224034d10df5cd47db23adb3aa78efe26274fc1f",
+      "subject": "Fix headers set to `undefined` in `init` hooks being sent as the string `\"undefined\"`",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "50c381041bdc66f2ed8636cda216ad4fd05f57f1",
+      "subject": "Fix a connection dropped while reading the body through shortcuts surfacing as a raw `TypeError`",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/retry.ts",
+          "line": 3390,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "\t\t// eslint-disable-next-line no-await-in-loop",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4e0bf0bdbe373f0158b51ebb5113cf5279c54b8a",
+      "subject": "Fix `searchParams` dropping request options inherited from a `Request` input",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fa9f6a7389369935557fd908f0998a24621adc73",
+      "subject": "Fix `context` being `undefined` in `init` hooks",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ee806e0085374bbbe203c907bab5ed2dba804d6e",
+      "subject": "Fix `hooks: {x: undefined}` and `signal: undefined` failing to type-check with `exactOptionalPropertyTypes`",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "source/types/options.ts",
+          "line": 407,
+          "title": "2 lint/type suppression(s) added",
+          "evidence": "export interface Options extends KyOptions, Omit<RequestInit, 'headers' | 'signal'> { // eslint-disable-line @typescript-eslint/consistent-type-definitions -- This must stay an interface so that it can be extended outside of Ky for use in `ky.create`.\n\t// eslint-disable-next-line @typescript-eslint/no-restricted-types",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test-d/normalized-options.ts",
+          "line": 63,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "// eslint-disable-next-line @typescript-eslint/no-restricted-types",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c6c5dbfedd648c94fefe35a06267b31c52dd9b82",
+      "subject": "Fix `parseJson` being ignored by `response.clone().json()`",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c5dc4e6a923cbadd6385d01f35a468295b17b23c",
+      "subject": "Fix `ky.extend()` callback mutations leaking into the parent instance",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/main.ts",
+          "line": 2163,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "\t\t// eslint-disable-next-line no-await-in-loop",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "cc9b5a330d04623052bf90aa09c9ffd938472a56",
+      "subject": "Fix `replaceOption()` crashing when wrapping a single hook type",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e893f1630888c630ac5050f8be96c254c9759b0e",
+      "subject": "Fix `onDownloadProgress` dropping response `url`, `redirected`, and `type`",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/stream.ts",
+          "line": 573,
+          "title": "3 lint/type suppression(s) added",
+          "evidence": "\t\t// eslint-disable-next-line @typescript-eslint/no-empty-function\n\t\t// eslint-disable-next-line @typescript-eslint/no-empty-function\n\t\t// eslint-disable-next-line @typescript-eslint/no-empty-function",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e06d351070314670526711e79d1a66ce0b932a50",
+      "subject": "Fix option merging rewriting nested user data and flattening class instances",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/fetch.ts",
+          "line": 185,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "\t\t// eslint-disable-next-line @typescript-eslint/no-empty-function",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e68ea7ad3080fa25ce2eba6a367c00dfff74f0f3",
+      "subject": "Preserve caller stack for schema validation errors (#883)",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "source/core/Ky.ts",
+          "line": 338,
+          "title": "2 lint/type suppression(s) added",
+          "evidence": "\t\t\t\t\t// eslint-disable-next-line no-return-await, @typescript-eslint/return-await -- Awaiting here preserves the caller's async stack when schema validation fails.\n\t\t\t// eslint-disable-next-line no-return-await, @typescript-eslint/return-await -- Awaiting here preserves the caller's async stack when the operation fails.",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/main.ts",
+          "line": 480,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "\t\t// eslint-disable-next-line no-await-in-loop",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "33682a7749c197fdb3e851d2efe99b67c7b8f89f",
+      "subject": "Meta tweaks",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c2ac4a1ac858cd8b423756c6c686b64071e834eb",
+      "subject": "Fix CI",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0f2de4755c2c688dff05bf595a549e1385f33c75",
+      "subject": "Fix `json` option keeping the content-type inherited from a `Request` input body",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "895086407b7165eb4d46cce470a3ffa27a23bac7",
+      "subject": "Fix mixed-case standard `method` values not being uppercased",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2f0a3fb6235e680afb35ddebd8b94d303aa7b4b7",
+      "subject": "Fix hooks receiving an aborted `signal` after retrying a timeout",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "015ef95890e26ad9f49d5be9485a0c75b2581222",
+      "subject": "Fix `parseJson` being ignored by `response.json()` when using `onDownloadProgress`",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b4bdeccfc3fd349d7055c646913078e6bded1a2e",
+      "subject": "Fix `Request` input body being dropped when using `searchParams`",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d27ad21266d162ee218d4ea69dce192b84b6f967",
+      "subject": "2.1.0",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "99644d0169138eb0c42718f06862061288f05a96",
+      "subject": "Fix progress callbacks for empty request and response bodies (#881)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0bda554d448c1b57c17a5c18114432c02465d467",
+      "subject": "Fix `signal` replacement when extending instances (#880)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "294fe63be57d73bda18194b7e23ab7225c054643",
+      "subject": "Allow `parseJson` to handle empty bodies (#877)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c426f19597777ba0c060250ba55f166422e8832b",
+      "subject": "Harden retry",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "source/types/options.ts",
+          "line": 468,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "export interface NormalizedOptions extends Readonly<RequestInit> { // eslint-disable-line @typescript-eslint/consistent-type-definitions -- This must stay an interface so that it can be extended outside of Ky for use in `ky.create`.",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test-d/normalized-options.ts",
+          "line": 11,
+          "title": "8 lint/type suppression(s) added",
+          "evidence": "\tinterface Options { // eslint-disable-line @typescript-eslint/consistent-type-definitions -- Declaration merging requires an interface.\n\tinterface NormalizedOptions { // eslint-disable-line @typescript-eslint/consistent-type-definitions -- Declaration merging requires an interface.\n// @ts-expect-error - The normalized options object is frozen.\n// @ts-expect-error - Inherited request options are frozen too.\n// @ts-expect-error - The normalized options object is frozen.\n// @ts-expect-error - The normalized options object is frozen.\n// @ts-expect-error - Module-augmented options passed to hooks are frozen too.\n// @ts-expect-error - Module-augmented options attached to errors are frozen too.",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/retry.ts",
+          "line": 1462,
+          "title": "4 lint/type suppression(s) added",
+          "evidence": "\t\t\t\t// @ts-expect-error\n\t\t\t\t// @ts-expect-error\n\t\t\t\t// @ts-expect-error\n\t\t\t\t// @ts-expect-error",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "be60db582496ce4a662a4e55df3d07d4b9aac5d5",
+      "subject": "Reject malformed HTTP URLs with `baseUrl`",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3419113b48e034fdcf8fa6bd3be3da7b3d0d758f",
+      "subject": "Improve `Retry-After` handling (#874)",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "source/core/Ky.ts",
+          "line": 591,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "\t\t\t// eslint-disable-next-line no-await-in-loop",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "06375efbacfc1bdc96f7a4de7560684b765e1274",
+      "subject": "Fix `extend()` dropping numeric `retry` limit when merging with an object (#867)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6edddd986f2f6a9c7d91e851d9b9a48df439d328",
+      "subject": "Add QUERY method support (#873)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f37e82cda0df4001d7da7d029f235aa570df111a",
+      "subject": "Fix flaky totalTimeout retry test",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b1012515602768026ae6f27adb76b7bc657764e1",
+      "subject": "Fix docs typo (#870)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "61d6d66d27911001b9b4d57ab93139f9ad61384b",
+      "subject": "Fix handling of Safari errors with domains",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e0fcf780de2bd69af2528e4b7b87ccae6bb727b1",
+      "subject": "Fix CI",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0a24c44fe4a15d0545c840facc56e473dd0b315b",
+      "subject": "2.0.2",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "add0703b7ea2e20f5afe16ab5d9507a16e275f20",
+      "subject": "Fix init hook URLSearchParams deletions",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/main.ts",
+          "line": 1132,
+          "title": "2 lint/type suppression(s) added",
+          "evidence": "\t\t\t\t() => {}, // eslint-disable-line @typescript-eslint/no-empty-function\n\t\t\t\t() => {}, // eslint-disable-line @typescript-eslint/no-empty-function",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "8f28eac337e1e9a02187ef57b3b918dfe50bd2cf",
+      "subject": "Tweaks",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "346f8986f98b3b6769034e28d5095922670a7ed6",
+      "subject": "Fix tuple `searchParams` mutations leaking across init-hook requests (#861)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e9eeb35770bdf6d894998c6c9f9a3fb090c8b5d2",
+      "subject": "2.0.1",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "29719915cf96e73a9cd0852d3cfb568a39ab6e5a",
+      "subject": "Improve compatibility with custom `fetch` implementations (#858)",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "source/core/Ky.ts",
+          "line": 170,
+          "title": "2 lint/type suppression(s) added",
+          "evidence": "\t\t\t\t\t\t// eslint-disable-next-line no-await-in-loop\n\t\t\t\t\t\t// eslint-disable-next-line no-await-in-loop",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4ba8c15feaca524b4a716413db21a481c494721b",
+      "subject": "Fix flaky test",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2df9b7e71963b8d0bb7edd172a5d3518c2778330",
+      "subject": "Fix hook state leaks and fetch option forwarding",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7f2eade94249f5c459af010a4f6911a29b6de2e8",
+      "subject": "Readme tweaks",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7d23d68e2614777f240896060f31d77f74f1a0d2",
+      "subject": "2.0.0",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a376fc45eb9d647ebcf0a04f790fbc8c223265c8",
+      "subject": "Fix minor typos and improve backtick consistency (#853)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d3750141ce7540fcb68137e3b73536dd0e9cec3d",
+      "subject": "Meta tweaks",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1b8e1ff777e31382165500ae2965d79a4ee4f63d",
+      "subject": "Make `json()` throw on empty responses (#854)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "bbc98fc6970ce52e9a88b8af31c01c15c6f363a3",
+      "subject": "Fix typos",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6d12e2d02d93c2ba923a40ac7cde52291230ef8c",
+      "subject": "Fix typos (#852)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b324279a02150cb8e888d8150d26033997f45816",
+      "subject": "Fix typo (#850)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7f0b6a939b5515bb9177fdb2d9ac66461e7a642d",
+      "subject": "2.0.0-0",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "87aafbac8688f8dc55e3c0a0606b41ec5f5bc009",
+      "subject": "Fix CI",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "29e78fe8e6977f62268c757e9e192677c6a35147",
+      "subject": "Merge `searchParams` with input URL (#840)",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/main.ts",
+          "line": 810,
+          "title": "6 lint/type suppression(s) added",
+          "evidence": "\t\t// @ts-expect-error - we test that explicitly undefined value is handled\n\t\t// @ts-expect-error - testing undefined value\n\t\t// @ts-expect-error - testing undefined value\n\t\t// @ts-expect-error - testing undefined value\n\t\t\t\t\t// @ts-expect-error - testing undefined value\n\t\t// @ts-expect-error - testing undefined value",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2481afdbc2a6eefd468f2bf6c08c39a4ea5b3535",
+      "subject": "Document pagination",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0dd95224e9d104282b6c9c0adcd75c1caee1bd7a",
+      "subject": "Various tweaks",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c20d7c78da256a89d56138e9091d0253b83cde99",
+      "subject": "Add `totalTimeout` option and make `timeout` be per retry (#848)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3713ce8d4bc50db655837bb1dd79550df24219fc",
+      "subject": "Add request/response context to `parseJson` option (#849)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1d15eb6d33360f751421b5cc64a36151fd4d3c07",
+      "subject": "Don't throw `HTTPError` for opaque responses from `no-cors` requests (#847)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "86b15196b50cf9a9e7e7e17b7261cd671279c790",
+      "subject": "Improve `onUploadProgress` test to verify body receipt and callback silence",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "75d6f0a0fba46d4f39e79c044ac8fe6f5f9ae7b7",
+      "subject": "Document HTTP/2 requirement for `onUploadProgress` on HTTPS",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7565d947daf4fb82a52c8583bf53dbcf8a734306",
+      "subject": "Improve body size estimation",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "bb8412ee37bde3ca9b6067ef643f03002069764c",
+      "subject": "Add `replaceOption` helper for `.extend()` (#846)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1e38ff424d3a12529606d7593886ea3694a2ced6",
+      "subject": "Gracefully ignore `onUploadProgress` when request streams are unsupported (#845)",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/browser.ts",
+          "line": 368,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "\t\t\t\tonUploadProgress() {}, // eslint-disable-line @typescript-eslint/no-empty-function",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "eaf0b80b23b7b85e4040f525a12521d727395420",
+      "subject": "Add `NetworkError` class and tighten retry logic (#842)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "87c6740ca236f58822f922322c7b183c18214a1b",
+      "subject": "Add `init` hook (#841)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "191057d135c1cfe07f9fa16978c2482969ccac20",
+      "subject": "Tweaks",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "01e0b856475123edbd9a599a27790f7e0065b25e",
+      "subject": "Add `request` and `options` to `beforeError` hook state (#835)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "90c6d00c990b35be4d6f5567796e4e99ad3f40f0",
+      "subject": "Treat hook errors as fatal outside retry handling (#834)",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "source/core/Ky.ts",
+          "line": 114,
+          "title": "6 lint/type suppression(s) added",
+          "evidence": "\t\t\t\t\t// eslint-disable-next-line no-await-in-loop\n\t\t\t\t\t// eslint-disable-next-line no-await-in-loop\n\t\t\t\t\t// eslint-disable-next-line no-await-in-loop\n\t\t\t// eslint-disable-next-line no-await-in-loop\n\t\t\t\t// eslint-disable-next-line no-await-in-loop\n\t\t\t\t// eslint-disable-next-line no-await-in-loop",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/hooks.ts",
+          "line": 3368,
+          "title": "6 lint/type suppression(s) added",
+          "evidence": "\t\t\t\t\t\t// eslint-disable-next-line @typescript-eslint/only-throw-error\n\t\t\t\t\t\t// eslint-disable-next-line @typescript-eslint/only-throw-error\n\t\t\t\t\t\t// eslint-disable-next-line @typescript-eslint/only-throw-error\n\t\t\t\t\t\t// eslint-disable-next-line @typescript-eslint/only-throw-error\n\t\t\t\t\t\t// eslint-disable-next-line @typescript-eslint/only-throw-error\n\t\t\t\t\t\t// eslint-disable-next-line @typescript-eslint/only-throw-error",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "94741a9471eb32644aa81a9672cf36486ab9a9bd",
+      "subject": "Add Standard Schema validation for `.json()` (#830)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4b37c9636a601b8f121d47485f794dcd404d0984",
+      "subject": "Minor tweaks",
+      "findings": [
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "source/core/Ky.ts",
+          "line": 296,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "648e25df5890a5992335aac429076aa392b373a4",
+      "subject": "Document and test URL modification in `beforeRequest` hook",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1f2ad7f20dcb778a4f0758432e8a8eb5c597a3e9",
+      "subject": "Add `baseUrl` option, rename `prefixUrl` to `prefix`, and allow leading slashes in input (#606)",
+      "findings": [
+        {
+          "rule_id": "GH001",
+          "rule_name": "test-file-deleted",
+          "severity": "high",
+          "confidence": "normal",
+          "file": "test/prefix-url.ts",
+          "line": 1,
+          "title": "Test file removed from the suite",
+          "evidence": "test/prefix-url.ts",
+          "why_flagged": "Removing a test file can remove coverage of behavior that still exists.",
+          "legit_if": "The code under test was also deleted, or coverage moved to another test file.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/base-url.ts",
+          "line": 21,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "\t\t// @ts-expect-error {baseUrl: boolean} isn't officially supported",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/browser.ts",
+          "line": 68,
+          "title": "2 lint/type suppression(s) added",
+          "evidence": "\t\t// @ts-expect-error unsupported {baseUrl: null} type\n\t\t// @ts-expect-error unsupported {prefix: null} type",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/prefix.ts",
+          "line": 21,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "\t\t// @ts-expect-error {prefix: boolean} isn't officially supported",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a541fc08b8c078a835b4ffc146226107aba375fe",
+      "subject": "Ignore non-Errors returned by beforeError hooks (#833)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c168a7ccd44d11bfc44390faca1e01cfc8895658",
+      "subject": "Document streaming request body behavior and retry memory implications",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "aec65dbdb196860260851bb33c0988aa75e9b2a8",
+      "subject": "Fix `beforeRequest` hooks being skipped when a `Request` is returned (#832)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6f3d1bdb9ee928b88bb2901fd2e84c190542f583",
+      "subject": "Skip request cloning when retries are disabled to prevent buffering large streaming bodies",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/retry.ts",
+          "line": 591,
+          "title": "3 lint/type suppression(s) added",
+          "evidence": "\t\t// @ts-expect-error - Types are outdated.\n\t\t// @ts-expect-error - Types are outdated.\n\t\t// @ts-expect-error - Types are outdated.",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "101c74ba1a133622c8c04975c414d83e5e7593c3",
+      "subject": "Make `beforeError` hook receive all errors (#829)",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "source/core/Ky.ts",
+          "line": 165,
+          "title": "2 lint/type suppression(s) added",
+          "evidence": "\t\t\t\t\t// eslint-disable-next-line no-await-in-loop\n\t\t\t\t\t// eslint-disable-next-line no-await-in-loop",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/hooks.ts",
+          "line": 1644,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "\t\t\t\t// eslint-disable-next-line @typescript-eslint/only-throw-error",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "51e35528894d679295cf22c3f363e7df14b97609",
+      "subject": "Return `undefined` instead of empty string from `.json()` on empty responses (#828)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6ed304d26a84177841bc5c6f858de0b806e2b4bd",
+      "subject": "Add regression for custom fetch POST body hang",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "953698e65ad0e2989f82b59a791738b744f07a1b",
+      "subject": "Improve flaky browser tests",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c3c304bf4f5a48c484aabc6e9573a7d15dfe15b7",
+      "subject": "Minor tweak",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "433febd55cc19c98c7a643be934693927ac38503",
+      "subject": "Strip Ky-specific properties from normalized options passed to hooks (#826)",
+      "findings": [
+        {
+          "rule_id": "GH002",
+          "rule_name": "test-count-decreased",
+          "severity": "high",
+          "confidence": "normal",
+          "file": "test/main.ts",
+          "line": 528,
+          "title": "Test count decreased: 55 \u2192 54",
+          "evidence": "Removed tests: throwHttpErrors preserves original type in hooks",
+          "why_flagged": "Fewer test definitions may leave previously checked behavior untested.",
+          "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "aac83fa9403355d628e8c1bdc505311b6a8683e7",
+      "subject": "Fix timeout to apply to total operation including retries (#825)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ecdd45eeaa48cbcbabaa53898dd4a39d1296a694",
+      "subject": "Unify hook signatures around a single state object (#827)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "dfa3f59c9cd53ab5d7812367a9eff0398ad046ba",
+      "subject": "Simplify tests",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f1da0fc60ddb4b1c7a468517044e7c8e832a7f06",
+      "subject": "Require Node.js 22",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "source/types/common.ts",
+          "line": 1,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "// eslint-disable-next-line @typescript-eslint/no-restricted-types",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "source/utils/body.ts",
+          "line": 4,
+          "title": "2 lint/type suppression(s) added",
+          "evidence": "// eslint-disable-next-line @typescript-eslint/no-restricted-types\n// eslint-disable-next-line @typescript-eslint/no-restricted-types",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "source/utils/is.ts",
+          "line": 1,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "// eslint-disable-next-line @typescript-eslint/no-restricted-types",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/main.ts",
+          "line": 1040,
+          "title": "2 lint/type suppression(s) added",
+          "evidence": "\t\t// eslint-disable-next-line @typescript-eslint/no-restricted-types\n\t\t// eslint-disable-next-line @typescript-eslint/no-restricted-types",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7003a19f813a8b3bfa849d46de5116517e18e95f",
+      "subject": "Add note about readme being dev version",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1341f5ca56c96c9440e6e8d0d624c871bb1b7929",
+      "subject": "Add `data` property to `HTTPError` with pre-parsed response body (#823)",
+      "findings": [
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "source/core/Ky.ts",
+          "line": 441,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n\t\t\t\treturn undefined;\n\t\t\t}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "source/core/Ky.ts",
+          "line": 449,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n\t\t\t                                              \n\t\t\treturn undefined;\n\t\t}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "source/core/Ky.ts",
+          "line": 475,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n\t\t\t\treturn undefined;\n\t\t\t}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "source/core/Ky.ts",
+          "line": 511,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n\t\t\treturn undefined;\n\t\t}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "source/core/Ky.ts",
+          "line": 41,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "source/core/Ky.ts",
+          "line": 461,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "\t\t\t\t\t// eslint-disable-next-line no-await-in-loop",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "eb5c3eba37451b7a6d598efa23d33c97919ae9e6",
+      "subject": "1.14.3",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d7f7e73ceede6232e3fc4b835f2ff26361531d34",
+      "subject": "Fix empty `context` object being added to merged `json` body",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "51b012949a27c4eb976ea6979a4ad35e724734a3",
+      "subject": "1.14.2",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2bdbd591aedfc2be2a2837e1c2390a1c8fcad442",
+      "subject": "Fix response body cleanup after hooks (#809)",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "source/core/Ky.ts",
+          "line": 54,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "\t\t\t\t\t// eslint-disable-next-line no-await-in-loop",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e673eaa6e42e5d96399db7996c9fd940a1cf02c8",
+      "subject": "Avoid awaiting response cancel on forced retry (#806)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5791b664a07ab9533c1261984a623d2d5bb60ee2",
+      "subject": "Make `isKyError` type guard include `ForceRetryError` (#801)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "cec10a9d99729058795b51f8da1f3d7a20dbf936",
+      "subject": "Fix handling of uppercase `retry.methods` and improve typing (#789)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4b6cd2fe28b3b80a95b011de3ad227f89cced25b",
+      "subject": "1.14.1",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6fa6bcefadef76a17f632a078cb604f5c76d4e50",
+      "subject": "Normalize retry option defaults when undefined",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4fd8c285b6a55f45301833342008a4246c0bbbf8",
+      "subject": "Fix: Handle `backoffLimit` being `undefined` (#796)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d8d6cfed4e0d69f1b923f1f7b2e00e5f81345172",
+      "subject": "Fix typo (#792)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "337a1b2cf565d1e327d70377c65ef6c1a6318e70",
+      "subject": "Add 401 token refresh pattern tests and examples",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c52a694d0bbf368a532a249ae3802437e5743f40",
+      "subject": "1.14.0",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "68a5228840de271858c83a043d8fe7032df4a929",
+      "subject": "Add `ky.retry()` to force retries from `afterResponse` hooks (#779)",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "source/core/Ky.ts",
+          "line": 67,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "\t\t\t\t\t// eslint-disable-next-line no-await-in-loop",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5d3684ed0e27c1a89f9d13f09523367d86cbabfe",
+      "subject": "Document type extension pattern",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "836feb45599e937f50f0d1e51ce4b791188a8c3c",
+      "subject": "Remove unnecessary double Request wrapping in searchParams handling (#773)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "84ff3b9d0d4ccb745e9c68e882a331588bf0d868",
+      "subject": "Allow `throwHttpErrors` option to be a function (#781)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2fe20cb0964ed60db5cb08ba74c184475c630c47",
+      "subject": "Fix flaky test",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b0951789929ddb08e423db2a134a1dcad308031f",
+      "subject": "Document how to do SSE",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fec6c43500681f2a59a8b5ddd7d35d9f23c4a130",
+      "subject": "Fix flaky tests",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "eeaf7271b390a8cfd3f5b29ea8e36929ccf386c2",
+      "subject": "1.13.0",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a51bb1e4cfde0190d569da683ffb3e46e0253cdd",
+      "subject": "Allow `beforeRetry` hooks to return a `Request` or `Response` (#774)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "caf78d2456649288a47df752c378e6ba7a3eb402",
+      "subject": "Fix Next.js edge runtime `next` option support (#775)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1e749ba065b4912e9db5b3517320f4ead4adec74",
+      "subject": "Add `context` option (#772)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c488be025f9e9fa604febde72274104edbb55376",
+      "subject": "Add X-RateLimit variant of Retry-After header (#771)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f0fdbd407504e3d3ed60db7b6460972d5134aef8",
+      "subject": "Add `retryOnTimeout` and `shouldRetry` options (#767)",
+      "findings": [
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "source/errors/NonError.ts",
+          "line": 20,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n\t\t\t                                                     \n\t\t}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/retry.ts",
+          "line": 1382,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "\t\t\t\t// eslint-disable-next-line @typescript-eslint/promise-function-async",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "081c924d0c5aae4c18056ed414d633cd996f9fa9",
+      "subject": "Add `retry.jitter` option (#760)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c0ff507a4a1b6ede3410983d2c74ee37e3768bfd",
+      "subject": "Clarify docs that `FormData` and `URLSearchParams` override `Content-Type` headers",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    }
+  ]
+}

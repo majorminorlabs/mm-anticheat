@@ -1,0 +1,62 @@
+diff --git a/packages/utils/src/diff/getType.ts b/packages/utils/src/diff/getType.ts
+--- a/packages/utils/src/diff/getType.ts
++++ b/packages/utils/src/diff/getType.ts
+@@ -1,46 +1,34 @@
+ export function getType(value: unknown): ValueType {
+   if (value === undefined) {
+     return 'undefined'
+-  }
+-  else if (value === null) {
++  } else if (value === null) {
+     return 'null'
+-  }
+-  else if (Array.isArray(value)) {
++  } else if (Array.isArray(value)) {
+     return 'array'
+-  }
+-  else if (typeof value === 'boolean') {
++  } else if (typeof value === 'boolean') {
+     return 'boolean'
+-  }
+-  else if (typeof value === 'function') {
++  } else if (typeof value === 'function') {
+     return 'function'
+-  }
+-  else if (typeof value === 'number') {
++  } else if (typeof value === 'number') {
+     return 'number'
+-  }
+-  else if (typeof value === 'string') {
++  } else if (typeof value === 'string') {
+     return 'string'
+-  }
+-  else if (typeof value === 'bigint') {
++  } else if (typeof value === 'bigint') {
+     return 'bigint'
+-  }
+-  else if (typeof value === 'object') {
++  } else if (typeof value === 'object') {
+     if (value != null) {
+       if (value.constructor === RegExp) {
+         return 'regexp'
+-      }
+-      else if (value.constructor === Map) {
++      } else if (value.constructor === Map) {
+         return 'map'
+-      }
+-      else if (value.constructor === Set) {
++      } else if (value.constructor === Set) {
+         return 'set'
+-      }
+-      else if (value.constructor === Date) {
++      } else if (value.constructor === Date) {
+         return 'date'
+       }
+     }
+     return 'object'
+-  }
+-  else if (typeof value === 'symbol') {
++  } else if (typeof value === 'symbol') {
+     return 'symbol'
+   }
+ 

@@ -19,15 +19,21 @@ class AssertionCountDecreased(RuleBase):
         removed = "\n".join(line.value for line in change.removed if assertion_line(line.value))
         if ctx.mode == "full":
             lang = python if is_python(change.path) else jsts
-            before = {test.name: test for test in lang.tests(change.base_content or "")}
-            after = {test.name: test for test in lang.tests(change.head_content or "")}
+            before = {
+                getattr(test, "key", test.name): test
+                for test in lang.tests(change.base_content or "")
+            }
+            after = {
+                getattr(test, "key", test.name): test
+                for test in lang.tests(change.head_content or "")
+            }
             return [
                 self.finding(
                     change,
                     test.line,
-                    f"Assertions decreased in {name}: "
+                    f"Assertions decreased in {test.name}: "
                     f"{before[name].assertions} → {test.assertions}",
-                    f"{name}\n{removed}",
+                    f"{test.name}\n{removed}",
                 )
                 for name, test in after.items()
                 if name in before and test.assertions < before[name].assertions

@@ -1,0 +1,2710 @@
+{
+  "repository": "vitest",
+  "head": "964e1a4404c31bf8fd37cb05ea0095483b506802",
+  "requested_commits": 150,
+  "commits_scanned": 150,
+  "commits_with_high": 2,
+  "commits_with_high_or_medium": 9,
+  "counts": [
+    {
+      "rule_id": "GH000",
+      "severity": "info",
+      "count": 2
+    },
+    {
+      "rule_id": "GH001",
+      "severity": "high",
+      "count": 2
+    },
+    {
+      "rule_id": "GH002",
+      "severity": "high",
+      "count": 2
+    },
+    {
+      "rule_id": "GH003",
+      "severity": "low",
+      "count": 1
+    },
+    {
+      "rule_id": "GH006",
+      "severity": "medium",
+      "count": 5
+    },
+    {
+      "rule_id": "GH008",
+      "severity": "low",
+      "count": 38
+    },
+    {
+      "rule_id": "GH008",
+      "severity": "medium",
+      "count": 27
+    },
+    {
+      "rule_id": "GH009",
+      "severity": "medium",
+      "count": 1
+    },
+    {
+      "rule_id": "GH010",
+      "severity": "low",
+      "count": 11
+    },
+    {
+      "rule_id": "GH011",
+      "severity": "info",
+      "count": 2
+    }
+  ],
+  "examples": {
+    "GH000": [
+      {
+        "commit": "d05ab8efbdb742e7c3a3976aa9862cda234ed524",
+        "subject": "docs: add blog post for Vitest 5 (#11076)",
+        "rule_id": "GH000",
+        "rule_name": "parse-skipped",
+        "severity": "info",
+        "confidence": "normal",
+        "file": "docs/public/og-vitest-5.jpg",
+        "line": 1,
+        "title": "Content could not be parsed",
+        "evidence": "Binary content is not parsed",
+        "why_flagged": "This content could not be analyzed completely; review it separately.",
+        "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+        "allowed": false
+      },
+      {
+        "commit": "d05ab8efbdb742e7c3a3976aa9862cda234ed524",
+        "subject": "docs: add blog post for Vitest 5 (#11076)",
+        "rule_id": "GH000",
+        "rule_name": "parse-skipped",
+        "severity": "info",
+        "confidence": "normal",
+        "file": "docs/public/trace-view.webm",
+        "line": 1,
+        "title": "Content could not be parsed",
+        "evidence": "Binary content is not parsed",
+        "why_flagged": "This content could not be analyzed completely; review it separately.",
+        "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+        "allowed": false
+      }
+    ],
+    "GH001": [
+      {
+        "commit": "9673c49a40535529db6042df7176f123e95bb8f5",
+        "subject": " fix: refactor caching, fix `:` in project and change the shape of `results` cache (#11453)",
+        "rule_id": "GH001",
+        "rule_name": "test-file-deleted",
+        "severity": "high",
+        "confidence": "normal",
+        "file": "test/e2e/fixtures/cache/basic.test.ts",
+        "line": 1,
+        "title": "Test file removed from the suite",
+        "evidence": "test/e2e/fixtures/cache/basic.test.ts",
+        "why_flagged": "Removing a test file can remove coverage of behavior that still exists.",
+        "legit_if": "The code under test was also deleted, or coverage moved to another test file.",
+        "allowed": false
+      },
+      {
+        "commit": "9673c49a40535529db6042df7176f123e95bb8f5",
+        "subject": " fix: refactor caching, fix `:` in project and change the shape of `results` cache (#11453)",
+        "rule_id": "GH001",
+        "rule_name": "test-file-deleted",
+        "severity": "high",
+        "confidence": "normal",
+        "file": "test/e2e/fixtures/cache/second.test.ts",
+        "line": 1,
+        "title": "Test file removed from the suite",
+        "evidence": "test/e2e/fixtures/cache/second.test.ts",
+        "why_flagged": "Removing a test file can remove coverage of behavior that still exists.",
+        "legit_if": "The code under test was also deleted, or coverage moved to another test file.",
+        "allowed": false
+      }
+    ],
+    "GH002": [
+      {
+        "commit": "9673c49a40535529db6042df7176f123e95bb8f5",
+        "subject": " fix: refactor caching, fix `:` in project and change the shape of `results` cache (#11453)",
+        "rule_id": "GH002",
+        "rule_name": "test-count-decreased",
+        "severity": "high",
+        "confidence": "normal",
+        "file": "test/unit/test/sequencers.test.ts",
+        "line": 2,
+        "title": "Test count decreased: 8 \u2192 3",
+        "evidence": "Removed tests: prioritize unknown files, sort by size, larger first, sort by results, failed first, sort by results, long first, sort by results, long and failed first",
+        "why_flagged": "Fewer test definitions may leave previously checked behavior untested.",
+        "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+        "allowed": false
+      },
+      {
+        "commit": "5dbebe9e3b8758fe97d233eb9718a3664cd0b9c3",
+        "subject": "fix: isolate `result.status` between `repeats` runs (#11218)",
+        "rule_id": "GH002",
+        "rule_name": "test-count-decreased",
+        "severity": "high",
+        "confidence": "normal",
+        "file": "test/unit/test/repeats.test.ts",
+        "line": 1,
+        "title": "Test count decreased: 10 \u2192 9",
+        "evidence": "Removed tests: should not reset retry count",
+        "why_flagged": "Fewer test definitions may leave previously checked behavior untested.",
+        "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+        "allowed": false
+      }
+    ],
+    "GH003": [
+      {
+        "commit": "2d053600efa0a646150e755bcc3745c5d1fded43",
+        "subject": "test(ui): improve explorer filter assertions (#11124)",
+        "rule_id": "GH003",
+        "rule_name": "skip-marker-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "test/ui/fixtures/main/node/skipped.test.ts",
+        "line": 3,
+        "title": "Skip/focus marker added to a new test",
+        "evidence": "test.skip('skipped test', () => {})",
+        "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
+        "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
+        "allowed": false
+      }
+    ],
+    "GH006": [
+      {
+        "commit": "5f2739e74983b0e5c9b5f3ce9901cebfeafee50c",
+        "subject": "fix(typecheck): use typescript pool in toTestSpecification (#11451)",
+        "rule_id": "GH006",
+        "rule_name": "hardcoded-test-expectation",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "packages/vitest/src/node/reporters/reported-tasks.ts",
+        "line": 253,
+        "title": "New source literal matches a test expectation",
+        "evidence": "      isTypecheck ? 'typescript' : undefined,\ntest/typescript/test/specification.test.ts:35:   expect(moduleSpecification.pool).toBe('typescript')",
+        "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+        "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+        "allowed": false
+      },
+      {
+        "commit": "5f2739e74983b0e5c9b5f3ce9901cebfeafee50c",
+        "subject": "fix(typecheck): use typescript pool in toTestSpecification (#11451)",
+        "rule_id": "GH006",
+        "rule_name": "hardcoded-test-expectation",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "packages/vitest/src/node/reporters/reported-tasks.ts",
+        "line": 466,
+        "title": "New source literal matches a test expectation",
+        "evidence": "      isTypecheck ? 'typescript' : undefined,\ntest/typescript/test/specification.test.ts:35:   expect(moduleSpecification.pool).toBe('typescript')",
+        "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+        "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+        "allowed": false
+      },
+      {
+        "commit": "5f2739e74983b0e5c9b5f3ce9901cebfeafee50c",
+        "subject": "fix(typecheck): use typescript pool in toTestSpecification (#11451)",
+        "rule_id": "GH006",
+        "rule_name": "hardcoded-test-expectation",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "packages/vitest/src/node/reporters/reported-tasks.ts",
+        "line": 528,
+        "title": "New source literal matches a test expectation",
+        "evidence": "      isTypecheck ? 'typescript' : undefined,\ntest/typescript/test/specification.test.ts:35:   expect(moduleSpecification.pool).toBe('typescript')",
+        "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+        "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+        "allowed": false
+      },
+      {
+        "commit": "b0f2b3bb9d81007cc10390da5d802e5d673e7b9e",
+        "subject": "fix: track project files and mocks with --changed (#11432)",
+        "rule_id": "GH006",
+        "rule_name": "hardcoded-test-expectation",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "packages/vitest/src/node/affected-modules.ts",
+        "line": 12,
+        "title": "New source literal matches a test expectation",
+        "evidence": "const builtinEnvironments = new Set(['node', 'jsdom', 'happy-dom', 'edge-runtime'])\ntest/e2e/test/related-deps.test.ts:617:     ...(name === 'jsdom' || name === 'happy-dom'",
+        "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+        "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+        "allowed": false
+      },
+      {
+        "commit": "b0f2b3bb9d81007cc10390da5d802e5d673e7b9e",
+        "subject": "fix: track project files and mocks with --changed (#11432)",
+        "rule_id": "GH006",
+        "rule_name": "hardcoded-test-expectation",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "packages/vitest/src/node/affected-modules.ts",
+        "line": 13,
+        "title": "New source literal matches a test expectation",
+        "evidence": "const clientEnvironments = new Set(['jsdom', 'happy-dom'])\ntest/e2e/test/related-deps.test.ts:617:     ...(name === 'jsdom' || name === 'happy-dom'",
+        "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+        "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+        "allowed": false
+      }
+    ],
+    "GH008": [
+      {
+        "commit": "9673c49a40535529db6042df7176f123e95bb8f5",
+        "subject": " fix: refactor caching, fix `:` in project and change the shape of `results` cache (#11453)",
+        "rule_id": "GH008",
+        "rule_name": "exception-swallowed",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "packages/vitest/src/node/cache/index.ts",
+        "line": 73,
+        "title": "Catch handler discards failures",
+        "evidence": "catch {}",
+        "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+        "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+        "allowed": false
+      },
+      {
+        "commit": "9673c49a40535529db6042df7176f123e95bb8f5",
+        "subject": " fix: refactor caching, fix `:` in project and change the shape of `results` cache (#11453)",
+        "rule_id": "GH008",
+        "rule_name": "exception-swallowed",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "packages/vitest/src/node/sequencers/BaseSequencer.ts",
+        "line": 119,
+        "title": "Catch handler discards failures",
+        "evidence": "catch {\n                                                             \n                                                  \n      }",
+        "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+        "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+        "allowed": false
+      },
+      {
+        "commit": "6f990fef1625ffc1e1f1a442c9446d851b06b7cc",
+        "subject": "fix(api): publish the api token atomically (#11323)",
+        "rule_id": "GH008",
+        "rule_name": "exception-swallowed",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "packages/vitest/src/node/config/apiToken.ts",
+        "line": 32,
+        "title": "Catch handler discards failures",
+        "evidence": "catch {\n    return undefined\n  }",
+        "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+        "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+        "allowed": false
+      },
+      {
+        "commit": "7c7119cf7c03bfc36c1e4c79f1502868d1207962",
+        "subject": "fix(vitest): remove root temp dir on close (#11248)",
+        "rule_id": "GH008",
+        "rule_name": "exception-swallowed",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "packages/vitest/src/node/core.ts",
+        "line": 1722,
+        "title": "Catch handler discards failures",
+        "evidence": "catch {}",
+        "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+        "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+        "allowed": false
+      },
+      {
+        "commit": "6c49b71978c23ef1dc04c2ef5fa73af8f9bc5ec0",
+        "subject": "fix(jsdom): support Blob on jsdom 30.1 (#11379)",
+        "rule_id": "GH008",
+        "rule_name": "exception-swallowed",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "packages/vitest/src/integrations/env/jsdom.ts",
+        "line": 310,
+        "title": "Catch handler discards failures",
+        "evidence": "catch {}",
+        "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+        "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+        "allowed": false
+      }
+    ],
+    "GH009": [
+      {
+        "commit": "a029e76a9e72ebdd468452ee1bb788bbe5dc635e",
+        "subject": "chore: migrate to oxc (#11367)",
+        "rule_id": "GH009",
+        "rule_name": "test-environment-detection",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "packages/vitest/src/node/viteLogger.ts",
+        "line": 46,
+        "title": "Test/CI environment referenced in source",
+        "evidence": "  const canClearScreen = allowClearScreen && process.stdout.isTTY && !process.env.CI",
+        "why_flagged": "Source code can alter behavior when it detects a test runner or CI.",
+        "legit_if": "Detection configures isolated resources, timeouts or legitimate environment settings.",
+        "allowed": false
+      }
+    ],
+    "GH010": [
+      {
+        "commit": "a029e76a9e72ebdd468452ee1bb788bbe5dc635e",
+        "subject": "chore: migrate to oxc (#11367)",
+        "rule_id": "GH010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "packages/mocker/src/browser/hints.ts",
+        "line": 43,
+        "title": "1 lint/type suppression(s) added",
+        "evidence": "      ? // @ts-expect-error injected by the plugin",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      },
+      {
+        "commit": "a029e76a9e72ebdd468452ee1bb788bbe5dc635e",
+        "subject": "chore: migrate to oxc (#11367)",
+        "rule_id": "GH010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "packages/vitest/src/integrations/vi.ts",
+        "line": 815,
+        "title": "1 lint/type suppression(s) added",
+        "evidence": "    ? // @ts-expect-error injected by vite-nide",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      },
+      {
+        "commit": "a029e76a9e72ebdd468452ee1bb788bbe5dc635e",
+        "subject": "chore: migrate to oxc (#11367)",
+        "rule_id": "GH010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "packages/vitest/src/node/core.ts",
+        "line": 1756,
+        "title": "1 lint/type suppression(s) added",
+        "evidence": "          // @ts-expect-error let me go",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      },
+      {
+        "commit": "a029e76a9e72ebdd468452ee1bb788bbe5dc635e",
+        "subject": "chore: migrate to oxc (#11367)",
+        "rule_id": "GH010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "packages/vitest/src/runtime/workers/native.ts",
+        "line": 239,
+        "title": "1 lint/type suppression(s) added",
+        "evidence": "    // @ts-expect-error untyped global",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      },
+      {
+        "commit": "a029e76a9e72ebdd468452ee1bb788bbe5dc635e",
+        "subject": "chore: migrate to oxc (#11367)",
+        "rule_id": "GH010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "test/e2e/test/config-types.test-d.ts",
+        "line": 53,
+        "title": "1 lint/type suppression(s) added",
+        "evidence": "          // @ts-expect-error -- Not allowed here",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      }
+    ],
+    "GH011": [
+      {
+        "commit": "6108b819785bceff03edb2cc7b60e17779f21191",
+        "subject": "fix: exit 1 when vitest list fails collection (fix #11145) (#11146)",
+        "rule_id": "GH011",
+        "rule_name": "snapshot-updated-with-source",
+        "severity": "info",
+        "confidence": "normal",
+        "file": "test/e2e/test/__snapshots__/list.test.ts.snap",
+        "line": 22,
+        "title": "Snapshot changed alongside source",
+        "evidence": "Source files: packages/vitest/src/node/core.ts",
+        "why_flagged": "Review that snapshot changes reflect intended behavior.",
+        "legit_if": "The reviewed source change intentionally changes this snapshot output.",
+        "allowed": false
+      },
+      {
+        "commit": "51e9494166d8d0108a621fce80c41b6dba760bae",
+        "subject": "feat!: parse files statically in vitest list by default (#11088)",
+        "rule_id": "GH011",
+        "rule_name": "snapshot-updated-with-source",
+        "severity": "info",
+        "confidence": "normal",
+        "file": "test/e2e/test/__snapshots__/list.test.ts.snap",
+        "line": 32,
+        "title": "Snapshot changed alongside source",
+        "evidence": "Source files: packages/vitest/src/node/cli/cli-api.ts, packages/vitest/src/node/cli/cli-config.ts, packages/vitest/src/node/core.ts",
+        "why_flagged": "Review that snapshot changes reflect intended behavior.",
+        "legit_if": "The reviewed source change intentionally changes this snapshot output.",
+        "allowed": false
+      }
+    ]
+  },
+  "errors": 0,
+  "stderr_lines": 0,
+  "rule_errors": 0,
+  "commits": [
+    {
+      "commit": "964e1a4404c31bf8fd37cb05ea0095483b506802",
+      "subject": "ci: move release app secrets to an environment (#11449)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5f2739e74983b0e5c9b5f3ce9901cebfeafee50c",
+      "subject": "fix(typecheck): use typescript pool in toTestSpecification (#11451)",
+      "findings": [
+        {
+          "rule_id": "GH006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/reporters/reported-tasks.ts",
+          "line": 253,
+          "title": "New source literal matches a test expectation",
+          "evidence": "      isTypecheck ? 'typescript' : undefined,\ntest/typescript/test/specification.test.ts:35:   expect(moduleSpecification.pool).toBe('typescript')",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/reporters/reported-tasks.ts",
+          "line": 466,
+          "title": "New source literal matches a test expectation",
+          "evidence": "      isTypecheck ? 'typescript' : undefined,\ntest/typescript/test/specification.test.ts:35:   expect(moduleSpecification.pool).toBe('typescript')",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/reporters/reported-tasks.ts",
+          "line": 528,
+          "title": "New source literal matches a test expectation",
+          "evidence": "      isTypecheck ? 'typescript' : undefined,\ntest/typescript/test/specification.test.ts:35:   expect(moduleSpecification.pool).toBe('typescript')",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "9673c49a40535529db6042df7176f123e95bb8f5",
+      "subject": " fix: refactor caching, fix `:` in project and change the shape of `results` cache (#11453)",
+      "findings": [
+        {
+          "rule_id": "GH001",
+          "rule_name": "test-file-deleted",
+          "severity": "high",
+          "confidence": "normal",
+          "file": "test/e2e/fixtures/cache/basic.test.ts",
+          "line": 1,
+          "title": "Test file removed from the suite",
+          "evidence": "test/e2e/fixtures/cache/basic.test.ts",
+          "why_flagged": "Removing a test file can remove coverage of behavior that still exists.",
+          "legit_if": "The code under test was also deleted, or coverage moved to another test file.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH001",
+          "rule_name": "test-file-deleted",
+          "severity": "high",
+          "confidence": "normal",
+          "file": "test/e2e/fixtures/cache/second.test.ts",
+          "line": 1,
+          "title": "Test file removed from the suite",
+          "evidence": "test/e2e/fixtures/cache/second.test.ts",
+          "why_flagged": "Removing a test file can remove coverage of behavior that still exists.",
+          "legit_if": "The code under test was also deleted, or coverage moved to another test file.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH002",
+          "rule_name": "test-count-decreased",
+          "severity": "high",
+          "confidence": "normal",
+          "file": "test/unit/test/sequencers.test.ts",
+          "line": 2,
+          "title": "Test count decreased: 8 \u2192 3",
+          "evidence": "Removed tests: prioritize unknown files, sort by size, larger first, sort by results, failed first, sort by results, long first, sort by results, long and failed first",
+          "why_flagged": "Fewer test definitions may leave previously checked behavior untested.",
+          "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/cache/index.ts",
+          "line": 73,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/sequencers/BaseSequencer.ts",
+          "line": 119,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n                                                             \n                                                  \n      }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4ee66c021e0592c886dbab727f0f8da9366f99ab",
+      "subject": "fix(runner): don't cache failed fixture setups (fix #11237) (#11238)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "af903c65e4d192b7bf2b788a7910b93cfe4c59f4",
+      "subject": "fix(ui): store module graph once per environment (#11421)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a627be498c33f9cb3307e7b99869dc8ad74caa36",
+      "subject": "fix(ui): simplify explorer filtering + fix nested tests when search matches a suite (#11262)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b4e79fd7a3c75714b6ff2554f0176264ee1d4e57",
+      "subject": "fix(expect): fix `Map` and `Set` deep equality in some assertions (#11402)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b0f2b3bb9d81007cc10390da5d802e5d673e7b9e",
+      "subject": "fix: track project files and mocks with --changed (#11432)",
+      "findings": [
+        {
+          "rule_id": "GH006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/affected-modules.ts",
+          "line": 12,
+          "title": "New source literal matches a test expectation",
+          "evidence": "const builtinEnvironments = new Set(['node', 'jsdom', 'happy-dom', 'edge-runtime'])\ntest/e2e/test/related-deps.test.ts:617:     ...(name === 'jsdom' || name === 'happy-dom'",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/affected-modules.ts",
+          "line": 13,
+          "title": "New source literal matches a test expectation",
+          "evidence": "const clientEnvironments = new Set(['jsdom', 'happy-dom'])\ntest/e2e/test/related-deps.test.ts:617:     ...(name === 'jsdom' || name === 'happy-dom'",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "eba44926eddd8947184c65de8a7aa7499ef82163",
+      "subject": "fix(pretty-format): support boxed symbols (fix #11445) (#11446)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e1a73147055d5a6ad02ad166c3a772b6d81c4898",
+      "subject": "fix(reporters): junit to strip ANSI sequences from all XML attributes (#11407)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ad208cc2911a0b48a6afae8bcae2f67de1393089",
+      "subject": "fix: enable fsModuleCache by default (#11435)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "30d0304d2f3e8c877a163971e5de8e6803d39211",
+      "subject": "fix: fail the run on git and location filter errors (#11430)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "8ebcf5f8a862d92ba4b0b87d3f389a7d2f4c7488",
+      "subject": "fix(browser): allow toHaveTextContent without arguments (#11425)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7ebd95fdd8a181fbdf5a1d554784c46a8758ac8a",
+      "subject": "perf: reuse fsModuleCache when filtering by source (#11428)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d6620fae6fdb401a510af4e071f7451b7c638021",
+      "subject": "fix(browser): close the mock route interception race (fix #8339) (#11083)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a23368585bbf19da24808b3a5070630a008dd81a",
+      "subject": "feat(experimental): print how many tests were affected and a total when running `--changed` (#11424)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c74e099a9d17e24e9816878165af4818df84a631",
+      "subject": "fix(deps): update all non-major dependencies (#11167)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "8ea59df0d390876e5a96fb98f29cc0c25fdebb17",
+      "subject": "chore(deps): update dependency bumpp to v12 (#11258)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b59d64f96e155ad353a1caf18878c74c64c521ac",
+      "subject": "chore(deps): update dependency cookie to v2 (#11318)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ff5bf2bc0bd99ccac7c40168397be26485700aa9",
+      "subject": "chore(deps): update dependency obug to v3 (#11373)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "021296ba5e2596517adf8975d53c99e4cf76af81",
+      "subject": "chore(deps): update dependency fastify to v5.12.5 [security] (#11420)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c87878ffc797e293b323c1eed8cf95961a957f56",
+      "subject": "chore(deps): update dependency strip-literal to v4 (#11374)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6e4a48e1f7956434892c527c6ee12cfb4937aa14",
+      "subject": "chore(deps): update dependency @vite-pwa/assets-generator to v2 (#11255)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "aecbb15475b74acfb0ad7d7216cf78d550b8f264",
+      "subject": "chore(deps): update dependency @vitejs/plugin-react to v6 (#11256)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c13eac0e96479c734bacb073604955cf78c40590",
+      "subject": "chore(deps): update dependency changelogithub to v15 (#11259)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c85a0bbd9a17e0f28a0078b3a4d40daf1e5422fe",
+      "subject": "chore: add a workflow to auto close prs (#11416)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6f990fef1625ffc1e1f1a442c9446d851b06b7cc",
+      "subject": "fix(api): publish the api token atomically (#11323)",
+      "findings": [
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/config/apiToken.ts",
+          "line": 32,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n    return undefined\n  }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d7e1315c116991544df1a6adb898e0a0cf7759e3",
+      "subject": "fix(ui): remove duplicate browser-open call opening two tabs (fix #11356) (#11358)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b48989f6e07757ca79f155654844018dd0bcdaf5",
+      "subject": "chore: reduce the number of dependencies in the root workspace (#11410)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "33cadea62e8763c455c7fca38d9ab1dda87c5f75",
+      "subject": "chore: release v5.0.3 (#11409)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "62a7fe6791fcbe796fcbf58a17e0ee88663b9555",
+      "subject": "docs(bench): Fix import statements and update benchmark examples (#11364)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "346d3896b65c3c907174447a035807342799f346",
+      "subject": "fix(vm): don't reuse scripts across vite environments (#11395)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "245f09400ea3e1cd0530992a93d40bf70cb9c89d",
+      "subject": "chore: remove `CLAUDE.md` (#11396)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3e794a96b33f188b5ee227480d90da11b750a64d",
+      "subject": "fix(expect): pass current equality testers to `expect.extend` asymmetric matchers (#11401)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f6c9a4977ad3363f796a737834572e54c6ad5c18",
+      "subject": "fix(deps): pin `why-is-node-running` to `3.2.1` to avoid users running into `ERR_PNPM_TRUST_DOWNGRADE` (#11403)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "062c75d8b63519211d951d8293ea81b5a9e3c124",
+      "subject": "chore: fix standalone docs build, update exports maps (#11394)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "caf2887dee8987a60118d53933f6e9cabd6b3e2a",
+      "subject": "fix(vm): do not optimize deps from index.html (fix #11329) (#11360)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a1fd67349c9ee69f03d321d891e2a5b190792aa2",
+      "subject": "docs: deploy on cloudflare (#11388)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c22aba9925c999e923fd65e5aad35a9272a710a9",
+      "subject": "fix(browser): `toMatchScreenshot` uses wrong reference on retried tests (#11393)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "50312ebb4eca6a98f6d0b2b61d5d9d38cbbabcef",
+      "subject": "fix(pool): preserve unique pool ids when `groupOrder` is set (#11392)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "07ee71706ca68182b1e584706bfe8938677bead1",
+      "subject": "test: fix failing win test (#11390)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7c36748fad1eae9687312f2f7ceadce6ec88b5df",
+      "subject": "fix(browser): ignore page crash while cancelling (#11386)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "92ba7fc1df16a4fa5bbee3f198c582fbd56689d8",
+      "subject": "fix: scope cache key generators to projects (fix #11281) (#11301)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "38f98855fa9cd7fd376afb84094eba0fda256a74",
+      "subject": "fix(cache): revalidate imports of cached modules (#11381)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b24585f08f2ea267746a2d6ca0e43edcbb29726f",
+      "subject": "fix: don't retry when `test.fails` expectedly failed (#11219)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f91db0dfd061e51a56a55dad43d249332b0ebb0a",
+      "subject": "fix(ui): split-pane handle overlapping iframe (#11221)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7c7119cf7c03bfc36c1e4c79f1502868d1207962",
+      "subject": "fix(vitest): remove root temp dir on close (#11248)",
+      "findings": [
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/core.ts",
+          "line": 1722,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6c49b71978c23ef1dc04c2ef5fa73af8f9bc5ec0",
+      "subject": "fix(jsdom): support Blob on jsdom 30.1 (#11379)",
+      "findings": [
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/integrations/env/jsdom.ts",
+          "line": 310,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "aafc0996f1641f824d5053bddf536f2598fe82c0",
+      "subject": "fix(browser): keep config of browser-consumed environments (#11378)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "07cd7320b5e882a63f80076aac8b6fc9c1b1da24",
+      "subject": "docs: document cwd behavior on projects (#11376)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "15cc006aa9f8683dc5f7e895d011fa7dc751ce35",
+      "subject": "fix: don't print an interceptor warning in browser mode (#11377)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5dbebe9e3b8758fe97d233eb9718a3664cd0b9c3",
+      "subject": "fix: isolate `result.status` between `repeats` runs (#11218)",
+      "findings": [
+        {
+          "rule_id": "GH002",
+          "rule_name": "test-count-decreased",
+          "severity": "high",
+          "confidence": "normal",
+          "file": "test/unit/test/repeats.test.ts",
+          "line": 1,
+          "title": "Test count decreased: 10 \u2192 9",
+          "evidence": "Removed tests: should not reset retry count",
+          "why_flagged": "Fewer test definitions may leave previously checked behavior untested.",
+          "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ada2a5e1886dbb1ab6d2ecce38d887fc4f9e1c26",
+      "subject": "chore(deps): ignore rrweb-snapshot in renovate (#11290)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1c3888bcefed294af9bb8e84868f4b828ba3cf8e",
+      "subject": "fix(browser): check mock path boundaries (fix #11361) (#11362)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a029e76a9e72ebdd468452ee1bb788bbe5dc635e",
+      "subject": "chore: migrate to oxc (#11367)",
+      "findings": [
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/browser-playwright/src/playwright.ts",
+          "line": 190,
+          "title": "Catch handler discards failures",
+          "evidence": ".catch(() => {})",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/browser-playwright/src/playwright.ts",
+          "line": 382,
+          "title": "Catch handler discards failures",
+          "evidence": ".catch(() => {})",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/browser-playwright/src/playwright.ts",
+          "line": 713,
+          "title": "Catch handler discards failures",
+          "evidence": ".catch(() => {})",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/browser/src/client/orchestrator.ts",
+          "line": 375,
+          "title": "Catch handler discards failures",
+          "evidence": ".catch(() => {\n                    \n      })",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/browser/src/client/orchestrator.ts",
+          "line": 386,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n                                                    \n      return undefined\n    }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/browser/src/client/tester/tester.ts",
+          "line": 334,
+          "title": "Catch handler discards failures",
+          "evidence": ".catch(() => {})",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/browser/src/node/index.ts",
+          "line": 591,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n    return undefined\n  }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/expect/src/jest-utils.ts",
+          "line": 640,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n      return undefined\n    }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/mocker/src/automocker.ts",
+          "line": 28,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n      return false\n    }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/pretty-format/src/plugins/DOMElement.ts",
+          "line": 29,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n    return false\n  }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/ui/node/index.ts",
+          "line": 60,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n            return false\n          }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/utils/src/source-map/node.ts",
+          "line": 21,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n    return undefined\n  }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/integrations/mock/when.ts",
+          "line": 28,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n    return false\n  }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/coverage.ts",
+          "line": 1026,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n      return null\n    }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/printError.ts",
+          "line": 155,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n            return false\n          }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/projects/globProjectFiles.ts",
+          "line": 53,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n          return null\n        }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/resolver.ts",
+          "line": 167,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n    return false\n  }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/vcs/git.ts",
+          "line": 72,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n      return null\n    }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH009",
+          "rule_name": "test-environment-detection",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/viteLogger.ts",
+          "line": 46,
+          "title": "Test/CI environment referenced in source",
+          "evidence": "  const canClearScreen = allowClearScreen && process.stdout.isTTY && !process.env.CI",
+          "why_flagged": "Source code can alter behavior when it detects a test runner or CI.",
+          "legit_if": "Detection configures isolated resources, timeouts or legitimate environment settings.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/runtime/detect-async-leaks.ts",
+          "line": 44,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n        return\n      }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/runtime/runner/utils/collect.ts",
+          "line": 11,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n                                                                         \n                                                                       \n    return undefined\n  }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/runtime/vm/utils.ts",
+          "line": 75,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n    return false\n  }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/runtime/worker.ts",
+          "line": 80,
+          "title": "Catch handler discards failures",
+          "evidence": ".catch(() => {})",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/runtime/workers/vm.ts",
+          "line": 61,
+          "title": "Catch handler discards failures",
+          "evidence": ".catch(() => {})",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "docs/.vitepress/scripts/fetch-avatars.ts",
+          "line": 18,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/browser-playwright/src/commands/trace.ts",
+          "line": 98,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/browser/src/client/tester/expect/utils.ts",
+          "line": 162,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n                                \n                                                   \n    }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/browser/src/client/tester/runner.ts",
+          "line": 274,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/mocker/src/automocker.ts",
+          "line": 74,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n                                                          \n        }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/mocker/src/browser/hints.ts",
+          "line": 43,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "      ? // @ts-expect-error injected by the plugin",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/ui/node/reporter.ts",
+          "line": 168,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/ui/node/reporter.ts",
+          "line": 258,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n                                                                            \n                            \n    }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/utils/src/error.ts",
+          "line": 40,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/utils/src/resolver.ts",
+          "line": 33,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n                                                                \n      }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/utils/src/resolver.ts",
+          "line": 62,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n                    \n  }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/utils/src/serialize.ts",
+          "line": 134,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n             \n  }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/rollup.config.js",
+          "line": 220,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/api/setup.ts",
+          "line": 128,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/api/setup.ts",
+          "line": 154,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/api/setup.ts",
+          "line": 168,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/integrations/vi.ts",
+          "line": 815,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "    ? // @ts-expect-error injected by vite-nide",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/cache/files.ts",
+          "line": 27,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n                                                                    \n                                                    \n    }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/cache/fsModuleCache.ts",
+          "line": 320,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/cache/fsModuleCache.ts",
+          "line": 400,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/cache/fsModuleCache.ts",
+          "line": 539,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n                    \n  }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/cli/doctor.ts",
+          "line": 215,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/config/apiToken.ts",
+          "line": 32,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/config/apiToken.ts",
+          "line": 49,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/core.ts",
+          "line": 373,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/core.ts",
+          "line": 1080,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/core.ts",
+          "line": 1756,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "          // @ts-expect-error let me go",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/packageInstaller.ts",
+          "line": 25,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/pools/rpc.ts",
+          "line": 240,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n                                                                                         \n        }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/project.ts",
+          "line": 506,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/reporters/base.ts",
+          "line": 1332,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n                                                                              \n      }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/resolver.ts",
+          "line": 227,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n                                                                   \n                          \n    }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/stdin.ts",
+          "line": 67,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n                                                                \n  }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/runtime/moduleRunner/moduleEvaluator.ts",
+          "line": 563,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/runtime/moduleRunner/startVitestModuleRunner.ts",
+          "line": 213,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n                                                                     \n                }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/runtime/vm/utils.ts",
+          "line": 164,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {\n                                                                 \n  }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/runtime/workers/init.ts",
+          "line": 284,
+          "title": "Catch handler discards failures",
+          "evidence": "catch {}",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/vitest/src/runtime/workers/native.ts",
+          "line": 239,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "    // @ts-expect-error untyped global",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/e2e/test/config-types.test-d.ts",
+          "line": 53,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "          // @ts-expect-error -- Not allowed here",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/e2e/test/reporters/custom-diff-config.test.ts",
+          "line": 41,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "          // @ts-expect-error color functions are not part of the public diff type,",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/e2e/test/scoped-fixtures.test.ts",
+          "line": 598,
+          "title": "10 lint/type suppression(s) added",
+          "evidence": "        // @ts-expect-error value is a test fixture\n            // @ts-expect-error - test-scoped fixtures are not available in beforeAll\n          // @ts-expect-error - file fixture cannot access test-scoped fixture 'testValue'\n          // @ts-expect-error - worker fixture cannot access file-scoped fixture 'fileValue'\n          // @ts-expect-error - worker fixture cannot access test-scoped fixture 'testValue'\n          // @ts-expect-error - file fixture cannot access 'task' from TestContext\n          // @ts-expect-error - worker fixture cannot access 'task' from TestContext\n            // @ts-expect-error - file fixture cannot access test-scoped fixture 'testValue'\n            // @ts-expect-error - worker fixture cannot access file-scoped fixture 'fileValue'\n            // @ts-expect-error - worker fixture cannot access test-scoped fixture 'testValue'",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/unit/test/dual-package-hazard.test.ts",
+          "line": 6,
+          "title": "2 lint/type suppression(s) added",
+          "evidence": "// @ts-expect-error no ts\n// @ts-expect-error no ts",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/unit/test/pretty-format.test.ts",
+          "line": 1117,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "            // @ts-expect-error testing runtime",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7d8ed3e9b70f23eb9c05b3693f19c528799d78cc",
+      "subject": "fix(browser): delay server `listen` until tests start running (#11366)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d4faa087b3531793231e81466bd14ab2de472778",
+      "subject": "chore: ask to not act on behalf of the operator (#11365)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "428e2e5043c64635b6b157358bde2fdeaa7b6b3a",
+      "subject": "chore: release v5.0.2 (#11357)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b4ef3abdbc90ad8d1344abbd38edbe00846545e5",
+      "subject": "docs: fix grammar in benchmark provider guide (#11344)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0b79231ad7897f03de17940ef16684b63aa217fe",
+      "subject": "fix: bind `process` in case global is overwritten (#11343)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "089354eeed38ed93dc0f741de813682373643ff0",
+      "subject": "docs: add Chromatic to VRT guide (#11341)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "597df569aba3e8b24c9ad231aacd3cf641ac3bdf",
+      "subject": "docs: correct stale config defaults (#11354)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ea1c44fb581978421f9f0901ce8c635970ea72fb",
+      "subject": "docs: `sequence.setupFiles` default is `'list'` (#11351)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0fd6b97902bc828d489385e0a28b82515f57b7cf",
+      "subject": "fix(detect-async-leaks): ignore `process.stdio` handles (#11333)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4e91e56687de43427fbb664d86a63438ca73b681",
+      "subject": "fix(reporters): `hanging-process` to use ESM entrypoint (#11316)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1a57929a49fb6fb2db02b47e56c4677ca5ae1704",
+      "subject": "docs(browser): fix locators.exact default  (#11338)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a0a939653bc8441848579bb6ac18706372242cd6",
+      "subject": "fix(spy): fix stack overflow when spying `Set.prototype.add` (#11299)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "42523289e9158b7a7f413ec3641ee0393c81eaac",
+      "subject": "fix(expect): fix `toMatchObject` with asymmetric matchers (#11100)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5b95efb6dfe378dc6fc8380f5b1e96832f019a5d",
+      "subject": "fix(reporter): `agent` to respect `--silent` (#11271)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "9614b803e905bfadb671acd1462c4b25e7c2c79f",
+      "subject": "chore: enable `minimumReleaseAgeExcludePrune` (#11122)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f58a209779ffd3007006481d0c9da0099d5226e6",
+      "subject": "docs: correct benchmark.exclude and watch defaults (#11268)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d1c3ecc932dcb4cd50420c54aa1f7fa3051deac7",
+      "subject": "fix(jsdom): fix `Request` with `Blob` body on jsdom 28+ (#11295)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e8e556ff7c97fb2ea881868667564028dc824cf4",
+      "subject": "fix(reporters): handle concurrent `createReport` calls (#11278)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0780a8e5b7967a4168173599e9c74fb79aab2483",
+      "subject": "ci: automate stable docs promotion (#11280)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2300f82da3cfacc542d12949d11a567aa1191855",
+      "subject": "chore(deps): unpin tinybench and tinyexec (#11288)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f88195e168b70e92059b0908c1e4c2f4049819df",
+      "subject": "fix(ui): persist authentication cookie beyond current browser session (#11066)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "03630a5995d10455fa136be53bfb2b2409381106",
+      "subject": "chore: release v5.0.1 (#11275)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "cbbea0b702e8f7d7f16ab4a042df807de447a262",
+      "subject": "docs: fix internal links to config options (#11240)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a47d7908f0635e9cba6cbe5e1a209bb6add5e0ab",
+      "subject": "fix(fakeTimers): force `queueMicrotask` and `nextTick` in `toNotFake` (#11261)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "05982297d0fb046d41e7accd89064f900071dd0a",
+      "subject": "fix(ui): fix explorer file summary count (#11125)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2d053600efa0a646150e755bcc3745c5d1fded43",
+      "subject": "test(ui): improve explorer filter assertions (#11124)",
+      "findings": [
+        {
+          "rule_id": "GH003",
+          "rule_name": "skip-marker-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/ui/fixtures/main/node/skipped.test.ts",
+          "line": 3,
+          "title": "Skip/focus marker added to a new test",
+          "evidence": "test.skip('skipped test', () => {})",
+          "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
+          "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0a7122daaf6de7728f99359af879abba02c41616",
+      "subject": "fix(ui): fix collapse/expand suite with file name search (#11260)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2ce29d5fa758046e5453bd92b8ed6c9da9709bb5",
+      "subject": "fix: warn when deprecated `deps.optimizer.web` is used (#11214)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "29de617051c69939201bd3c9f4efd7e4fd85618b",
+      "subject": "docs: update vite package requirement (#11234)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ccd6d057b6e4ca29a5e6b753a2b8e16b0afd8cda",
+      "subject": "docs: fix typecheck exclude default in documentation (#11223)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7f75f902eb918e8ccfc176779ebfcf17f7bce992",
+      "subject": "docs: reuse button styles in migration guide (#11210)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4944cf4988052950af174be8dfd688761d0e0588",
+      "subject": "fix(utils): fix `deepMerge` to handle prototype (#11215)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c119be016295b45a005e2a36367ea7d133b4f385",
+      "subject": "fix(expect): correct return value in `toMatchAriaSnapshot` (#11208)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4f8ef0216f637ed2d3e66684982d930f20892347",
+      "subject": "docs: remove v0 link, update vitest API usage (#11211)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "91ab1588c72c9c5f7c638368a541cd20e0e8a934",
+      "subject": "fix(doctor): measure vm pools for custom environments (#11212)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "07670364b45e61f2c542d332a232fe81e4f88d82",
+      "subject": "refactor(ui): consolidate unocss style to use class (#11206)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "23dda738ccacb11682426426cd7b876afd107621",
+      "subject": "fix: share the server on self-referencing `extends` (#11034)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "221aaef485b1284563a0715fcfe017971ff0c58c",
+      "subject": "docs: consolidate ui and html reporter guide  (#11169)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "498fbe9222eb9aa3d8cf48481e200c16bb693bbd",
+      "subject": "fix: resolve ResolvedConfig exactOptionalPropertyTypes errors (#11175)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "115c3f6d2bfa6a8672eeab8cc21bbecc6a4ef3d0",
+      "subject": "fix: correct typos in error message and comments (#11187)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "376dc3bc1c7ac099a7634b55c2e8f90cd6ec02a9",
+      "subject": "feat(ui): add focused trace view layout mode (#11190)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "41c9f6516af58e6ca825d62cac63060b0c0a4e3e",
+      "subject": "docs: update the benchmarking example to the Vitest 5 bench API (#11204)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "17e2b22dd018a9098a597d835bf45d1a7a3e73c8",
+      "subject": "fix(snapshot): report obsolete keys next to skipped tests (fix #11157) (#11158)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "73614654a46f617c357920eecda439654a561f92",
+      "subject": "fix: keep metadata file when clearing the cache (#11199)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "972e24bab5fb96843de72447eb65585628b8dbde",
+      "subject": "fix(browser): avoid double quotes in `config.define` (#11198)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5dc4b5c925e8e3ccc3e2ddf0ff31cb4c1f4447ca",
+      "subject": "feat(ui): move trace attempts selector to viewer header (#11189)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b426c1976d32310c271d053b814bafb9a99bcd89",
+      "subject": "fix: prevent false Vitest import resolution (#11196)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "99fc5259175cf09671a0ed75ec476f06507a2605",
+      "subject": "fix: avoid recursive prototype in automocking (#11195)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "09bc9ad6b3dfce1eb647d775376cdadd7c492694",
+      "subject": "docs: update legacy Chinese docs domain (#11179)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d9ea973140d267ca4702deb32aa35c0afb960e52",
+      "subject": "docs: fix docs/guide/projects.md tip block (#11160)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7c818153add03b0bca54453a54e76961dd5be18d",
+      "subject": "fix: keep parse error details in static collection (fix #11150) (#11151)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "455466c168a9d5cfecd98824860fbdc236f1f9ba",
+      "subject": "fix(types): make public declarations self-contained (#11141)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6108b819785bceff03edb2cc7b60e17779f21191",
+      "subject": "fix: exit 1 when vitest list fails collection (fix #11145) (#11146)",
+      "findings": [
+        {
+          "rule_id": "GH011",
+          "rule_name": "snapshot-updated-with-source",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "test/e2e/test/__snapshots__/list.test.ts.snap",
+          "line": 22,
+          "title": "Snapshot changed alongside source",
+          "evidence": "Source files: packages/vitest/src/node/core.ts",
+          "why_flagged": "Review that snapshot changes reflect intended behavior.",
+          "legit_if": "The reviewed source change intentionally changes this snapshot output.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "9e1166959e14bd32298d8a0e85352431c769ec7a",
+      "subject": "chore: add more rules to AGENTS.md regarding ai contributions (#11142)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "decfeb61c71a93372f84b6d43893df86a1756308",
+      "subject": "docs: mention default diagnostics (#11135)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1051116c6364092656ee2d73315b03b3cc4aa9a3",
+      "subject": "docs: mention vitest doctor in the blog post (#11134)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5fd9ce33cb737a290456423fb700d07cf0971567",
+      "subject": "docs: fix migration links (#11133)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d05ab8efbdb742e7c3a3976aa9862cda234ed524",
+      "subject": "docs: add blog post for Vitest 5 (#11076)",
+      "findings": [
+        {
+          "rule_id": "GH000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "docs/public/og-vitest-5.jpg",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Binary content is not parsed",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "docs/public/trace-view.webm",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Binary content is not parsed",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f441c6fab25e579c5b7dd3dd50538416f415fbae",
+      "subject": "chore: release v5.0.0 (#11130)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d7bf1a7444e15db23c9bbb921e968296b0e3cdf6",
+      "subject": "docs: split migration into multiple pages, add a button to copy the prompt (#11129)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d46a7472266d5bb43595ea51dcdd64ab0f560f12",
+      "subject": "fix: treat test.describe as a suite during static collection (#11128)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "584cf308437069385b0fb905fa3ff7d7b7f65a90",
+      "subject": "fix: add a warning if inline project has duplicate plugins due to unexpected `extends: true` (#11120)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "73d7294840a09c6c46d90a602a3a8acb3f8ddc41",
+      "subject": "fix(ui): hide running count in static reports (#11123)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f08ce4b7144542af128dcb884150c42074223653",
+      "subject": "fix: apply queued mocks from doMock() in queue order (fixes #10706) (#11127)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c4473e48ee046938a9ab6784fe2735257c2c0f72",
+      "subject": "fix(coverage): prevent crash on `/@fs/` prepended virtual files (#11119)",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "test/coverage-test/fixtures/src/virtual-files.ts",
+          "line": 7,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "// @ts-expect-error -- untyped virtual file provided by custom plugin",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e5e68a308b7c64f4a021fab53042d5469a4d73d1",
+      "subject": "chore(deps): update babel monorepo to v8 (#11105)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2451e34c404aba1038f5e749c85bb268b2f4525e",
+      "subject": "perf(spy): avoid scanning cleared mocks (#11092)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c4093fdeb87fe6a3066f6c6d637129a031802e94",
+      "subject": "ci: cancel ci when pr is merged or closed (#11108)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "897f51fd2493046c52ec9539b7d02fe3763bd63e",
+      "subject": "chore: release v5.0.0-rc.4 (#11107)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1339b0655dc4679aeb8f905bacee83b6f76f6b23",
+      "subject": "chore(deps): update all non-major dependencies (#11104)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "51e9494166d8d0108a621fce80c41b6dba760bae",
+      "subject": "feat!: parse files statically in vitest list by default (#11088)",
+      "findings": [
+        {
+          "rule_id": "GH011",
+          "rule_name": "snapshot-updated-with-source",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "test/e2e/test/__snapshots__/list.test.ts.snap",
+          "line": 32,
+          "title": "Snapshot changed alongside source",
+          "evidence": "Source files: packages/vitest/src/node/cli/cli-api.ts, packages/vitest/src/node/cli/cli-config.ts, packages/vitest/src/node/core.ts",
+          "why_flagged": "Review that snapshot changes reflect intended behavior.",
+          "legit_if": "The reviewed source change intentionally changes this snapshot output.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2122ffdfb42d86c9a2f1238100d6a031312cae32",
+      "subject": "fix: propagate --maxWorkers to projects (#11102)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "58f02ae3663435854902ca8c2de049e75c4610f9",
+      "subject": "feat(ui): add link to open playwright trace (#11059)",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "packages/ui/client/composables/attachments.ts",
+          "line": 45,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "    // eslint-disable-next-line no-alert",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "dc10f5f8fb69b026afcf56f8a7a9dd36bd964d73",
+      "subject": "fix(browser): report the action error when a task times out (#11101)",
+      "findings": [
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/runtime/runner/deadline.ts",
+          "line": 59,
+          "title": "Catch handler discards failures",
+          "evidence": ".catch(() => {})",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "602d215ae50d8b8f93ddbaacac1f9f139cfe4f20",
+      "subject": "fix(ui): add suite level report view (#11038)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d4fe1986fe334d22940039e815ccdbcc907baa6a",
+      "subject": "feat: promote clearCache out of experimental (#11086)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3f2ddc21a83f3ebf16be50a1b31982ee9060266f",
+      "subject": "fix(vm): link module graphs one at a time (#11096)",
+      "findings": [
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/runtime/vm/esm-executor.ts",
+          "line": 140,
+          "title": "Catch handler discards failures",
+          "evidence": ".catch(() => {})",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "848d7243e608efcfb6c31baaa722f17a094a841d",
+      "subject": "fix: don't duplicte `oxc.target` if user provides a custom array (#11095)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ccd3059efeb9e2c6b3a01c2fa289c23e6e83a865",
+      "subject": "docs: document TZ limitation in thread pools (#11098)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5b278a4dd6e826271498b4553bf2010904786542",
+      "subject": "test: use fs.watch for the async leak fixture (#11099)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e08c45c3921ab1c517021836bc73a13f1310c538",
+      "subject": "perf(expect): lazily format spy matcher failures (#11090)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7db80dc27e5948010c00160ed0b86570baad6ce8",
+      "subject": "chore: release v5.0.0-rc.3 (#11089)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b628cb68050729dd82fbe5998198f4347040ebf0",
+      "subject": "feat: promote parseSpecifications out of experimental (#11087)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "130f79b8b7e9aa3c9af9ff7b81fc1c76cec01729",
+      "subject": "fix: ignore computed member calls in static collection (#11085)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c10a129007cc1f57b04a1b62ca6fa7a3cb3a1d5a",
+      "subject": "fix: accept awaited value in vi.when thenResolve (#11084)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "488c04680e4fbb9e9bff796871ed665eef517e68",
+      "subject": "fix: invalidate resolved setup files (fix #11073) (#11081)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3cd019a0a952f43b79d85b2750d189ce0a17066d",
+      "subject": "fix(ui): persist trace step-iframe split pane sizes (#11027)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a6d5ea2d81f459b9dbd42199cd2c35efa415f580",
+      "subject": "perf(vm): let environments opt out of the module graph prewarm (#11078)",
+      "findings": [
+        {
+          "rule_id": "GH008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/runtime/workers/vm.ts",
+          "line": 46,
+          "title": "Catch handler discards failures",
+          "evidence": ".catch(() => {})",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "91be1d71cde84c6e150fda352eb1d79a099f60e5",
+      "subject": "chore(ai): always close PRs classified as `automation` (#11077)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1c00c94686ff6f96ec756503ed765b31068692a8",
+      "subject": "chore: extend comment policy (#11072)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "732df2c2b4bc73e8fcddc256228e43c6e479a87e",
+      "subject": "fix(deps): update all non-major dependencies (#11043)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d343a2521e79b0696725c150ea7fb78c33161ce9",
+      "subject": "chore(deps): update dependency eslint to ^10.9.1 (#11044)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5f6a5e84a5e8cef301e15ac2e8f8e9837b002ec6",
+      "subject": "feat(coverage): switch to `@vitest/istanbuljs` packages (#11053)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "58e71306b2b07d584aa351007af714e65b857a82",
+      "subject": "perf(expect): avoid redefining matcher state (#11048)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c21865dfd0787e309aa5e974ac9ccd959a5bf0ea",
+      "subject": "fix: fix `recordArtifact` location with `vi.defineHelper` (#11047)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    }
+  ]
+}

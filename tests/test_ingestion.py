@@ -114,7 +114,7 @@ def test_malformed_patch_continues():
     [
         ("conftest.py", "", {"test", "config"}),
         ("test_foo.py", "", {"test"}),
-        ("checks.py", "class Checks(unittest.TestCase): pass", {"test"}),
+        ("checks.py", "class Checks(unittest.TestCase): pass", {"source"}),
         ("checks.ts", "import {test} from 'node:test';", {"test"}),
         ("vendor/test_a.py", "def test_a(): pass", {"other"}),
         (".github/workflows/ci.yml", "", {"config"}),

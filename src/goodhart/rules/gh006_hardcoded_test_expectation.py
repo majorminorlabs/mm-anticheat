@@ -1,55 +1,67 @@
-"""Match significant expected literals and input branches, with local evidence."""
+"""New input-specific outputs tied to expectations from the same test."""
 
 import ast
 import re
+from functools import lru_cache
 
 from goodhart.diffmodel import FileChange
 from goodhart.engine import ScanContext
 from goodhart.lang import jsts, python
 from goodhart.rules.base import Finding, RuleBase
-from goodhart.util import is_python, python_code, scalar, significant, without_comments
-
-LITERAL = re.compile(r"(['\"])(?:\\.|(?!\1).)*?\1|(?<![\w.])-?\d+(?:\.\d+)?(?![\w.])")
+from goodhart.util import is_python, scalar, significant, without_comments
 
 
 def _values(text: str) -> list[object]:
-    result = []
-    for match in LITERAL.finditer(text):
+    return [value for token in jsts.tokens(text) if significant(value := jsts.literal(token))]
+
+
+@lru_cache(maxsize=64)
+def _groups(text: str, py: bool, full: bool) -> list:
+    if py:
         try:
-            value = ast.literal_eval(match[0])
-        except (SyntaxError, ValueError):
-            continue
-        if significant(value):
-            result.append(value)
-    return result
-
-
-def _patch_literals(text: str) -> tuple[list[tuple[object, int]], list[tuple[object, int]]]:
+            return python.literal_groups(text)
+        except SyntaxError:
+            if full:
+                return []
+    else:
+        return jsts.literal_groups(text)
     expected, inputs = [], []
-    for number, line in enumerate(text.splitlines(), 1):
-        if line.lstrip().startswith(("#", "//")):
-            continue
-        match = re.search(r"(?:==\s*|\.(?:toBe|toEqual|toStrictEqual)\s*\()(.*)", line)
-        if match and ("assert" in line or "expect" in line):
+    # In incomplete Python patch fragments retain the documented line heuristic.
+    for number, line in enumerate(without_comments(text, True).splitlines(), 1):
+        match = re.search(r"(?:==\s*|assertEqual\s*\([^,]*,\s*)(.*)", line)
+        if match and "assert" in line:
             expected.extend((value, number) for value in _values(match[1]))
-        equal = re.search(r"assertEqual\s*\([^,]*,\s*(.*)\)", line)
-        if equal:
-            expected.extend((value, number) for value in _values(equal[1]))
-        # Restrict input matching to call argument regions before assertion matchers.
         before = line[: match.start()] if match else line
         if re.search(r"\w+\s*\(", before):
             inputs.extend((value, number) for value in _values(before))
-    return expected, inputs
+    return [("<fragment>", expected, inputs)]
 
 
-def _source_values(text: str, py: bool) -> list[object]:
+def _source_values(text: str, py: bool) -> set[object]:
     if py:
-        return [
-            scalar(node)
+        return {
+            value
             for node in ast.walk(python.parse(text))
-            if isinstance(node, (ast.Constant, ast.UnaryOp)) and significant(scalar(node))
-        ]
-    return _values(jsts.mask(text))
+            if isinstance(node, (ast.Constant, ast.UnaryOp)) and significant(value := scalar(node))
+        }
+    return set(_values(jsts.mask(text)))
+
+
+def _output(text: str) -> list[object]:
+    items = [token for token in jsts.tokens(text) if token.kind != "comment"]
+    start = next(
+        (
+            index + 1
+            for index, item in enumerate(items)
+            if item.kind == "ident" and item.value == "return" or item.value in {"=", "?"}
+        ),
+        None,
+    )
+    return (
+        []
+        if start is None
+        else [value for item in items[start:] if significant(value := jsts.literal(item))]
+    )
 
 
 class HardcodedTestExpectation(RuleBase):
@@ -65,110 +77,193 @@ class HardcodedTestExpectation(RuleBase):
     )
 
     def check(self, change: FileChange, ctx: ScanContext) -> list[Finding]:
-        expected: dict[object, tuple[str, int, str]] = {}
-        inputs: set[object] = set()
-        test_contents = dict(ctx.extra_tests)
-        patch_coordinates = {}
-        for item in ctx.changes:
-            if "test" in item.new_kinds and item.new_path:
-                test_contents[item.path] = (
-                    item.head_content or "" if ctx.mode == "full" else item.visible("head")
-                )
-                if ctx.mode == "patch":
-                    patch_coordinates[item.path] = [
-                        line.new_line or 1
-                        for hunk in item.hunks
-                        for line in hunk.lines
-                        if line.kind != "-"
-                    ]
-        for path, content in sorted(test_contents.items()):
-            if is_python(path) and ctx.mode == "full":
-                try:
-                    output_values, input_values = python.literals(content)
-                except SyntaxError:
+        if "expectations" not in ctx.cache:
+            contents = dict(ctx.extra_tests)
+            coordinates = {}
+            for item in ctx.changes:
+                if "test" in item.new_kinds and item.new_path:
+                    contents[item.path] = (
+                        item.head_content or "" if ctx.mode == "full" else item.visible("head")
+                    )
+                    if ctx.mode == "patch":
+                        coordinates[item.path] = [
+                            line.new_line or 1
+                            for hunk in item.hunks
+                            for line in hunk.lines
+                            if line.kind != "-"
+                        ]
+            groups = []
+            for path, content in sorted(contents.items()):
+                from goodhart.lang import limit_reason
+
+                if limit_reason(content):
                     continue
-            else:
-                output_values, input_values = _patch_literals(
-                    without_comments(content, is_python(path)),
-                )
-            lines = content.splitlines()
-            for value, number in output_values:
-                if significant(value):
-                    coordinates = patch_coordinates.get(path)
-                    actual = coordinates[number - 1] if coordinates else number
-                    expected.setdefault(value, (path, actual, lines[number - 1]))
-            inputs.update(value for value, _ in input_values if significant(value))
+                lines = content.splitlines()
+                for _, output, input_ in _groups(content, is_python(path), ctx.mode == "full"):
+                    evidence = {}
+                    for value, row in output:
+                        if significant(value):
+                            actual = coordinates[path][row - 1] if path in coordinates else row
+                            evidence.setdefault(value, (path, actual, lines[row - 1]))
+                    groups.append((evidence, {value for value, _ in input_ if significant(value)}))
+            ctx.cache["expectations"] = groups
+        groups = ctx.cache["expectations"]
+        expected = {value: evidence for outputs, _ in groups for value, evidence in outputs.items()}
         if not expected:
             return []
         py = is_python(change.path)
-        base_values = (
-            set(_source_values(change.base_content or "", py))
+        base = (
+            _source_values(change.base_content or "", py)
             if ctx.mode == "full"
             else set(_values(change.visible("base")))
         )
-        added = {line.new_line: line for line in change.added}
+        added = {line.new_line or 1: line for line in change.added}
+        visible = {}
         if ctx.mode == "full":
-            text = change.head_content or ""
-            clean = without_comments(text, py).splitlines()
-            structure = (python_code(text) if py else jsts.mask(text, strings=True)).splitlines()
-            visible = {index: value for index, value in enumerate(clean, 1)}
-            structural = {index: value for index, value in enumerate(structure, 1)}
+            visible = dict(
+                enumerate(without_comments(change.head_content or "", py).splitlines(), 1)
+            )
         else:
-            visible, structural = {}, {}
             for hunk in change.hunks:
                 lines = [line for line in hunk.lines if line.kind != "-"]
-                text = "\n".join(line.value for line in lines)
-                clean = without_comments(text, py).splitlines()
-                structure = (
-                    python_code(text) if py else jsts.mask(text, strings=True)
-                ).splitlines()
-                for index, item in enumerate(lines):
-                    visible[item.new_line] = clean[index]
-                    structural[item.new_line] = structure[index]
-        findings, high_lines = [], set()
-        for number, line in added.items():
-            code = visible.get(number, "")
-            shape = structural.get(number, "")
-            # Require an actual input comparison, not merely a literal in a nearby comment.
-            condition = re.search(r"\b(?:if|elif|case)\b|\?.*:", shape)
-            branch_inputs = set(_values(code)) & inputs
-            if not condition or not branch_inputs or not re.search(r"==|===|\bcase\b", shape):
-                continue
-            for target in range(number or 1, (number or 1) + 4):
-                output = visible.get(target, "")
-                if not re.search(r"\breturn\b|(?<![=!<>])=(?!=)|\?.*:", structural.get(target, "")):
-                    continue
-                for value in _values(output):
-                    if value in expected:
-                        path, test_line, evidence = expected[value]
-                        findings.append(
-                            self.finding(
-                                change,
-                                number or 1,
-                                "Input-specific branch matches a test expectation",
-                                f"{line.value}\n{output}\n{path}:{test_line}: {evidence}",
-                                reduced=ctx.mode == "patch",
+                clean = without_comments("\n".join(line.value for line in lines), py).splitlines()
+                visible.update(
+                    (line.new_line or 1, clean[index]) for index, line in enumerate(lines)
+                )
+        branches = []
+        if py and ctx.mode == "full":
+            for node in ast.walk(python.parse(change.head_content or "")):
+                if isinstance(node, (ast.If, ast.IfExp)):
+                    condition = {
+                        scalar(item)
+                        for item in ast.walk(node.test)
+                        if isinstance(item, (ast.Constant, ast.UnaryOp))
+                    }
+                    candidates = node.body if isinstance(node, ast.If) else [node.body, node.orelse]
+                    for candidate in candidates:
+                        outputs = (
+                            [candidate]
+                            if isinstance(node, ast.IfExp)
+                            else [
+                                child
+                                for child in ast.walk(candidate)
+                                if isinstance(child, (ast.Return, ast.Assign, ast.AnnAssign))
+                            ]
+                        )
+                        for output in outputs:
+                            if output.lineno > node.lineno + 3:
+                                continue
+                            expression = output if isinstance(node, ast.IfExp) else output.value
+                            values = (
+                                {
+                                    scalar(item)
+                                    for item in ast.walk(expression)
+                                    if isinstance(item, (ast.Constant, ast.UnaryOp))
+                                }
+                                if expression
+                                else set()
                             )
-                        )
-                        high_lines.add(target)
-                        break
-                if target in high_lines:
-                    break
-        for number, line in added.items():
-            if number in high_lines or line.value.lstrip().startswith(("#", "//")):
+                            branches.append(
+                                (node.lineno, output.lineno, condition, values - condition)
+                            )
+                elif isinstance(node, ast.Match):
+                    for case in node.cases:
+                        row = case.pattern.lineno
+                        condition = {
+                            scalar(item)
+                            for item in ast.walk(case.pattern)
+                            if isinstance(item, (ast.Constant, ast.UnaryOp))
+                        }
+                        for statement in case.body:
+                            for output in ast.walk(statement):
+                                if (
+                                    not isinstance(output, (ast.Return, ast.Assign, ast.AnnAssign))
+                                    or output.lineno > row + 3
+                                ):
+                                    continue
+                                values = (
+                                    {
+                                        scalar(item)
+                                        for item in ast.walk(output.value)
+                                        if isinstance(item, (ast.Constant, ast.UnaryOp))
+                                    }
+                                    if output.value
+                                    else set()
+                                )
+                                branches.append((row, output.lineno, condition, values - condition))
+        else:
+            for row, line in added.items():
+                code = visible.get(row, "")
+                shape = jsts.mask(code, strings=True)
+                if not re.search(r"\b(?:if|elif|case)\b|\?", shape):
+                    continue
+                # Separate ternary conditions before extracting outputs.
+                split = (
+                    shape.find("?")
+                    if "?" in shape
+                    else shape.find(":")
+                    if re.search(r"\bcase\b|^\s*(?:if|elif)\b", shape)
+                    else -1
+                )
+                if split < 0 and "if" in shape:
+                    if_match = re.search(r"\bif\s*\(", shape)
+                    paren = shape.find("(", if_match.start()) if if_match else -1
+                    depth = 0
+                    for index in range(paren, len(shape)):
+                        depth += (shape[index] == "(") - (shape[index] == ")")
+                        if depth == 0:
+                            split = index
+                            break
+                condition_text = code[: split + 1] if split >= 0 else code
+                condition = set(_values(condition_text))
+                if not re.search(r"==|\bcase\b", jsts.mask(condition_text, strings=True)):
+                    continue
+                for target in range(row, row + 4):
+                    output_text = visible.get(target, "")
+                    if target == row and split >= 0:
+                        output_text = "return " + code[split + 1 :]
+                    branches.append((row, target, condition, set(_output(output_text)) - condition))
+        findings, high_outputs = [], set()
+        for row, output_row, condition, outputs in branches:
+            if row not in added:
                 continue
-            for value in _values(visible.get(number, "")):
-                if value in expected and value not in base_values:
-                    path, test_line, evidence = expected[value]
-                    findings.append(
-                        self.finding(
-                            change,
-                            number or 1,
-                            "New source literal matches a test expectation",
-                            f"{line.value}\n{path}:{test_line}: {evidence}",
-                            severity="medium",
-                            reduced=ctx.mode == "patch",
-                        )
+            for expectations, inputs in groups:
+                matches = sorted((outputs & expectations.keys()) - base, key=repr)
+                if not condition & inputs or not matches:
+                    continue
+                value = matches[0]
+                path, test_row, evidence = expectations[value]
+                findings.append(
+                    self.finding(
+                        change,
+                        row,
+                        "Input-specific branch matches a test expectation",
+                        f"{visible.get(row, '')}\n{visible.get(output_row, '')}\n"
+                        f"{path}:{test_row}: {evidence}",
+                        reduced=ctx.mode == "patch",
                     )
-                    break
-        return findings
+                )
+                high_outputs.add(output_row)
+                break
+        for row, line in added.items():
+            if row in high_outputs:
+                continue
+            values = [
+                value
+                for value in _values(visible.get(row, ""))
+                if value in expected and value not in base
+            ]
+            if values:
+                path, test_row, evidence = expected[values[0]]
+                findings.append(
+                    self.finding(
+                        change,
+                        row,
+                        "New source literal matches a test expectation",
+                        f"{line.value}\n{path}:{test_row}: {evidence}",
+                        severity="medium",
+                        reduced=ctx.mode == "patch",
+                    )
+                )
+        # A one-line branch and repeated tests should produce only one high per location.
+        return list({(f.line, f.severity): f for f in findings}.values())

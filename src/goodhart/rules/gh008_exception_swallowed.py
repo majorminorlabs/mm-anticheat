@@ -42,9 +42,12 @@ class ExceptionSwallowed(RuleBase):
             for node in ast.walk(python.parse(text)):
                 if not isinstance(node, ast.ExceptHandler):
                     continue
-                broad = node.type is None or (
-                    isinstance(node.type, ast.Name)
-                    and node.type.id in {"Exception", "BaseException"}
+                types = node.type.elts if isinstance(node.type, ast.Tuple) else [node.type]
+                broad = any(
+                    item is None
+                    or isinstance(item, ast.Name)
+                    and item.id in {"Exception", "BaseException"}
+                    for item in types
                 )
                 changed = any(
                     number in added
@@ -104,7 +107,9 @@ class ExceptionSwallowed(RuleBase):
             clean = jsts.mask(text)
 
             def numbers(start: int, end: int) -> range:
-                return range(text.count("\n", 0, start) + 1, text.count("\n", 0, end) + 2)
+                return range(
+                    text.count("\n", 0, start) + 1, text.count("\n", 0, max(start, end - 1)) + 2
+                )
 
             for match in pattern.finditer(clean):
                 if any(number in added for number in numbers(match.start(), match.end())):
@@ -114,6 +119,7 @@ class ExceptionSwallowed(RuleBase):
                             text.count("\n", 0, match.start()) + 1,
                             "Catch handler discards failures",
                             match[0],
+                            severity="low" if re.match(r"catch\s*\{\s*\}", match[0]) else "medium",
                         )
                     )
         else:
@@ -130,6 +136,9 @@ class ExceptionSwallowed(RuleBase):
                                 lines[index].new_line or 1,
                                 "Catch handler discards failures",
                                 match[0],
+                                severity="low"
+                                if re.match(r"catch\s*\{\s*\}", match[0])
+                                else "medium",
                             )
                         )
         return findings

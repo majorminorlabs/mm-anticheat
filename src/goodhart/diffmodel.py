@@ -47,6 +47,10 @@ class FileChange:
 
     @property
     def kinds(self) -> frozenset[FileKind]:
+        if self.new_path is None:
+            return self.old_kinds
+        if self.old_path == self.new_path:
+            return self.new_kinds
         return self.old_kinds | self.new_kinds
 
     @property

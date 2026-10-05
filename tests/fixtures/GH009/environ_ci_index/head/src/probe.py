@@ -1,0 +1,1 @@
+flag = os.environ["CI"]

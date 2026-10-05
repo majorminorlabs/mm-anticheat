@@ -1,19 +1,31 @@
-"""Source code which detects a test runner or CI environment."""
+"""Runner detection is high; ordinary CI checks are medium, with string masking."""
 
 import re
 from pathlib import PurePosixPath
 
 from goodhart.diffmodel import FileChange
 from goodhart.engine import ScanContext
+from goodhart.lang import jsts
 from goodhart.rules.base import Finding, RuleBase
-from goodhart.util import code_lines
+from goodhart.util import is_python, python_code, without_comments
 
-PATTERN = re.compile(
-    r"\bPYTEST_CURRENT_TEST\b|['\"](?:pytest|unittest)['\"]\s+in\s+sys\.modules"
-    r"|sys\.modules\.get\(\s*['\"](?:pytest|unittest)['\"]"
-    r"|\bJEST_WORKER_ID\b|\bVITEST\b"
-    r"|process\.env\.NODE_ENV\s*(?:===?|!==?)\s*['\"]test['\"]"
-    r"|os\.environ\.get\(\s*['\"]CI['\"]|process\.env\.CI\b"
+KEY = r"['\"](?:PYTEST_CURRENT_TEST|JEST_WORKER_ID|VITEST)['\"]"
+ENV = r"(?:os\.environ\.get|os\.getenv)\(\s*"
+RUNNER = re.compile(
+    ENV
+    + KEY
+    + r"|os\.environ\[\s*"
+    + KEY
+    + r"|process\.env\.(?:PYTEST_CURRENT_TEST|JEST_WORKER_ID|VITEST)\b"
+    + r"|['\"](?:pytest|unittest)['\"]\s+in\s+sys\.modules"
+    + r"|sys\.modules\.get\(\s*['\"](?:pytest|unittest)['\"]"
+    + r"|['\"]pytest['\"]\s+in\s+sys\.argv\s*\[\s*0\s*\]"
+    + r"|(?:process\.env\.NODE_ENV|import\.meta\.env\.MODE)\s*(?:===?|!==?)\s*['\"]test['\"]"
+    + r"|import\.meta\.vitest\b|\b(?:PYTEST_CURRENT_TEST|JEST_WORKER_ID|VITEST)\b"
+)
+CI = re.compile(
+    ENV + r"['\"]CI['\"]|os\.environ\[\s*['\"]CI['\"]"
+    r"|['\"]CI['\"]\s+in\s+os\.environ|process\.env\.CI\b"
 )
 
 
@@ -22,22 +34,48 @@ class TestEnvironmentDetection(RuleBase):
     name = "test-environment-detection"
     default_severity = "high"
     applies_to = {"source"}
-    why_flagged = "Source code can alter behavior when it detects tests or CI."
-    legit_if = "Test/CI detection configures isolated resources or legitimate environment settings."
+    why_flagged = "Source code can alter behavior when it detects a test runner or CI."
+    legit_if = (
+        "Detection configures isolated resources, timeouts or legitimate environment settings."
+    )
 
     def check(self, change: FileChange, ctx: ScanContext) -> list[Finding]:
         if "test" in change.kinds:
             return []
         name = PurePosixPath(change.path).name
         settings = name == "settings.py" or name.startswith(("config.", "env."))
+        added = {line.new_line: line for line in change.added}
+        regions = []
+        if ctx.mode == "full":
+            text = change.head_content or ""
+            regions.append((text, list(range(1, len(text.splitlines()) + 1))))
+        else:
+            for hunk in change.hunks:
+                lines = [line for line in hunk.lines if line.kind != "-"]
+                regions.append(
+                    ("\n".join(line.value for line in lines), [line.new_line for line in lines])
+                )
+        hits = {}
+        for text, coordinates in regions:
+            clean = without_comments(text, is_python(change.path))
+            shape = python_code(text) if is_python(change.path) else jsts.mask(text, strings=True)
+            for pattern, severity in ((CI, "medium"), (RUNNER, "high")):
+                for match in pattern.finditer(clean):
+                    if not shape[match.start() : match.end()].strip():
+                        continue  # The entire hit is inside a string/comment.
+                    start = clean.count("\n", 0, match.start())
+                    end = clean.count("\n", 0, match.end() - 1)
+                    for index in range(start, end + 1):
+                        row = coordinates[index]
+                        if row in added:
+                            hits[row] = "low" if settings else severity
         return [
             self.finding(
                 change,
-                line.new_line or 1,
+                row or 1,
                 "Test/CI environment referenced in source",
-                line.value,
-                severity="low" if settings else "high",
+                added[row].value,
+                severity=severity,
             )
-            for line in code_lines(change)
-            if PATTERN.search(line.value)
+            for row, severity in sorted(hits.items())
         ]

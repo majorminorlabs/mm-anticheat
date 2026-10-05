@@ -1,0 +1,1688 @@
+{
+  "repository": "httpx",
+  "head": "b5addb64f0161ff6bfe94c124ef76f6a1fba5254",
+  "requested_commits": 150,
+  "commits_scanned": 150,
+  "commits_with_high": 3,
+  "commits_with_high_or_medium": 8,
+  "counts": [
+    {
+      "rule_id": "GH000",
+      "severity": "info",
+      "count": 2
+    },
+    {
+      "rule_id": "GH001",
+      "severity": "medium",
+      "count": 1
+    },
+    {
+      "rule_id": "GH002",
+      "severity": "high",
+      "count": 8
+    },
+    {
+      "rule_id": "GH002",
+      "severity": "info",
+      "count": 2
+    },
+    {
+      "rule_id": "GH002",
+      "severity": "medium",
+      "count": 1
+    },
+    {
+      "rule_id": "GH004",
+      "severity": "medium",
+      "count": 1
+    },
+    {
+      "rule_id": "GH006",
+      "severity": "medium",
+      "count": 3
+    },
+    {
+      "rule_id": "GH010",
+      "severity": "low",
+      "count": 5
+    }
+  ],
+  "examples": {
+    "GH000": [
+      {
+        "commit": "89102021fcb44f6c3fab6304e5f951692723c908",
+        "subject": "chore: update sponsorship graphic (#3620)",
+        "rule_id": "GH000",
+        "rule_name": "parse-skipped",
+        "severity": "info",
+        "confidence": "normal",
+        "file": "docs/img/speakeasy.png",
+        "line": 1,
+        "title": "Content could not be parsed",
+        "evidence": "Binary content is not parsed",
+        "why_flagged": "This content could not be analyzed completely; review it separately.",
+        "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+        "allowed": false
+      },
+      {
+        "commit": "d4961b9f8e7f00b654dbdbf200562bd273f598c7",
+        "subject": "Add speakeasy sponsorship (#3305)",
+        "rule_id": "GH000",
+        "rule_name": "parse-skipped",
+        "severity": "info",
+        "confidence": "normal",
+        "file": "docs/img/speakeasy.png",
+        "line": 1,
+        "title": "Content could not be parsed",
+        "evidence": "Binary content is not parsed",
+        "why_flagged": "This content could not be analyzed completely; review it separately.",
+        "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+        "allowed": false
+      }
+    ],
+    "GH001": [
+      {
+        "commit": "5b5f6d8e172910371b5901f6e21717097274c513",
+        "subject": "Moving test cases into 'test_url.py' (#2982)",
+        "rule_id": "GH001",
+        "rule_name": "test-file-deleted",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "tests/test_urlparse.py",
+        "line": 1,
+        "title": "Test file removed from the suite",
+        "evidence": "tests/test_urlparse.py",
+        "why_flagged": "Removing a test file can remove coverage of behavior that still exists. Tests appear to have moved to: tests/models/test_url.py.",
+        "legit_if": "The code under test was also deleted, or coverage moved to another test file.",
+        "allowed": false
+      }
+    ],
+    "GH002": [
+      {
+        "commit": "7b19cd5f4b749064c6452892a5e58a3758da1d1b",
+        "subject": "Move utility functions from _utils.py to _client.py (#3389)",
+        "rule_id": "GH002",
+        "rule_name": "test-count-decreased",
+        "severity": "info",
+        "confidence": "normal",
+        "file": "tests/test_utils.py",
+        "line": 9,
+        "title": "Test count decreased: 13 \u2192 8",
+        "evidence": "Removed tests: test_same_origin, test_not_same_origin, test_is_https_redirect, test_is_not_https_redirect, test_is_not_https_redirect_if_not_default_ports",
+        "why_flagged": "Fewer test definitions may leave previously checked behavior untested. Tests appear to have moved to: tests/client/test_headers.py.",
+        "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+        "allowed": false
+      },
+      {
+        "commit": "1805ee0d22f96e2b29f0500dd3076e10020004bf",
+        "subject": "Graceful upgrade path for 0.28. (#3394)",
+        "rule_id": "GH002",
+        "rule_name": "test-count-decreased",
+        "severity": "high",
+        "confidence": "normal",
+        "file": "tests/test_config.py",
+        "line": 12,
+        "title": "Test count decreased: 29 \u2192 27",
+        "evidence": "Removed tests: test_SSLContext_repr, test_certifi_lazy_loading",
+        "why_flagged": "Fewer test definitions may leave previously checked behavior untested.",
+        "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+        "allowed": false
+      },
+      {
+        "commit": "41597adffa9d34171a63f7511fc0f702558dd08c",
+        "subject": "Move remaining utility functions from _utils.py to _models.py  (#3387)",
+        "rule_id": "GH002",
+        "rule_name": "test-count-decreased",
+        "severity": "info",
+        "confidence": "normal",
+        "file": "tests/test_utils.py",
+        "line": 56,
+        "title": "Test count decreased: 16 \u2192 13",
+        "evidence": "Removed tests: test_parse_header_links, test_parse_header_links_no_link, test_obfuscate_sensitive_headers",
+        "why_flagged": "Fewer test definitions may leave previously checked behavior untested. Tests appear to have moved to: tests/models/test_headers.py.",
+        "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+        "allowed": false
+      },
+      {
+        "commit": "eeb5e3c2a3ff2403ec47b5926715ecd61143d92d",
+        "subject": "Cleanup unneccessary test case (#3375)",
+        "rule_id": "GH002",
+        "rule_name": "test-count-decreased",
+        "severity": "high",
+        "confidence": "normal",
+        "file": "tests/client/test_auth.py",
+        "line": 273,
+        "title": "Test count decreased: 35 \u2192 34",
+        "evidence": "Removed tests: test_netrc_auth_nopassword",
+        "why_flagged": "Fewer test definitions may leave previously checked behavior untested.",
+        "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+        "allowed": false
+      },
+      {
+        "commit": "8e36f2bc685dfbe43cd7503bc1c422a6ed6e05a5",
+        "subject": "Introduce new `SSLContext` API & escalate deprecations. (#3319)",
+        "rule_id": "GH002",
+        "rule_name": "test-count-decreased",
+        "severity": "high",
+        "confidence": "normal",
+        "file": "tests/client/test_proxies.py",
+        "line": 88,
+        "title": "Test count decreased: 12 \u2192 8",
+        "evidence": "Removed tests: test_proxies_parameter, test_socks_proxy_deprecated, test_unsupported_proxy_scheme_deprecated, test_proxy_and_proxies_together",
+        "why_flagged": "Fewer test definitions may leave previously checked behavior untested.",
+        "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+        "allowed": false
+      }
+    ],
+    "GH004": [
+      {
+        "commit": "c7cd6aa5bdcf9f9d63e7dcea33cb78d6920aeed8",
+        "subject": "test `obfuscate_sensitive_headers` via public api (#3063)",
+        "rule_id": "GH004",
+        "rule_name": "assertion-count-decreased",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "tests/test_utils.py",
+        "line": 208,
+        "title": "Assertions decreased in test_obfuscate_sensitive_headers: 2 \u2192 1",
+        "evidence": "test_obfuscate_sensitive_headers\n    assert list(obfuscate_sensitive_headers(headers)) == output\n    assert list(obfuscate_sensitive_headers(bytes_headers)) == bytes_output",
+        "why_flagged": "Fewer assertions can make a test pass while checking less behavior.",
+        "legit_if": "Redundant checks were removed, or equivalent checks moved into a shared helper.",
+        "allowed": false
+      }
+    ],
+    "GH006": [
+      {
+        "commit": "41597adffa9d34171a63f7511fc0f702558dd08c",
+        "subject": "Move remaining utility functions from _utils.py to _models.py  (#3387)",
+        "rule_id": "GH006",
+        "rule_name": "hardcoded-test-expectation",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "httpx/_models.py",
+        "line": 53,
+        "title": "New source literal matches a test expectation",
+        "evidence": "SENSITIVE_HEADERS = {\"authorization\", \"proxy-authorization\"}\ntests/models/test_headers.py:169: @pytest.mark.parametrize(\"header\", [\"authorization\", \"proxy-authorization\"])",
+        "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+        "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+        "allowed": false
+      },
+      {
+        "commit": "db9072f998b53ff66d50778bf5edee8e2cc8ede1",
+        "subject": "Add URL parsing tests from WHATWG (#3188)",
+        "rule_id": "GH006",
+        "rule_name": "hardcoded-test-expectation",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "httpx/_urlparse.py",
+        "line": 383,
+        "title": "New source literal matches a test expectation",
+        "evidence": "            raise InvalidURL(\"Relative URLs cannot have a path starting with '//'\")\ntests/models/test_url.py:418:     assert str(exc.value) == \"Relative URLs cannot have a path starting with '//'\"",
+        "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+        "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+        "allowed": false
+      },
+      {
+        "commit": "db9072f998b53ff66d50778bf5edee8e2cc8ede1",
+        "subject": "Add URL parsing tests from WHATWG (#3188)",
+        "rule_id": "GH006",
+        "rule_name": "hardcoded-test-expectation",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "httpx/_urlparse.py",
+        "line": 388,
+        "title": "New source literal matches a test expectation",
+        "evidence": "            raise InvalidURL(\"Relative URLs cannot have a path starting with ':'\")\ntests/models/test_url.py:422:     assert str(exc.value) == \"Relative URLs cannot have a path starting with ':'\"",
+        "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+        "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+        "allowed": false
+      }
+    ],
+    "GH010": [
+      {
+        "commit": "8e36f2bc685dfbe43cd7503bc1c422a6ed6e05a5",
+        "subject": "Introduce new `SSLContext` API & escalate deprecations. (#3319)",
+        "rule_id": "GH010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "httpx/_decoders.py",
+        "line": 33,
+        "title": "1 lint/type suppression(s) added",
+        "evidence": "    zstandard = None  # type: ignore",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      },
+      {
+        "commit": "49d74a2e7f773f88a84dd4af900d7a8543636ae2",
+        "subject": "Clarified error when header value is None (#3312)",
+        "rule_id": "GH010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "tests/client/test_headers.py",
+        "line": 185,
+        "title": "1 lint/type suppression(s) added",
+        "evidence": "        httpx.Headers({\"foo\": None})  # type: ignore",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      },
+      {
+        "commit": "392dbe45f086d0877bd288c5d68abf860653b680",
+        "subject": "Add support for zstd decoding (#3139)",
+        "rule_id": "GH010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "httpx/_compat.py",
+        "line": 35,
+        "title": "1 lint/type suppression(s) added",
+        "evidence": "        map(int, re.search(r\"^([0-9]+)\\.([0-9]+)\", zstd.__version__).groups())  # type: ignore[union-attr]",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      },
+      {
+        "commit": "371b6e946c9e70df3dce79590c195448eac3f635",
+        "subject": "Use `__future__.annotations` (#3068)",
+        "rule_id": "GH010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "httpx/_models.py",
+        "line": 200,
+        "title": "2 lint/type suppression(s) added",
+        "evidence": "    def update(self, headers: HeaderTypes | None = None) -> None:  # type: ignore\n    def update(self, cookies: CookieTypes | None = None) -> None:  # type: ignore",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      },
+      {
+        "commit": "724eced022299c1beacce399f41dd9091e16a65a",
+        "subject": "Reorganise tests in 'test_url.py' (#2981)",
+        "rule_id": "GH010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "tests/models/test_url.py",
+        "line": 114,
+        "title": "1 lint/type suppression(s) added",
+        "evidence": "        httpx.URL(ExternalURLClass())  # type: ignore",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      }
+    ]
+  },
+  "errors": 0,
+  "stderr_lines": 0,
+  "rule_errors": 0,
+  "commits": [
+    {
+      "commit": "b5addb64f0161ff6bfe94c124ef76f6a1fba5254",
+      "subject": "Adapt test_response_decode_text_using_autodetect for chardet 6.0 (#3773)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ae1b9f66238f75ced3ced5e4485408435de10768",
+      "subject": "Expose `FunctionAuth` in `__all__` (#3699)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ca097c96f97d8d2a5da09b8ca736c7e78a2467f6",
+      "subject": "docs/ssl: fix typo (#3703)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "def4778d622e8bf49a9fea4dda78cca4cf666d8a",
+      "subject": "Fixed a syntax error in the file upload example (#3692)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "435e1dac899adeb0c156c00721ecbb1124d75842",
+      "subject": "Bump actions/setup-python from 5 to 6 (#3677)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4b23574cf83307ce27d3b14b4a425dc58c57d28d",
+      "subject": "Update dependencies (#3665)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "652f051feaf1ab2828e1812eb0c48f9046a8b5ce",
+      "subject": "Documentation for SSL_CERT_FILE and SSL_CERT_DIR (#3579)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3fee27838e9fd0cb528861e41f3ff98164081a4b",
+      "subject": "[docs] Remove load_ssl_context & load_verify_locations DEBUG log (#3589)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "bc00d2bd9f715b3b848925e0c259887409bceabc",
+      "subject": "Update compatibility.md with documentation of exceptions differences (#3649)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "767cf6baa608a56d03f8fe438a39c2013904f0ae",
+      "subject": "Bump the python-packages group across 1 directory with 10 updates (#3658)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b55d4635701d9dc22928ee647880c76b078ba3f2",
+      "subject": "Upgrade Python type checker mypy (#3654)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "15e9759e656654b44307fbee685e032c7bb4aede",
+      "subject": "Add `httpx-secure` to third party packages (#3629)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "364697efcafe39290358745da8be451a40a3eab2",
+      "subject": "Upgrade Python formatter ruff (#3651)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "89102021fcb44f6c3fab6304e5f951692723c908",
+      "subject": "chore: update sponsorship graphic (#3620)",
+      "findings": [
+        {
+          "rule_id": "GH000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "docs/img/speakeasy.png",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Binary content is not parsed",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4fb9528c2f5ac000441c3634d297e77da23067cd",
+      "subject": "Drop Python 3.8 support (#3592)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "336204f0121a9aefdebac5cacd81f912bafe8057",
+      "subject": "Display proxy protocol scheme on error (#3571)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6c7af967734bafd011164f2a1653abc87905a62b",
+      "subject": "Add httpx-retries to third party packages docs (#3552)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "9e8ab40369bd3ec2cc8bff37ab79bf5769c8b00f",
+      "subject": "Docs: Add `httpx.Proxy` to api.md (#3512)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ce7a6e91fbcaae8b8e5d8df5865a95a9b75acb64",
+      "subject": "Add `httpdbg` to third party packages. (#3327)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4189b7f051c6c51ce74c3bee1a5f269f9c50c6b2",
+      "subject": "fix typo (#3519)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e70d0b08c929e5140e38aa92a419de0c6d494148",
+      "subject": "Sharper CHANGELOG entry. (#3448)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b395e6626b45dc2122c04c6e080fc7fb908cc9af",
+      "subject": "Bump cryptography from 44.0.0 to 44.0.1 (#3499)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "10b7295922741b91a15751029e6ad3e8e5efb9f3",
+      "subject": "docs: Use `with` to open files in multipart examples (#3478)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c7c13f18a5af4c64c649881b2fe8dbd72a519c32",
+      "subject": "Add support for Python 3.13 (#3460)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "26d48e0634e6ee9cdc0533996db289ce4b430177",
+      "subject": "Version 0.28.1 (#3445)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "89599a9541af14bcf906fc4ed58ccbdf403802ba",
+      "subject": "Fix `verify=False`, `cert=...` case. (#3442)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "8ecb86f0d74ffc52d4663214fae9526bee89358d",
+      "subject": "Add test for request params behavior changes (#3364) (#3440)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0cb7e5a2e736628e2f506d259fcf0d48cd2bde82",
+      "subject": "Bump the python-packages group with 11 updates (#3434)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "15e21e9ea3cad4f06e22a7e704aabefdf43d2e29",
+      "subject": "Updating deprecated docstring Client() class (#3426)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "80960fa31918d7663c3f4c3ad61661cf0e80628f",
+      "subject": "Version 0.28.0. (#3419)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a33c87852b8a0dddc65e5f739af1e0a6fca4b91f",
+      "subject": "Fix `extensions` type annotation. (#3380)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ce7e14da27abba6574be9b3ea7cd5990556a9343",
+      "subject": "Error on verify as str. (#3418)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "47f4a96ffaaaa07dca1614409549b5d7a6e7af49",
+      "subject": "Handle empty zstd responses (#3412)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "189fc4bcbe5f314128775dec66a616ac9a31ad48",
+      "subject": "Update CHANGELOG.md, fix typo(s) (#3406)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7b19cd5f4b749064c6452892a5e58a3758da1d1b",
+      "subject": "Move utility functions from _utils.py to _client.py (#3389)",
+      "findings": [
+        {
+          "rule_id": "GH002",
+          "rule_name": "test-count-decreased",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/test_utils.py",
+          "line": 9,
+          "title": "Test count decreased: 13 \u2192 8",
+          "evidence": "Removed tests: test_same_origin, test_not_same_origin, test_is_https_redirect, test_is_not_https_redirect, test_is_not_https_redirect_if_not_default_ports",
+          "why_flagged": "Fewer test definitions may leave previously checked behavior untested. Tests appear to have moved to: tests/client/test_headers.py.",
+          "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b47d94c90445921dc74f42c8390a474892c3f097",
+      "subject": "Avoid private imports in test cases. (#3403)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2ea2286db4da3ba6d318e617ac03217225e9f962",
+      "subject": "Import ssl on demand (#3401)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1805ee0d22f96e2b29f0500dd3076e10020004bf",
+      "subject": "Graceful upgrade path for 0.28. (#3394)",
+      "findings": [
+        {
+          "rule_id": "GH002",
+          "rule_name": "test-count-decreased",
+          "severity": "high",
+          "confidence": "normal",
+          "file": "tests/test_config.py",
+          "line": 12,
+          "title": "Test count decreased: 29 \u2192 27",
+          "evidence": "Removed tests: test_SSLContext_repr, test_certifi_lazy_loading",
+          "why_flagged": "Fewer test definitions may leave previously checked behavior untested.",
+          "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "41597adffa9d34171a63f7511fc0f702558dd08c",
+      "subject": "Move remaining utility functions from _utils.py to _models.py  (#3387)",
+      "findings": [
+        {
+          "rule_id": "GH006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "httpx/_models.py",
+          "line": 53,
+          "title": "New source literal matches a test expectation",
+          "evidence": "SENSITIVE_HEADERS = {\"authorization\", \"proxy-authorization\"}\ntests/models/test_headers.py:169: @pytest.mark.parametrize(\"header\", [\"authorization\", \"proxy-authorization\"])",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH002",
+          "rule_name": "test-count-decreased",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/test_utils.py",
+          "line": 56,
+          "title": "Test count decreased: 16 \u2192 13",
+          "evidence": "Removed tests: test_parse_header_links, test_parse_header_links_no_link, test_obfuscate_sensitive_headers",
+          "why_flagged": "Fewer test definitions may leave previously checked behavior untested. Tests appear to have moved to: tests/models/test_headers.py.",
+          "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6212e8fa3bf90154b891c7721f6d29737caac861",
+      "subject": "Move utility functions from _utils.py to _multipart.py (#3388)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "83a85189c79708b732d04e7b906e388fb0fbde94",
+      "subject": "Move normalize header functions from _utils.py to _models.py (#3382)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "66225539796d819b5114ead2fd5e4d61865ab708",
+      "subject": "Cleanup `Request` method parameter. (#3378)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "12be5c44caa7a34bfe19f82eace5150ddeba2612",
+      "subject": "add socks5h proxy support (#3178)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e9cabc8e1deb6548c5c5e2f453e343d39a2a5321",
+      "subject": "made dependencies on certifi and httpcore only load when required (#3377)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "eeb5e3c2a3ff2403ec47b5926715ecd61143d92d",
+      "subject": "Cleanup unneccessary test case (#3375)",
+      "findings": [
+        {
+          "rule_id": "GH002",
+          "rule_name": "test-count-decreased",
+          "severity": "high",
+          "confidence": "normal",
+          "file": "tests/client/test_auth.py",
+          "line": 273,
+          "title": "Test count decreased: 35 \u2192 34",
+          "evidence": "Removed tests: test_netrc_auth_nopassword",
+          "why_flagged": "Fewer test definitions may leave previously checked behavior untested.",
+          "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5dda2aa30692e8529555f57efa7bcd203a7d5ac1",
+      "subject": "Just use default `safe=...` characters for `urlescape` (#3376)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "544038155382473ce87b17ef2238c96e48dee700",
+      "subject": "Update CHANGELOG.md (#3374)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ba2e51215e4e619540f2a24282b84ed8a738e6fd",
+      "subject": "Review urlescape percent-safe set, and use + behavior for form spaces. (#3373)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d293374b6603816420a2bb8e7f4fe5a5f09cbfcc",
+      "subject": "Review URL percent escaping sets, from whatwg. (#3371)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "489fef48ba8619c7604376165c7e8007398e1b5d",
+      "subject": "Update CHANGELOG.md (#3372)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "9fd6f0ca6616d0310a3ee0b0c6ef509a97995797",
+      "subject": "Ensure JSON representation is compact. #3363 (#3367)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "8e36f2bc685dfbe43cd7503bc1c422a6ed6e05a5",
+      "subject": "Introduce new `SSLContext` API & escalate deprecations. (#3319)",
+      "findings": [
+        {
+          "rule_id": "GH002",
+          "rule_name": "test-count-decreased",
+          "severity": "high",
+          "confidence": "normal",
+          "file": "tests/client/test_proxies.py",
+          "line": 88,
+          "title": "Test count decreased: 12 \u2192 8",
+          "evidence": "Removed tests: test_proxies_parameter, test_socks_proxy_deprecated, test_unsupported_proxy_scheme_deprecated, test_proxy_and_proxies_together",
+          "why_flagged": "Fewer test definitions may leave previously checked behavior untested.",
+          "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH002",
+          "rule_name": "test-count-decreased",
+          "severity": "high",
+          "confidence": "normal",
+          "file": "tests/models/test_url.py",
+          "line": 868,
+          "title": "Test count decreased: 70 \u2192 69",
+          "evidence": "Removed tests: test_url_raw_compatibility",
+          "why_flagged": "Fewer test definitions may leave previously checked behavior untested.",
+          "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH002",
+          "rule_name": "test-count-decreased",
+          "severity": "high",
+          "confidence": "normal",
+          "file": "tests/test_asgi.py",
+          "line": 225,
+          "title": "Test count decreased: 13 \u2192 12",
+          "evidence": "Removed tests: test_deprecated_shortcut",
+          "why_flagged": "Fewer test definitions may leave previously checked behavior untested.",
+          "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH002",
+          "rule_name": "test-count-decreased",
+          "severity": "high",
+          "confidence": "normal",
+          "file": "tests/test_config.py",
+          "line": 2,
+          "title": "Test count decreased: 29 \u2192 28",
+          "evidence": "Removed tests: test_load_ssl_config_verify_non_existing_path, test_load_ssl_config_verify_env_file, test_load_ssl_context, test_create_ssl_context_with_get_request, test_ssl_config_support_for_keylog_file",
+          "why_flagged": "Fewer test definitions may leave previously checked behavior untested.",
+          "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH002",
+          "rule_name": "test-count-decreased",
+          "severity": "high",
+          "confidence": "normal",
+          "file": "tests/test_utils.py",
+          "line": 6,
+          "title": "Test count decreased: 18 \u2192 16",
+          "evidence": "Removed tests: test_logging_ssl, test_get_ssl_cert_file",
+          "why_flagged": "Fewer test definitions may leave previously checked behavior untested.",
+          "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH002",
+          "rule_name": "test-count-decreased",
+          "severity": "high",
+          "confidence": "normal",
+          "file": "tests/test_wsgi.py",
+          "line": 204,
+          "title": "Test count decreased: 11 \u2192 10",
+          "evidence": "Removed tests: test_deprecated_shortcut",
+          "why_flagged": "Fewer test definitions may leave previously checked behavior untested.",
+          "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "httpx/_decoders.py",
+          "line": 33,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "    zstandard = None  # type: ignore",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3f76571d3429497c4ee4ecf5d8bc034b6f765957",
+      "subject": "Concise URL instantiation. (#3364)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6f9b50990dad9645a6f9dc0e1eb90af0a6474c3b",
+      "subject": "typo: Reading a response expose response text, not request text (#3359)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1bf1fc0ea8417c8e539914aeafdb48f15591ba75",
+      "subject": "Bump the python-packages group with 5 updates (#3329)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "95a9527ed6a8b9a8e53ddee2f61447fb1a37e2a9",
+      "subject": "Add `httpx-ws` to third party packages. (#3325)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3849e1518f342dd8cd08f8c0537b565d54e6d2a2",
+      "subject": "Add `httpx-socks` to third party packages. (#3326)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "49d74a2e7f773f88a84dd4af900d7a8543636ae2",
+      "subject": "Clarified error when header value is None (#3312)",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "tests/client/test_headers.py",
+          "line": 185,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "        httpx.Headers({\"foo\": None})  # type: ignore",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2e01aa0075327c5c30632207e8b7a1961dda5303",
+      "subject": "Enable TestSuite for PRs to version branches. (#3318)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f06171fd5a86cf89387f4ee860ea0da207160418",
+      "subject": "Revert \"Removed leading $ from cli code blocks\" (#3192)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d4961b9f8e7f00b654dbdbf200562bd273f598c7",
+      "subject": "Add speakeasy sponsorship (#3305)",
+      "findings": [
+        {
+          "rule_id": "GH000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "docs/img/speakeasy.png",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Binary content is not parsed",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0aa20e449e742f81fbc518ce793878015226652d",
+      "subject": "Bump cryptography from 43.0.0 to 43.0.1 (#3295)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d46fa57a6a5163e39af9eda6e026c60ca646f573",
+      "subject": "Bump the python-packages group across 1 directory with 8 updates (#3292)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "609df7ecc0f7cb10a1c998aa9c269bba77337c5f",
+      "subject": "Reintroduce `URLTypes`. (#3288)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1d6b6634331686c0701c75b6ff4830925269f23d",
+      "subject": "Update CHANGELOG for 0.27.1 release date. (#3285)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1bf1ba51242e6433f6a4cfa45a9338eb85bd7559",
+      "subject": "Version 0.27.1 (#3275)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7c0cda153d301bde9a011e1dd7157d7e2b20889d",
+      "subject": "Improve InvalidURL error message. (#3250)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "beb501fc28cb24ef7cd584159bc6ac55d2244dea",
+      "subject": "Bump the python-packages group across 1 directory with 8 updates (#3247)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "359f77d4f6ea722d02c3731e9581456c6386e188",
+      "subject": "Clean up URL signature. (#3245)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b351a44fb6e97dbe3119b738ddff7125cc5dc7af",
+      "subject": "Update requirements.txt (#3246)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "db9072f998b53ff66d50778bf5edee8e2cc8ede1",
+      "subject": "Add URL parsing tests from WHATWG (#3188)",
+      "findings": [
+        {
+          "rule_id": "GH006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "httpx/_urlparse.py",
+          "line": 383,
+          "title": "New source literal matches a test expectation",
+          "evidence": "            raise InvalidURL(\"Relative URLs cannot have a path starting with '//'\")\ntests/models/test_url.py:418:     assert str(exc.value) == \"Relative URLs cannot have a path starting with '//'\"",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "httpx/_urlparse.py",
+          "line": 388,
+          "title": "New source literal matches a test expectation",
+          "evidence": "            raise InvalidURL(\"Relative URLs cannot have a path starting with ':'\")\ntests/models/test_url.py:422:     assert str(exc.value) == \"Relative URLs cannot have a path starting with ':'\"",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "92e9dfb3997ab07353bbe98f9b5a6e69b7701c70",
+      "subject": "Update asgi.py docstring (#3210)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e186ecc9f82c9a45c031e70f0a153ac54235bd10",
+      "subject": "Bump the python-packages group with 8 updates (#3213)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "37593c1952f4972040f6163da67e3777fd3d2e94",
+      "subject": "Fast path returns for normalize_path cases (#3189)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "88a81c5d31a4a8b4bd0a860dedd3bb12dc09ff86",
+      "subject": "[fix] Use proxy ssl context consistently (#3175)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fa6dac8383541669f42086d4f07c71b0f8d6a279",
+      "subject": "Removed leading $ from cli code blocks (#3174)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a7092af2fda78d92daaad7627e4cf0cf5e94b019",
+      "subject": "Resolve queryparam quoting (#3187)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "be56b747350008b7b0456242691919f9086c0f32",
+      "subject": "Fix doc links for making requests directly to WSGI/ASGI apps (#3186)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2f5ae50726b1a2ca78340a25054f81cf4ed926c7",
+      "subject": "Bump the python-packages group with 6 updates (#3185)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4b85e6c3898b94e686b427afd83138c87520b479",
+      "subject": "Docs: fix small typos in Extensions doc (#3138)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7354ed70ceb1a0f072af82e2cb784ef6b2512ed3",
+      "subject": "Bump the python-packages group with 8 updates (#3156)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5bb2ea0f4e1274730ef85f50f5a6bf07eb74eef4",
+      "subject": "Update URL.__init__ signature (#3159)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "45bb65bba12360d94b8c512e6b13ac4b775a402d",
+      "subject": "Document 'target' extension (#3160)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "392dbe45f086d0877bd288c5d68abf860653b680",
+      "subject": "Add support for zstd decoding (#3139)",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "httpx/_compat.py",
+          "line": 35,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "        map(int, re.search(r\"^([0-9]+)\\.([0-9]+)\", zstd.__version__).groups())  # type: ignore[union-attr]",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7df47ce4d93a06f2c3310cd692b4c2336d7663ba",
+      "subject": "Bump the python-packages group with 8 updates (#3129)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0006ed0547f8f8a3cbe2edf758e996c3c73b5e7d",
+      "subject": "format (#3131)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f3eb3c90fdd19d2e4c5239e19a3588d072ff53fb",
+      "subject": "Keep clients in sync (#3120)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7e10342c2ad44955582e4fef96470f3e653347d4",
+      "subject": "Delete `README_chinese.md` (#3122)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4941b40cbbae1ceb2b7a3d4e8064df96806c5e33",
+      "subject": "Fix broken links in docs/contributing.md and CHANGELOG.md (#3124)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6045186f7d3a665b965c13dec413e3a346b1a01d",
+      "subject": "Update /advanced/#<anchor> links -> /advanced/clients/#<anchor> (#3123)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6d852d319acd5d97caf14037dff15ede04b37542",
+      "subject": "Fix client.send() timeout new Request instance (#3116)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "df5345140e09ac6c2de0d9589bcd6f3e31c6aa3f",
+      "subject": "fix docs basic authentication typo (#3112)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fc84f7f6eb77fe5d4428261c837ac8016ec77a28",
+      "subject": "test `same_origin` via public api (#3062)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e745060c75d06a7a6c1c90007120af2a43b3fffc",
+      "subject": "test `is_https_redirect` via public api (#3064)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4de13707ee0fbc6e3ea5b30c90cf64aae0af7fb2",
+      "subject": "Use more permissible types in ASGIApp  (#3109)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "87713d2172053c4ad05efacf3ab7e0a5c15616fc",
+      "subject": "Define and expose the API from the same place (#3106)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "77cb36f181b6ee728dd25c781ba5550a8804ee1d",
+      "subject": "Bump cryptography from 42.0.2 to 42.0.4 (#3107)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "326b9431c761e1ef1e00b9f760d1f654c8db48c6",
+      "subject": "Version 0.27.0 (#3095)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3faa4a8f2e0d406167b913bbfd3afab087662d03",
+      "subject": "Improve 'Custom transports' docs (#3081)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c51af4ba52d4103517a91f770e617cc579803b2d",
+      "subject": "Extensions docs (#3080)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "cabd1c095e52e2f67ab63ec17941d3a539d7c877",
+      "subject": "Deprecate `app=...` in favor of explicit `WSGITransport`/`ASGITransport`. (#3050)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6f461522a5c58839c31be3c82b7bd47fba77109b",
+      "subject": "Bump the python-packages group with 6 updates (#3077)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "37a2901af38f4142ee902c838aaaf92cf8a80f6a",
+      "subject": "Mention NO_PROXY environment variable on Advanced Usage page (#3066)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "371b6e946c9e70df3dce79590c195448eac3f635",
+      "subject": "Use `__future__.annotations` (#3068)",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "httpx/_models.py",
+          "line": 200,
+          "title": "2 lint/type suppression(s) added",
+          "evidence": "    def update(self, headers: HeaderTypes | None = None) -> None:  # type: ignore\n    def update(self, cookies: CookieTypes | None = None) -> None:  # type: ignore",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4f6edf36e93fd9f83ff95b065718fd6bd0c4d3c5",
+      "subject": "test `parse_header_links` via public api (#3061)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c7cd6aa5bdcf9f9d63e7dcea33cb78d6920aeed8",
+      "subject": "test `obfuscate_sensitive_headers` via public api (#3063)",
+      "findings": [
+        {
+          "rule_id": "GH004",
+          "rule_name": "assertion-count-decreased",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/test_utils.py",
+          "line": 208,
+          "title": "Assertions decreased in test_obfuscate_sensitive_headers: 2 \u2192 1",
+          "evidence": "test_obfuscate_sensitive_headers\n    assert list(obfuscate_sensitive_headers(headers)) == output\n    assert list(obfuscate_sensitive_headers(bytes_headers)) == bytes_output",
+          "why_flagged": "Fewer assertions can make a test pass while checking less behavior.",
+          "legit_if": "Redundant checks were removed, or equivalent checks moved into a shared helper.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "15f925336c6bad2f5b2711553a6b6763923175de",
+      "subject": "Drop outdated section (#3057)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d76607b112bf0bfbc79dc4dd8566101c69dbfa6e",
+      "subject": "Adding an indent to fix wrong rendering in warning block (#3056)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "73e688875a3579b67eee5795839b9660a1cfe5d8",
+      "subject": "Fix sections references (#3058)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "419d3a9d80d0c4072f6cb58eeb306148ae89e2e9",
+      "subject": "Bump the python-packages group with 3 updates (#3055)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "8cd952c88fc2d0469cee8f08c2a580652b084375",
+      "subject": "Docs restructuring. (#3049)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ab720d325808e1d092787995c2023c9aeb24aff5",
+      "subject": "Group dependencies on dependabot updates (#3054)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "99cba6ac642b12f0331d069ae324402c54c4c600",
+      "subject": "Fix RFC 2069 mode digest authentication (#3045)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ca51b4532a4495c38c8abf1a393dbd80099deae3",
+      "subject": "Keep clients in sync (#3042)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c6907c22034e2739c4c1af89908e3c9f90602788",
+      "subject": "Remove unused type: ignore (#3038)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ebc1393c5cf6430e3027bdb724368a9d6e3429ef",
+      "subject": "Bump pytest from 7.4.3 to 7.4.4 (#3032)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4ddff16bbe41c0bc4b8a5ea3a2c204d8e99478f3",
+      "subject": "Bump coverage[toml] from 7.3.0 to 7.4.0 (#3034)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f1ed7463086f0aed97afa61a1197c51840d3bb2e",
+      "subject": "Bump actions/setup-python from 4 to 5 (#3036)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ea3071642d12ed546d901861a5901da6fad37073",
+      "subject": "Bump ruff from 0.1.6 to 0.1.9 (#3031)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b871b4b8b29aca2e675645fae0c9f8e7d2a5e7d5",
+      "subject": "Bump mkdocs-material from 9.4.14 to 9.5.3 (#3035)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "dd5304d3eb97f0aad7126a45f3fd7041dfee0ac2",
+      "subject": "Tidy up import (#3020)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1a660147edf1d32af440fdfb115b71238eda7498",
+      "subject": "Add missing argument (#3023)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1d526a018060d158e7548366216491c413756872",
+      "subject": "`types-certifi` and `types-chardet` are no longer needed (#3015)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "08eff926a6011ac84961fd2cee22d9fd4d4b1a88",
+      "subject": "Version 0.26.0 (#3009)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b4b27ff6777c8906c2b31dd879bd4cc1d9e4f6ce",
+      "subject": "Remove unused curio check (#3010)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a11fc3849b94157274c98d99501acad05cbfb221",
+      "subject": "Cleanup URL percent-encoding behavior. (#2990)",
+      "findings": [
+        {
+          "rule_id": "GH002",
+          "rule_name": "test-count-decreased",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/models/test_url.py",
+          "line": 73,
+          "title": "Test count decreased: 68 \u2192 65",
+          "evidence": "Removed tests: test_path_percent_encoding, test_query_percent_encoding, test_fragment_percent_encoding, test_url_with_url_encoded_path",
+          "why_flagged": "Fewer test definitions may leave previously checked behavior untested. Parametrization was added in this file.",
+          "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3b9060ee1121b48669e0b30045c9344065f4f2ae",
+      "subject": "Fix environment proxies (#2741)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2318fd822cdb16435ccb5cabcba16c0b7969c1e4",
+      "subject": "Enabling `ruff` C416 (#3001)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2c51edd0c0d4124423661eb5678ae1a94a107260",
+      "subject": "Update CHANGELOG.md (#3000)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1e110964736a95d822144390b99d7ecf17fca527",
+      "subject": "Fixed `iter_text` adding an empty string (#2998)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "90538a3b4610ba49ce16c997bcfdb9101f9503be",
+      "subject": "Ensure that ASGI 'raw_path' does not include query component of URL. (#2999)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f8981f3d124f9b8db9073fd5c8afa11acb55a738",
+      "subject": "Add the 'proxy' parameter and deprecate 'proxies'. (#2879)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b471f01d668b9ef730e8843531b07b1c21b74c47",
+      "subject": "Allow URLs where username or password contains unescaped '@'. (#2986)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5b5f6d8e172910371b5901f6e21717097274c513",
+      "subject": "Moving test cases into 'test_url.py' (#2982)",
+      "findings": [
+        {
+          "rule_id": "GH001",
+          "rule_name": "test-file-deleted",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/test_urlparse.py",
+          "line": 1,
+          "title": "Test file removed from the suite",
+          "evidence": "tests/test_urlparse.py",
+          "why_flagged": "Removing a test file can remove coverage of behavior that still exists. Tests appear to have moved to: tests/models/test_url.py.",
+          "legit_if": "The code under test was also deleted, or coverage moved to another test file.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "724eced022299c1beacce399f41dd9091e16a65a",
+      "subject": "Reorganise tests in 'test_url.py' (#2981)",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "tests/models/test_url.py",
+          "line": 114,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "        httpx.URL(ExternalURLClass())  # type: ignore",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "9ef08c79493834108144954e3ada1443b8098d09",
+      "subject": "Bump uvicorn from 0.22.0 to 0.24.0.post1 (#2972)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "266761d8d9653b6e996db1accde5d552baa5201d",
+      "subject": "Bump mkdocs-material from 9.4.7 to 9.4.14 (#2973)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fe5954c98f92d825e47d8c432743deef7aa6599d",
+      "subject": "Bump trio-typing from 0.9.0 to 0.10.0 (#2970)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0265d95faad296ed588b0752422d56344e720b49",
+      "subject": "Bump cryptography from 41.0.6 to 41.0.7 (#2971)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d4b70fe8959e726c203c843488b64b54378e97ea",
+      "subject": "Bump ruff from 0.1.3 to 0.1.6 (#2974)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fd60b1815cf92354d097ac46aea63ebc0f34fd21",
+      "subject": "Ruff linter: Use the default line-length (#2922)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "90d71e63e017fb5535a97c3c880d1373ae8918f4",
+      "subject": "Bump cryptography from 41.0.4 to 41.0.6 (#2965)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "cc206cf2dad42600479962ac1daaa44675cfaf56",
+      "subject": "Version 0.25.2 (#2957)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "87f39f12c9ecdd0ebcd8d017235698e72567e9c7",
+      "subject": "add missing type hints to __init__(...) (#2938)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c51e0466be600af7f36c72fca084f16a91bce9d2",
+      "subject": "Add missing changelog section (#2943)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "497b315fc7a0ca6a54c8ec6c929568abaf6efab1",
+      "subject": "Add tests and requirements.txt to sdist (#2927)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "89cbd3c942241ed4734cba52e902ab2c815b35c6",
+      "subject": "\ud83d\udccc pin httpcore==1.* (#2937)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f653b2f0cf5aea2a3ad179e5858f248e975d68f9",
+      "subject": "Inline Brotli samples in tests (#2935)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fbe35add82032d119d60c7f4de9bce2ccb12f6a1",
+      "subject": "Tidy up headers in CHANGELOG.md (#2925)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c19728ca39f30f90d13e7eae954169550b2e8b66",
+      "subject": "Bump build from 0.10.0 to 1.0.3 (#2913)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    }
+  ]
+}

@@ -31,12 +31,12 @@ def _weaker(before: str, after: str) -> bool:
             return True
     if exact and re.search(r"\.toBeCloseTo\([^\n]*,\s*0\s*\)", after):
         return True
-    specific = re.search(r"(?:assertRaises|toThrow)\s*\(\s*([\w.]+)", before)
+    specific = re.search(r"(?:assertRaises|toThrow|pytest\.raises)\s*\(\s*([\w.]+)", before)
     if (
         specific
         and specific[1] not in {"Exception", "BaseException"}
         and re.search(
-            r"assertRaises\s*\(\s*(?:Exception|BaseException)\s*[,)]|toThrow\s*\(\s*\)",
+            r"(?:assertRaises|pytest\.raises)\s*\(\s*(?:Exception|BaseException)\s*[,)]|toThrow\s*\(\s*\)",
             after,
         )
     ):

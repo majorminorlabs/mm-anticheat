@@ -69,7 +69,7 @@ def assertion_line(text: str) -> bool:
     return bool(
         re.search(
             r"\bassert\b|\b(?:self\.)?assert\w*\s*\(|\bexpect\s*\(|"
-            r"\bassert\.",
+            r"\bassert\.|\bpytest\.raises\s*\(|\.assert_(?:called|awaited|not_called)\w*\s*\(",
             text,
         )
     )
@@ -105,14 +105,12 @@ def comment_text(text: str, py: bool) -> dict[int, str]:
         except (tokenize.TokenError, IndentationError):
             pass
     else:
-        pattern = (
-            r"//[^\n]*|/\*[\s\S]*?\*/|'(?:\\.|[^'\\])*'|\"(?:\\.|[^\"\\])*\"|`(?:\\.|[^`\\])*`"
-        )
-        for match in re.finditer(pattern, text):
-            if match[0].startswith(("//", "/*")):
-                start = text.count("\n", 0, match.start()) + 1
-                for index, line in enumerate(match[0].splitlines()):
-                    result[start + index] = line
+        from goodhart.lang.jsts import tokens
+
+        for token in tokens(text):
+            if token.kind == "comment":
+                for index, line in enumerate(token.value.splitlines()):
+                    result[token.line + index] = line
     return result
 
 

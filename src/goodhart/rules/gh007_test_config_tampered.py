@@ -126,7 +126,7 @@ def _selectors(value: object) -> set[str]:
     return {
         match[0].strip()
         for match in re.finditer(
-            r"(?:^|\s)(?:-k\s+[^\n]+?(?=\s+-|$)|--(?:deselect|ignore(?:-glob)?)[=\s]+[^\s]+"
+            r"(?:^|\s)(?:-[km]\s+[^\n]+?(?=\s+-|$)|--(?:deselect|ignore(?:-glob)?)[=\s]+[^\s]+"
             r"|-p\s+no:[^\s]+)",
             text,
         )
@@ -188,7 +188,8 @@ class TestConfigTampered(RuleBase):
                     (new_match[1] if new_match else ""),
                 )
             if new_script != old_script and (
-                re.search(
+                (TEST_RUN.search(old_script) and not TEST_RUN.search(new_script))
+                or re.search(
                     r"\|\|\s*true\b|--passWithNoTests\b|\bexit\s+0\b",
                     new_script,
                 )

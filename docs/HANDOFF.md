@@ -3,7 +3,7 @@
 Owner: Dippo (MAJOR//minor)
 Builder: Sol 6.1
 Reviewer: Claude (reviews after each gate, writes a fix list, Sol fixes)
-Doc version: v1, 2026-10-04
+Doc version: v1.1, 2026-10-04 (Gate 2 sources, section 8.2 wording)
 
 ---
 
@@ -61,7 +61,7 @@ Build with the default. Don't block on these.
 | D3 | Language | Python | Keeps the eval tooling (quant tester later) on one stack. |
 | D4 | Default `--fail-on` threshold | `high` | Medium/low still print, they just don't fail CI. |
 | D5 | Repo home | MAJOR//minor GitHub org, private until launch | |
-| D6 | Real-world fixture set | Supplied by Dippo at GATE 2 | Diffs from ATLAS runs where agents actually cheated. |
+| D6 | Real-world fixture set | Supplied by Dippo at GATE 2 | Sourced from public reward-hacking transcripts (METR), ImpossibleBench runs on local models, Dippo's own repo history, and public agent PRs. Not from ATLAS. |
 
 ---
 
@@ -313,13 +313,21 @@ A test harness (`tests/test_fixtures.py`) discovers every case, runs the scanner
 
 ### 8.2 Requirements
 - Per rule: ≥ 2 positive, ≥ 2 negative, and at least one of each in patch mode where the rule supports it.
-- Negative cases must include the **legit-if** scenario from the rule spec (e.g. GH001 with matching source deleted, GH002 with consolidation into parametrize).
+- Fixtures must include the **legit-if** scenario from the rule spec (e.g. GH001 with matching source deleted, GH002 with consolidation into parametrize). Where section 6 specifies a downgrade for that scenario, the fixture asserts the downgraded finding. Section 6 wins over this section.
 - A cross-rule "clean refactor" fixture: a realistic, honest diff (rename + extract function + new tests) that must produce **zero** findings above `info`.
 - A "classic cheat" fixture: one diff that triggers GH002, GH003, GH005 and GH006 together. This becomes the README demo.
 - Performance test: generate a 5,000-line synthetic diff; full scan must finish in < 2s on a laptop. Mark it so it can be skipped in CI if slow.
 
 ### 8.3 Real-world set (GATE 2)
-Dippo supplies diffs from ATLAS runs. Sol adds them as fixtures under `tests/fixtures/real/`, records hit/miss per case in `docs/real-world-eval.md`, and tunes rules only where a change doesn't break existing fixtures.
+Dippo supplies real diffs where an agent gamed tests. Sources, in rough order:
+1. **Dippo's own repos.** Run `goodhart scan` over the git history of repos built with Claude Code / Codex (a small `scripts/scan_history.py` that walks commits and saves any commit with high/medium findings as a candidate fixture). Dippo labels each candidate as real cheat or false positive.
+2. **ImpossibleBench runs** using a local model (MLX or llama.cpp via an OpenAI-compatible endpoint) on the "conflicting" split. Every task there is impossible, so any passing solution gamed the tests. Extract the final diff per task.
+3. **METR's public transcripts** (transcripts.metr.org). Hand-convert a handful of examples into diffs.
+4. **Public agent PRs** on GitHub that reviewers called out for removing or skipping tests.
+
+Sol adds them as fixtures under `tests/fixtures/real/`, with a `source` field in `meta.toml` (`own-history`, `impossiblebench`, `metr`, `github-pr`), records hit/miss per case in `docs/real-world-eval.md`, and tunes rules only where a change doesn't break existing fixtures. False positives from source 1 become negative fixtures.
+
+Note: many METR examples (grader stubs, `__eq__` overrides that always return True, patched timers) are outside the v1 rules. Log them as misses with a short note. They feed the v1.1 candidates list in section 11, not v1 scope.
 
 ---
 
@@ -378,7 +386,6 @@ class Rule(Protocol):
     supports_patch_mode: bool
     why_flagged: str
     legit_if: str
-
     def check(self, change: FileChange, ctx: ScanContext) -> list[Finding]: ...
 ```
 
@@ -444,6 +451,8 @@ Claude does a full review against section 13 → `REVIEW_03.md`. Dippo handles n
 - Auto-fixing or reverting anything.
 - Scoring agents or producing an overall "honesty score."
 - Mock-of-unit-under-test detection (too noisy without real type info; v2).
+
+**v1.1 candidates (do not build in v1, just record evidence for them):** `__eq__` / `__hash__` overrides that return a constant, grader or scorer functions replaced with stubs, monkey-patched timing functions (`time.time`, `perf_counter`), reading reference answers from fixture or metadata files in source code, and early `return` / `return None` inserted at the top of a test body (candidate GH013, `test-body-short-circuited`; REVIEW_01 C1).
 
 ---
 

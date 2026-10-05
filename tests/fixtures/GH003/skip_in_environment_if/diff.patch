@@ -1,0 +1,8 @@
+diff --git a/tests/test_probe.py b/tests/test_probe.py
+--- a/tests/test_probe.py
++++ b/tests/test_probe.py
+@@ -1,2 +1,4 @@
+ def test_existing():
++    if sys.version_info < (3, 12):
++        pytest.skip("requires new Python")
+     assert 3 == 3

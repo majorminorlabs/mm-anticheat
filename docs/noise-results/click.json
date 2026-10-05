@@ -1,0 +1,893 @@
+{
+  "repository": "click",
+  "head": "06b2a678741131fd577ce170e23e5ca0aeba0309",
+  "requested_commits": 80,
+  "commits_scanned": 80,
+  "commits_with_high": 1,
+  "commits_with_high_or_medium": 2,
+  "counts": [
+    {
+      "rule_id": "GH002",
+      "severity": "high",
+      "count": 1
+    },
+    {
+      "rule_id": "GH003",
+      "severity": "low",
+      "count": 2
+    },
+    {
+      "rule_id": "GH004",
+      "severity": "medium",
+      "count": 1
+    },
+    {
+      "rule_id": "GH010",
+      "severity": "low",
+      "count": 7
+    }
+  ],
+  "examples": {
+    "GH002": [
+      {
+        "commit": "c3535905c77a29afc84861b29d3ad366ce5451bd",
+        "subject": "Fix broken fish completion and multiline help string",
+        "rule_id": "GH002",
+        "rule_name": "test-count-decreased",
+        "severity": "high",
+        "confidence": "normal",
+        "file": "tests/test_shell_completion.py",
+        "line": 362,
+        "title": "Test count decreased: 36 \u2192 35",
+        "evidence": "Removed tests: test_fish_multiline_help_complete",
+        "why_flagged": "Fewer test definitions may leave previously checked behavior untested.",
+        "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+        "allowed": false
+      }
+    ],
+    "GH003": [
+      {
+        "commit": "2468b70997a6ec27ced4b4867954c90da3f92075",
+        "subject": "Fix readline backspace/line-wrapping on linux (#2969)",
+        "rule_id": "GH003",
+        "rule_name": "skip-marker-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "tests/test_utils.py",
+        "line": 232,
+        "title": "Skip/focus marker added to a new test",
+        "evidence": "pytest.mark.skipif(WIN, reason=\"Different behavior on windows.\")",
+        "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
+        "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
+        "allowed": false
+      },
+      {
+        "commit": "0d69b6ce8b25fe31ea580c608adb8e45df3805bb",
+        "subject": "Adds support for editing multiple files (#2068)",
+        "rule_id": "GH003",
+        "rule_name": "skip-marker-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "tests/test_termui.py",
+        "line": 384,
+        "title": "Skip/focus marker added to a new test",
+        "evidence": "pytest.mark.skipif(platform.system() == \"Windows\", reason=\"No sed on Windows.\")",
+        "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
+        "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
+        "allowed": false
+      }
+    ],
+    "GH004": [
+      {
+        "commit": "0e0c00324a5af35f8995c7ff88df67b0f5594a58",
+        "subject": "Keep track of `<stderr>` and `<stdout>` mix in `CliRunner` results (#2523)",
+        "rule_id": "GH004",
+        "rule_name": "assertion-count-decreased",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "tests/test_testing.py",
+        "line": 301,
+        "title": "Assertions decreased in test_stderr: 10 \u2192 6",
+        "evidence": "test_stderr\n    assert result.output == \"stdout\\n\"\n    assert result.stdout == \"stdout\\n\"\n    assert result.stderr == \"stderr\\n\"\n    assert result_mix.output == \"stdout\\nstderr\\n\"\n    assert result_mix.stdout == \"stdout\\nstderr\\n\"\n    with pytest.raises(ValueError):\n        assert result_mix.stderr  # noqa B018",
+        "why_flagged": "Fewer assertions can make a test pass while checking less behavior.",
+        "legit_if": "Redundant checks were removed, or equivalent checks moved into a shared helper.",
+        "allowed": false
+      }
+    ],
+    "GH010": [
+      {
+        "commit": "c69643b60cf971cd5d8e5d3902632807ceab9b8f",
+        "subject": "Add file-like pager: `click.get_pager_file()` (#1572)",
+        "rule_id": "GH010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "src/click/_termui_impl.py",
+        "line": 429,
+        "title": "1 lint/type suppression(s) added",
+        "evidence": "                stream.color = color  # type: ignore[attr-defined]",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      },
+      {
+        "commit": "c5cced7b3096804567688df645194e3ed3dfa88b",
+        "subject": "fix: `_termui_impl.open_url()` \u2014 'start' on Windows is a cmd built-in, not an executable (#3186)",
+        "rule_id": "GH010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "src/click/_termui_impl.py",
+        "line": 729,
+        "title": "1 lint/type suppression(s) added",
+        "evidence": "                os.startfile(url)  # type: ignore[attr-defined]",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      },
+      {
+        "commit": "f14b75063fb36b9208b13a920326926363616b39",
+        "subject": "update dev dependencies",
+        "rule_id": "GH010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "src/click/_winconsole.py",
+        "line": 112,
+        "title": "1 lint/type suppression(s) added",
+        "evidence": "            return buffer_type.from_address(buf.buf)  # type: ignore[attr-defined, no-any-return]",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      },
+      {
+        "commit": "45f89cd5d39db37b9aa1a014da000f12da532ddc",
+        "subject": "Improve typing on Windows (#2803)",
+        "rule_id": "GH010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "src/click/_compat.py",
+        "line": 548,
+        "title": "1 lint/type suppression(s) added",
+        "evidence": "        rv.write = _safe_write  # type: ignore[method-assign]",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      },
+      {
+        "commit": "45f89cd5d39db37b9aa1a014da000f12da532ddc",
+        "subject": "Improve typing on Windows (#2803)",
+        "rule_id": "GH010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "src/click/_winconsole.py",
+        "line": 75,
+        "title": "1 lint/type suppression(s) added",
+        "evidence": "        from collections.abc import Buffer  # type: ignore",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      }
+    ]
+  },
+  "errors": 0,
+  "stderr_lines": 0,
+  "rule_errors": 0,
+  "commits": [
+    {
+      "commit": "c3535905c77a29afc84861b29d3ad366ce5451bd",
+      "subject": "Fix broken fish completion and multiline help string",
+      "findings": [
+        {
+          "rule_id": "GH002",
+          "rule_name": "test-count-decreased",
+          "severity": "high",
+          "confidence": "normal",
+          "file": "tests/test_shell_completion.py",
+          "line": 362,
+          "title": "Test count decreased: 36 \u2192 35",
+          "evidence": "Removed tests: test_fish_multiline_help_complete",
+          "why_flagged": "Fewer test definitions may leave previously checked behavior untested.",
+          "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4e869f3a172a58df077932dc80b130cdf4ba9774",
+      "subject": "start version 8.5.0",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0039359443e73ab1034c63a1f6d58aba22c0ebc8",
+      "subject": "Add missing space between option help text and deprecation label (#3423)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fc6c7c47edd6110b6bd5a1a5297b2035214b0cd1",
+      "subject": "`FuncParamType` should use `ValueError` message in `self.fail()` (#3211)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5b9630f50fde938b72ad8c99542efe3a6f5717e2",
+      "subject": "Localisation of more strings (#2902)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "73e155006526575548d143ef519995f540547e52",
+      "subject": "Fix sentinel typing and its uses in parser (#3396)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fed9049f7a07550d560a91b30c5b0b3e17d54981",
+      "subject": "Move #1572 changelog entry to correct version entry (8.4.0).",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "831c8f0948af519e45b90801d7430ff25451f972",
+      "subject": "Add NoSuchCommand exception with suggestions for misspelled commands (#3228)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "19fd4d6e18bc9fce451f92f422696b11169faa57",
+      "subject": "Fix: Ensure fish completion handles multiline help strings correctly (#3126)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c69643b60cf971cd5d8e5d3902632807ceab9b8f",
+      "subject": "Add file-like pager: `click.get_pager_file()` (#1572)",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "src/click/_termui_impl.py",
+          "line": 429,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "                stream.color = color  # type: ignore[attr-defined]",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c5cced7b3096804567688df645194e3ed3dfa88b",
+      "subject": "fix: `_termui_impl.open_url()` \u2014 'start' on Windows is a cmd built-in, not an executable (#3186)",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "src/click/_termui_impl.py",
+          "line": 729,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "                os.startfile(url)  # type: ignore[attr-defined]",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2468b70997a6ec27ced4b4867954c90da3f92075",
+      "subject": "Fix readline backspace/line-wrapping on linux (#2969)",
+      "findings": [
+        {
+          "rule_id": "GH003",
+          "rule_name": "skip-marker-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "tests/test_utils.py",
+          "line": 232,
+          "title": "Skip/focus marker added to a new test",
+          "evidence": "pytest.mark.skipif(WIN, reason=\"Different behavior on windows.\")",
+          "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
+          "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ddede2147c9370ab8275f81db4826b6895d2e7dc",
+      "subject": "`Parameter` typing improvements (#2805)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d2e4a42ff410d92e88293f3552422a4a284c749b",
+      "subject": "Extract `_guess_type` from `convert_type` and add overloads (#3372)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1339fd3323357119a9c7a6326c788f80295954ce",
+      "subject": "Add missing unreleased 8.3.3 section",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "04ef3a6f473deb2499721a8d11f92a7d2c0912f2",
+      "subject": "update dev dependencies",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "feffea5ca2537ed36a1d699d3536a65c676fc5c1",
+      "subject": "fix windows import check",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "bb7be1f6a91f3fd1267d1a6d68771273d593f9c7",
+      "subject": "Revert \"Use `default=True` as a sentinel for non-boolean flags\"",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6c4a77ba24854dab793a8ff72110a0a24c403c9f",
+      "subject": "Use `default=True` as a sentinel for non-boolean flags",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f67abc6fe7dd3d878879a4f004866bf5acefa9b4",
+      "subject": "update dev dependencies",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "701b313160be12752e49b3f7cea32402c0969a69",
+      "subject": "Fix completions for quoted/escaped parameters in Fish (#3013)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a1235aacb1be55dc66ddcfefbf64dec44b6ab54d",
+      "subject": "Fix Zsh completions with colons (#2846)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "28650344c54dd54e673d3e9a35e76bf9f4bedf8d",
+      "subject": "svg logo",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "316d58ef45d29eb9865679260a52315647d259ca",
+      "subject": "cleanup svg",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "beb4c356844f62f501ead054f947f05313ca2e2b",
+      "subject": "cleanup svg",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d1a80aa95cc207f50da1c438af742b7edad02267",
+      "subject": "update dev dependencies",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f14b75063fb36b9208b13a920326926363616b39",
+      "subject": "update dev dependencies",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "src/click/_winconsole.py",
+          "line": 112,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "            return buffer_type.from_address(buf.buf)  # type: ignore[attr-defined, no-any-return]",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "9982faee85f2715a9cde03639f8c0382561c09ce",
+      "subject": "Update CHANGES.rst",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7318f5f11bd59de62e4f7f73585d19300deb32b2",
+      "subject": "Update CHANGES.rst",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "8fcf9b0c5bbfcc9231298d76cde29ae8b0fc50d0",
+      "subject": "CHANGES: fix rst markup.",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "24969c08cd312c01e7f590cf199452c6f51f6e0c",
+      "subject": "Add missing PR to CHANGES.",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "82089af2e66f5150edd1355f390f7b5e4028aeff",
+      "subject": "Rewrite first half of options docs (#2825)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4ece17a107d7b2e8bc3bd14356c2b53038fe41cf",
+      "subject": "Expand `Choice` token normalization + make generic (#2796)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "45f89cd5d39db37b9aa1a014da000f12da532ddc",
+      "subject": "Improve typing on Windows (#2803)",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "src/click/_compat.py",
+          "line": 548,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "        rv.write = _safe_write  # type: ignore[method-assign]",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "src/click/_winconsole.py",
+          "line": 75,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "        from collections.abc import Buffer  # type: ignore",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4ffa1ef3b6d23208f65ac54f688f02856aa0d660",
+      "subject": "Correct click.edit typing (#2804)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b5464b7e065bdfd952b1532880941f1be07e4e2b",
+      "subject": "Only try to set flag_value if is_flag is true (#2829)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "88328fc8743d43566081d9f17acad5f5552f5a87",
+      "subject": "Add CliRunner default `catch_exceptions` parameter (#2818)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5961d31fb566f089ad468a5b26a32f1ebfa7f63e",
+      "subject": "Introduce Parameter.deprecated + Command.deprecated message customization (#2271)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fde47b4b4f978f179b9dff34583cb2b99021f482",
+      "subject": "Fix issues previously type ignored.",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3b06e0b75aaa68533c7fbd4f89053309f2e4ed8a",
+      "subject": "Improve echo_via_pager behaviour in face of errors (#2775)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2cabbe3175026695210fe0bf9b179fd62d52634f",
+      "subject": "specialize progressbar(length=...) as ProgressBar[int] (#2630)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0d69b6ce8b25fe31ea580c608adb8e45df3805bb",
+      "subject": "Adds support for editing multiple files (#2068)",
+      "findings": [
+        {
+          "rule_id": "GH003",
+          "rule_name": "skip-marker-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "tests/test_termui.py",
+          "line": 384,
+          "title": "Skip/focus marker added to a new test",
+          "evidence": "pytest.mark.skipif(platform.system() == \"Windows\", reason=\"No sed on Windows.\")",
+          "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
+          "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0ef55fda47bb3d0dece21197d81d8d72a4250e73",
+      "subject": "Close contexts created during shell completion #2644. (#2800)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d8763b93021c416549b5f8b4b5497234619410db",
+      "subject": "Help shown via no_args_is_help results in exit code 2, was 0 (#1489)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4271fe283dc9365563aebb369ada8d20eee015a8",
+      "subject": "feat: new method for choice fail (#2622)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1787497713fa389435ed732c9b26274c3cdc458d",
+      "subject": "Added functionality to set flag_value correctly when using envvar (#2788)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "380008389b32ca2b7de7c73f670a9eee1562004e",
+      "subject": "Give a UserWarning when Parameter is overriden by name (#2397)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fcd85032cff78aa536a6d2b455fb83bfcc02b228",
+      "subject": "Add functionality to hide the progress bar #2609 (#2727)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c326df95e9e3da0425360e030413f6a3ee25fdee",
+      "subject": "Fix closing of callbacks on CLI exit (#2680)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a8c05427602d12842c53ce48b03b5d6b5c0c6693",
+      "subject": "Clarify #2696 changes.",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1b524bb30d0bd39528369c7029b9296e7663cf19",
+      "subject": "show env var in error hint (#2696)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0e0c00324a5af35f8995c7ff88df67b0f5594a58",
+      "subject": "Keep track of `<stderr>` and `<stdout>` mix in `CliRunner` results (#2523)",
+      "findings": [
+        {
+          "rule_id": "GH004",
+          "rule_name": "assertion-count-decreased",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/test_testing.py",
+          "line": 301,
+          "title": "Assertions decreased in test_stderr: 10 \u2192 6",
+          "evidence": "test_stderr\n    assert result.output == \"stdout\\n\"\n    assert result.stdout == \"stdout\\n\"\n    assert result.stderr == \"stderr\\n\"\n    assert result_mix.output == \"stdout\\nstderr\\n\"\n    assert result_mix.stdout == \"stdout\\nstderr\\n\"\n    with pytest.raises(ValueError):\n        assert result_mix.stderr  # noqa B018",
+          "why_flagged": "Fewer assertions can make a test pass while checking less behavior.",
+          "legit_if": "Redundant checks were removed, or equivalent checks moved into a shared helper.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "948d7a707a0abda8ce0a1b39ba87390f11ffcd5e",
+      "subject": "Split generation of help extra items and rendering (#2517)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a6e0d2936891030f5092c9869c7391104f6721d9",
+      "subject": "Hide default value when show_default is False (#2509)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1a4d8c1bb1e8f8e214ede7223bd2c05dc2ce006a",
+      "subject": "Fix metavar for Choice options when show_choices=False (#2365)",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "src/click/types.py",
+          "line": 262,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "        if param.param_type_name == \"option\" and not param.show_choices:  # type: ignore",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "02046e7a19480f85fff7e4577486518abe47e401",
+      "subject": "update test workflow trigger",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4a758f5c38636ecd9d030356d85bcca3d8fbd0ca",
+      "subject": "set up pre-commit lite workflow",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0a3b97020d8aa144c91efb784da09f80a0744cba",
+      "subject": "set up pre-commit lite workflow",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "777260815d0b8fba0349e28fa365e2cfb784e066",
+      "subject": "set up pre-commit lite workflow",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2f70e173a3b676928c006e96a1466e8adcf92462",
+      "subject": "update dev dependencies",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7ac7e2a4aed2b9f328d4527adbe3f910f59f9eed",
+      "subject": "remove extraneous test envs",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "471c20a5955b8449d97e90c5d4db654022d0f2a2",
+      "subject": "update dev dependencies",
+      "findings": [
+        {
+          "rule_id": "GH010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "src/click/core.py",
+          "line": 1674,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "            return rv  # type: ignore[return-value]",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f8857cb03268b5b952b88b2acb3e11d9f0f7b6e4",
+      "subject": "update slsa action",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6192a4ce4aac5cbe441ed461f2a8bbf236f17de5",
+      "subject": "update actions versions",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "15959d92fd88d929e2eaecf25dffd1d35fbcd7fb",
+      "subject": "update dev dependencies",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a3277513d7340d8a0e29076fe2769a8837f756ae",
+      "subject": "remove old upgrading notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "883feba5840d27198b4d98b08b042cddc7744781",
+      "subject": "remove old upgrading notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "77dc47f13797dfc63108cd920dac84fe96aa5e1a",
+      "subject": "update dev requirements",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "187666a07b249838ef3f1bba4252bb1823b718f2",
+      "subject": "use pypi trusted publisher auth",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "145aaee6276f15bfa89c7b9bed96f2c1d10739ac",
+      "subject": "update metadata",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "725e3e4a8da6f45441d48ec9f6a526583b6e162c",
+      "subject": "set workflow permissions",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c65c6ad18471448c0fcc59ef53088787288c02cc",
+      "subject": "Bump actions/cache from 3.0.9 to 3.0.11 (#2391)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2b60d8163a45a6feeb55001da40dd4f23e5241e0",
+      "subject": "Bump actions/cache from 3.0.8 to 3.0.9 (#2364)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fb4327216543d751e2654a0d3bf6ce3d31c435cc",
+      "subject": "Bump actions/cache from 3.0.5 to 3.0.8 (#2349)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f467dd3aefc3f01563e20e649d0d3c3ba978325e",
+      "subject": "start version 8.2.0",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "422cb2064eed146dbe03ba3aed5be35daeb70414",
+      "subject": "reword locale encoding changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "74765746b88e96eac6fec3b736b346db60f78551",
+      "subject": "reword locale encoding changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "08ecfd0e7c238a2444886d239de6d0e9d83530ec",
+      "subject": "keep !r format for now",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a1e5ff6d8dfc8364a397508dba8c85cdc0af24e3",
+      "subject": "fix changelog for executable",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "91b2cd67dd04b2843fd6c71e582876c826f5b78e",
+      "subject": "unpin pytest",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    }
+  ]
+}

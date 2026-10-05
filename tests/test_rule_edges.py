@@ -50,7 +50,8 @@ def test_untouched_importing_tests(repo, mode):
     (repo / "src/parser.py").write_text("def parse(x):\n    return len(x)\n")
     # Content-based classification must work outside conventional test paths.
     (repo / "checks.py").write_text(
-        'from src.parser import parse\ndef test_parse():\n    assert parse("nested") == 4242\n'
+        "import pytest\nfrom src.parser import parse\ndef test_parse():\n"
+        '    assert parse("nested") == 4242\n'
     )
     git(repo, "add", ".")
     git(repo, "commit", "-m", "add importer")
@@ -155,7 +156,7 @@ def test_json_deterministic_and_schema():
     assert first == render(result)
     payload = json.loads(first)
     assert payload["schema_version"] == "1"
-    assert payload["summary"] == {"high": 1, "medium": 0, "low": 0, "info": 0, "files_scanned": 1}
+    assert payload["summary"] == {"high": 0, "medium": 1, "low": 0, "info": 0, "files_scanned": 1}
     assert set(payload["findings"][0]) == {
         "rule_id",
         "rule_name",

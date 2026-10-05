@@ -49,8 +49,12 @@ Also available: `scan --staged`, `scan --diff -` (stdin), `--version`, and `rule
 `--format text` and `--format json` are implemented. JSON uses the provisional
 schema v1 fields from the handoff; the contract freezes in Phase 4. When no Git
 base is given, the scanner uses the upstream/main/master merge base or `HEAD~1`.
+If that merge base is head, it uses head's first parent. An empty range prints a
+stderr notice naming the resolved range; scans with over 300 changed files print
+a size notice.
 The header prints the resolved range. Working and staged heads are labelled
 `WORKTREE` and `INDEX`; patch range fields are null.
+JSON's `files` array exposes effective, base and head classifications.
 
 ## Rules
 
@@ -73,19 +77,26 @@ The header prints the resolved range. Working and staged heads are labelled
 ## Limitations
 
 - Flags require human review and cannot establish whether someone cheated.
-- JS/TS uses regex and brace heuristics. Dynamic test construction, imported test
+- JS/TS uses a forward lexer and structural heuristics. Dynamic test construction, imported test
   aliases, nested templates, regex literals, and unusual syntax can be missed.
 - Patch mode lacks complete files. Counting findings have reduced confidence;
   GH006 also reports reduced confidence because it cannot inspect all tests or
   the full base source. Hunk boundaries can hide definitions and existing values.
 - GH006 cannot resolve dynamic imports, re-exports, computed expectations, or
   computed inputs. Significant shared domain literals can produce medium flags.
+  High matches require new output literals and inputs/expectations from the same
+  test. Static parametrize and each array rows are included.
 - Configuration parsing uses stdlib parsers for Python/INI/TOML/JSON and local
   heuristics for JS configs and CI YAML. Computed configuration can be missed.
 - Suppressions and skips are flagged even when legitimate. Existing reviewed
   comments only suppress findings once Phase 4 allowlisting is implemented.
 - Files with binary content, unavailable content, malformed diffs, or Python
-  syntax errors produce GH000 diagnostics. Other files continue to be scanned.
+  syntax errors produce GH000 diagnostics. Rule errors, files over 1 MB and lines
+  over 20,000 characters also produce GH000. Other files continue to be scanned.
+- Classification uses paths first. Python content signals require a framework
+  import and module test or TestCase subclass, outside source-looking paths.
+  CI-only environment checks are medium; bare empty JS catches are low. Counting
+  rules downgrade test moves when matching names are added elsewhere in the diff.
 
 ## Development and review
 
@@ -102,3 +113,18 @@ fixtures run the entire registry. Skip performance checks with
 `pytest -m 'not performance'` on slow CI machines. Add positive and negative
 fixtures when changing a rule. Gate 1 review instructions are in
 [docs/GATE_1.md](docs/GATE_1.md). Do not publish packages, tags, or a public repo.
+
+Measure a local history without checking out commits or fetching anything:
+
+```sh
+.venv/bin/python scripts/noise_check.py /path/to/repo 150 --head COMMIT --json /tmp/noise.json
+.venv/bin/python scripts/scan_history.py /path/to/repo 150 --head COMMIT --output /tmp/candidates
+```
+
+The first script reports per-rule/severity counts, high-flagged commits and at
+most five examples per rule; JSON retains every commit and finding. Errors or an
+incomplete requested window exit 3. The second exports high/medium candidates
+for manual labeling and preserves existing candidate directories. Observed
+findings are not expected-result oracles. See the pinned
+[noise baseline](docs/noise-baseline.md): 10 of 680 commits flag high, exceeding
+the review's target of eight. Gate 1 remains under review.

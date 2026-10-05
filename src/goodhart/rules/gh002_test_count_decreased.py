@@ -1,12 +1,13 @@
 """Count test definitions on both sides of a change."""
 
 import re
+from collections import Counter
 
 from goodhart.diffmodel import FileChange
 from goodhart.engine import ScanContext
-from goodhart.lang import jsts, python
+from goodhart.lang.moves import destinations, names
 from goodhart.rules.base import Finding, RuleBase
-from goodhart.util import first_line, is_python
+from goodhart.util import first_line
 
 
 class TestCountDecreased(RuleBase):
@@ -18,11 +19,16 @@ class TestCountDecreased(RuleBase):
     legit_if = "Tests were consolidated into parametrized cases or obsolete behavior was removed."
 
     def check(self, change: FileChange, ctx: ScanContext) -> list[Finding]:
-        lang = python if is_python(change.path) else jsts
+        if change.new_path is None:
+            return []  # GH001 covers deleted test files without duplicate findings.
         if ctx.mode == "full":
-            before = [test.name for test in lang.tests(change.base_content or "")]
-            after = [test.name for test in lang.tests(change.head_content or "")]
+            before = names(change, "base", True)
+            after = names(change, "head", True)
         else:
+            from goodhart.lang import jsts, python
+            from goodhart.util import is_python
+
+            lang = python if is_python(change.path) else jsts
             before = [
                 name
                 for name, _ in lang.definition_names(
@@ -41,14 +47,18 @@ class TestCountDecreased(RuleBase):
         why = self.why_flagged + (
             " Parametrization was added in this file." if consolidated else ""
         )
-        removed = [name for name in before if name not in after]
+        removed = list((Counter(before) - Counter(after)).elements())
+        overlap, targets = destinations(removed, change, ctx.changes, ctx.mode == "full")
+        severity = "info" if overlap >= 0.8 else "medium" if overlap > 0 or consolidated else "high"
+        if targets:
+            why += " Tests appear to have moved to: " + ", ".join(targets) + "."
         return [
             self.finding(
                 change,
                 first_line(change),
                 f"Test count decreased: {len(before)} → {len(after)}",
                 "Removed tests: " + ", ".join(removed or before),
-                severity="medium" if consolidated else "high",
+                severity=severity,
                 reduced=ctx.mode == "patch",
                 why=why,
             )

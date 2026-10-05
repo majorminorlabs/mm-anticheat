@@ -1,6 +1,5 @@
 """Scanner orchestration. Rules are added in subsequent phases."""
 
-import configparser
 from dataclasses import dataclass, field
 
 from goodhart.classify import matches
@@ -18,6 +17,7 @@ class ScanContext:
     changes: list[FileChange]
     config: Config
     extra_tests: dict[str, str] = field(default_factory=dict)
+    cache: dict[str, object] = field(default_factory=dict)
 
 
 @dataclass
@@ -53,7 +53,7 @@ def scan(
     rules: list[Rule] | None = None,
 ) -> ScanResult:
     """Run applicable rules and sort findings deterministically."""
-    from goodhart.lang import python
+    from goodhart.lang import limit_reason, python
     from goodhart.rules import all_rules
     from goodhart.rules.gh000_diagnostics import parse_skipped
     from goodhart.util import is_python
@@ -68,14 +68,24 @@ def scan(
             any(matches(path, glob) for glob in config.ignore_globs) for path in paths
         ):
             continue
+        contents = [
+            change.base_content or change.visible("base"),
+            change.head_content or change.visible("head"),
+        ]
+        oversized = next(
+            (reason for content in contents if (reason := limit_reason(content))), None
+        )
+        if oversized:
+            findings.append(parse_skipped(change.path, oversized))
+            continue
         syntax_error = None
         if data.mode == "full" and is_python(change.path) and not change.parse_error:
             for side, content in (("base", change.base_content), ("head", change.head_content)):
                 if content is not None:
                     try:
                         python.parse(content)
-                    except SyntaxError as exc:
-                        syntax_error = f"{side} Python syntax: {exc.msg} at line {exc.lineno}"
+                    except Exception as exc:
+                        syntax_error = f"{side}: {type(exc).__name__}: {exc}"
         if syntax_error:
             findings.append(parse_skipped(change.path, syntax_error))
         diagnosed = bool(change.parse_error or syntax_error)
@@ -85,10 +95,14 @@ def scan(
             if change.kinds & rule.applies_to and rule.id not in config.skip_rules:
                 try:
                     findings.extend(rule.check(change, ctx))
-                except (SyntaxError, ValueError, configparser.Error) as exc:
-                    if not diagnosed:
-                        findings.append(parse_skipped(change.path, f"{rule.id}: {exc}"))
-                        diagnosed = True
+                except Exception as exc:
+                    if not (diagnosed and isinstance(exc, SyntaxError)):
+                        findings.append(
+                            parse_skipped(
+                                change.path,
+                                f"{rule.id}: {type(exc).__name__}: {exc}",
+                            )
+                        )
     findings.sort(
         key=lambda item: (
             SEVERITY_ORDER[item.severity],

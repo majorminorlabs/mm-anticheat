@@ -1,0 +1,11 @@
+diff --git a/packages/vitest/src/node/cache/index.ts b/packages/vitest/src/node/cache/index.ts
+--- a/packages/vitest/src/node/cache/index.ts
++++ b/packages/vitest/src/node/cache/index.ts
+@@ -0,0 +1,7 @@
++      try {
++        const file = resolve(this.vitest.config.root, key.slice(prefix.length))
++        const stats = statSync(file, { throwIfNoEntry: false })
++        if (stats) {
++          return { size: stats.size }
++        }
++      } catch {}

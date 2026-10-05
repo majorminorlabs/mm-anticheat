@@ -1,0 +1,1 @@
+flag = os.getenv("CI")

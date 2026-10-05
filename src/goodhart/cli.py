@@ -48,6 +48,13 @@ def main(argv: list[str] | None = None) -> int:
             data = load_git(
                 base=args.base, head=args.head or "HEAD", working=args.working, staged=args.staged
             )
+        for notice in data.notices:
+            print(f"goodhart: {notice}", file=sys.stderr)
+        if len(data.changes) > 300:
+            print(
+                f"goodhart: {len(data.changes)} changed files; this scan may take longer",
+                file=sys.stderr,
+            )
         counts = file_counts(data)
         result = run_scan(data)
         if args.format == "json":

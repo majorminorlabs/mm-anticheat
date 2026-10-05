@@ -4,13 +4,20 @@ from dataclasses import dataclass, field
 
 TEST_GLOBS = (
     "tests/**",
+    "**/tests/**",
+    "test/**",
+    "**/test/**",
+    "spec/**",
+    "**/spec/**",
+    "e2e/**",
+    "**/e2e/**",
     "**/*_test.py",
     "**/test_*.py",
-    "**/*.test.ts",
-    "**/*.spec.ts",
-    "**/*.test.js",
-    "**/*.spec.js",
     "**/__tests__/**",
+) + tuple(
+    f"**/*.{kind}.{extension}"
+    for kind in ("test", "spec")
+    for extension in ("js", "jsx", "ts", "tsx", "mjs", "cjs", "mts", "cts")
 )
 
 
