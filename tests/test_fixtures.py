@@ -46,6 +46,8 @@ def fixture_input(case: Path):
 @pytest.mark.parametrize("case", CASES, ids=lambda case: str(case.relative_to(FIXTURES)))
 def test_fixture(case):
     meta, data = fixture_input(case)
+    if meta.get("source"):
+        assert data.changes, "Corpus regression fixtures must exercise a changed file"
     selected = meta.get("rules")
     rules = [rule for rule in all_rules() if selected is None or rule.id in selected]
     result = scan(data, rules=rules)

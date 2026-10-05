@@ -1,2 +1,3 @@
-  open: {
-    description: 'Open UI automatically (default: `!process.env.CI`)',
+      ui: {
+        description: 'Show Vitest UI when running tests (default: `!process.env.CI`)',
+      },
