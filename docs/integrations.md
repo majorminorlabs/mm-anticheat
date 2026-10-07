@@ -18,14 +18,14 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: OWNER/ANTICHEAT_REPO@PINNED_COMMIT
+      - uses: majorminorlabs/mm-anticheat@5276444f9d17800c6f6f65648057c2aee0293191
         with:
           fail-on: high
           comment: 'false'
           config: ''
 ```
 
-Replace the repository and pinned revision when Dippo chooses the private home.
+The repository is private. Update the pinned SHA only after reviewing a new scanner build.
 Inputs: fail-on (high/medium/low/never), comment (true/false), config (empty for
 trusted base-side settings; an explicit path is the operator's trust decision).
 Inputs become environment variables and subprocess arguments, never shell code.
@@ -48,7 +48,7 @@ staged scans also save their diff and findings JSON under .anticheat/captures/. 
 
 ```yaml
 repos:
-  - repo: https://github.com/OWNER/ANTICHEAT_REPO
+  - repo: https://github.com/majorminorlabs/mm-anticheat
     rev: PINNED_COMMIT
     hooks:
       - id: mm-anticheat

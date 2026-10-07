@@ -19,7 +19,7 @@ def git(*args: str) -> bytes:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, default=Path("dist/mm-anticheat-gate3.zip"))
+    parser.add_argument("--output", type=Path, default=Path("dist/mm-anticheat-holdout.zip"))
     parser.add_argument("--tests-passed", type=int, required=True)
     args = parser.parse_args()
     if args.tests_passed < 1:
@@ -30,15 +30,15 @@ def main() -> int:
     payload = git("archive", "--format=zip", "--prefix=mm-anticheat/", commit)
     buffer = io.BytesIO(payload)
     noise = [json.loads(path.read_text()) for path in Path("docs/noise-results").glob("*.json")]
-    history = json.loads(Path("docs/b2-rescan-review03.json").read_text())
+    history = json.loads(Path("docs/b2-rescan-review04.json").read_text())
     metadata = {
         "source_commit": commit,
         "built_at": datetime.now(UTC).isoformat(),
-        "gate": "3 / awaiting REVIEW_03b",
+        "gate": "REVIEW_04 / awaiting holdout and GO",
         "tests_passed": args.tests_passed,
         "noise_commits": sum(row["commits_scanned"] for row in noise),
         "noise_high_commits": sum(row["commits_with_high"] for row in noise),
-        "noise_gh006_high": sum(
+        "noise_ac006_high": sum(
             count["count"]
             for row in noise
             for count in row["counts"]
@@ -47,7 +47,11 @@ def main() -> int:
         "b2_commits": sum(row["scanned"] for row in history),
         "b2_high_commits": sum(row["high"] for row in history),
         "b1": "invalid; retained and not rerun",
-        "hosted_action": "pending private remote",
+        "hosted_action": "clean PR passes; classic cheat PR scanner fails",
+        "branch_protection": "blocked: GitHub Pro required for private repository",
+        "criteria_through_step3_met": False,
+        "study": json.loads(Path("docs/agent-study-summary.json").read_text()),
+        "publication": "not authorized until Dippo replies GO",
     }
     with zipfile.ZipFile(buffer, "a", compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("mm-anticheat/BUILD_INFO.json", json.dumps(metadata, indent=2) + "\n")
