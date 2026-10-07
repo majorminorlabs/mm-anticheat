@@ -13,6 +13,19 @@
     "allowed": false
   },
   {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "src/pipeline/luna-support.mjs",
+    "line": 54,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "      { claim_id: validClaimId, evidence_ids: [validEvidenceId], article_anchor: 'paragraph-2', treatment: requiredTreatment === 'paraphrase' ? 'context' : 'paraphrase' }\n      { claim_id: validClaimId, evidence_ids: [validEvidenceId], article_anchor: 'paragraph-2', treatment: requiredTreatment === 'paraphrase' ? 'context' : 'paraphrase' }",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
     "rule_id": "AC008",
     "rule_name": "exception-swallowed",
     "severity": "medium",

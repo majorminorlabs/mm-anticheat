@@ -4,60 +4,65 @@
   "requested_commits": 150,
   "commits_scanned": 150,
   "commits_with_high": 3,
-  "commits_with_high_or_medium": 7,
+  "commits_with_high_or_medium": 14,
   "counts": [
     {
-      "rule_id": "GH000",
+      "rule_id": "AC000",
       "severity": "info",
       "count": 2
     },
     {
-      "rule_id": "GH001",
+      "rule_id": "AC001",
       "severity": "medium",
       "count": 1
     },
     {
-      "rule_id": "GH002",
+      "rule_id": "AC002",
       "severity": "high",
       "count": 8
     },
     {
-      "rule_id": "GH002",
+      "rule_id": "AC002",
       "severity": "info",
       "count": 2
     },
     {
-      "rule_id": "GH002",
+      "rule_id": "AC002",
       "severity": "medium",
       "count": 1
     },
     {
-      "rule_id": "GH004",
+      "rule_id": "AC004",
       "severity": "medium",
       "count": 1
     },
     {
-      "rule_id": "GH006",
+      "rule_id": "AC006",
       "severity": "low",
       "count": 2
     },
     {
-      "rule_id": "GH006",
+      "rule_id": "AC006",
       "severity": "medium",
       "count": 1
     },
     {
-      "rule_id": "GH010",
+      "rule_id": "AC010",
       "severity": "low",
       "count": 5
+    },
+    {
+      "rule_id": "AC018",
+      "severity": "medium",
+      "count": 16
     }
   ],
   "examples": {
-    "GH000": [
+    "AC000": [
       {
         "commit": "89102021fcb44f6c3fab6304e5f951692723c908",
         "subject": "chore: update sponsorship graphic (#3620)",
-        "rule_id": "GH000",
+        "rule_id": "AC000",
         "rule_name": "parse-skipped",
         "severity": "info",
         "confidence": "normal",
@@ -72,7 +77,7 @@
       {
         "commit": "d4961b9f8e7f00b654dbdbf200562bd273f598c7",
         "subject": "Add speakeasy sponsorship (#3305)",
-        "rule_id": "GH000",
+        "rule_id": "AC000",
         "rule_name": "parse-skipped",
         "severity": "info",
         "confidence": "normal",
@@ -85,11 +90,11 @@
         "allowed": false
       }
     ],
-    "GH001": [
+    "AC001": [
       {
         "commit": "5b5f6d8e172910371b5901f6e21717097274c513",
         "subject": "Moving test cases into 'test_url.py' (#2982)",
-        "rule_id": "GH001",
+        "rule_id": "AC001",
         "rule_name": "test-file-deleted",
         "severity": "medium",
         "confidence": "normal",
@@ -102,11 +107,11 @@
         "allowed": false
       }
     ],
-    "GH002": [
+    "AC002": [
       {
         "commit": "7b19cd5f4b749064c6452892a5e58a3758da1d1b",
         "subject": "Move utility functions from _utils.py to _client.py (#3389)",
-        "rule_id": "GH002",
+        "rule_id": "AC002",
         "rule_name": "test-count-decreased",
         "severity": "info",
         "confidence": "normal",
@@ -121,7 +126,7 @@
       {
         "commit": "1805ee0d22f96e2b29f0500dd3076e10020004bf",
         "subject": "Graceful upgrade path for 0.28. (#3394)",
-        "rule_id": "GH002",
+        "rule_id": "AC002",
         "rule_name": "test-count-decreased",
         "severity": "high",
         "confidence": "normal",
@@ -136,7 +141,7 @@
       {
         "commit": "41597adffa9d34171a63f7511fc0f702558dd08c",
         "subject": "Move remaining utility functions from _utils.py to _models.py  (#3387)",
-        "rule_id": "GH002",
+        "rule_id": "AC002",
         "rule_name": "test-count-decreased",
         "severity": "info",
         "confidence": "normal",
@@ -151,7 +156,7 @@
       {
         "commit": "eeb5e3c2a3ff2403ec47b5926715ecd61143d92d",
         "subject": "Cleanup unneccessary test case (#3375)",
-        "rule_id": "GH002",
+        "rule_id": "AC002",
         "rule_name": "test-count-decreased",
         "severity": "high",
         "confidence": "normal",
@@ -166,7 +171,7 @@
       {
         "commit": "8e36f2bc685dfbe43cd7503bc1c422a6ed6e05a5",
         "subject": "Introduce new `SSLContext` API & escalate deprecations. (#3319)",
-        "rule_id": "GH002",
+        "rule_id": "AC002",
         "rule_name": "test-count-decreased",
         "severity": "high",
         "confidence": "normal",
@@ -179,11 +184,11 @@
         "allowed": false
       }
     ],
-    "GH004": [
+    "AC004": [
       {
         "commit": "c7cd6aa5bdcf9f9d63e7dcea33cb78d6920aeed8",
         "subject": "test `obfuscate_sensitive_headers` via public api (#3063)",
-        "rule_id": "GH004",
+        "rule_id": "AC004",
         "rule_name": "assertion-count-decreased",
         "severity": "medium",
         "confidence": "normal",
@@ -196,11 +201,11 @@
         "allowed": false
       }
     ],
-    "GH006": [
+    "AC006": [
       {
         "commit": "41597adffa9d34171a63f7511fc0f702558dd08c",
         "subject": "Move remaining utility functions from _utils.py to _models.py  (#3387)",
-        "rule_id": "GH006",
+        "rule_id": "AC006",
         "rule_name": "hardcoded-test-expectation",
         "severity": "medium",
         "confidence": "normal",
@@ -215,7 +220,7 @@
       {
         "commit": "db9072f998b53ff66d50778bf5edee8e2cc8ede1",
         "subject": "Add URL parsing tests from WHATWG (#3188)",
-        "rule_id": "GH006",
+        "rule_id": "AC006",
         "rule_name": "hardcoded-test-expectation",
         "severity": "low",
         "confidence": "normal",
@@ -230,7 +235,7 @@
       {
         "commit": "db9072f998b53ff66d50778bf5edee8e2cc8ede1",
         "subject": "Add URL parsing tests from WHATWG (#3188)",
-        "rule_id": "GH006",
+        "rule_id": "AC006",
         "rule_name": "hardcoded-test-expectation",
         "severity": "low",
         "confidence": "normal",
@@ -243,11 +248,11 @@
         "allowed": false
       }
     ],
-    "GH010": [
+    "AC010": [
       {
         "commit": "8e36f2bc685dfbe43cd7503bc1c422a6ed6e05a5",
         "subject": "Introduce new `SSLContext` API & escalate deprecations. (#3319)",
-        "rule_id": "GH010",
+        "rule_id": "AC010",
         "rule_name": "lint-or-type-suppression-added",
         "severity": "low",
         "confidence": "normal",
@@ -262,7 +267,7 @@
       {
         "commit": "49d74a2e7f773f88a84dd4af900d7a8543636ae2",
         "subject": "Clarified error when header value is None (#3312)",
-        "rule_id": "GH010",
+        "rule_id": "AC010",
         "rule_name": "lint-or-type-suppression-added",
         "severity": "low",
         "confidence": "normal",
@@ -277,7 +282,7 @@
       {
         "commit": "392dbe45f086d0877bd288c5d68abf860653b680",
         "subject": "Add support for zstd decoding (#3139)",
-        "rule_id": "GH010",
+        "rule_id": "AC010",
         "rule_name": "lint-or-type-suppression-added",
         "severity": "low",
         "confidence": "normal",
@@ -292,7 +297,7 @@
       {
         "commit": "371b6e946c9e70df3dce79590c195448eac3f635",
         "subject": "Use `__future__.annotations` (#3068)",
-        "rule_id": "GH010",
+        "rule_id": "AC010",
         "rule_name": "lint-or-type-suppression-added",
         "severity": "low",
         "confidence": "normal",
@@ -307,7 +312,7 @@
       {
         "commit": "724eced022299c1beacce399f41dd9091e16a65a",
         "subject": "Reorganise tests in 'test_url.py' (#2981)",
-        "rule_id": "GH010",
+        "rule_id": "AC010",
         "rule_name": "lint-or-type-suppression-added",
         "severity": "low",
         "confidence": "normal",
@@ -317,6 +322,83 @@
         "evidence": "        httpx.URL(ExternalURLClass())  # type: ignore",
         "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
         "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      }
+    ],
+    "AC018": [
+      {
+        "commit": "5dda2aa30692e8529555f57efa7bcd203a7d5ac1",
+        "subject": "Just use default `safe=...` characters for `urlescape` (#3376)",
+        "rule_id": "AC018",
+        "rule_name": "expectation-rewritten",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "tests/models/test_url.py",
+        "line": 151,
+        "title": "Expected literal rewritten alongside source",
+        "evidence": "b'/?a=b+c&d=e/f' \u2192 b'/?a=b+c&d=e%2Ff'; actual expression unchanged",
+        "why_flagged": "This change can let a test pass without checking the intended behavior.",
+        "legit_if": "The behavior is intentional and independently reviewed.",
+        "allowed": false
+      },
+      {
+        "commit": "5dda2aa30692e8529555f57efa7bcd203a7d5ac1",
+        "subject": "Just use default `safe=...` characters for `urlescape` (#3376)",
+        "rule_id": "AC018",
+        "rule_name": "expectation-rewritten",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "tests/models/test_url.py",
+        "line": 312,
+        "title": "Expected literal rewritten alongside source",
+        "evidence": "'http://webservice?u=http://example.com?q%3Dfoo%252Fa' \u2192 'http://webservice?u=http%3A%2F%2Fexample.com%3Fq%3Dfoo%252Fa'; actual expression unchanged",
+        "why_flagged": "This change can let a test pass without checking the intended behavior.",
+        "legit_if": "The behavior is intentional and independently reviewed.",
+        "allowed": false
+      },
+      {
+        "commit": "ba2e51215e4e619540f2a24282b84ed8a738e6fd",
+        "subject": "Review urlescape percent-safe set, and use + behavior for form spaces. (#3373)",
+        "rule_id": "AC018",
+        "rule_name": "expectation-rewritten",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "tests/models/test_url.py",
+        "line": 151,
+        "title": "Expected literal rewritten alongside source",
+        "evidence": "b'/?a=b%20c&d=e%2Ff' \u2192 b'/?a=b+c&d=e/f'; actual expression unchanged",
+        "why_flagged": "This change can let a test pass without checking the intended behavior.",
+        "legit_if": "The behavior is intentional and independently reviewed.",
+        "allowed": false
+      },
+      {
+        "commit": "ba2e51215e4e619540f2a24282b84ed8a738e6fd",
+        "subject": "Review urlescape percent-safe set, and use + behavior for form spaces. (#3373)",
+        "rule_id": "AC018",
+        "rule_name": "expectation-rewritten",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "tests/models/test_url.py",
+        "line": 290,
+        "title": "Expected literal rewritten alongside source",
+        "evidence": "'http://webservice?u=with%20spaces' \u2192 'http://webservice?u=with+spaces'; actual expression unchanged",
+        "why_flagged": "This change can let a test pass without checking the intended behavior.",
+        "legit_if": "The behavior is intentional and independently reviewed.",
+        "allowed": false
+      },
+      {
+        "commit": "ba2e51215e4e619540f2a24282b84ed8a738e6fd",
+        "subject": "Review urlescape percent-safe set, and use + behavior for form spaces. (#3373)",
+        "rule_id": "AC018",
+        "rule_name": "expectation-rewritten",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "tests/models/test_url.py",
+        "line": 312,
+        "title": "Expected literal rewritten alongside source",
+        "evidence": "'http://webservice?u=http%3A%2F%2Fexample.com%3Fq%3Dfoo%252Fa' \u2192 'http://webservice?u=http://example.com?q%3Dfoo%252Fa'; actual expression unchanged",
+        "why_flagged": "This change can let a test pass without checking the intended behavior.",
+        "legit_if": "The behavior is intentional and independently reviewed.",
         "allowed": false
       }
     ]
@@ -421,7 +503,7 @@
       "subject": "chore: update sponsorship graphic (#3620)",
       "findings": [
         {
-          "rule_id": "GH000",
+          "rule_id": "AC000",
           "rule_name": "parse-skipped",
           "severity": "info",
           "confidence": "normal",
@@ -582,7 +664,7 @@
       "subject": "Move utility functions from _utils.py to _client.py (#3389)",
       "findings": [
         {
-          "rule_id": "GH002",
+          "rule_id": "AC002",
           "rule_name": "test-count-decreased",
           "severity": "info",
           "confidence": "normal",
@@ -617,7 +699,7 @@
       "subject": "Graceful upgrade path for 0.28. (#3394)",
       "findings": [
         {
-          "rule_id": "GH002",
+          "rule_id": "AC002",
           "rule_name": "test-count-decreased",
           "severity": "high",
           "confidence": "normal",
@@ -638,7 +720,7 @@
       "subject": "Move remaining utility functions from _utils.py to _models.py  (#3387)",
       "findings": [
         {
-          "rule_id": "GH006",
+          "rule_id": "AC006",
           "rule_name": "hardcoded-test-expectation",
           "severity": "medium",
           "confidence": "normal",
@@ -651,7 +733,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH002",
+          "rule_id": "AC002",
           "rule_name": "test-count-decreased",
           "severity": "info",
           "confidence": "normal",
@@ -707,7 +789,7 @@
       "subject": "Cleanup unneccessary test case (#3375)",
       "findings": [
         {
-          "rule_id": "GH002",
+          "rule_id": "AC002",
           "rule_name": "test-count-decreased",
           "severity": "high",
           "confidence": "normal",
@@ -726,7 +808,34 @@
     {
       "commit": "5dda2aa30692e8529555f57efa7bcd203a7d5ac1",
       "subject": "Just use default `safe=...` characters for `urlescape` (#3376)",
-      "findings": [],
+      "findings": [
+        {
+          "rule_id": "AC018",
+          "rule_name": "expectation-rewritten",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/models/test_url.py",
+          "line": 151,
+          "title": "Expected literal rewritten alongside source",
+          "evidence": "b'/?a=b+c&d=e/f' \u2192 b'/?a=b+c&d=e%2Ff'; actual expression unchanged",
+          "why_flagged": "This change can let a test pass without checking the intended behavior.",
+          "legit_if": "The behavior is intentional and independently reviewed.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC018",
+          "rule_name": "expectation-rewritten",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/models/test_url.py",
+          "line": 312,
+          "title": "Expected literal rewritten alongside source",
+          "evidence": "'http://webservice?u=http://example.com?q%3Dfoo%252Fa' \u2192 'http://webservice?u=http%3A%2F%2Fexample.com%3Fq%3Dfoo%252Fa'; actual expression unchanged",
+          "why_flagged": "This change can let a test pass without checking the intended behavior.",
+          "legit_if": "The behavior is intentional and independently reviewed.",
+          "allowed": false
+        }
+      ],
       "error": null,
       "stderr": ""
     },
@@ -740,14 +849,81 @@
     {
       "commit": "ba2e51215e4e619540f2a24282b84ed8a738e6fd",
       "subject": "Review urlescape percent-safe set, and use + behavior for form spaces. (#3373)",
-      "findings": [],
+      "findings": [
+        {
+          "rule_id": "AC018",
+          "rule_name": "expectation-rewritten",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/models/test_url.py",
+          "line": 151,
+          "title": "Expected literal rewritten alongside source",
+          "evidence": "b'/?a=b%20c&d=e%2Ff' \u2192 b'/?a=b+c&d=e/f'; actual expression unchanged",
+          "why_flagged": "This change can let a test pass without checking the intended behavior.",
+          "legit_if": "The behavior is intentional and independently reviewed.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC018",
+          "rule_name": "expectation-rewritten",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/models/test_url.py",
+          "line": 290,
+          "title": "Expected literal rewritten alongside source",
+          "evidence": "'http://webservice?u=with%20spaces' \u2192 'http://webservice?u=with+spaces'; actual expression unchanged",
+          "why_flagged": "This change can let a test pass without checking the intended behavior.",
+          "legit_if": "The behavior is intentional and independently reviewed.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC018",
+          "rule_name": "expectation-rewritten",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/models/test_url.py",
+          "line": 312,
+          "title": "Expected literal rewritten alongside source",
+          "evidence": "'http://webservice?u=http%3A%2F%2Fexample.com%3Fq%3Dfoo%252Fa' \u2192 'http://webservice?u=http://example.com?q%3Dfoo%252Fa'; actual expression unchanged",
+          "why_flagged": "This change can let a test pass without checking the intended behavior.",
+          "legit_if": "The behavior is intentional and independently reviewed.",
+          "allowed": false
+        }
+      ],
       "error": null,
       "stderr": ""
     },
     {
       "commit": "d293374b6603816420a2bb8e7f4fe5a5f09cbfcc",
       "subject": "Review URL percent escaping sets, from whatwg. (#3371)",
-      "findings": [],
+      "findings": [
+        {
+          "rule_id": "AC018",
+          "rule_name": "expectation-rewritten",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/models/test_url.py",
+          "line": 617,
+          "title": "Expected literal rewritten alongside source",
+          "evidence": "'https://tom%40example.org:abc123%40%20%25@example.org' \u2192 'https://tom%40example.org:abc123%40%20%@example.org'; actual expression unchanged",
+          "why_flagged": "This change can let a test pass without checking the intended behavior.",
+          "legit_if": "The behavior is intentional and independently reviewed.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC018",
+          "rule_name": "expectation-rewritten",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/models/test_url.py",
+          "line": 620,
+          "title": "Expected literal rewritten alongside source",
+          "evidence": "b'tom%40example.org:abc123%40%20%25' \u2192 b'tom%40example.org:abc123%40%20%'; actual expression unchanged",
+          "why_flagged": "This change can let a test pass without checking the intended behavior.",
+          "legit_if": "The behavior is intentional and independently reviewed.",
+          "allowed": false
+        }
+      ],
       "error": null,
       "stderr": ""
     },
@@ -761,7 +937,60 @@
     {
       "commit": "9fd6f0ca6616d0310a3ee0b0c6ef509a97995797",
       "subject": "Ensure JSON representation is compact. #3363 (#3367)",
-      "findings": [],
+      "findings": [
+        {
+          "rule_id": "AC018",
+          "rule_name": "expectation-rewritten",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/models/test_requests.py",
+          "line": 65,
+          "title": "Expected literal rewritten alongside source",
+          "evidence": "b'{\"test\": 123}' \u2192 b'{\"test\":123}'; actual expression unchanged",
+          "why_flagged": "This change can let a test pass without checking the intended behavior.",
+          "legit_if": "The behavior is intentional and independently reviewed.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC018",
+          "rule_name": "expectation-rewritten",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/models/test_requests.py",
+          "line": 186,
+          "title": "Expected literal rewritten alongside source",
+          "evidence": "b'{\"test\": 123}' \u2192 b'{\"test\":123}'; actual expression unchanged",
+          "why_flagged": "This change can let a test pass without checking the intended behavior.",
+          "legit_if": "The behavior is intentional and independently reviewed.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC018",
+          "rule_name": "expectation-rewritten",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/test_content.py",
+          "line": 180,
+          "title": "Expected literal rewritten alongside source",
+          "evidence": "b'{\"Hello\": \"world!\"}' \u2192 b'{\"Hello\":\"world!\"}'; actual expression unchanged",
+          "why_flagged": "This change can let a test pass without checking the intended behavior.",
+          "legit_if": "The behavior is intentional and independently reviewed.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC018",
+          "rule_name": "expectation-rewritten",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/test_content.py",
+          "line": 181,
+          "title": "Expected literal rewritten alongside source",
+          "evidence": "b'{\"Hello\": \"world!\"}' \u2192 b'{\"Hello\":\"world!\"}'; actual expression unchanged",
+          "why_flagged": "This change can let a test pass without checking the intended behavior.",
+          "legit_if": "The behavior is intentional and independently reviewed.",
+          "allowed": false
+        }
+      ],
       "error": null,
       "stderr": ""
     },
@@ -770,7 +999,7 @@
       "subject": "Introduce new `SSLContext` API & escalate deprecations. (#3319)",
       "findings": [
         {
-          "rule_id": "GH002",
+          "rule_id": "AC002",
           "rule_name": "test-count-decreased",
           "severity": "high",
           "confidence": "normal",
@@ -783,7 +1012,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH002",
+          "rule_id": "AC002",
           "rule_name": "test-count-decreased",
           "severity": "high",
           "confidence": "normal",
@@ -796,7 +1025,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH002",
+          "rule_id": "AC002",
           "rule_name": "test-count-decreased",
           "severity": "high",
           "confidence": "normal",
@@ -809,7 +1038,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH002",
+          "rule_id": "AC002",
           "rule_name": "test-count-decreased",
           "severity": "high",
           "confidence": "normal",
@@ -822,7 +1051,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH002",
+          "rule_id": "AC002",
           "rule_name": "test-count-decreased",
           "severity": "high",
           "confidence": "normal",
@@ -835,7 +1064,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH002",
+          "rule_id": "AC002",
           "rule_name": "test-count-decreased",
           "severity": "high",
           "confidence": "normal",
@@ -848,7 +1077,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -904,7 +1133,7 @@
       "subject": "Clarified error when header value is None (#3312)",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -939,7 +1168,7 @@
       "subject": "Add speakeasy sponsorship (#3305)",
       "findings": [
         {
-          "rule_id": "GH000",
+          "rule_id": "AC000",
           "rule_name": "parse-skipped",
           "severity": "info",
           "confidence": "normal",
@@ -993,7 +1222,34 @@
     {
       "commit": "7c0cda153d301bde9a011e1dd7157d7e2b20889d",
       "subject": "Improve InvalidURL error message. (#3250)",
-      "findings": [],
+      "findings": [
+        {
+          "rule_id": "AC018",
+          "rule_name": "expectation-rewritten",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/models/test_url.py",
+          "line": 370,
+          "title": "Expected literal rewritten alongside source",
+          "evidence": "'Invalid non-printable ASCII character in URL' \u2192 \"Invalid non-printable ASCII character in URL, '\\\\n' at position 24.\"; actual expression unchanged",
+          "why_flagged": "This change can let a test pass without checking the intended behavior.",
+          "legit_if": "The behavior is intentional and independently reviewed.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC018",
+          "rule_name": "expectation-rewritten",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/models/test_url.py",
+          "line": 378,
+          "title": "Expected literal rewritten alongside source",
+          "evidence": "\"Invalid non-printable ASCII character in URL component 'path'\" \u2192 \"Invalid non-printable ASCII character in URL path component, '\\\\n' at position 1.\"; actual expression unchanged",
+          "why_flagged": "This change can let a test pass without checking the intended behavior.",
+          "legit_if": "The behavior is intentional and independently reviewed.",
+          "allowed": false
+        }
+      ],
       "error": null,
       "stderr": ""
     },
@@ -1023,7 +1279,33 @@
       "subject": "Add URL parsing tests from WHATWG (#3188)",
       "findings": [
         {
-          "rule_id": "GH006",
+          "rule_id": "AC018",
+          "rule_name": "expectation-rewritten",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/models/test_url.py",
+          "line": 234,
+          "title": "Expected literal rewritten alongside source",
+          "evidence": "'exam%25le.com' \u2192 'exam%20le.com'; actual expression unchanged",
+          "why_flagged": "This change can let a test pass without checking the intended behavior.",
+          "legit_if": "The behavior is intentional and independently reviewed.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC018",
+          "rule_name": "expectation-rewritten",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/models/test_url.py",
+          "line": 422,
+          "title": "Expected literal rewritten alongside source",
+          "evidence": "\"URLs with no scheme component cannot have a path starting with ':'\" \u2192 \"Relative URLs cannot have a path starting with ':'\"; actual expression unchanged",
+          "why_flagged": "This change can let a test pass without checking the intended behavior.",
+          "legit_if": "The behavior is intentional and independently reviewed.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
           "rule_name": "hardcoded-test-expectation",
           "severity": "low",
           "confidence": "normal",
@@ -1036,7 +1318,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH006",
+          "rule_id": "AC006",
           "rule_name": "hardcoded-test-expectation",
           "severity": "low",
           "confidence": "normal",
@@ -1090,7 +1372,21 @@
     {
       "commit": "a7092af2fda78d92daaad7627e4cf0cf5e94b019",
       "subject": "Resolve queryparam quoting (#3187)",
-      "findings": [],
+      "findings": [
+        {
+          "rule_id": "AC018",
+          "rule_name": "expectation-rewritten",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/models/test_url.py",
+          "line": 300,
+          "title": "Expected literal rewritten alongside source",
+          "evidence": "'http://webservice?u=with%20spaces' \u2192 'http://webservice?u=%25'; actual expression unchanged",
+          "why_flagged": "This change can let a test pass without checking the intended behavior.",
+          "legit_if": "The behavior is intentional and independently reviewed.",
+          "allowed": false
+        }
+      ],
       "error": null,
       "stderr": ""
     },
@@ -1141,7 +1437,7 @@
       "subject": "Add support for zstd decoding (#3139)",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1295,7 +1591,7 @@
       "subject": "Use `__future__.annotations` (#3068)",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1323,7 +1619,7 @@
       "subject": "test `obfuscate_sensitive_headers` via public api (#3063)",
       "findings": [
         {
-          "rule_id": "GH004",
+          "rule_id": "AC004",
           "rule_name": "assertion-count-decreased",
           "severity": "medium",
           "confidence": "normal",
@@ -1477,7 +1773,7 @@
       "subject": "Cleanup URL percent-encoding behavior. (#2990)",
       "findings": [
         {
-          "rule_id": "GH002",
+          "rule_id": "AC002",
           "rule_name": "test-count-decreased",
           "severity": "medium",
           "confidence": "normal",
@@ -1547,7 +1843,7 @@
       "subject": "Moving test cases into 'test_url.py' (#2982)",
       "findings": [
         {
-          "rule_id": "GH001",
+          "rule_id": "AC001",
           "rule_name": "test-file-deleted",
           "severity": "medium",
           "confidence": "normal",
@@ -1568,7 +1864,7 @@
       "subject": "Reorganise tests in 'test_url.py' (#2981)",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",

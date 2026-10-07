@@ -1,5 +1,57 @@
 [
   {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "public/fx.js",
+    "line": 22,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "      if (!document.fonts || typeof document.fonts.load !== 'function') { release(); return; }\n      try { pending = document.fonts.load('400 1em \"League Gothic Italic\"'); }",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "src/app.mjs",
+    "line": 4056,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "    if (values.placement === 'hero' && isVideoItem(existing)) return showPhotoDetailsMessage('Videos can be placed in the article body but cannot be used as the hero.');\n    if (values.placement === 'hero' && isVideoItem(existing)) return showPhotoDetailsMessage('Videos can be placed in the article body but cannot be used as the hero.');",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "src/article-renderer.mjs",
+    "line": 284,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "  const treatment = !isVideo && image.treatment === 'frameless' ? 'frameless' : 'framed';\n  const treatment = !isVideo && image.treatment === 'frameless' ? 'frameless' : 'framed';",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "src/source-registry.mjs",
+    "line": 96,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "    topic_tags: cleanArray(record.topic_tags).map(item => item.toLowerCase() === 'digital collectibles' ? 'nfts' : item),\n    topic_tags: cleanArray(record.topic_tags).map(item => item.toLowerCase() === 'digital collectibles' ? 'nfts' : item),",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
     "rule_id": "AC008",
     "rule_name": "exception-swallowed",
     "severity": "medium",

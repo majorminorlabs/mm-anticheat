@@ -1,0 +1,1372 @@
+{
+  "repository": "black",
+  "head": "eb8835829969f82c2567119f528b188769f3ac6d",
+  "requested_commits": 150,
+  "commits_scanned": 150,
+  "commits_with_high": 0,
+  "commits_with_high_or_medium": 1,
+  "counts": [
+    {
+      "rule_id": "AC003",
+      "severity": "low",
+      "count": 1
+    },
+    {
+      "rule_id": "AC003",
+      "severity": "medium",
+      "count": 1
+    },
+    {
+      "rule_id": "AC010",
+      "severity": "low",
+      "count": 11
+    }
+  ],
+  "examples": {
+    "AC003": [
+      {
+        "commit": "315a796590d112d15cf74b941ca83b53bb331068",
+        "subject": "Fix GitHub Action crash on dependency-group includes (#5479)",
+        "rule_id": "AC003",
+        "rule_name": "skip-marker-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "tests/test_github_action.py",
+        "line": 10,
+        "title": "Skip/focus marker added to a new test",
+        "evidence": "pytest.mark.skipif(\n    sys.version_info < (3, 11), reason=\"use_pyproject requires Python 3.11 or later\"\n)",
+        "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
+        "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
+        "allowed": false
+      },
+      {
+        "commit": "acd6198877ced2d8126b9b3958bb17f4a65ef0d1",
+        "subject": "Skip symlink tests when the platform forbids creating one (#5390)",
+        "rule_id": "AC003",
+        "rule_name": "skip-marker-added",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "tests/test_black.py",
+        "line": 2658,
+        "title": "Skip/focus marker added",
+        "evidence": "pytest.skip(f\"Can't create symlinks: {e}\")",
+        "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
+        "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
+        "allowed": false
+      }
+    ],
+    "AC010": [
+      {
+        "commit": "99d9cbfd80e76f8581d1d370c1063cf4abe6c9b3",
+        "subject": "Avoid unnecessary parens for unbreakable RHS in assignments (#3954) (#5473)",
+        "rule_id": "AC010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "scripts/diff_shades_gha_helper.py",
+        "line": 34,
+        "title": "1 lint/type suppression(s) added",
+        "evidence": "DOCS_URL: Final = \"https://black.readthedocs.io/en/latest/contributing/gauging_changes.html#diff-shades\"  # noqa: B950",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      },
+      {
+        "commit": "d078e8eee2824b01e1c4b841f0affc273e198d35",
+        "subject": "Refactor release process to be more automated and use immutable releases (#5296)",
+        "rule_id": "AC010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "scripts/release_tests.py",
+        "line": 10,
+        "title": "1 lint/type suppression(s) added",
+        "evidence": "from release import SourceFiles, is_valid_version  # type: ignore",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      },
+      {
+        "commit": "6408e696237222d2519238f0ae637e850fd5240a",
+        "subject": "Preserve leaf line numbers in append_leaves to prevent pragma line collapse (#5466)",
+        "rule_id": "AC010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "tests/data/cases/preview_long_strings__regression.py",
+        "line": 576,
+        "title": "4 lint/type suppression(s) added",
+        "evidence": ")  # type: ignore\n)  # type: ignore\n)  # type: ignore\n)  # type: ignore",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      },
+      {
+        "commit": "1e6d48e43718ca534da4da600c9f591e949b2c17",
+        "subject": "Don't wrap part of an unmerged implicit string concatenation in parens (#5434)",
+        "rule_id": "AC010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "tests/data/cases/preview_long_strings__regression.py",
+        "line": 1278,
+        "title": "1 lint/type suppression(s) added",
+        "evidence": ")  # type: ignore",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      },
+      {
+        "commit": "7453ad9e1f88a115a50999aab034226ccb2e3750",
+        "subject": "Preserve type ignores in attribute chains (#5297)",
+        "rule_id": "AC010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "tests/data/cases/type_ignore_attribute_chain.py",
+        "line": 3,
+        "title": "4 lint/type suppression(s) added",
+        "evidence": "        app  # type: ignore[no-any-return]\n            .highlighter  # type: ignore[attr-defined]\n        app  # type: ignore[no-any-return]\n        .builder.highlighter  # type: ignore[attr-defined]",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      }
+    ]
+  },
+  "errors": 0,
+  "stderr_lines": 0,
+  "rule_errors": 0,
+  "commits": [
+    {
+      "commit": "eb8835829969f82c2567119f528b188769f3ac6d",
+      "subject": "Parenthesize expressions with parameter comments in preview (#3113) (#5442)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "939fa93a1327d2a5f2829e6c1d7e4bd25a17b0f7",
+      "subject": "Keep the parentheses around a right-hand side when a dict value's parentheses are made invisible (#5492)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "27c6fd024f97408bd0ab8e01c5dd72c0b927035e",
+      "subject": "Avoid quadratic runtime in right_hand_split_with_omits on long lines (#5270) (#5475)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b801776af42c29333afa644f92023eda5c9c8e39",
+      "subject": "Keep an ignored encoding declaration off the first two lines (#5487)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a3cb9e123ceab4f0fcab4980dd6c5f9439646794",
+      "subject": "Fix `--line-ranges` crash on `# fmt: skip` before a closing bracket (#5477)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6e940882526b846e4487c5760f0127739abf9902",
+      "subject": "Keep repeated unchanged lines outside selected ranges (#5436)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "77c0cae18bcc82257882afc7bbb9a5cd95cba16c",
+      "subject": "Fix line-range mapping for a changed start of file (#5484)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "97fb59f06a076fa34c68b2922b4d3da583adfa90",
+      "subject": "Fix check passing after a line ranges run (#5476)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ee05651742abc47ec807c0fb34247ac6f4f3c5fc",
+      "subject": "Bump stefanzweifel/git-auto-commit-action from 7.1.0 to 7.2.0 (#5485)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1ed66a8b3385a000508a03158ac3dc2a8a75a209",
+      "subject": "Add --cache-dir command-line option (#5433)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d9d091de04dd5872a308c8a60ca03b093c500e14",
+      "subject": "Fix unnecessary line breaks for expressions with comments under preview (#4026, #3713) (#5455)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e74a32413083a97bb7a96588708423be0c880227",
+      "subject": "Don't remove backslash-newlines from raw strings in string_processing (#5482)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f4f6cd9becdafb8e88dfff171ad4bb91427864c8",
+      "subject": "Fix long notebook magic assignments being wrapped in parentheses (#5481)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "99d9cbfd80e76f8581d1d370c1063cf4abe6c9b3",
+      "subject": "Avoid unnecessary parens for unbreakable RHS in assignments (#3954) (#5473)",
+      "findings": [
+        {
+          "rule_id": "AC010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "scripts/diff_shades_gha_helper.py",
+          "line": 34,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "DOCS_URL: Final = \"https://black.readthedocs.io/en/latest/contributing/gauging_changes.html#diff-shades\"  # noqa: B950",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "315a796590d112d15cf74b941ca83b53bb331068",
+      "subject": "Fix GitHub Action crash on dependency-group includes (#5479)",
+      "findings": [
+        {
+          "rule_id": "AC003",
+          "rule_name": "skip-marker-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "tests/test_github_action.py",
+          "line": 10,
+          "title": "Skip/focus marker added to a new test",
+          "evidence": "pytest.mark.skipif(\n    sys.version_info < (3, 11), reason=\"use_pyproject requires Python 3.11 or later\"\n)",
+          "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
+          "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "30664d8f17b29658aa72e44a1bfe23eede12db99",
+      "subject": "Update contributing guidlines (#5483)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "03f580c25686169c569e87f9919d8485d7e9a459",
+      "subject": "Add new changelog (#5480)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4f1883b1f15305a0e83a7c87991f46292bf09f85",
+      "subject": "Prepare release 26.10.0 (#5478)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "93e5c8204c0340403c925a3bf7b747bf7817aaab",
+      "subject": "Do not split a docstring on non-newline characters (#5461)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2f3f992a9827e7ed7c4e68c34c35a5a34b75f4c2",
+      "subject": "Fix superlinear runtime growth with the number of input files (#5450)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d078e8eee2824b01e1c4b841f0affc273e198d35",
+      "subject": "Refactor release process to be more automated and use immutable releases (#5296)",
+      "findings": [
+        {
+          "rule_id": "AC010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "scripts/release_tests.py",
+          "line": 10,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "from release import SourceFiles, is_valid_version  # type: ignore",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6408e696237222d2519238f0ae637e850fd5240a",
+      "subject": "Preserve leaf line numbers in append_leaves to prevent pragma line collapse (#5466)",
+      "findings": [
+        {
+          "rule_id": "AC010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "tests/data/cases/preview_long_strings__regression.py",
+          "line": 576,
+          "title": "4 lint/type suppression(s) added",
+          "evidence": ")  # type: ignore\n)  # type: ignore\n)  # type: ignore\n)  # type: ignore",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "cf8560b1f43014986662ab4e717da29e98b8c651",
+      "subject": "Add is_formatted output to GitHub Action (#3526) (#5408)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "9b65aa3ab5688ef64ff6f1a2bafa6618df799953",
+      "subject": "docs(contributing): fix two grammar typos in issue_triage.md (#5426)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e1c478359c087b76a6c4830a84c7e78ac93d8a6c",
+      "subject": "Fix --force-exclude for paths containing .. (#5471)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "34bfc69e57d05c6429673a445b402826695e8be5",
+      "subject": "Fix duplicated comments when string_processing rewrites a line (#5449)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5fe7881e6e40ceeed3c9e3212cbc70a040adea28",
+      "subject": "Fix preview blank lines after a stub method (#5439)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1e6d48e43718ca534da4da600c9f591e949b2c17",
+      "subject": "Don't wrap part of an unmerged implicit string concatenation in parens (#5434)",
+      "findings": [
+        {
+          "rule_id": "AC010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "tests/data/cases/preview_long_strings__regression.py",
+          "line": 1278,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": ")  # type: ignore",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "52ab313a6c506620eb96595a03b4a02554c138f2",
+      "subject": "docs: include .py in the default --include list (#5465)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "994ef7eeb18172178552daa1f36f001d156ad583",
+      "subject": "Fix fmt: skip turning a bracketed ternary into a call (#5464)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6aba61865bc1b35c605fb9989d9461036ae5bca9",
+      "subject": "Split only the magic trailing comma's brackets when trailers follow (#5448)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f65a19b46a356e613d5f8642839f26d47c0dbc8d",
+      "subject": "Report Black's own parse failure as an internal error (#5383)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "85f2ccaf728144ccb1938da387df5b8dd8875e63",
+      "subject": "Add regression test for #3685 (#5456) (#5456)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "aec65659c6a803c5fa908667748c585403ab960a",
+      "subject": "Keep dictionary keys with operators together in preview (#3442) (#5435)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a7c2368b7e183f1a42ed51219c86d453067f78cb",
+      "subject": "Allow whitespace around versions in blackd X-Python-Variant header (#5441)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "dd76ff8d6fee1d6b3a90216cf934e364b8d66625",
+      "subject": "Keep the CRLF ending of the line skipped by `--skip-source-first-line` (#5438)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ccb313069b0475d62649b770763df72895452812",
+      "subject": "Fix crash on `# fmt: skip` one-line definitions with type parameters (#5429)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "8d5a2d9f49378d7abe2eb632df1601818de8c24e",
+      "subject": "Fall back to the default configuration when sources share no project root (#5386)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "56d208d35c17a0e6cee247430633eec762a8fe21",
+      "subject": "Keep paired fmt: skip comments on compound headers (#5401)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a48e6f3e069deae32edecb62aba6edb2455c7799",
+      "subject": "Fix git checkout command for Vundle in editor docs (#2781) (#5398)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7453ad9e1f88a115a50999aab034226ccb2e3750",
+      "subject": "Preserve type ignores in attribute chains (#5297)",
+      "findings": [
+        {
+          "rule_id": "AC010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "tests/data/cases/type_ignore_attribute_chain.py",
+          "line": 3,
+          "title": "4 lint/type suppression(s) added",
+          "evidence": "        app  # type: ignore[no-any-return]\n            .highlighter  # type: ignore[attr-defined]\n        app  # type: ignore[no-any-return]\n        .builder.highlighter  # type: ignore[attr-defined]",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "tests/data/cases/type_ignore_attribute_chain_unstable.py",
+          "line": 6,
+          "title": "4 lint/type suppression(s) added",
+          "evidence": "        app  # type: ignore[no-any-return]\n            .highlighter  # type: ignore[attr-defined]\n        app  # type: ignore[no-any-return]\n        .builder.highlighter  # type: ignore[attr-defined]",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "42047e102f6df3847a14524c875e02b00a8f0c6b",
+      "subject": "Fix splitting stringified return annotations with parameters (#5427)",
+      "findings": [
+        {
+          "rule_id": "AC010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "tests/data/cases/preview_return_annotation_brackets_string.py",
+          "line": 11,
+          "title": "2 lint/type suppression(s) added",
+          "evidence": "def with_type_ignore(a) -> \"ThisIsTrulyUnreasonablyExtremelyLongClassName | list[ThisIsTrulyUnreasonablyExtremelyLongClassName]\":  # type: ignore\ndef with_type_ignore(a) -> \"ThisIsTrulyUnreasonablyExtremelyLongClassName | list[ThisIsTrulyUnreasonablyExtremelyLongClassName]\":  # type: ignore",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5f4516d267e705f73a648a713cf1b25cb0c9d019",
+      "subject": "Fix crash on `# fmt: skip` in a decorated function group in stubs (#5430)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "601c629e1107afe11c984e89ac0209307e3d4739",
+      "subject": "Fix unclosed file handles in Converter.parse_graminit_h/_c (#5432)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "9f9c675f27fa96f2a901fb0cb8ac3b5d8d579c79",
+      "subject": "Fix a crash when `# type: ignore` is lost during formatting (#5329)",
+      "findings": [
+        {
+          "rule_id": "AC010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "tests/data/cases/preview_comments7.py",
+          "line": 151,
+          "title": "2 lint/type suppression(s) added",
+          "evidence": "    )  # type: ignore\n    )  # type: ignore",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "61cafcb8745d753f374dc046adf4e4428c2d79f8",
+      "subject": "Remove unnecessary parentheses in unpacking targets (#3080) (#5416)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b30c97e31acb233ef7e6bb8fd2cfe88279c9b419",
+      "subject": "Return HTTP 400 for an empty `X-Python-Variant` entry in blackd (#5428)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2b96e280653fd79f593c942191d8614ca6ce39e6",
+      "subject": "Keep a trailing comment on optional parentheses that contain own-line comments (#5395)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0b50123abb27a59a8aac517a89ac4fec739dae24",
+      "subject": "Format a call whose sole argument is a parenthesized generator under --preview (#5369)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b5b1eb6f60ce9febc473c6cb49f935954d108678",
+      "subject": "Support version specifiers in `tool.black.required-version` for GitHub Action (fixes #4406) (#5399)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "64631f6623868d9cecdb6c98586522316ccb8dc3",
+      "subject": "Normalize uppercase t-string prefixes in preview mode (#5425)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6aaae16d2fbb9bc321a7f52ca1882e63fe6f6e3a",
+      "subject": "Fix unparseable output for `# fmt: skip` on compound header bracket (#5402) (#5405)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "62bcae6485c3d5adc9c0acdcf500c8ed0f547694",
+      "subject": "[pre-commit.ci] pre-commit autoupdate (#5423)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "da22d4390519b10d03d3c8ab4697a0770cce5e76",
+      "subject": "Don't require sys.stdout.buffer when writing formatted output or diffs (#5411)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "debb3169c698144c6b879da12b340d393c4fd0b5",
+      "subject": "Initialize bracket_depth in Leaf and preserve it in clone (#5214) (#5414)",
+      "findings": [
+        {
+          "rule_id": "AC010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "tests/data/cases/fmtskip_leaf_bracket_depth.py",
+          "line": 6,
+          "title": "4 lint/type suppression(s) added",
+          "evidence": "    reg = ExtractorLoggingConfig(  # type: ignore[arg-type]  # pyright: ignore[something]  # fmt: skip\n        path_alternative_dest_folder=path_alternative_dest_folder_1,  # type: ignore[arg-type]\nfunc(  # type: ignore[arg-type]  # pyright: ignore[something]  # fmt: skip\n    kwarg=val,  # type: ignore[arg-type]",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1e28c83d5bb693153f77f3374838c846e54526d1",
+      "subject": "Avoid looking at __class__.__name__ in run_transformer (#2432) (#5396)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5bfefcb15bd0572dccd488a76ad54a33069cc0f5",
+      "subject": "docs: fix grammar in double-quote rationale (a one -> a single) (#5392)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "21dca43c79b05fd2c41bcba79bd0ae68bc93782c",
+      "subject": "Bump docker/setup-buildx-action from 4.3.0 to 4.4.1 (#5415)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "115caae279147a9de4cfc1c0f6bdc05f7e600156",
+      "subject": "Bump docker/build-push-action from 7.3.0 to 7.4.0 (#5413)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d2291c38704220a2adf531e055514c5190200fed",
+      "subject": "Preserve prefixes outside --line-ranges (#5175)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "acd6198877ced2d8126b9b3958bb17f4a65ef0d1",
+      "subject": "Skip symlink tests when the platform forbids creating one (#5390)",
+      "findings": [
+        {
+          "rule_id": "AC003",
+          "rule_name": "skip-marker-added",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/test_black.py",
+          "line": 2658,
+          "title": "Skip/focus marker added",
+          "evidence": "pytest.skip(f\"Can't create symlinks: {e}\")",
+          "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
+          "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b68c0c773dc3ad56b6631ed315d38ee1669e7463",
+      "subject": "Bump zizmorcore/zizmor-action from 0.6.3 to 0.6.4 (#5394)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "20622e1259c29bda81831962ace1348ba1921c84",
+      "subject": "Clarify project-root exclusion patterns (#5339)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4d492eb2ffa0d4c9e3d6ef900c204fefb68f4dbc",
+      "subject": "[pre-commit.ci] pre-commit autoupdate (#5118)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0d808f1d5fadaa6dc5ebd86ce248e9b1c55ae525",
+      "subject": "Bump mypy from 2.3.0 to 2.3.1 (#5384)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7adeae01474047c1de3b5dcfdc3c013457ef44ad",
+      "subject": "Handle UTF-8 offsets when masking notebook magics (#5381)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "59f16b5bd9009bec205eee66cc22f4e74a26bea5",
+      "subject": "keep inline comments in _force_standalone_comment_split (#5330)",
+      "findings": [
+        {
+          "rule_id": "AC010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "tests/data/cases/comments_in_comprehensions.py",
+          "line": 64,
+          "title": "2 lint/type suppression(s) added",
+          "evidence": "        in [  # type: ignore[attr-defined]\n    in [  # type: ignore[attr-defined]",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6409f0a51b7bf081ea60a21b21292cfe572fefdc",
+      "subject": "Fix incorrect or redundant conditions (#5374)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "bdcad23abeb99dee53af0c511b9fd49b0354b28e",
+      "subject": "Bump zizmorcore/zizmor-action from 0.6.2 to 0.6.3 (#5377)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "8947c48ef2077c3a301b03c1e814dc2e3f78436e",
+      "subject": "Bump docker/setup-buildx-action from 4.2.0 to 4.3.0 (#5325)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c835e9db6377e6dc55643c83607fa38f17572fad",
+      "subject": "Keep parentheses around the target of an annotated assignment (#5321)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5ee554164c10218e4d176d045ef235e74173a12d",
+      "subject": "Preserve blank lines before a closing fmt: on comment (#5300)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "70cac98cd578327216363d5ba0e643b6bc5fd3a8",
+      "subject": "avoid quadratic child rescan in normalize_invisible_parens (#5322)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "28aa20c5595e15ea6e5f687bf347d3f829316db8",
+      "subject": "keep async keyword with fmt: skip one-line compound statements (#5311)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3224f36a0fcad002d3aa32f61ab21e14598aded9",
+      "subject": "Fix --line-ranges inserting a blank line after a docstring (#5312)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ef60933a73efec306e7cef8ef8775e86676c728e",
+      "subject": "Delete scripts/migrate-black.py (#5319)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "40d4160f1fe1f42bbd2e7ea683294ba857df4e63",
+      "subject": "docs: fix magic trailing comma documentation link (#5317)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "92e26de83e53c6ef4d42e0eddeffe9a29fcaf1cd",
+      "subject": "docs: fix PyCharm File Watchers help link (#5316)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c5b93f41331d6f54a2f8bc09f9f32128790bdfbb",
+      "subject": "DOC: fix typo in docs/faq.md (#5313)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "bd622eda1aab7c8c6604282e2fa78381ee6370f3",
+      "subject": "Remove redundant generator parentheses (#5304)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "74371e2041a3120a049ced8f1cab0e7a6bc8ecd3",
+      "subject": "Report parse errors as file:line:column (#5237)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "928f50354512b3857ca07c1085076286035e4a56",
+      "subject": "docs: mention Vim PEP 8 indentation plugin (#5288)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "011942a84347316f60ab1b3fe7f9563f8210f2cc",
+      "subject": "Don't hug brackets when it would merge two `type: ignore` comments (#5271)",
+      "findings": [
+        {
+          "rule_id": "AC010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "tests/data/cases/preview_hug_parens_with_type_ignore.py",
+          "line": 4,
+          "title": "10 lint/type suppression(s) added",
+          "evidence": "foo(  # type:ignore\n    [  # type:ignore\nitems = [  # type: ignore\n    (  # type: ignore\nitems = [  # type: ignore\nfoo(  # type: ignore\n    [a]  # type: ignore\nitems = [  # type: ignore\n    (  # type: ignore\nitems = [  # type: ignore",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e744e77f4983c65101937931947862403ed75718",
+      "subject": "docs: fix typos in docstrings, and remove some unused code (#5294)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "006b2a74d4deac01fa16e85ccc9f5810b53a7391",
+      "subject": "Keep the required trailing comma of a one-element subscript under --skip-magic-trailing-comma (#5272)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fa72105efac5c15c3a3c83c21ec6e6097c525325",
+      "subject": "Bump actions/setup-python from 6.3.0 to 7.0.0 (#5264)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "9076219c7a5a4c1b3960db532d4b197e5e406033",
+      "subject": "Bump zizmorcore/zizmor-action from 0.5.7 to 0.6.2 (#5290)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b48a411b658eb412428f1afb4300b004cfad6d35",
+      "subject": "Bump pypa/gh-action-pypi-publish from 1.14.1 to 1.14.2 (#5291)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d90b38d552ad1b26b6a2f68b9618af02662c8fde",
+      "subject": "Bump docker/login-action from 4.4.0 to 4.6.0 (#5292)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "33de18721670b006e81a9f6761fd99b87aaf3efc",
+      "subject": "fix PIP_UPLOADED_PRIOR_TO in Dockerfile (#5293)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a61e98a2f7d6987dfe93b4d6b25e04416a2314d6",
+      "subject": "Do not use pip-install; add dependency cooldowns (#5146)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "18684ccb3edd702d8398c0fffd9a6416028c976c",
+      "subject": "Run most CI on 3.15 (#5101)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f2dc344b437f29feaed186f27a66a8de4ffab7be",
+      "subject": "avoid quadratic per-leaf copy in StringMerger.do_transform (#5220)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5706d79984dacb40cc1a3b26c0a987269384f602",
+      "subject": "don't treat a t-string in docstring position as a docstring (#5287)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c7801d9e24fe28b9c85742722cdcb97e1582a94d",
+      "subject": "don't escape nested quotes inside t-string replacement fields (#5265)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ba7debff26632c612ee5bc173faf54a7399c3f46",
+      "subject": "don't re-escape an already escaped quote in normalize_string_quotes (#5262)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "dff8d9106369b2dde5085d4a38cc00a987c6a022",
+      "subject": "Bump mypy to 2.3.0 (#5247)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "8276940aff57862bed7389dcca32340f35ce77db",
+      "subject": "Bump pypa/gh-action-pypi-publish from 1.14.0 to 1.14.1 (#5263)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "db2e3e7b317b40685ba4618235a8388c7c6ea5e2",
+      "subject": "Ignore permission errors when reading cache (#5258)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "8049246eddaed76bb36501100a1fd79a80bad5bc",
+      "subject": "Bump actions/checkout from 7.0.0 to 7.0.1 (#5257)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "65e95768ea960d2a69847128c77c44b4062b25d0",
+      "subject": "Bump myst-parser to 5.1.0 (#5255)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ef04d6b7067a7e8108e073e2f3b263a3b6ffabda",
+      "subject": "Bump cibuildwheel to 4.1.0 (#5254)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "8960ab0457803c310bf2f3550e1d96c598ca8f70",
+      "subject": "docs: fix grammar typo '.pyi file that are' -> '.pyi files that are' \u2026 (#5253)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "354c61aad99ee26eb7794d91f92d837afefa0f25",
+      "subject": "Bump prettier to 3.9.6 (#5248)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7aaaeb27c15d0c8c19ed24bcba9ee5f185940b0d",
+      "subject": "Preserve blank lines before fmt-off classes (#5238)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "244897da45ffb10e848c4eeff75b28e2290112a8",
+      "subject": "Preserve single-element tuple comma under --skip-magic-trailing-comma (#5246)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "42ed836d80fe8fab2e40de84627cb77ece7cc33f",
+      "subject": "Fix unstable formatting with comments on optional parens (#5241)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a20a0168eab6c9269989cce48273ae8ccd87dd2a",
+      "subject": "Respect the magic trailing comma in starred type parameter lists (#5244)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "106b148d1dd5bbed90c4fe2fd02fbd7ad380b5dd",
+      "subject": "Keep nested parens around lambda/ternary comprehension iterables (preview) (#5200)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f90421166726f7de6208002c185d26960a1b9240",
+      "subject": "avoid quadratic leaf re-adding in get_leaves_inside_matching_brackets (#5242)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "308e2ee7dce7435f844ef3517cfe41f7b05f023c",
+      "subject": "avoid quadratic per-leaf subtree walk in is_complex_subscript (#5239)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e46a84dab42c54d3b5f71fd37d1d3d3deab99755",
+      "subject": "docs: clarify GitHub Action pyproject.toml version lookup for Poetry users (#5240)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fcab6484062fbf1ded2333900ea600b9bc21ac69",
+      "subject": "avoid quadratic tree traversal in pre_order/post_order/leaves (#5235)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "51abf53080b09eab12143727641ff1e2cd39d8c9",
+      "subject": "fix: add conditional stripping for Linux executables (#5223)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "513058f032123cb5892549c0b981aa98f3376ffc",
+      "subject": "avoid quadratic node removal when converting fmt: off/on blocks (#5232)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2def970c03ccc47c9aaef1bd42daa63ab08ab001",
+      "subject": "Bump docker/login-action from 4.2.0 to 4.4.0 (#5231)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "00353ea9ee83bdf5d38b9c20c0e6a96b422e0373",
+      "subject": "Bump docker/setup-buildx-action from 4.1.0 to 4.2.0 (#5230)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7d6d3cccc10a2d320553add86d5877eb35c3fc64",
+      "subject": "Bump docker/build-push-action from 7.2.0 to 7.3.0 (#5228)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "42bc212d7702c1f4bdcb9117971888a95cd091ad",
+      "subject": "Bump stefanzweifel/git-auto-commit-action from 7.1.0 to 7.2.0 (#5224)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d7587ce9f52f36eb41bc505e529540fd8cbdcd3e",
+      "subject": "Validate BLACK_NUM_WORKERS values (#5211)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0a6396ba56d2d7fac4ce4fef5ea15c97e82b299b",
+      "subject": "batch --line-ranges node conversion to avoid quadratic removal (#5213)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "56ba38a484dae93f9793e70c4a136331284bdcc5",
+      "subject": "Handle empty cache files (#5192)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a618e3c96f81b635135ed5b08921c4c9d16cdc4b",
+      "subject": "Standardize ReadTheDocs links (#5212)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ce441f2a5b02fe84aac731194615fb6b2337dd65",
+      "subject": "Bump actions/cache from 5.0.5 to 6.1.0 (#5205)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "8ed5983e8f299a5754968c4a0dbd6a8be2a14f51",
+      "subject": "Fix typo and macOS capitalization in the basics documentation (#5217)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "451316b955a34e4c9dd96375866dc65aa100dd17",
+      "subject": "Bump actions/setup-python from 6.2.0 to 6.3.0 (#5206)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2d174df7cb16f5dbdbb188da15fdb2059adb30d6",
+      "subject": "Validate include and force-exclude config types (#5193)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ea5e8f85e1f4b2d3dfc13d1633b57f0a9d6b97dc",
+      "subject": "Bump zizmorcore/zizmor-action from 0.5.6 to 0.5.7 (#5202)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c4c9a93111309459a3f0e1e268160f7ef2159077",
+      "subject": "avoid quadratic child rescan in append_leaves (#5199)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "8140f6e47ed15762ec0bf0d03ee03869fa655ce2",
+      "subject": "avoid quadratic suite scan per fmt: skip in compound-statement check (#5190)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7cd074962f9534ab8558db959faec81acb14bcdd",
+      "subject": "avoid full children-list and sibling-map rebuild in Node.replace (#5194)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "46c2abc37cd74a974cf9820ab07c98274d2a267e",
+      "subject": "avoid quadratic multiline-string context scan in is_line_short_enough (#5188)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "bf83d5f10563ed454b57fd88de63c6e8062453c0",
+      "subject": "avoid quadratic token-lookahead scan in the parser's TokenProxy (#5186)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a51a0be79ca241ee97be920639d88f36eb1fc0bd",
+      "subject": "Fix fmt off block before with statement (#5189)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d883a7da0ba341d87fcc6357be53c9d7e4ac1905",
+      "subject": "Bump actions/checkout from 6.0.3 to 7.0.0 (#5197)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "69dcf870137791a3126e53c7ce4a6a2a6318dcde",
+      "subject": "Bump sphinxcontrib-programoutput from 0.19 to 0.20 (#5198)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "177744ee918f70d7c7da86407959a84e31682902",
+      "subject": "avoid quadratic named-escape scan when splitting long strings (#5183)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "505bbfc909a0479befa113b39a611891e3fde5f9",
+      "subject": "avoid quadratic child-list rescan when wrapping nodes in parens (#5184)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b74b23013fe6d0f7e0cee430a472ac70c5ba1334",
+      "subject": "avoid rebuilding sibling maps on every node mutation (#5178)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f50ab10f393ac9b22b14c7cbfd60acf0d173c754",
+      "subject": "Keep parens around lambda iterables in comprehensions (preview) (#5176)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0676fe9ebe80d7051b3ef6c3803d96f6e441b094",
+      "subject": "Parenthesize singleton tuples in yield expressions (#5170)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d32101360027916aaa0875e5e5280e889fd7300b",
+      "subject": "avoid quadratic opening-bracket scan in is_one_sequence_between (#5177)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6325332f05312ebde112a61cf4a19ef2ecf1ea74",
+      "subject": "Document standalone release executables (#5162)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "00cd1e4a6b306679dca12730873fa49fb9c06343",
+      "subject": "Fix unnecessary parentheses in indexed assignment RHS (#5095)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6cf262f7174e4b7c52768aeffcf77fc5dd90b293",
+      "subject": "Bump actions/checkout from 6.0.2 to 6.0.3 (#5172)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3a98448daec6a81c625307f7b26d38d3ec64a899",
+      "subject": "avoid re-naking the whole merged string in _merge_one_string_group (#5173)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e34bb1bef70e83410c2816dfd07485ec026959aa",
+      "subject": "avoid re-walking nested brackets in max_delimiter_priority_in_atom (#5171)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6a1c07745ad28cd835d8fb6995ead6011abefbbb",
+      "subject": "Fix crash on `# fmt: skip` after an opening bracket with a standalone comment (#5161)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "beb438cd6355aaa1a5cb4e9f980d87484744b68e",
+      "subject": "Add validation for --line-ranges values (#5107)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f665703258bfa1916f8a6c1cbab0bc384b90cbac",
+      "subject": "Add blank lines after docstring-only functions in stub files outside overload groups (#5158)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    }
+  ]
+}

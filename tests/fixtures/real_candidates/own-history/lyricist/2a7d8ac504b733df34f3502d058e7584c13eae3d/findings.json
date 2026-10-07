@@ -1,1 +1,54 @@
-[]
+[
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/build_l8.py",
+    "line": 39,
+    "title": "New source literal matches a test expectation",
+    "evidence": "    38: ('Place the pulse beneath the door, not above it.', ['under', 'door']),\ntests/test_blind_quality_l7.py:30:         self.assertEqual(forbidden['length_position'], 'under')",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/build_l8.py",
+    "line": 114,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "            suffix = (f'Do not use the word \"{term}\" or a form of it.' if typ == 'lexical_prohibition'\n                      else f'Imply \"{term}\" without naming it or using a form of that word.')",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/build_l8.py",
+    "line": 159,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "        if status == 'REVISE':\n            p['constraint_prompt'] = decision['revised_prompt']",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/train_l8.py",
+    "line": 89,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "    dataset_hashes = {split: sha((ROOT / ('data/l5' if split == 'train' else 'data/l3') / f'{split}.jsonl').read_bytes())\n    dataset_hashes = {split: sha((ROOT / ('data/l5' if split == 'train' else 'data/l3') / f'{split}.jsonl').read_bytes())",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  }
+]

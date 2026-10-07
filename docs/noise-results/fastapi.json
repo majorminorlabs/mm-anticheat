@@ -1,0 +1,2017 @@
+{
+  "repository": "fastapi",
+  "head": "94918c1d40afb27065c64d523219ed2ad9822f76",
+  "requested_commits": 150,
+  "commits_scanned": 150,
+  "commits_with_high": 1,
+  "commits_with_high_or_medium": 3,
+  "counts": [
+    {
+      "rule_id": "AC000",
+      "severity": "info",
+      "count": 2
+    },
+    {
+      "rule_id": "AC003",
+      "severity": "low",
+      "count": 1
+    },
+    {
+      "rule_id": "AC005",
+      "severity": "high",
+      "count": 1
+    },
+    {
+      "rule_id": "AC006",
+      "severity": "low",
+      "count": 32
+    },
+    {
+      "rule_id": "AC006",
+      "severity": "medium",
+      "count": 21
+    },
+    {
+      "rule_id": "AC010",
+      "severity": "low",
+      "count": 1
+    }
+  ],
+  "examples": {
+    "AC000": [
+      {
+        "commit": "4b3949cd9e5932f76217131fceabc74145c3db24",
+        "subject": "\u2728 Add native OpenTelemetry support (#16403)",
+        "rule_id": "AC000",
+        "rule_name": "parse-skipped",
+        "severity": "info",
+        "confidence": "normal",
+        "file": "docs/en/docs/img/tutorial/opentelemetry/image01.png",
+        "line": 1,
+        "title": "Content could not be parsed",
+        "evidence": "Binary content is not parsed",
+        "why_flagged": "This content could not be analyzed completely; review it separately.",
+        "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+        "allowed": false
+      },
+      {
+        "commit": "541e6aa14b7d1d9c524a79625590a3ef8b58a841",
+        "subject": "\ud83d\udd25 Remove unused image (#16195)",
+        "rule_id": "AC000",
+        "rule_name": "parse-skipped",
+        "severity": "info",
+        "confidence": "normal",
+        "file": "docs/en/docs/img/fastapi-conf.jpeg",
+        "line": 1,
+        "title": "Content could not be parsed",
+        "evidence": "Binary content is not parsed",
+        "why_flagged": "This content could not be analyzed completely; review it separately.",
+        "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+        "allowed": false
+      }
+    ],
+    "AC003": [
+      {
+        "commit": "4b3949cd9e5932f76217131fceabc74145c3db24",
+        "subject": "\u2728 Add native OpenTelemetry support (#16403)",
+        "rule_id": "AC003",
+        "rule_name": "skip-marker-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "tests/test_telemetry/test_runtime.py",
+        "line": 467,
+        "title": "Skip/focus marker added to a new test",
+        "evidence": "pytest.mark.skipif(\n    not hasattr(__import__(\"os\"), \"fork\"), reason=\"POSIX worker lifecycle\"\n)",
+        "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
+        "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
+        "allowed": false
+      }
+    ],
+    "AC005": [
+      {
+        "commit": "1d4953d2e528b58cfb09bbc28fb25dcda227c6ea",
+        "subject": "\ud83d\udc1b Allow startup when automatic OpenTelemetry configuration fails (#16418)",
+        "rule_id": "AC005",
+        "rule_name": "assertion-weakened",
+        "severity": "high",
+        "confidence": "normal",
+        "file": "tests/test_telemetry/test_runtime.py",
+        "line": 229,
+        "title": "Assertion replaced by a weaker check",
+        "evidence": "-     assert len(messages) == 1, messages\n+     assert exporter.get_finished_spans()",
+        "why_flagged": "The replacement assertion accepts behavior rejected by the previous check.",
+        "legit_if": "The contract intentionally became less strict, with that change reviewed elsewhere.",
+        "allowed": false
+      }
+    ],
+    "AC006": [
+      {
+        "commit": "13a2afb931e4f03bd824005b2461ed5af5143ee9",
+        "subject": "\ud83d\udcdd Embed the FastAPI and friends newsletter signup form (#16459)",
+        "rule_id": "AC006",
+        "rule_name": "hardcoded-test-expectation",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "docs/en/docs/js/custom.js",
+        "line": 250,
+        "title": "Input-specific literal output lacks test corroboration",
+        "evidence": "        theme: document.body.dataset.mdColorScheme === 'slate' ? 'dark' : 'light',\n        theme: document.body.dataset.mdColorScheme === 'slate' ? 'dark' : 'light',",
+        "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+        "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+        "allowed": false
+      },
+      {
+        "commit": "4b3949cd9e5932f76217131fceabc74145c3db24",
+        "subject": "\u2728 Add native OpenTelemetry support (#16403)",
+        "rule_id": "AC006",
+        "rule_name": "hardcoded-test-expectation",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "docs_src/opentelemetry/tutorial001_py310.py",
+        "line": 6,
+        "title": "New source literal matches a test expectation",
+        "evidence": "@app.get(\"/items/{item_id}\")\ntests/test_router_include_context.py:53:     assert contexts[0].path_format == \"/items/{item_id}\"",
+        "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+        "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+        "allowed": false
+      },
+      {
+        "commit": "4b3949cd9e5932f76217131fceabc74145c3db24",
+        "subject": "\u2728 Add native OpenTelemetry support (#16403)",
+        "rule_id": "AC006",
+        "rule_name": "hardcoded-test-expectation",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "docs_src/opentelemetry/tutorial002_py310.py",
+        "line": 11,
+        "title": "New source literal matches a test expectation",
+        "evidence": "@app.get(\"/items/{item_id}\")\ntests/test_router_include_context.py:53:     assert contexts[0].path_format == \"/items/{item_id}\"",
+        "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+        "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+        "allowed": false
+      },
+      {
+        "commit": "4b3949cd9e5932f76217131fceabc74145c3db24",
+        "subject": "\u2728 Add native OpenTelemetry support (#16403)",
+        "rule_id": "AC006",
+        "rule_name": "hardcoded-test-expectation",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "docs_src/opentelemetry/tutorial003_py310.py",
+        "line": 6,
+        "title": "New source literal matches a test expectation",
+        "evidence": "@app.get(\"/items/{item_id}\")\ntests/test_router_include_context.py:53:     assert contexts[0].path_format == \"/items/{item_id}\"",
+        "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+        "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+        "allowed": false
+      },
+      {
+        "commit": "4b3949cd9e5932f76217131fceabc74145c3db24",
+        "subject": "\u2728 Add native OpenTelemetry support (#16403)",
+        "rule_id": "AC006",
+        "rule_name": "hardcoded-test-expectation",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "fastapi/applications.py",
+        "line": 1211,
+        "title": "New source literal matches a test expectation",
+        "evidence": "            scope[\"type\"] not in (\"http\", \"websocket\")\ntests/test_frontend.py:1000:     assert data == \"websocket\"",
+        "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+        "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+        "allowed": false
+      }
+    ],
+    "AC010": [
+      {
+        "commit": "ad263df5a4a55f1fa0708158431cc5a0443014f2",
+        "subject": "\u2b06 Bump the python-packages group across 1 directory with 15 updates (#16285)",
+        "rule_id": "AC010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "fastapi/cli.py",
+        "line": 5,
+        "title": "1 lint/type suppression(s) added",
+        "evidence": "    cli_main = None  # type: ignore # ty: ignore[unused-ignore-comment]",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      }
+    ]
+  },
+  "errors": 0,
+  "stderr_lines": 0,
+  "rule_errors": 0,
+  "commits": [
+    {
+      "commit": "94918c1d40afb27065c64d523219ed2ad9822f76",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e74b6e09106682de99e81e332deafb2995afa27b",
+      "subject": "\ud83d\udc77 Fix deprecated command in `bump-pre-commit-hooks` workflow (#16463)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6e659e84de09ee06e0499141f7f4951f478ddbac",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "923a78f6ab05cac8b5f2f9fcd484de7fae292592",
+      "subject": "\ud83d\udcdd Remove HTML title from newsletter to avoid the tooltip (#16461)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fa5daa88eb215ca570f1f00d61923519fbdef54d",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "13a2afb931e4f03bd824005b2461ed5af5143ee9",
+      "subject": "\ud83d\udcdd Embed the FastAPI and friends newsletter signup form (#16459)",
+      "findings": [
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "docs/en/docs/js/custom.js",
+          "line": 250,
+          "title": "Input-specific literal output lacks test corroboration",
+          "evidence": "        theme: document.body.dataset.mdColorScheme === 'slate' ? 'dark' : 'light',\n        theme: document.body.dataset.mdColorScheme === 'slate' ? 'dark' : 'light',",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "52159d7e7018df55b57a0b8fdd6c1193e48b2b57",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4713a34407de223dc37b171c5fd058168602fb5e",
+      "subject": "\ud83d\udd27 Update sponsors: remove Render (#16457)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5f9fc5c59a9bb54608aa35376715f3ba9708188e",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "9ee8f0012d82013eccf2d4bb03de57963fad77ad",
+      "subject": "\ud83c\udf10 Update translations for fr (add-missing) (#16436)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1fbfd595984bbc404e188c02af5633c8356e2cee",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "467a1afd67bbbde12d631765ee0b48a10299fc06",
+      "subject": "\ud83c\udf10 Update translations for hi (add-missing) (#16435)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ef7841ae82200f1fbd6cedf4b4bf6198930acc01",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "46817880b9d36c254189099f6ee776ff886cddda",
+      "subject": "\ud83c\udf10 Update translations for tr (add-missing) (#16434)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ce63efccc55eb3952bbc5b3abcf3d07f9836327c",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f548047b3f2467cf0674cc3bfa52e2c0e7d11c27",
+      "subject": "\ud83c\udf10 Update translations for zh (add-missing) (#16433)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7d1a2800cf65c70aff8b1da50f9bf515dc2197f5",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c03a416427418c2e891aa62c28a4045d2fd29e14",
+      "subject": "\ud83c\udf10 Update translations for zh-hant (add-missing) (#16432)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6156ed47d1f1c5bd26e7dda9a866250bc2b9e913",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "39a68b9784ae8f3d187abe0ba63a82e4b60cafdb",
+      "subject": "\ud83c\udf10 Update translations for pt (add-missing) (#16431)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "53769f41ac574a096f651b4609b057c9ff470fff",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "80668be78365ac59895bd925caa50b83cabf303b",
+      "subject": "\ud83c\udf10 Update translations for de (add-missing) (#16430)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "144f45d76d3f2d621348d27cbb4b5d7583986296",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c972176846392986cd07e6da49c9e3aedbcb290a",
+      "subject": "\ud83c\udf10 Update translations for uk (add-missing) (#16429)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1ecca849fbe0929471b83f26f60f09e6749b619b",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c1d73722abeb96a988862bd77da8def77d59c3f4",
+      "subject": "\ud83c\udf10 Update translations for ja (add-missing) (#16428)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "86a5dcfcf7425b627b7a971acf0173f446266d2e",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0379b4adb072954e037be4d14dea8f586a5793ff",
+      "subject": "\ud83c\udf10 Update translations for ko (add-missing) (#16425)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "823703cb91b53b06e2e0d94e8027fa92c328fcaa",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e2182602ee313e7b6f086f7f8eae212d98e0740e",
+      "subject": "\ud83d\udd28 Use `gpt-6-astra` model for translations (#16453)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "80bb4b2386e936a5b3df667b726abd25bfa8c50c",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fe18c5928c94566089b5cccb5d8d3fec7e24c4c2",
+      "subject": "\ud83c\udf10 Update translations for es (add-missing) (#16426)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "02912c3fea549591d0d4cf49883478acfa698d31",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5eb71862dc2265be39980e60d880af1b4ca865c9",
+      "subject": "\u2b06 Bump the python-packages group across 1 directory with 14 updates (#16447)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "26dbe0b00e1211b99446500fc6e402cfec6a3b99",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "190bfa51fe8e19b3a5f126b95db2e3f0f6a4f1bb",
+      "subject": "\ud83c\udf10 Update translations for ru (add-missing) (#16427)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e6942531f53bc49b86ecf73f9500abd0e22eef0b",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "cced85bc2d4d6ef5f37cc3a9668a6abbdb18e0a7",
+      "subject": "\ud83c\udf10 Update Russian LLM-prompt (#16449)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "28a206107302ee20ce6a9a876d05a258c1c8d328",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "57c50daef104e82143607d7c76b7eceb6e03178e",
+      "subject": "\u2b06 Bump starlette from 1.6.0 to 1.7.0 (#16440)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "487b860aeb1b9be59ae9cc8aedc10951623e3e3c",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6d1c9e5383a358365538e5f16b1676341b15b1f0",
+      "subject": "\u2b06 Bump pyjwt from 2.13.0 to 2.15.0 (#16423)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "27a0ea5c513874b07c81995878556c71181b3c8a",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f93c6efe985d689462137ef73713fa30aef28737",
+      "subject": "\u2b06 Bump gitpython from 3.1.60 to 3.1.62 (#16444)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6921e0d1f269dfee56faf6840d8e29609331479c",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "497b784c7e14d56847defb7ccfb294d03dcc378e",
+      "subject": "\ud83d\udc65 Update FastAPI GitHub topic repositories (#16443)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "28f196169ed4afae1ebcfd497ac1c758cdbf1038",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "37247fe6ddd11f99c6929c59b27ba0f1d2299bd2",
+      "subject": "\ud83d\udc65 Update FastAPI People - Sponsors (#16437)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5f361e3a12884b27f4dc6d066de9d607eb16be76",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d36f21b96cf551080d357834f4f71b0e83533bbf",
+      "subject": "\u2b06 Bump pre-commit hooks (#16442)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e6ee235fcc38a707795be6496e4a028dafae6a61",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5e47200d273718ef2c56ec6868cb189e7ff07edb",
+      "subject": "\u2b06 Bump urllib3 from 2.7.0 to 2.8.0 (#16445)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "462c575efc0ee8511b46ab2ac362e65e4e02813f",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b3b47c6cf1b8d420cbca518dbca02946797f695b",
+      "subject": "\u2b06 Bump the github-actions group with 3 updates (#16438)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "33d411dbc3236275dd64d200bfe18d5d60a49b2e",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e73f34e3af85fe859863d5f55e92b7e55f6a9035",
+      "subject": "\ud83d\udcdd Update skill, use Asyncer for blocking code in threads (#16420)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "78c4324f0c56bc5282a459978779a9e532d19709",
+      "subject": "\ud83d\udd16 Release version 0.142.2 (#16419)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2579ed0d9e73205326463025cc756650f642f511",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1d4953d2e528b58cfb09bbc28fb25dcda227c6ea",
+      "subject": "\ud83d\udc1b Allow startup when automatic OpenTelemetry configuration fails (#16418)",
+      "findings": [
+        {
+          "rule_id": "AC005",
+          "rule_name": "assertion-weakened",
+          "severity": "high",
+          "confidence": "normal",
+          "file": "tests/test_telemetry/test_runtime.py",
+          "line": 229,
+          "title": "Assertion replaced by a weaker check",
+          "evidence": "-     assert len(messages) == 1, messages\n+     assert exporter.get_finished_spans()",
+          "why_flagged": "The replacement assertion accepts behavior rejected by the previous check.",
+          "legit_if": "The contract intentionally became less strict, with that change reviewed elsewhere.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3e33a03bdaa3a89f27d5e0c390c4ba9032f14b5e",
+      "subject": "\ud83d\udd16 Release version 0.142.1 (#16415)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "12ea7f5a5e76c5ba3495c2803f57ed92ac67731b",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ac88f563db5f4d3300d43355eca728c93ed9ffe2",
+      "subject": "\ud83d\udc1b Fix repeated endpoint wrapping in included routers (#16414)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "bd41128123fd08d693f5541e27c550eebe20f8b0",
+      "subject": "\ud83d\udd16 Release version 0.142.0 (#16411)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7aa21e53c859ce52b17196b35909efca6f2fa11f",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4b3949cd9e5932f76217131fceabc74145c3db24",
+      "subject": "\u2728 Add native OpenTelemetry support (#16403)",
+      "findings": [
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "docs_src/opentelemetry/tutorial001_py310.py",
+          "line": 6,
+          "title": "New source literal matches a test expectation",
+          "evidence": "@app.get(\"/items/{item_id}\")\ntests/test_router_include_context.py:53:     assert contexts[0].path_format == \"/items/{item_id}\"",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "docs_src/opentelemetry/tutorial002_py310.py",
+          "line": 11,
+          "title": "New source literal matches a test expectation",
+          "evidence": "@app.get(\"/items/{item_id}\")\ntests/test_router_include_context.py:53:     assert contexts[0].path_format == \"/items/{item_id}\"",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "docs_src/opentelemetry/tutorial003_py310.py",
+          "line": 6,
+          "title": "New source literal matches a test expectation",
+          "evidence": "@app.get(\"/items/{item_id}\")\ntests/test_router_include_context.py:53:     assert contexts[0].path_format == \"/items/{item_id}\"",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "fastapi/applications.py",
+          "line": 1211,
+          "title": "New source literal matches a test expectation",
+          "evidence": "            scope[\"type\"] not in (\"http\", \"websocket\")\ntests/test_frontend.py:1000:     assert data == \"websocket\"",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_api.py",
+          "line": 22,
+          "title": "New source literal matches a test expectation",
+          "evidence": "        \"DELETE\",\ntests/test_frontend.py:1042: @pytest.mark.parametrize(\"method\", [\"POST\", \"PUT\", \"PATCH\", \"DELETE\", \"OPTIONS\"])",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_api.py",
+          "line": 25,
+          "title": "New source literal matches a test expectation",
+          "evidence": "        \"OPTIONS\",\ntests/test_frontend.py:1042: @pytest.mark.parametrize(\"method\", [\"POST\", \"PUT\", \"PATCH\", \"DELETE\", \"OPTIONS\"])",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_api.py",
+          "line": 26,
+          "title": "New source literal matches a test expectation",
+          "evidence": "        \"PATCH\",\ntests/test_frontend.py:1042: @pytest.mark.parametrize(\"method\", [\"POST\", \"PUT\", \"PATCH\", \"DELETE\", \"OPTIONS\"])",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_api.py",
+          "line": 27,
+          "title": "New source literal matches a test expectation",
+          "evidence": "        \"POST\",\ntests/test_frontend.py:1042: @pytest.mark.parametrize(\"method\", [\"POST\", \"PUT\", \"PATCH\", \"DELETE\", \"OPTIONS\"])",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_asgi.py",
+          "line": 30,
+          "title": "New source literal matches a test expectation",
+          "evidence": "    0.05,\ntests/test_path.py:331:     assert response.json() == 0.05",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_asgi.py",
+          "line": 38,
+          "title": "New source literal matches a test expectation",
+          "evidence": "    5.0,\ntests/test_ambiguous_params.py:68:     assert response.json() == 5",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_asgi.py",
+          "line": 88,
+          "title": "New source literal matches a test expectation",
+          "evidence": "    if scope[\"type\"] == \"websocket\" and _normal_websocket_disconnect(exc):\ntests/test_frontend.py:1000:     assert data == \"websocket\"",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_asgi.py",
+          "line": 103,
+          "title": "Input-specific literal output lacks test corroboration",
+          "evidence": "                    event_name=\"fastapi.websocket.exception\"\n                    else \"http.server.request.exception\",",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_asgi.py",
+          "line": 104,
+          "title": "New source literal matches a test expectation",
+          "evidence": "                    if scope[\"type\"] == \"websocket\"\ntests/test_frontend.py:1000:     assert data == \"websocket\"",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_asgi.py",
+          "line": 109,
+          "title": "Input-specific literal output lacks test corroboration",
+          "evidence": "                    body=\"Unhandled exception in FastAPI WebSocket connection\"\n                    else \"Unhandled exception in FastAPI request\",",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_asgi.py",
+          "line": 110,
+          "title": "New source literal matches a test expectation",
+          "evidence": "                    if scope[\"type\"] == \"websocket\"\ntests/test_frontend.py:1000:     assert data == \"websocket\"",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_asgi.py",
+          "line": 243,
+          "title": "New source literal matches a test expectation",
+          "evidence": "        is_websocket = scope[\"type\"] == \"websocket\"\ntests/test_frontend.py:1000:     assert data == \"websocket\"",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_asgi.py",
+          "line": 262,
+          "title": "Input-specific literal output lacks test corroboration",
+          "evidence": "        span_method = \"WS\" if is_websocket else \"HTTP\" if method == \"_OTHER\" else method\n        span_method = \"WS\" if is_websocket else \"HTTP\" if method == \"_OTHER\" else method",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_asgi.py",
+          "line": 267,
+          "title": "New source literal matches a test expectation",
+          "evidence": "            attributes[\"network.protocol.name\"] = \"websocket\"\ntests/test_frontend.py:1000:     assert data == \"websocket\"",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_asgi.py",
+          "line": 294,
+          "title": "Input-specific literal output lacks test corroboration",
+          "evidence": "                if scope.get(\"query_string\"):\n                    span_attributes[\"url.query\"] = urlencode(",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_asgi.py",
+          "line": 380,
+          "title": "New source literal matches a test expectation",
+          "evidence": "            if message[\"type\"] == \"http.response.start\":\ntests/test_frontend.py:592:     assert messages[0][\"type\"] == \"http.response.start\"",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_api.py",
+          "line": 21,
+          "title": "New source literal matches a test expectation",
+          "evidence": "        \"CONNECT\",\ntests/test_telemetry/test_http.py:498:         \"CONNECT\",",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_api.py",
+          "line": 24,
+          "title": "New source literal matches a test expectation",
+          "evidence": "        \"HEAD\",\ntests/test_telemetry/test_http.py:501:         \"HEAD\",",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_api.py",
+          "line": 29,
+          "title": "New source literal matches a test expectation",
+          "evidence": "        \"QUERY\",\ntests/test_telemetry/test_http.py:506:         \"QUERY\",",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_api.py",
+          "line": 30,
+          "title": "New source literal matches a test expectation",
+          "evidence": "        \"TRACE\",\ntests/test_telemetry/test_http.py:507:         \"TRACE\",",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_api.py",
+          "line": 164,
+          "title": "New source literal matches a test expectation",
+          "evidence": "            event_name=\"fastapi.validation.failed\",\ntests/test_telemetry/test_data.py:165:         assert record.event_name == \"fastapi.validation.failed\"",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_api.py",
+          "line": 168,
+          "title": "New source literal matches a test expectation",
+          "evidence": "            body=\"Request validation failed\",\ntests/test_telemetry/test_data.py:171:         assert record.body == \"Request validation failed\"",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_api.py",
+          "line": 183,
+          "title": "New source literal matches a test expectation",
+          "evidence": "    return isinstance(exc, WebSocketDisconnect) and exc.code in (1000, 1001)\ntests/test_telemetry/test_websockets.py:76: @pytest.mark.parametrize(\"code\", [1000, 1001, 1006])",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_api.py",
+          "line": 239,
+          "title": "New source literal matches a test expectation",
+          "evidence": "    with _operation(name=\"endpoint\", function=function):\ntests/test_telemetry/test_operations.py:66:     \"failure\", [\"dependency\", \"endpoint\", \"serialization\", \"handled\"]",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_asgi.py",
+          "line": 42,
+          "title": "New source literal matches a test expectation",
+          "evidence": "_SCHEMA_URL = \"https://opentelemetry.io/schemas/1.44.0\"\ntests/test_telemetry/test_exceptions.py:37:         == \"https://opentelemetry.io/schemas/1.44.0\"",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_asgi.py",
+          "line": 201,
+          "title": "New source literal matches a test expectation",
+          "evidence": "            meter = provider.get_meter(\"fastapi\", __version__, schema_url=_SCHEMA_URL)\ntests/test_telemetry/test_http.py:248: @pytest.mark.parametrize(\"route_type\", [\"fastapi\", \"starlette\"])",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_asgi.py",
+          "line": 261,
+          "title": "New source literal matches a test expectation",
+          "evidence": "        method = original_method if original_method in self._known_methods else \"_OTHER\"\ntests/test_telemetry/test_http.py:547:     assert span.attributes[\"http.request.method\"] == \"_OTHER\"",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_asgi.py",
+          "line": 286,
+          "title": "New source literal matches a test expectation",
+          "evidence": "                \"fastapi\",\ntests/test_telemetry/test_http.py:248: @pytest.mark.parametrize(\"route_type\", [\"fastapi\", \"starlette\"])",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_asgi.py",
+          "line": 322,
+          "title": "New source literal matches a test expectation",
+          "evidence": "                \"fastapi\",\ntests/test_telemetry/test_http.py:248: @pytest.mark.parametrize(\"route_type\", [\"fastapi\", \"starlette\"])",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_runtime.py",
+          "line": 59,
+          "title": "New source literal matches a test expectation",
+          "evidence": "        or \"http/protobuf\"\ntests/test_telemetry/test_runtime.py:162: @pytest.mark.parametrize(\"protocol\", [\"http/protobuf\", \"grpc\"])",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_runtime.py",
+          "line": 61,
+          "title": "New source literal matches a test expectation",
+          "evidence": "    if protocol != \"http/protobuf\":\ntests/test_telemetry/test_runtime.py:162: @pytest.mark.parametrize(\"protocol\", [\"http/protobuf\", \"grpc\"])",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_runtime.py",
+          "line": 101,
+          "title": "New source literal matches a test expectation",
+          "evidence": "            (\"TRACES\", config[\"tracing\"], config[\"tracer_provider\"]),\ntests/test_telemetry/test_runtime.py:176: @pytest.mark.parametrize(\"signal\", [\"TRACES\", \"METRICS\", \"LOGS\"])",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_runtime.py",
+          "line": 102,
+          "title": "New source literal matches a test expectation",
+          "evidence": "            (\"METRICS\", config[\"metrics\"], config[\"meter_provider\"]),\ntests/test_telemetry/test_runtime.py:176: @pytest.mark.parametrize(\"signal\", [\"TRACES\", \"METRICS\", \"LOGS\"])",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_runtime.py",
+          "line": 103,
+          "title": "New source literal matches a test expectation",
+          "evidence": "            (\"LOGS\", config[\"logs\"], config[\"logger_provider\"]),\ntests/test_telemetry/test_runtime.py:176: @pytest.mark.parametrize(\"signal\", [\"TRACES\", \"METRICS\", \"LOGS\"])",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_runtime.py",
+          "line": 136,
+          "title": "New source literal matches a test expectation",
+          "evidence": "            \"TRACES\": (\"tracer\", trace.get_tracer_provider),\ntests/test_telemetry/test_runtime.py:176: @pytest.mark.parametrize(\"signal\", [\"TRACES\", \"METRICS\", \"LOGS\"])",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_runtime.py",
+          "line": 137,
+          "title": "New source literal matches a test expectation",
+          "evidence": "            \"METRICS\": (\"meter\", metrics.get_meter_provider),\ntests/test_telemetry/test_runtime.py:176: @pytest.mark.parametrize(\"signal\", [\"TRACES\", \"METRICS\", \"LOGS\"])",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_runtime.py",
+          "line": 138,
+          "title": "New source literal matches a test expectation",
+          "evidence": "            \"LOGS\": (\"logger\", _logs.get_logger_provider),\ntests/test_telemetry/test_runtime.py:176: @pytest.mark.parametrize(\"signal\", [\"TRACES\", \"METRICS\", \"LOGS\"])",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_runtime.py",
+          "line": 142,
+          "title": "New source literal matches a test expectation",
+          "evidence": "            if signal == \"TRACES\":\ntests/test_telemetry/test_runtime.py:176: @pytest.mark.parametrize(\"signal\", [\"TRACES\", \"METRICS\", \"LOGS\"])",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_runtime.py",
+          "line": 144,
+          "title": "New source literal matches a test expectation",
+          "evidence": "            if signal == \"METRICS\":\ntests/test_telemetry/test_runtime.py:176: @pytest.mark.parametrize(\"signal\", [\"TRACES\", \"METRICS\", \"LOGS\"])",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_runtime.py",
+          "line": 159,
+          "title": "New source literal matches a test expectation",
+          "evidence": "                if signal == \"TRACES\":\ntests/test_telemetry/test_runtime.py:176: @pytest.mark.parametrize(\"signal\", [\"TRACES\", \"METRICS\", \"LOGS\"])",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_runtime.py",
+          "line": 163,
+          "title": "New source literal matches a test expectation",
+          "evidence": "                elif signal == \"METRICS\":\ntests/test_telemetry/test_runtime.py:176: @pytest.mark.parametrize(\"signal\", [\"TRACES\", \"METRICS\", \"LOGS\"])",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_runtime.py",
+          "line": 186,
+          "title": "New source literal matches a test expectation",
+          "evidence": "                if signal == \"TRACES\":\ntests/test_telemetry/test_runtime.py:176: @pytest.mark.parametrize(\"signal\", [\"TRACES\", \"METRICS\", \"LOGS\"])",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_runtime.py",
+          "line": 188,
+          "title": "New source literal matches a test expectation",
+          "evidence": "                elif signal == \"METRICS\":\ntests/test_telemetry/test_runtime.py:176: @pytest.mark.parametrize(\"signal\", [\"TRACES\", \"METRICS\", \"LOGS\"])",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_runtime.py",
+          "line": 222,
+          "title": "New source literal matches a test expectation",
+          "evidence": "                await send({\"type\": \"lifespan.startup.failed\", \"message\": str(exc)})\ntests/test_telemetry/test_runtime.py:230:     assert messages[0][\"type\"] == \"lifespan.startup.failed\"",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_runtime.py",
+          "line": 230,
+          "title": "New source literal matches a test expectation",
+          "evidence": "                \"lifespan.shutdown.complete\",\ntests/test_telemetry/test_runtime.py:366:         \"lifespan.shutdown.complete\",",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_runtime.py",
+          "line": 231,
+          "title": "New source literal matches a test expectation",
+          "evidence": "                \"lifespan.shutdown.failed\",\ntests/test_telemetry/test_runtime.py:365:         \"lifespan.shutdown.failed\",",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/telemetry/_runtime.py",
+          "line": 232,
+          "title": "New source literal matches a test expectation",
+          "evidence": "                \"lifespan.startup.failed\",\ntests/test_telemetry/test_runtime.py:230:     assert messages[0][\"type\"] == \"lifespan.startup.failed\"",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC003",
+          "rule_name": "skip-marker-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "tests/test_telemetry/test_runtime.py",
+          "line": 467,
+          "title": "Skip/focus marker added to a new test",
+          "evidence": "pytest.mark.skipif(\n    not hasattr(__import__(\"os\"), \"fork\"), reason=\"POSIX worker lifecycle\"\n)",
+          "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
+          "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "docs/en/docs/img/tutorial/opentelemetry/image01.png",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Binary content is not parsed",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c30032a1b68fb36c03fffe1856369d3824607c7c",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "79d42b219b96f582e41e68ee19bf03cff58cd535",
+      "subject": "\u2705 Fix frontend test timeout with Starlette Git (#16408)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a3d205bf19640528718cb4f05ab77f4dfca6ad9a",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "39c9a473f9450fc0834ad4ce24d176f3f4a4bb4a",
+      "subject": "\ud83d\udd27 Update sponsors: remove Permit.io (#16406)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "192b12197eb04c2b4a691cce7d87261b21716714",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d4efcba222fdd21d0f0533f4b6d917ac1f7470d6",
+      "subject": "\u2b06 Bump anyio from 4.12.1 to 4.14.2 (#16375)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "50113da16fec53b66b80d75e80a89296de4fa5a5",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ad263df5a4a55f1fa0708158431cc5a0443014f2",
+      "subject": "\u2b06 Bump the python-packages group across 1 directory with 15 updates (#16285)",
+      "findings": [
+        {
+          "rule_id": "AC010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "fastapi/cli.py",
+          "line": 5,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "    cli_main = None  # type: ignore # ty: ignore[unused-ignore-comment]",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "965b72225a4822653359a3120f4722d7ee75a475",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fcf472e93a2657ff29600b54807f581e0d8f387a",
+      "subject": "\u2b06 Bump starlette from 1.3.1 to 1.6.0 (#16289)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fc5f36b17d0d3eb8971ff349f1f809e8a4f67a05",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "45762fc49fefdbfa2286b92df3c349c88023ce97",
+      "subject": "\u2b06 Bump annotated-doc from 0.0.4 to 0.0.5 (#16288)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4f0855f4eaf0d5a5fcb21cd7d96a11808349f8da",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1459633d64f6256fe6e7d3c10e549d8cd3908556",
+      "subject": "\u2b06 Bump typing-inspection from 0.4.2 to 0.4.4 (#16286)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ed92e3667aca3f1b6426707d117b7969a1c731b7",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "87ce65f0d5861b83aa0a01583946d5e593fc57e3",
+      "subject": "\u2b06 Bump fastar from 0.11.0 to 0.12.0 (#16287)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a18233ff1e86d570dfe68457403e3355da91325e",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "042c33c0876e30933ef3f29a96eb4b0a597bff92",
+      "subject": "\u2b06 Bump the github-actions group with 5 updates (#16284)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b93bf331621c7332dfba54d706fa3bafc1be1650",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1b973b63b1290ee7ed2371000c7d7a8cbc0d9f73",
+      "subject": "\u2b06 Bump pre-commit hooks (#16290)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "68ba752015d1b8eef764aeba34f0fc573f0e120f",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2b39879267940b81c0ec4597bc5de920489ad7e7",
+      "subject": "\ud83d\udc65 Update FastAPI GitHub topic repositories (#16291)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c17a0820af82f8c8acdf61603d341f452bd15275",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a4ecdd0657a92da49ce996d71318a4838b36ed82",
+      "subject": "\ud83d\udc65 Update FastAPI People - Sponsors (#16282)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "49033471594ea5d99a80abdf1043231b7791ee49",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c56721805f9e920e9fec6d739a2a203ea7e34b5c",
+      "subject": "\u2b06\ufe0f Bump Typer min version to 0.26.1 (#16252)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "9a8a13f50f710c2f31845182a277a0b6dba8e146",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "60bd125bfb3aacd5e0447f8503a3e1d8a2720c1d",
+      "subject": "\u2b06\ufe0f Bump `setup-uv` action to `10.0.1` (#16249)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c3f316b7e814667e8ee81e03a7330d00ee61e45c",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "452e526877cccec949e96180916cbb55c40a6581",
+      "subject": "\ud83c\udf10 Update translations for hi (update-outdated) (#16212)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f369914b82ee9e7515525dd3cfe938352619f1a3",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "286344571f15e9134e7e0fcc92b79ab8eb53e836",
+      "subject": "\ud83c\udf10 Update translations for ru (update-outdated) (#16210)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "97a99726e7880988164bb0dbdb06497719c5c604",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5e5e80dfaa97c7bd9a9b75b7dc482405b54158d8",
+      "subject": "\ud83c\udf10 Update translations for zh-hant (update-outdated) (#16211)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "60f8b35daed799b05c66f10f32f79cf03fc6d83e",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "8e898965822dcd77a0cfc400f63c57741c61742f",
+      "subject": "\ud83c\udf10 Update translations for uk (update-outdated) (#16208)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "47fed8507db9a1c3f8b2e15c4441321bcd894855",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a07bdb2acbc1b7001b02da42cba9b33d43ab5d6d",
+      "subject": "\ud83c\udf10 Update translations for de (update-outdated) (#16209)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "aec0645081f13e5e6354794625847cdb7e4845f7",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "cf816469f0c6d99270151279ed0d9d57277e238d",
+      "subject": "\ud83c\udf10 Update translations for tr (update-outdated) (#16207)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "90e992a9caefa64a78d70e3a6c2ee5bbd42c026d",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "8be56794c0198b10e08956644de9b445e31c5434",
+      "subject": "\ud83c\udf10 Update translations for ja (update-outdated) (#16206)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0a6dae53c748fcf1aa1187effaff7b6c53a6b4da",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ea2514fd99e89650e87101c5481e2ac918731738",
+      "subject": "\ud83c\udf10 Update translations for fr (update-outdated) (#16205)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "8e8103b643aa6e3793671887ac029dc520920f34",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a77d04a26616fbef2a7fb7b7c4e15cf3bd586f8a",
+      "subject": "\ud83c\udf10 Update translations for zh (update-outdated) (#16204)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c44617dc831547c562f2e32948b63906db7d3428",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0a7c77b8616865d8b2a4c3cb3f9443868a1bddf0",
+      "subject": "\ud83c\udf10 Update translations for es (update-outdated) (#16203)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "02d6349d7fa103bc70e2f641b9a928a1e9049311",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d7270bbc1d8b38e5fb24e8fd707289a3b7f77e4b",
+      "subject": "\ud83c\udf10 Update translations for pt (update-outdated) (#16202)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "30a2a89487f63bb6a678760ed28efda96d297968",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "77a24c1381f28ef9be4843ce29dd4946dfee724c",
+      "subject": "\ud83c\udf10 Update translations for ko (update-outdated) (#16201)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "80257cb8dab912fff8ab8cc06c6cc7dcb2c95f31",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "24ecb120f4b281cfa422853028e35e8522692f65",
+      "subject": "\ud83d\udc77 Update translation PR branches with PR Push (#16224)",
+      "findings": [
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "scripts/translate.py",
+          "line": 475,
+          "title": "New source literal matches a test expectation",
+          "evidence": "        bot_name=\"pr-push[bot]\",\ntests/test_translate.py:43:     assert run_git(tmp_path, \"log\", \"-1\", \"--format=%an\") == \"pr-push[bot]\"",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "66b2c5a9b5ddf65f218423072ad158e42ed780aa",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b26a476a9cf4a21f080e544c5f42a7183e9bc1dd",
+      "subject": "\u23ea\ufe0f Restore `commit_in_place` input in `translate.yml` (#16216)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a1fa70d4237d50aae6586a0d9b229df583463d21",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6988aa68743f05341a24fcf6ba6b9224930a5e6d",
+      "subject": "\ud83d\udcf1 Improve mobile responsiveness of conference rail (#16196)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "13a5f34dce029671645f72695383265c5b3a8d48",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "541e6aa14b7d1d9c524a79625590a3ef8b58a841",
+      "subject": "\ud83d\udd25 Remove unused image (#16195)",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "docs/en/docs/img/fastapi-conf.jpeg",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Binary content is not parsed",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fb1f34897663937236ef0599715a38d8650753d2",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ad24bc870f9c39b0041808b6731f5f79154ddd32",
+      "subject": "\u267b\ufe0f Remove conf section and add event banner (#16193)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f336ff831c4af3d4f625c2593a27b1e0cae93eb7",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "cdbb660571552715517c6153053f219d00c80c13",
+      "subject": "\ud83d\udc77 Migrate automatic labels to Latest Changes (#16185)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0e6342d90e62e93d1082280dde87c322ecbc524e",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "613089ea60d04188153e2bb68a7f4587399ad012",
+      "subject": "\ud83d\udc77 Fix branch name in `zizmor.yml` workflow (`main` -> `master`) (#16178)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3e8d1526d83a90aaf7d6eb6dc682bf150f180b25",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d4b62c7f62747d1148ad6bb3fa70d0b143496b74",
+      "subject": "\ud83d\udc77 Remove legacy label check (#16180)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a9134f62683a7df133cd901b748169879e53dac4",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b963df2927e008aca0add5c7dfa50d75771b7868",
+      "subject": "\u2b06 Bump pymdown-extensions from 11.0 to 11.0.1 (#16162)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6a6002298106d89d3a65fd62527dc0bdc4e681fd",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "aa92203c32e885f4f583cd5a7e4040501a5dbae4",
+      "subject": "\u2b06 Bump gitpython from 3.1.57 to 3.1.58 (#16157)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "244d66308d6c525f394d0c2ce32dabceb2ed262b",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a269cf4087918405a550afff3ce97decfdb59d62",
+      "subject": "\ud83d\udc65 Update FastAPI People - Sponsors (#16175)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1dd2cc214fd9759f636eb91563e0b7c158637665",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d353359c781137126233dc75a8bb9f65b01a7c8e",
+      "subject": "\ud83d\udc1b Fix Sponsors Git authentication (#16174)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7bb06b01c57e54e0f0ecae5c408798fa623f9cde",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f0ce4db90d3f834d23a5f76f61d6a0b8c9cded2a",
+      "subject": "\ud83d\udc65 Update FastAPI GitHub topic repositories (#16173)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "eb63bd162e2076bd640ff96686699f75b6fd623e",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "051d1156b0a7451aecfde6d372f8b9086bc81543",
+      "subject": "\ud83c\udf10 Update translations for ko (update-outdated) (#16171)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4defb3e857e8f6788e4f5f0202e40f0a97c5aea7",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "591a4f819ca264314f4c8044c15c1f935d93708d",
+      "subject": "\ud83d\udd10 Use PR Submit for automated updates (#16172)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ffa9af958ab154afe286e044fd2182a699b7dc17",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b43dc5e10cb1a56b72a8a5f78e5b02e41cddbba0",
+      "subject": "\ud83d\udd10 Use PR Submit for translations (#16168)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3abff4ec72355d9d816e60ffa6650e2c1a7ab284",
+      "subject": "\ud83d\udcdd Update release notes",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    }
+  ]
+}

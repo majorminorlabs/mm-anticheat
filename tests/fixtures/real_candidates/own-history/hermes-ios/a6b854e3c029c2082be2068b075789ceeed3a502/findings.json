@@ -1,1 +1,93 @@
-[]
+[
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "hermes-mobile-bridge/src/hermes_mobile_bridge/api.py",
+    "line": 190,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "    if c[\"data\"].get(\"canonical\"):\n            return web.json_response(await BotMode(s, request[AUTH]).conversation(c[\"data\"][\"bot_id\"]))",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "hermes-mobile-bridge/src/hermes_mobile_bridge/service.py",
+    "line": 236,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "        questions = params.get(\"questions\", [])[:5] if method == \"clarify\" else [{\"qid\": None, \"question\": \"This action requires a local client\"}]\n        questions = params.get(\"questions\", [])[:5] if method == \"clarify\" else [{\"qid\": None, \"question\": \"This action requires a local client\"}]",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "hermes-mobile-bridge/src/hermes_mobile_bridge/service.py",
+    "line": 248,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "                        limitation=None if method == \"clarify\" else \"local_client_required\", generation=self.backends[profile].generation,\n                        limitation=None if method == \"clarify\" else \"local_client_required\", generation=self.backends[profile].generation,",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "hermes-mobile-bridge/src/hermes_mobile_bridge/service.py",
+    "line": 249,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "                        details=only(question, \"question choices multi_select\") if method == \"clarify\" else only(params, \"command description\"))\n                        details=only(question, \"question choices multi_select\") if method == \"clarify\" else only(params, \"command description\"))",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "hermes-mobile-bridge/src/hermes_mobile_bridge/service.py",
+    "line": 433,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "        if conv[\"data\"].get(\"canonical\"):\n            resumed = await backend.rpc(\"session.resume\", {\"session_id\": conv[\"stored_id\"], \"profile\": self.session_profile(conv), \"omit_messages\": True, \"close_on_disconnect\": False})",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "hermes-mobile-bridge/src/hermes_mobile_bridge/upstream.py",
+    "line": 82,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "                    await self.ws.send_json({\"jsonrpc\": \"2.0\", \"id\": data[\"id\"], \"error\": {\"code\": code, \"message\": \"No Desktop window is showing this chat\" if code == 4404 else \"Mobile cannot handle this request\"}})\n                    await self.ws.send_json({\"jsonrpc\": \"2.0\", \"id\": data[\"id\"], \"error\": {\"code\": code, \"message\": \"No Desktop window is showing this chat\" if code == 4404 else \"Mobile cannot handle this request\"}})",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "hermes-mobile-bridge/src/hermes_mobile_bridge/upstream.py",
+    "line": 117,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "                if self.cfg.get(\"installed_commit\") == \"4bb9e57bfde8a0affb5553eff13ed6e1f14147f1\":\n                    self.declines_not_shown = capability.get(\"declines_not_shown\") is True",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  }
+]

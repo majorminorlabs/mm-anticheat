@@ -2,6 +2,32 @@
   {
     "rule_id": "AC006",
     "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/build_l9.py",
+    "line": 97,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "        out['excluded_concept' if kind != 'lexical_prohibition' else 'forbidden_term'] = concept\n        out['excluded_concept' if kind != 'lexical_prohibition' else 'forbidden_term'] = concept",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/train_l9.py",
+    "line": 89,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "    dataset_hashes = {split: sha((ROOT / ('data/l5' if split == 'train' else 'data/l3') / f'{split}.jsonl').read_bytes())\n    dataset_hashes = {split: sha((ROOT / ('data/l5' if split == 'train' else 'data/l3') / f'{split}.jsonl').read_bytes())",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
     "severity": "low",
     "confidence": "normal",
     "file": "scripts/build_l9.py",

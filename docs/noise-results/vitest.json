@@ -4,65 +4,75 @@
   "requested_commits": 150,
   "commits_scanned": 150,
   "commits_with_high": 2,
-  "commits_with_high_or_medium": 7,
+  "commits_with_high_or_medium": 12,
   "counts": [
     {
-      "rule_id": "GH000",
+      "rule_id": "AC000",
       "severity": "info",
       "count": 2
     },
     {
-      "rule_id": "GH001",
+      "rule_id": "AC001",
       "severity": "high",
       "count": 2
     },
     {
-      "rule_id": "GH002",
+      "rule_id": "AC002",
       "severity": "high",
       "count": 2
     },
     {
-      "rule_id": "GH003",
+      "rule_id": "AC003",
       "severity": "low",
       "count": 1
     },
     {
-      "rule_id": "GH006",
+      "rule_id": "AC006",
       "severity": "low",
-      "count": 5
+      "count": 3
     },
     {
-      "rule_id": "GH008",
+      "rule_id": "AC006",
+      "severity": "medium",
+      "count": 21
+    },
+    {
+      "rule_id": "AC008",
       "severity": "low",
       "count": 38
     },
     {
-      "rule_id": "GH008",
+      "rule_id": "AC008",
       "severity": "medium",
       "count": 27
     },
     {
-      "rule_id": "GH009",
+      "rule_id": "AC009",
       "severity": "medium",
       "count": 1
     },
     {
-      "rule_id": "GH010",
+      "rule_id": "AC010",
       "severity": "low",
       "count": 11
     },
     {
-      "rule_id": "GH011",
+      "rule_id": "AC011",
       "severity": "info",
       "count": 2
+    },
+    {
+      "rule_id": "AC018",
+      "severity": "medium",
+      "count": 1
     }
   ],
   "examples": {
-    "GH000": [
+    "AC000": [
       {
         "commit": "d05ab8efbdb742e7c3a3976aa9862cda234ed524",
         "subject": "docs: add blog post for Vitest 5 (#11076)",
-        "rule_id": "GH000",
+        "rule_id": "AC000",
         "rule_name": "parse-skipped",
         "severity": "info",
         "confidence": "normal",
@@ -77,7 +87,7 @@
       {
         "commit": "d05ab8efbdb742e7c3a3976aa9862cda234ed524",
         "subject": "docs: add blog post for Vitest 5 (#11076)",
-        "rule_id": "GH000",
+        "rule_id": "AC000",
         "rule_name": "parse-skipped",
         "severity": "info",
         "confidence": "normal",
@@ -90,11 +100,11 @@
         "allowed": false
       }
     ],
-    "GH001": [
+    "AC001": [
       {
         "commit": "9673c49a40535529db6042df7176f123e95bb8f5",
         "subject": " fix: refactor caching, fix `:` in project and change the shape of `results` cache (#11453)",
-        "rule_id": "GH001",
+        "rule_id": "AC001",
         "rule_name": "test-file-deleted",
         "severity": "high",
         "confidence": "normal",
@@ -109,7 +119,7 @@
       {
         "commit": "9673c49a40535529db6042df7176f123e95bb8f5",
         "subject": " fix: refactor caching, fix `:` in project and change the shape of `results` cache (#11453)",
-        "rule_id": "GH001",
+        "rule_id": "AC001",
         "rule_name": "test-file-deleted",
         "severity": "high",
         "confidence": "normal",
@@ -122,11 +132,11 @@
         "allowed": false
       }
     ],
-    "GH002": [
+    "AC002": [
       {
         "commit": "9673c49a40535529db6042df7176f123e95bb8f5",
         "subject": " fix: refactor caching, fix `:` in project and change the shape of `results` cache (#11453)",
-        "rule_id": "GH002",
+        "rule_id": "AC002",
         "rule_name": "test-count-decreased",
         "severity": "high",
         "confidence": "normal",
@@ -141,7 +151,7 @@
       {
         "commit": "5dbebe9e3b8758fe97d233eb9718a3664cd0b9c3",
         "subject": "fix: isolate `result.status` between `repeats` runs (#11218)",
-        "rule_id": "GH002",
+        "rule_id": "AC002",
         "rule_name": "test-count-decreased",
         "severity": "high",
         "confidence": "normal",
@@ -154,11 +164,11 @@
         "allowed": false
       }
     ],
-    "GH003": [
+    "AC003": [
       {
         "commit": "2d053600efa0a646150e755bcc3745c5d1fded43",
         "subject": "test(ui): improve explorer filter assertions (#11124)",
-        "rule_id": "GH003",
+        "rule_id": "AC003",
         "rule_name": "skip-marker-added",
         "severity": "low",
         "confidence": "normal",
@@ -171,11 +181,11 @@
         "allowed": false
       }
     ],
-    "GH006": [
+    "AC006": [
       {
         "commit": "5f2739e74983b0e5c9b5f3ce9901cebfeafee50c",
         "subject": "fix(typecheck): use typescript pool in toTestSpecification (#11451)",
-        "rule_id": "GH006",
+        "rule_id": "AC006",
         "rule_name": "hardcoded-test-expectation",
         "severity": "low",
         "confidence": "normal",
@@ -190,7 +200,7 @@
       {
         "commit": "5f2739e74983b0e5c9b5f3ce9901cebfeafee50c",
         "subject": "fix(typecheck): use typescript pool in toTestSpecification (#11451)",
-        "rule_id": "GH006",
+        "rule_id": "AC006",
         "rule_name": "hardcoded-test-expectation",
         "severity": "low",
         "confidence": "normal",
@@ -205,7 +215,7 @@
       {
         "commit": "5f2739e74983b0e5c9b5f3ce9901cebfeafee50c",
         "subject": "fix(typecheck): use typescript pool in toTestSpecification (#11451)",
-        "rule_id": "GH006",
+        "rule_id": "AC006",
         "rule_name": "hardcoded-test-expectation",
         "severity": "low",
         "confidence": "normal",
@@ -218,41 +228,41 @@
         "allowed": false
       },
       {
-        "commit": "b0f2b3bb9d81007cc10390da5d802e5d673e7b9e",
-        "subject": "fix: track project files and mocks with --changed (#11432)",
-        "rule_id": "GH006",
+        "commit": "9673c49a40535529db6042df7176f123e95bb8f5",
+        "subject": " fix: refactor caching, fix `:` in project and change the shape of `results` cache (#11453)",
+        "rule_id": "AC006",
         "rule_name": "hardcoded-test-expectation",
-        "severity": "low",
+        "severity": "medium",
         "confidence": "normal",
-        "file": "packages/vitest/src/node/affected-modules.ts",
-        "line": 12,
+        "file": "packages/vitest/src/node/cache/index.ts",
+        "line": 4,
         "title": "New source literal matches a test expectation",
-        "evidence": "const builtinEnvironments = new Set(['node', 'jsdom', 'happy-dom', 'edge-runtime'])\ntest/e2e/test/related-deps.test.ts:617:     ...(name === 'jsdom' || name === 'happy-dom'",
+        "evidence": "import { statSync } from 'node:fs'\ntest/e2e/test/vite-ssr-resolve.test.ts:128:       expect(await resolver.shouldExternalize('node:fs')).toBe('node:fs')",
         "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
         "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
         "allowed": false
       },
       {
-        "commit": "b0f2b3bb9d81007cc10390da5d802e5d673e7b9e",
-        "subject": "fix: track project files and mocks with --changed (#11432)",
-        "rule_id": "GH006",
+        "commit": "9673c49a40535529db6042df7176f123e95bb8f5",
+        "subject": " fix: refactor caching, fix `:` in project and change the shape of `results` cache (#11453)",
+        "rule_id": "AC006",
         "rule_name": "hardcoded-test-expectation",
-        "severity": "low",
+        "severity": "medium",
         "confidence": "normal",
-        "file": "packages/vitest/src/node/affected-modules.ts",
-        "line": 13,
+        "file": "packages/vitest/src/node/cache/results.ts",
+        "line": 212,
         "title": "New source literal matches a test expectation",
-        "evidence": "const clientEnvironments = new Set(['jsdom', 'happy-dom'])\ntest/e2e/test/related-deps.test.ts:617:     ...(name === 'jsdom' || name === 'happy-dom'",
+        "evidence": "  return state === 'pass' || state === 'fail' || state === 'skip' || state === 'todo'\ntest/e2e/test/reporters/import-durations.test.ts:83:     expect(file.result?.state).toBe('pass')",
         "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
         "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
         "allowed": false
       }
     ],
-    "GH008": [
+    "AC008": [
       {
         "commit": "9673c49a40535529db6042df7176f123e95bb8f5",
         "subject": " fix: refactor caching, fix `:` in project and change the shape of `results` cache (#11453)",
-        "rule_id": "GH008",
+        "rule_id": "AC008",
         "rule_name": "exception-swallowed",
         "severity": "low",
         "confidence": "normal",
@@ -267,7 +277,7 @@
       {
         "commit": "9673c49a40535529db6042df7176f123e95bb8f5",
         "subject": " fix: refactor caching, fix `:` in project and change the shape of `results` cache (#11453)",
-        "rule_id": "GH008",
+        "rule_id": "AC008",
         "rule_name": "exception-swallowed",
         "severity": "low",
         "confidence": "normal",
@@ -282,7 +292,7 @@
       {
         "commit": "6f990fef1625ffc1e1f1a442c9446d851b06b7cc",
         "subject": "fix(api): publish the api token atomically (#11323)",
-        "rule_id": "GH008",
+        "rule_id": "AC008",
         "rule_name": "exception-swallowed",
         "severity": "medium",
         "confidence": "normal",
@@ -297,7 +307,7 @@
       {
         "commit": "7c7119cf7c03bfc36c1e4c79f1502868d1207962",
         "subject": "fix(vitest): remove root temp dir on close (#11248)",
-        "rule_id": "GH008",
+        "rule_id": "AC008",
         "rule_name": "exception-swallowed",
         "severity": "low",
         "confidence": "normal",
@@ -312,7 +322,7 @@
       {
         "commit": "6c49b71978c23ef1dc04c2ef5fa73af8f9bc5ec0",
         "subject": "fix(jsdom): support Blob on jsdom 30.1 (#11379)",
-        "rule_id": "GH008",
+        "rule_id": "AC008",
         "rule_name": "exception-swallowed",
         "severity": "low",
         "confidence": "normal",
@@ -325,11 +335,11 @@
         "allowed": false
       }
     ],
-    "GH009": [
+    "AC009": [
       {
         "commit": "a029e76a9e72ebdd468452ee1bb788bbe5dc635e",
         "subject": "chore: migrate to oxc (#11367)",
-        "rule_id": "GH009",
+        "rule_id": "AC009",
         "rule_name": "test-environment-detection",
         "severity": "medium",
         "confidence": "normal",
@@ -342,11 +352,11 @@
         "allowed": false
       }
     ],
-    "GH010": [
+    "AC010": [
       {
         "commit": "a029e76a9e72ebdd468452ee1bb788bbe5dc635e",
         "subject": "chore: migrate to oxc (#11367)",
-        "rule_id": "GH010",
+        "rule_id": "AC010",
         "rule_name": "lint-or-type-suppression-added",
         "severity": "low",
         "confidence": "normal",
@@ -361,7 +371,7 @@
       {
         "commit": "a029e76a9e72ebdd468452ee1bb788bbe5dc635e",
         "subject": "chore: migrate to oxc (#11367)",
-        "rule_id": "GH010",
+        "rule_id": "AC010",
         "rule_name": "lint-or-type-suppression-added",
         "severity": "low",
         "confidence": "normal",
@@ -376,7 +386,7 @@
       {
         "commit": "a029e76a9e72ebdd468452ee1bb788bbe5dc635e",
         "subject": "chore: migrate to oxc (#11367)",
-        "rule_id": "GH010",
+        "rule_id": "AC010",
         "rule_name": "lint-or-type-suppression-added",
         "severity": "low",
         "confidence": "normal",
@@ -391,7 +401,7 @@
       {
         "commit": "a029e76a9e72ebdd468452ee1bb788bbe5dc635e",
         "subject": "chore: migrate to oxc (#11367)",
-        "rule_id": "GH010",
+        "rule_id": "AC010",
         "rule_name": "lint-or-type-suppression-added",
         "severity": "low",
         "confidence": "normal",
@@ -406,7 +416,7 @@
       {
         "commit": "a029e76a9e72ebdd468452ee1bb788bbe5dc635e",
         "subject": "chore: migrate to oxc (#11367)",
-        "rule_id": "GH010",
+        "rule_id": "AC010",
         "rule_name": "lint-or-type-suppression-added",
         "severity": "low",
         "confidence": "normal",
@@ -419,11 +429,11 @@
         "allowed": false
       }
     ],
-    "GH011": [
+    "AC011": [
       {
         "commit": "6108b819785bceff03edb2cc7b60e17779f21191",
         "subject": "fix: exit 1 when vitest list fails collection (fix #11145) (#11146)",
-        "rule_id": "GH011",
+        "rule_id": "AC011",
         "rule_name": "snapshot-updated-with-source",
         "severity": "info",
         "confidence": "normal",
@@ -438,7 +448,7 @@
       {
         "commit": "51e9494166d8d0108a621fce80c41b6dba760bae",
         "subject": "feat!: parse files statically in vitest list by default (#11088)",
-        "rule_id": "GH011",
+        "rule_id": "AC011",
         "rule_name": "snapshot-updated-with-source",
         "severity": "info",
         "confidence": "normal",
@@ -448,6 +458,23 @@
         "evidence": "Source files: packages/vitest/src/node/cli/cli-api.ts, packages/vitest/src/node/cli/cli-config.ts, packages/vitest/src/node/core.ts",
         "why_flagged": "Review that snapshot changes reflect intended behavior.",
         "legit_if": "The reviewed source change intentionally changes this snapshot output.",
+        "allowed": false
+      }
+    ],
+    "AC018": [
+      {
+        "commit": "b24585f08f2ea267746a2d6ca0e43edcbb29726f",
+        "subject": "fix: don't retry when `test.fails` expectedly failed (#11219)",
+        "rule_id": "AC018",
+        "rule_name": "expectation-rewritten",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "test/unit/test/retry.test.ts",
+        "line": 23,
+        "title": "Expected literal rewritten alongside source",
+        "evidence": "'2' \u2192 '1'; actual expression unchanged",
+        "why_flagged": "This change can let a test pass without checking the intended behavior.",
+        "legit_if": "The behavior is intentional and independently reviewed.",
         "allowed": false
       }
     ]
@@ -468,7 +495,7 @@
       "subject": "fix(typecheck): use typescript pool in toTestSpecification (#11451)",
       "findings": [
         {
-          "rule_id": "GH006",
+          "rule_id": "AC006",
           "rule_name": "hardcoded-test-expectation",
           "severity": "low",
           "confidence": "normal",
@@ -481,7 +508,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH006",
+          "rule_id": "AC006",
           "rule_name": "hardcoded-test-expectation",
           "severity": "low",
           "confidence": "normal",
@@ -494,7 +521,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH006",
+          "rule_id": "AC006",
           "rule_name": "hardcoded-test-expectation",
           "severity": "low",
           "confidence": "normal",
@@ -515,7 +542,7 @@
       "subject": " fix: refactor caching, fix `:` in project and change the shape of `results` cache (#11453)",
       "findings": [
         {
-          "rule_id": "GH001",
+          "rule_id": "AC001",
           "rule_name": "test-file-deleted",
           "severity": "high",
           "confidence": "normal",
@@ -528,7 +555,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH001",
+          "rule_id": "AC001",
           "rule_name": "test-file-deleted",
           "severity": "high",
           "confidence": "normal",
@@ -541,7 +568,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH002",
+          "rule_id": "AC002",
           "rule_name": "test-count-decreased",
           "severity": "high",
           "confidence": "normal",
@@ -554,7 +581,33 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/cache/index.ts",
+          "line": 4,
+          "title": "New source literal matches a test expectation",
+          "evidence": "import { statSync } from 'node:fs'\ntest/e2e/test/vite-ssr-resolve.test.ts:128:       expect(await resolver.shouldExternalize('node:fs')).toBe('node:fs')",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/cache/results.ts",
+          "line": 212,
+          "title": "New source literal matches a test expectation",
+          "evidence": "  return state === 'pass' || state === 'fail' || state === 'skip' || state === 'todo'\ntest/e2e/test/reporters/import-durations.test.ts:83:     expect(file.result?.state).toBe('pass')",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -567,7 +620,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -616,27 +669,105 @@
       "subject": "fix: track project files and mocks with --changed (#11432)",
       "findings": [
         {
-          "rule_id": "GH006",
+          "rule_id": "AC006",
           "rule_name": "hardcoded-test-expectation",
-          "severity": "low",
+          "severity": "medium",
           "confidence": "normal",
           "file": "packages/vitest/src/node/affected-modules.ts",
-          "line": 12,
+          "line": 5,
           "title": "New source literal matches a test expectation",
-          "evidence": "const builtinEnvironments = new Set(['node', 'jsdom', 'happy-dom', 'edge-runtime'])\ntest/e2e/test/related-deps.test.ts:617:     ...(name === 'jsdom' || name === 'happy-dom'",
+          "evidence": "import { existsSync } from 'node:fs'\ntest/e2e/test/vite-ssr-resolve.test.ts:128:       expect(await resolver.shouldExternalize('node:fs')).toBe('node:fs')",
           "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
           "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
           "allowed": false
         },
         {
-          "rule_id": "GH006",
+          "rule_id": "AC006",
           "rule_name": "hardcoded-test-expectation",
-          "severity": "low",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/affected-modules.ts",
+          "line": 12,
+          "title": "New source literal matches a test expectation",
+          "evidence": "const builtinEnvironments = new Set(['node', 'jsdom', 'happy-dom', 'edge-runtime'])\ntest/unit/test/env-glob.test.ts:5:   expect(expect.getState().environment).toBe('node')",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
           "confidence": "normal",
           "file": "packages/vitest/src/node/affected-modules.ts",
           "line": 13,
           "title": "New source literal matches a test expectation",
-          "evidence": "const clientEnvironments = new Set(['jsdom', 'happy-dom'])\ntest/e2e/test/related-deps.test.ts:617:     ...(name === 'jsdom' || name === 'happy-dom'",
+          "evidence": "const clientEnvironments = new Set(['jsdom', 'happy-dom'])\ntest/unit/test/doctor-candidates.test.ts:124:     expect(happyDom?.envSwap).toEqual({ from: 'jsdom', to: 'happy-dom' })",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/affected-modules.ts",
+          "line": 136,
+          "title": "New source literal matches a test expectation",
+          "evidence": "    if (spec.pool === 'browser') {\ntest/browser/specs/runner.test.ts:151:       { name: 'browser', priority: 1 },",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/affected-modules.ts",
+          "line": 158,
+          "title": "New source literal matches a test expectation",
+          "evidence": "      typeof config.diff === 'string' ? config.diff : undefined,\ntest/e2e/fixtures/css/test/process-inline.spec.ts:18:     expect(typeof style).toBe('string')",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/affected-modules.ts",
+          "line": 214,
+          "title": "New source literal matches a test expectation",
+          "evidence": "    if (spec.pool === 'browser') {\ntest/browser/specs/runner.test.ts:151:       { name: 'browser', priority: 1 },",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/affected-modules.ts",
+          "line": 272,
+          "title": "New source literal matches a test expectation",
+          "evidence": "  if (typeof envDir !== 'string') {\ntest/e2e/fixtures/css/test/process-inline.spec.ts:18:     expect(typeof style).toBe('string')",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/environments/staticMocks.ts",
+          "line": 58,
+          "title": "New source literal matches a test expectation",
+          "evidence": "    if (mock.method !== 'mock') {\ntest/e2e/fixtures/no-module-runner/test/manual-mock.test.ts:70:   expect(hello).toBe('mock')",
           "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
           "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
           "allowed": false
@@ -767,7 +898,60 @@
     {
       "commit": "c85a0bbd9a17e0f28a0078b3a4d40daf1e5422fe",
       "subject": "chore: add a workflow to auto close prs (#11416)",
-      "findings": [],
+      "findings": [
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": ".github/scripts/approve-contributor.js",
+          "line": 99,
+          "title": "New source literal matches a test expectation",
+          "evidence": "  core.setOutput('approved', 'true')\ntest/e2e/test/override.test.ts:95:     ['true', { enabled: true }],",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": ".github/scripts/pr-redirect.js",
+          "line": 16,
+          "title": "New source literal matches a test expectation",
+          "evidence": "  const dryRun = process.env.DRY_RUN === 'true'\ntest/e2e/test/override.test.ts:95:     ['true', { enabled: true }],",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": ".github/scripts/pr-redirect.js",
+          "line": 123,
+          "title": "Input-specific literal output lacks test corroboration",
+          "evidence": "    if (current.state !== 'open') {\n      return 'closed during the run'",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": ".github/scripts/pr-redirect.js",
+          "line": 234,
+          "title": "New source literal matches a test expectation",
+          "evidence": "      await new Promise((resolve) => setTimeout(resolve, 2000))\ntest/e2e/test/test-tags.test.ts:697:   expect(testCase.options.timeout).toBe(2000)",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        }
+      ],
       "error": null,
       "stderr": ""
     },
@@ -776,7 +960,7 @@
       "subject": "fix(api): publish the api token atomically (#11323)",
       "findings": [
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -914,7 +1098,21 @@
     {
       "commit": "b24585f08f2ea267746a2d6ca0e43edcbb29726f",
       "subject": "fix: don't retry when `test.fails` expectedly failed (#11219)",
-      "findings": [],
+      "findings": [
+        {
+          "rule_id": "AC018",
+          "rule_name": "expectation-rewritten",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "test/unit/test/retry.test.ts",
+          "line": 23,
+          "title": "Expected literal rewritten alongside source",
+          "evidence": "'2' \u2192 '1'; actual expression unchanged",
+          "why_flagged": "This change can let a test pass without checking the intended behavior.",
+          "legit_if": "The behavior is intentional and independently reviewed.",
+          "allowed": false
+        }
+      ],
       "error": null,
       "stderr": ""
     },
@@ -930,7 +1128,7 @@
       "subject": "fix(vitest): remove root temp dir on close (#11248)",
       "findings": [
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -951,7 +1149,7 @@
       "subject": "fix(jsdom): support Blob on jsdom 30.1 (#11379)",
       "findings": [
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -993,7 +1191,7 @@
       "subject": "fix: isolate `result.status` between `repeats` runs (#11218)",
       "findings": [
         {
-          "rule_id": "GH002",
+          "rule_id": "AC002",
           "rule_name": "test-count-decreased",
           "severity": "high",
           "confidence": "normal",
@@ -1028,7 +1226,20 @@
       "subject": "chore: migrate to oxc (#11367)",
       "findings": [
         {
-          "rule_id": "GH008",
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "examples/lit/src/my-button.ts",
+          "line": 35,
+          "title": "New source literal matches a test expectation",
+          "evidence": "      <button @click=${this._onClick} role=\"button\">Click Count: ${this.count}</button>\ntest/browser/fixtures/locators/query.test.ts:24:     expect(locator.element()).toBe(document.querySelector('button'))",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1041,7 +1252,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1054,7 +1265,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1067,7 +1278,20 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/browser/src/client/client.ts",
+          "line": 16,
+          "title": "Input-specific literal output lacks test corroboration",
+          "evidence": "  PAGE_TYPE === 'orchestrator' ? getBrowserState().sessionId : getBrowserState().testerId\n  location.protocol === 'https:' ? 'wss:' : 'ws:'",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1080,7 +1304,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1093,7 +1317,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1106,7 +1330,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1119,7 +1343,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1132,7 +1356,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1145,7 +1369,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1158,7 +1382,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1171,7 +1395,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1184,7 +1408,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1197,7 +1421,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1210,7 +1434,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1223,7 +1447,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1236,7 +1460,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1249,7 +1473,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1262,7 +1486,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH009",
+          "rule_id": "AC009",
           "rule_name": "test-environment-detection",
           "severity": "medium",
           "confidence": "normal",
@@ -1275,7 +1499,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1288,7 +1512,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1301,7 +1525,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1314,7 +1538,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1327,7 +1551,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1340,7 +1564,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1353,7 +1577,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1366,7 +1590,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1379,7 +1603,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1392,7 +1616,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1405,7 +1629,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1418,7 +1642,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1431,7 +1655,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1444,7 +1668,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1457,7 +1681,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1470,7 +1694,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1483,7 +1707,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1496,7 +1720,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1509,7 +1733,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1522,7 +1746,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1535,7 +1759,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1548,7 +1772,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1561,7 +1785,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1574,7 +1798,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1587,7 +1811,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1600,7 +1824,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1613,7 +1837,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1626,7 +1850,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1639,7 +1863,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1652,7 +1876,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1665,7 +1889,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1678,7 +1902,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1691,7 +1915,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1704,7 +1928,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1717,7 +1941,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1730,7 +1954,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1743,7 +1967,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1756,7 +1980,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1769,7 +1993,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1782,7 +2006,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1795,7 +2019,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1808,7 +2032,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1821,7 +2045,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1834,7 +2058,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1847,7 +2071,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1860,7 +2084,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1873,7 +2097,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1886,7 +2110,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -2082,7 +2306,7 @@
       "subject": "test(ui): improve explorer filter assertions (#11124)",
       "findings": [
         {
-          "rule_id": "GH003",
+          "rule_id": "AC003",
           "rule_name": "skip-marker-added",
           "severity": "low",
           "confidence": "normal",
@@ -2285,7 +2509,7 @@
       "subject": "fix: exit 1 when vitest list fails collection (fix #11145) (#11146)",
       "findings": [
         {
-          "rule_id": "GH011",
+          "rule_id": "AC011",
           "rule_name": "snapshot-updated-with-source",
           "severity": "info",
           "confidence": "normal",
@@ -2334,7 +2558,7 @@
       "subject": "docs: add blog post for Vitest 5 (#11076)",
       "findings": [
         {
-          "rule_id": "GH000",
+          "rule_id": "AC000",
           "rule_name": "parse-skipped",
           "severity": "info",
           "confidence": "normal",
@@ -2347,7 +2571,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH000",
+          "rule_id": "AC000",
           "rule_name": "parse-skipped",
           "severity": "info",
           "confidence": "normal",
@@ -2410,7 +2634,7 @@
       "subject": "fix(coverage): prevent crash on `/@fs/` prepended virtual files (#11119)",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -2466,7 +2690,7 @@
       "subject": "feat!: parse files statically in vitest list by default (#11088)",
       "findings": [
         {
-          "rule_id": "GH011",
+          "rule_id": "AC011",
           "rule_name": "snapshot-updated-with-source",
           "severity": "info",
           "confidence": "normal",
@@ -2494,7 +2718,20 @@
       "subject": "feat(ui): add link to open playwright trace (#11059)",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/ui/client/composables/attachments.ts",
+          "line": 71,
+          "title": "Input-specific literal output lacks test corroboration",
+          "evidence": "        if (event.origin !== 'https://trace.playwright.dev' || event.source !== popup || event.data?.method !== 'ready') {\n        if (event.origin !== 'https://trace.playwright.dev' || event.source !== popup || event.data?.method !== 'ready') {",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -2515,7 +2752,46 @@
       "subject": "fix(browser): report the action error when a task times out (#11101)",
       "findings": [
         {
-          "rule_id": "GH008",
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/browser/src/client/tester/action.ts",
+          "line": 57,
+          "title": "New source literal matches a test expectation",
+          "evidence": "    if (errorSource || !test || test.type !== 'test') {\ntest/browser/specs/runner.test.ts:136:       { name: 'test', priority: 5 },",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/browser/src/client/tester/action.ts",
+          "line": 76,
+          "title": "New source literal matches a test expectation",
+          "evidence": "    const args = typeof this.#args === 'function'\ntest/e2e/fixtures/git-changed/related/deep-related-exports.test.ts:10:   expect(typeof access).toBe('function')",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/browser/src/client/tester/action.ts",
+          "line": 147,
+          "title": "New source literal matches a test expectation",
+          "evidence": "    if (typeof file === 'string') {\ntest/e2e/fixtures/css/test/process-inline.spec.ts:18:     expect(typeof style).toBe('string')",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -2550,7 +2826,7 @@
       "subject": "fix(vm): link module graphs one at a time (#11096)",
       "findings": [
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -2569,7 +2845,21 @@
     {
       "commit": "848d7243e608efcfb6c31baaa722f17a094a841d",
       "subject": "fix: don't duplicte `oxc.target` if user provides a custom array (#11095)",
-      "findings": [],
+      "findings": [
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "packages/vitest/src/node/plugins/config.ts",
+          "line": 80,
+          "title": "Input-specific literal output lacks test corroboration",
+          "evidence": "        if (!('rolldownVersion' in vite) && viteConfig.esbuild !== false) {\n          viteConfig.esbuild.target ??= 'node22'",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        }
+      ],
       "error": null,
       "stderr": ""
     },
@@ -2641,7 +2931,7 @@
       "subject": "perf(vm): let environments opt out of the module graph prewarm (#11078)",
       "findings": [
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",

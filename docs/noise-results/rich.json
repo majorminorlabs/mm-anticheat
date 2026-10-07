@@ -1,0 +1,2073 @@
+{
+  "repository": "rich",
+  "head": "9d8f9a372cc5916fd4781fec207ced7ddac2f08f",
+  "requested_commits": 150,
+  "commits_scanned": 150,
+  "commits_with_high": 1,
+  "commits_with_high_or_medium": 3,
+  "counts": [
+    {
+      "rule_id": "AC000",
+      "severity": "info",
+      "count": 54
+    },
+    {
+      "rule_id": "AC001",
+      "severity": "high",
+      "count": 1
+    },
+    {
+      "rule_id": "AC004",
+      "severity": "medium",
+      "count": 1
+    },
+    {
+      "rule_id": "AC006",
+      "severity": "medium",
+      "count": 2
+    },
+    {
+      "rule_id": "AC018",
+      "severity": "medium",
+      "count": 1
+    }
+  ],
+  "examples": {
+    "AC000": [
+      {
+        "commit": "a9c4aaba7ead5599d969aa4c8f3c6dae5549cef4",
+        "subject": "support html inline",
+        "rule_id": "AC000",
+        "rule_name": "parse-skipped",
+        "severity": "info",
+        "confidence": "normal",
+        "file": "tests/_card_render.py",
+        "line": 1,
+        "title": "Content could not be parsed",
+        "evidence": "Line exceeds the 20,000 character analysis limit",
+        "why_flagged": "This content could not be analyzed completely; review it separately.",
+        "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+        "allowed": false
+      },
+      {
+        "commit": "36fe3f7ca9becca4777861d5e6e625f5a4a37545",
+        "subject": "docstring",
+        "rule_id": "AC000",
+        "rule_name": "parse-skipped",
+        "severity": "info",
+        "confidence": "normal",
+        "file": "tests/_card_render.py",
+        "line": 1,
+        "title": "Content could not be parsed",
+        "evidence": "Line exceeds the 20,000 character analysis limit",
+        "why_flagged": "This content could not be analyzed completely; review it separately.",
+        "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+        "allowed": false
+      },
+      {
+        "commit": "e1eef1f20c93948b9c5ff877f0bd9bf967a11cd7",
+        "subject": "remove error docstring",
+        "rule_id": "AC000",
+        "rule_name": "parse-skipped",
+        "severity": "info",
+        "confidence": "normal",
+        "file": "tests/_card_render.py",
+        "line": 1,
+        "title": "Content could not be parsed",
+        "evidence": "Line exceeds the 20,000 character analysis limit",
+        "why_flagged": "This content could not be analyzed completely; review it separately.",
+        "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+        "allowed": false
+      },
+      {
+        "commit": "05a6b9b17a7c778756187f15d6d4bf693db6345f",
+        "subject": "ws",
+        "rule_id": "AC000",
+        "rule_name": "parse-skipped",
+        "severity": "info",
+        "confidence": "normal",
+        "file": "tests/_card_render.py",
+        "line": 1,
+        "title": "Content could not be parsed",
+        "evidence": "Line exceeds the 20,000 character analysis limit",
+        "why_flagged": "This content could not be analyzed completely; review it separately.",
+        "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+        "allowed": false
+      },
+      {
+        "commit": "ffc639a3738e79ad73d35db09a70c338b35045a6",
+        "subject": "sponsor",
+        "rule_id": "AC000",
+        "rule_name": "parse-skipped",
+        "severity": "info",
+        "confidence": "normal",
+        "file": "tests/_card_render.py",
+        "line": 1,
+        "title": "Content could not be parsed",
+        "evidence": "Line exceeds the 20,000 character analysis limit",
+        "why_flagged": "This content could not be analyzed completely; review it separately.",
+        "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+        "allowed": false
+      }
+    ],
+    "AC001": [
+      {
+        "commit": "d4e55f7629236085241ec46109631c010bd313dc",
+        "subject": "imports",
+        "rule_id": "AC001",
+        "rule_name": "test-file-deleted",
+        "severity": "high",
+        "confidence": "normal",
+        "file": "tests/test_lrucache.py",
+        "line": 1,
+        "title": "Test file removed from the suite",
+        "evidence": "tests/test_lrucache.py",
+        "why_flagged": "Removing a test file can remove coverage of behavior that still exists.",
+        "legit_if": "The code under test was also deleted, or coverage moved to another test file.",
+        "allowed": false
+      }
+    ],
+    "AC004": [
+      {
+        "commit": "d4e55f7629236085241ec46109631c010bd313dc",
+        "subject": "imports",
+        "rule_id": "AC004",
+        "rule_name": "assertion-count-decreased",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "tests/test_style.py",
+        "line": 169,
+        "title": "Assertions decreased in test_add: 2 \u2192 1",
+        "evidence": "test_add\n    assert Style().__add__(\"foo\") == NotImplemented",
+        "why_flagged": "Fewer assertions can make a test pass while checking less behavior.",
+        "legit_if": "Redundant checks were removed, or equivalent checks moved into a shared helper.",
+        "allowed": false
+      }
+    ],
+    "AC006": [
+      {
+        "commit": "a9c4aaba7ead5599d969aa4c8f3c6dae5549cef4",
+        "subject": "support html inline",
+        "rule_id": "AC006",
+        "rule_name": "hardcoded-test-expectation",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "rich/markdown.py",
+        "line": 618,
+        "title": "Input-specific literal output lacks test corroboration",
+        "evidence": "            elif node_type == \"html_inline\":\n                    kbd_style = console.get_style(\"markdown.kbd\", default=\"bold\")",
+        "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+        "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+        "allowed": false
+      },
+      {
+        "commit": "a9c4aaba7ead5599d969aa4c8f3c6dae5549cef4",
+        "subject": "support html inline",
+        "rule_id": "AC006",
+        "rule_name": "hardcoded-test-expectation",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "rich/markdown.py",
+        "line": 619,
+        "title": "Input-specific literal output lacks test corroboration",
+        "evidence": "                if token.content == \"<kbd>\":\n                    kbd_style = console.get_style(\"markdown.kbd\", default=\"bold\")",
+        "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+        "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+        "allowed": false
+      }
+    ],
+    "AC018": [
+      {
+        "commit": "f7aa3fb78e438cfb4761847a1aaa237c5368bf1d",
+        "subject": "fix for ansi issue",
+        "rule_id": "AC018",
+        "rule_name": "expectation-rewritten",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "tests/test_text.py",
+        "line": 109,
+        "title": "Expected literal rewritten alongside source",
+        "evidence": "'Hello, \\nWorld!' \u2192 'BOLD not bold'; actual expression unchanged",
+        "why_flagged": "This change can let a test pass without checking the intended behavior.",
+        "legit_if": "The behavior is intentional and independently reviewed.",
+        "allowed": false
+      }
+    ]
+  },
+  "errors": 0,
+  "stderr_lines": 0,
+  "rule_errors": 0,
+  "commits": [
+    {
+      "commit": "46cebbb032f920eb096efbaf23cdc6fe9dd541f7",
+      "subject": "fix changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6ac483cbea39cab124dfd3483bba70ffafb71050",
+      "subject": "correction",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a9c4aaba7ead5599d969aa4c8f3c6dae5549cef4",
+      "subject": "support html inline",
+      "findings": [
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "rich/markdown.py",
+          "line": 618,
+          "title": "Input-specific literal output lacks test corroboration",
+          "evidence": "            elif node_type == \"html_inline\":\n                    kbd_style = console.get_style(\"markdown.kbd\", default=\"bold\")",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "rich/markdown.py",
+          "line": 619,
+          "title": "Input-specific literal output lacks test corroboration",
+          "evidence": "                if token.content == \"<kbd>\":\n                    kbd_style = console.get_style(\"markdown.kbd\", default=\"bold\")",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "42899d8a0a96b121a514516f4be9db44ff7aeaf3",
+      "subject": "typo",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1d402e0c59f8765e420a5a4440eb2fca7465d1ae",
+      "subject": "fix dates",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "36fe3f7ca9becca4777861d5e6e625f5a4a37545",
+      "subject": "docstring",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c595fa95068dd2c5095d25446b2f0571bc0b3995",
+      "subject": "contributing",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e1eef1f20c93948b9c5ff877f0bd9bf967a11cd7",
+      "subject": "remove error docstring",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "33092121924c84fb31bb19801bdb9750e9f36131",
+      "subject": "faqs",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d008e2ab69b60900801e707e056dfc467290a29f",
+      "subject": "faq",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "05a6b9b17a7c778756187f15d6d4bf693db6345f",
+      "subject": "ws",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ffc639a3738e79ad73d35db09a70c338b35045a6",
+      "subject": "sponsor",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "22b26678419dcb1c13fedda9c98faec022774940",
+      "subject": "comments",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7a4a7a614b4893a8197d06800b241c2c28036ad4",
+      "subject": "docstring",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "dd8901c3e3dbbab84b564bb31b818e897cb56703",
+      "subject": "docstring",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ad669087b9fe4b48758b57cc80379518bea10ead",
+      "subject": "changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "53757bc234cf18977cade41a5b64f3abaccb0b85",
+      "subject": "Add Toad project information to README",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f82a399d584092f0195d0f68add0c03531e02c84",
+      "subject": "Include AI usage checkbox in PR template",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4d6d631a3d2deddf8405522d4b8c976a6d35726c",
+      "subject": "Update pull_request_template.md",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1080fb7eef04c14c906b730372dd82d3e44c2228",
+      "subject": "Update pull request template for typo contributions",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "494f83c923ca54ecc943bf5e60c0004e65fbb54e",
+      "subject": "changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ea9d4db5d84b4e834979304e3053bf757daae322",
+      "subject": "Update feature_request.md",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7d36119f8378b36129502c3281a7faffef837e02",
+      "subject": "promote the demo",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "851d9b8654199342fc017ec841ad73deef336496",
+      "subject": "reference for control",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "532f0cb7fcbae3d10e4741ce3fc1e4f43ba67042",
+      "subject": "sponsorship message",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "26af5f5eb4a499422f8294148c9165a517dd80ed",
+      "subject": "Update comment.yml",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2b0234ee83391d2b435c5614c77d1ff691df1580",
+      "subject": "Update suggest.md",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "59d6ad8c923dc78b6a2e7f8daa7e1b598991b0d5",
+      "subject": "Update comment.yml",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7d978cfb78ae0816da21551cc1bad6cd40790487",
+      "subject": "Update FUNDING.yml",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4309fd235e6c96c6d056a0007337fb78a1b30f3d",
+      "subject": "avoid displaying spinners in a table",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "8732dc52db3836302657696cd71486dfb61777c7",
+      "subject": "Update README.md",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0c6c75644f80530de219dae3e94f0aeb999f9b4c",
+      "subject": "update build os",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "9533080b6c5baff7d0d37fdd85f24862d3f887ec",
+      "subject": "gix for rtd",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c9129e70724e942e72015cda295c499cde661128",
+      "subject": "update for read the docs",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2bae2fe3d861ef83d778c289f6e1e17733225b76",
+      "subject": "Update feature_request.md",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2ffd9d69763ed09269214c8ffe2fe435581febd8",
+      "subject": "changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d43db994181f91cfa996f2f3df3b557ba87494e4",
+      "subject": "wording",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "36f3ca645dd225ef5d9d836e1e3c480dc3f68ff0",
+      "subject": "changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7022e202245b6bdeb39e8025d2b5dab793841ec8",
+      "subject": "Test fixes",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fde5d6eee3b0437eaecdcbf6f8b11aeab3a5d503",
+      "subject": "format",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "dcbe0ec6bb78eb023c6810d6a07dc1bb3e69c8b1",
+      "subject": "highlight column",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "927d06669d82e05cfc31abf30cc9f8cede9ebfd3",
+      "subject": "docs",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6a3e9e817ff327876b1bec45b741450199de996b",
+      "subject": "docstring",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5f4f6966a10e21267b22da9d6fe712b366a5e2e8",
+      "subject": "changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "579b6ac0533779eb0d0fee4d837d08d0a218c529",
+      "subject": "pyupgrade",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "01f708e7977fadc7f3b397b09249bb841bb27248",
+      "subject": "test fix",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5568de4fa30cabffeefc0a5bdd772bfa957bcd85",
+      "subject": "changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f14920de99cd5a92f1657c3603739ebb57e1ac4e",
+      "subject": "changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "26479c17e9f3e32cab9a913713e0405743665552",
+      "subject": "fix changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "245649b3e2d6e16aef315d95904df26bee7b8550",
+      "subject": "punctuation",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "aebc1158fcb457f5e1a691591a121613a5417322",
+      "subject": "faqs",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "26152e9cc95eef9c8f363d7bf1dfda426275348d",
+      "subject": "Export TextType into the docs. (#3257)",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "59b1aca63bf9ec69ada93af960d8b2a7bd920477",
+      "subject": "Fix double-width characters disappearing when wrapping (#3180)",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b32e42bda00c6275d4e18dcbe298268094359549",
+      "subject": "Fix issue with trailing whitespace (#3195)",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "50d2a457c8ea273c14a0053b00493473b86dbe21",
+      "subject": "Fix typing for FloatPrompt (#3151)",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0177b0370024121a4914e242d5241b2d15b35fd0",
+      "subject": "Black formatting (#3035)",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7a168a27c5097805b3bafa495f35e3955004ff4a",
+      "subject": "[docs] Fix typos and other small stuff (#3094)",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e76f3c3ea78481342e21a7b3328075462ab69c2b",
+      "subject": "Update pre-commit hooks (#3113)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "92e7164773ab1a0dd438ba43fee5d3b76b28ba1a",
+      "subject": "Fix #3104 (#3105)",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "238cf7bd98a73d3ed601f918c67c5e09729df89c",
+      "subject": "Update README.tr.md (#3162)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c82777bd5016c68f2d433fe594e78aa08d967505",
+      "subject": "\u270f\ufe0f Fix micro-typo in README.es.md (#3145)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b97abfcaccb7ff137360e922d557acf34c26a708",
+      "subject": "Add missing Panel.fit parameters (#3192)",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "21c0f25869bcdd0ef4e8ebc8d48c4b362147f740",
+      "subject": "Bump actions/checkout from 2 to 4 (#3122)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c7d6215cfe5a2a32182040539256a21bc6b7fd3b",
+      "subject": "Fix a few typos in the repository that were resulting in the codespel\u2026 (#3181)",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "01d01ed5ee322f65ef5c333955570552c68a40d8",
+      "subject": "Update progress.py: doc: Progress.default_columns -> Progress.get_def\u2026 (#3170)",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ec91917deb47b43188312e0e3f03bbab7e4e2e7e",
+      "subject": "changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5360fe6fe4f582e5a5bec591cf7433ed85e6863d",
+      "subject": "version bump",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a972ca05522577de2f98eb7c957deead9c87b38f",
+      "subject": "changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "720800e6930d85ad027b1e9bd0cbb96b5e994ce3",
+      "subject": "fix tab size issue",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "368e8ad77c95a6bef8f9d332039091d1417296bc",
+      "subject": "fix negative time",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "293be90514e1f9ab8719826a27f1324479f5d7c1",
+      "subject": "remove superfluous doc",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "afaf8cc7e08fd47d2c78c953c4b8ea663e05fb90",
+      "subject": "changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1176f81a82ddbc01d33d5f4995c01ed113baa1b5",
+      "subject": "fix for typing extension issue",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "cf138826618dcabe3146b9178eaf312885ca28bb",
+      "subject": "changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "68224905f5dc7a3c765e04aba0460b75a95f5004",
+      "subject": "use env var",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "86418dfd18f46b94cabf6807a1cad11c31b4960d",
+      "subject": "version bump",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "13c952bc13c7f55bbd4fbb93c772b95fbf6500b0",
+      "subject": "version bump",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6c86f0e2b46c434bd559b9deb84b88a273e19bb0",
+      "subject": "bump markdown-it",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b89d0362e8ebcb18902f0f0a206879f1829b5c0b",
+      "subject": "changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "80188f22a085690895b02b84f728d1378705f1b5",
+      "subject": "doc",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "50d7df770ca65299bba6b25f82a7d25e641b145e",
+      "subject": "docs on highlighters",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0c1aedac9c004d45d111c5258fe0f36ccbd88c91",
+      "subject": "fix year on changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "87529ad403630d6b7d1047179a5e62341fd75b3c",
+      "subject": "version bump",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e833da996e1b4468a53b15286fe831f59a2eaf11",
+      "subject": "don't reraise",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5d3e44bbc6c1907f0a63dad118c86e079055f3be",
+      "subject": "questions",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6a72534ca079d45219a9b92e34c259a3083e988c",
+      "subject": "Updated with links",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "eeb446359045e066e211b1e4a32bee9d9ff3ef98",
+      "subject": "fix yml",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "787c4d78d680fca364f73a4ab933664f0139d85c",
+      "subject": "Updated branch",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5f4e93efb159af99ed51f1fbfd8b793bb36448d9",
+      "subject": "Remove ko-fi",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "84e628655a2981ee90413ca3f35001ec3954161d",
+      "subject": "edit",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3006b2788a5e494eb00babb948fbd365f340a150",
+      "subject": "italics",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "07e37937845f470bdcb3ae27b1e273b37b87e470",
+      "subject": "env var docs",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "13dd9c2c2ebee5409368d5494f4712f52a073b93",
+      "subject": "version bump",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0bdbe550c4bdc68058ca285f20bc3d57aa0a0ba7",
+      "subject": "quote extras",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c6001e52260fb60250ba1e8d6ed67af004a85560",
+      "subject": "added line about end_section",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "28a05fa17721a20df55dae160bede89ff5873d7e",
+      "subject": "Remove unused height parameter from Layout class (#2540)",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4200f51d92b146556bf5e4b42468377f8d87365e",
+      "subject": "Expose font_aspect_ratio as parameter on SVG export (#2539)",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0425c792c11360185654a81ad53488ce8223d0f7",
+      "subject": "Parse escape codes in `Pretty` repr (#2470)",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "33040731973d44cf6326d4b88e697f79dbdc4e9a",
+      "subject": "words",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1b1ac5fc814d0f28e6abd3bc240e9052b830cbf3",
+      "subject": "box svg",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3fbf53acf03bdc3488c326e922c39f7b54088175",
+      "subject": "box docs",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "cde23ed0a1ecad8c63436148c7e1fb6f0073fca8",
+      "subject": "changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "92d374da1c7ced24778507f86f600514bec0d341",
+      "subject": "version bump",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a473ef8fc588fe22fc5569f7036baa0d75ae1473",
+      "subject": "fix changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d4e55f7629236085241ec46109631c010bd313dc",
+      "subject": "imports",
+      "findings": [
+        {
+          "rule_id": "AC001",
+          "rule_name": "test-file-deleted",
+          "severity": "high",
+          "confidence": "normal",
+          "file": "tests/test_lrucache.py",
+          "line": 1,
+          "title": "Test file removed from the suite",
+          "evidence": "tests/test_lrucache.py",
+          "why_flagged": "Removing a test file can remove coverage of behavior that still exists.",
+          "legit_if": "The code under test was also deleted, or coverage moved to another test file.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC004",
+          "rule_name": "assertion-count-decreased",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/test_style.py",
+          "line": 169,
+          "title": "Assertions decreased in test_add: 2 \u2192 1",
+          "evidence": "test_add\n    assert Style().__add__(\"foo\") == NotImplemented",
+          "why_flagged": "Fewer assertions can make a test pass while checking less behavior.",
+          "legit_if": "Redundant checks were removed, or equivalent checks moved into a shared helper.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d28e636a9a4fe2297f3366988343e383f7b6d87c",
+      "subject": "Update README.md (#2328)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "51889e2e663bbda8d59b2a68f23322f578681cea",
+      "subject": "Substituting plain headed box when show_header=False on Table (#2330)",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d68c6b2be3a67acd8994da59fd70ff97b83e87ea",
+      "subject": "typo",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e8a9466b94612babc8a437a613614debc1adbea1",
+      "subject": "test fix",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "37cde9d5b55b95b027e6d24fbc2d29cf401ad1d3",
+      "subject": "changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1772458f80924c78fa3a8d0260bca9762ad86e18",
+      "subject": "changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "857e0a0d7be4827746fe42e2bae7db920aecc642",
+      "subject": "Update README.md",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "9e46a9729c59189274b7dc8e09179a3ef5ba233b",
+      "subject": "Added Textual link and Gallery",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "79a41db38f3f2d20610d3b9cfe9b18074374ffca",
+      "subject": "Add padding support to `Syntax` (#2247)",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5a999f49f9e1617ab6d31381a4c862caa0a75873",
+      "subject": "Render height fix (#2246)",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "bb00fc96ee09525e5b5f2ffe7762138b5999e949",
+      "subject": "svg update",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a3b7e0e869ad05dc823278e34b781226b355b9a2",
+      "subject": "catch terminal size errors",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c979a1b16f27285b03fdb14f5e364ea36d7eba01",
+      "subject": "changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b5f0b743a7f50c72199eb792cd6e70730b60651f",
+      "subject": "update progress docs",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b6a83c2dce5e9904d58017d00ac95b64dfddfa2f",
+      "subject": "docs update",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "8a9e9a202222cafc38c6949655888f52e929733d",
+      "subject": "SVG export - Safari - Prevent box appearing on rounded corners (#2201)",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "cb56ec7ebbbb9da1637efded61e3678c1660bcf5",
+      "subject": "Setting terminal window title (#2200)",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6b9adfa9c2513310f2bdeb8df2ba11aee066d6b6",
+      "subject": "docs",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "9f43cccfce3b39b8ac637b4e8cdfe2f0946e9c23",
+      "subject": "Exporting console content to SVG (#2101)",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0436c6d852332569d0381f18bedcc2ec49936872",
+      "subject": "simplification",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "330efb41d7f6159a97c64c71e0bb19a4eb820e8c",
+      "subject": "changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f7aa3fb78e438cfb4761847a1aaa237c5368bf1d",
+      "subject": "fix for ansi issue",
+      "findings": [
+        {
+          "rule_id": "AC018",
+          "rule_name": "expectation-rewritten",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/test_text.py",
+          "line": 109,
+          "title": "Expected literal rewritten alongside source",
+          "evidence": "'Hello, \\nWorld!' \u2192 'BOLD not bold'; actual expression unchanged",
+          "why_flagged": "This change can let a test pass without checking the intended behavior.",
+          "legit_if": "The behavior is intentional and independently reviewed.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "cad92aa56c4de35c65abf33276674db6de5a7fa0",
+      "subject": "remove superfluous block",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ae12e09065ad33d189bf28bdd4c4ace41f709d93",
+      "subject": "Column fields",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c1b43f0f18fe0774dbea1b1540d9a875f2f89a3f",
+      "subject": "better typehints in docs",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "92fb4b6f5d611684b7e0568266c35848f30ca36f",
+      "subject": "changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5d3af20f64e86e9832196f0bb259ff13eddfc13e",
+      "subject": "changelog and docstring",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c2b0e32f277a0f85951b2274a0ef83febee7e66e",
+      "subject": "bump version",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4f8908a67ec65423bd76794863c9e860550f46ef",
+      "subject": "update lock file",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0ac4e3081859dad086439ab3f1b1f4f00b3f9021",
+      "subject": "sorted contributors",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "71135d19209f094293b077a10d18d484e6168505",
+      "subject": "mypy bump",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "0d69004c169ba6984dc67c22d8ae8ec01f9edf2c",
+      "subject": "updates",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "21432b4c6ada8886f64ad20fb6a426f6a7efcdcf",
+      "subject": "docs",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "8c3e6be424f36522cbb3c4773e58a01f5f39761f",
+      "subject": "Update feature_request.md",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "588f0331ffa6fee4976b5c33a6dc42f047d5cf85",
+      "subject": "Update FUNDING.yml",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1daa1771f31dee625054c65926eb616cc1bc352e",
+      "subject": "Words",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e7de32a0e50026695166b2b397114117ec549cd0",
+      "subject": "Link to Rich-CLI",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3f7d3e4ef372f4ce954c240df723d8cd646b1534",
+      "subject": "changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e5317f638c0c0188415d619fb9f19f5219e8e84d",
+      "subject": "bump version",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "26da2787c0ef775736782c7fa11ff80b7c7124eb",
+      "subject": "sort changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "47e83e16fecbd2daf7df42a2875460d1c1df03ad",
+      "subject": "blurb",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "tests/_card_render.py",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Line exceeds the 20,000 character analysis limit",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fb4f424e1cf58e2da41036d23c079bf8bd379598",
+      "subject": "Version bump",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d81cef7850f1571e2702f3d87338bee9f71a1bec",
+      "subject": "changelog",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3ac7b5cf86dfe96f5860915a380b355416e0db8b",
+      "subject": "Update comment.yml",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "9b71f5b72374bbb0f9900c73be8858fa8d69d2c5",
+      "subject": "Remove links to sponsorship",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    }
+  ]
+}

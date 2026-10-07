@@ -1,1 +1,41 @@
-[]
+[
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/build_l2.py",
+    "line": 107,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "    klass='descriptive' if h<65 else 'sparse'\n    klass='descriptive' if h<65 else 'sparse'",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/build_l2.py",
+    "line": 167,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "                    'length_control':'short' if len(chunk)<=4 or len(words(target))<=30 else 'medium',\n                    'length_control':'short' if len(chunk)<=4 or len(words(target))<=30 else 'medium',",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/evaluate.py",
+    "line": 75,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "    if adapter and '/l2/' in f'/{adapter}/':\n        run['l2_dataset_hashes']=json.loads((ROOT/'corpus/metadata/l2_dataset.json').read_text())['hashes']",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  }
+]

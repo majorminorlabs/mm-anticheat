@@ -1,1 +1,67 @@
-[]
+[
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/analyze_blind_l12.py",
+    "line": 42,
+    "title": "New source literal matches a test expectation",
+    "evidence": "              'under' if count < lower else 'over' if count > upper else 'within'}\ntests/test_blind_quality_l7.py:30:         self.assertEqual(forbidden['length_position'], 'under')",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/analyze_blind_l12.py",
+    "line": 62,
+    "title": "New source literal matches a test expectation",
+    "evidence": "            'under_minimum': sum(row['machine']['length_position'] == 'under' for row in rows),\ntests/test_blind_quality_l7.py:30:         self.assertEqual(forbidden['length_position'], 'under')",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/analyze_blind_l12.py",
+    "line": 220,
+    "title": "New source literal matches a test expectation",
+    "evidence": "            'under_minimum': sum(r['machine']['length_position'] == 'under' for r in rows),\ntests/test_blind_quality_l7.py:30:         self.assertEqual(forbidden['length_position'], 'under')",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/qa_l12.py",
+    "line": 69,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "        'dataset_hashes': {split: sha((ROOT / ('data/l5' if split == 'train' else 'data/l3') /\n        'dataset_hashes': {split: sha((ROOT / ('data/l5' if split == 'train' else 'data/l3') /",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/train_l12.py",
+    "line": 78,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "    dataset_hashes = {split: sha((ROOT / ('data/l5' if split == 'train' else 'data/l3') / f'{split}.jsonl').read_bytes())\n    dataset_hashes = {split: sha((ROOT / ('data/l5' if split == 'train' else 'data/l3') / f'{split}.jsonl').read_bytes())",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  }
+]

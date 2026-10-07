@@ -2,12 +2,25 @@
   {
     "rule_id": "AC006",
     "rule_name": "hardcoded-test-expectation",
-    "severity": "low",
+    "severity": "medium",
     "confidence": "normal",
     "file": "scripts/node_control.py",
     "line": 79,
-    "title": "New source literal matches a test expectation",
-    "evidence": "        return {\"state\": \"not-installed\" if inference.get(\"backend\") == \"none-installed\" else \"not-configured\",\ntests/test_node_control.py:26:     assert status[\"inference\"][\"state\"] == \"not-installed\"",
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "        return {\"state\": \"not-installed\" if inference.get(\"backend\") == \"none-installed\" else \"not-configured\",\n        return {\"state\": \"not-installed\" if inference.get(\"backend\") == \"none-installed\" else \"not-configured\",",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/node_control.py",
+    "line": 135,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "    if args.command == \"list\":\n        payload = [{\"id\": node[\"id\"], \"display_name\": node.get(\"display_name\"), \"os\": node.get(\"os\")} for node in selected]",
     "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
     "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
     "allowed": false

@@ -1,0 +1,1570 @@
+{
+  "repository": "axios",
+  "head": "2b169bbb0cf67e6539e4cec222ced5ac8a923e00",
+  "requested_commits": 150,
+  "commits_scanned": 150,
+  "commits_with_high": 0,
+  "commits_with_high_or_medium": 7,
+  "counts": [
+    {
+      "rule_id": "AC000",
+      "severity": "info",
+      "count": 1
+    },
+    {
+      "rule_id": "AC006",
+      "severity": "low",
+      "count": 2
+    },
+    {
+      "rule_id": "AC006",
+      "severity": "medium",
+      "count": 6
+    },
+    {
+      "rule_id": "AC008",
+      "severity": "medium",
+      "count": 3
+    },
+    {
+      "rule_id": "AC010",
+      "severity": "low",
+      "count": 7
+    }
+  ],
+  "examples": {
+    "AC000": [
+      {
+        "commit": "2426e03ba9020be31ed013873423cea6b7cd2e67",
+        "subject": "docs: add Code for Japan and Sweepico sponsors (#11252)",
+        "rule_id": "AC000",
+        "rule_name": "parse-skipped",
+        "severity": "info",
+        "confidence": "normal",
+        "file": "docs/public/sponsors/code-for-japan.jpg",
+        "line": 1,
+        "title": "Content could not be parsed",
+        "evidence": "Binary content is not parsed",
+        "why_flagged": "This content could not be analyzed completely; review it separately.",
+        "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+        "allowed": false
+      }
+    ],
+    "AC006": [
+      {
+        "commit": "2498c233438eb72c9a9ee8540ded19c6ef4224fa",
+        "subject": "fix: align request handling across runtimes (v1.x) (#11242)",
+        "rule_id": "AC006",
+        "rule_name": "hardcoded-test-expectation",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "lib/core/assertParamsAcyclic.js",
+        "line": 41,
+        "title": "New source literal matches a test expectation",
+        "evidence": "        if (descriptor && utils.hasOwnProp(descriptor, 'value')) {\ntests/unit/helpers/formDataToJSON.test.js:91:           y: 'value',",
+        "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+        "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+        "allowed": false
+      },
+      {
+        "commit": "05acca21c888e44e2125d4813be3311d32f72483",
+        "subject": "fix(helpers): correct data: URL base64 size estimate for maxContentLength guard (#11061)",
+        "rule_id": "AC006",
+        "rule_name": "hardcoded-test-expectation",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "lib/helpers/estimateDataURLDecodedBytes.js",
+        "line": 62,
+        "title": "Input-specific literal output lacks test corroboration",
+        "evidence": "    if (code === 37           && isPercentEncodedByte(body, i, len)) {\n      code = hexValue(body.charCodeAt(i + 1)) * 16 + hexValue(body.charCodeAt(i + 2));",
+        "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+        "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+        "allowed": false
+      },
+      {
+        "commit": "a93b1c90d919542987cc38591d10eed949a345d0",
+        "subject": "fix(core): synthesize AxiosError message from AggregateError.errors (#11059)",
+        "rule_id": "AC006",
+        "rule_name": "hardcoded-test-expectation",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "lib/core/AxiosError.js",
+        "line": 95,
+        "title": "New source literal matches a test expectation",
+        "evidence": "  return message || error.name || 'AggregateError';\ntests/unit/core/AxiosError.test.js:130:       expect(axiosError.message).toBe('AggregateError');",
+        "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+        "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+        "allowed": false
+      },
+      {
+        "commit": "227c788eb702ee88791451eb53e76ef3dca67f8a",
+        "subject": "fix(http): guard socket.setKeepAlive for proxy agent streams (#10917)",
+        "rule_id": "AC006",
+        "rule_name": "hardcoded-test-expectation",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "lib/adapters/http.js",
+        "line": 1210,
+        "title": "New source literal matches a test expectation",
+        "evidence": "        if (typeof socket.setKeepAlive === 'function') {\ntests/smoke/bun/tests/import.smoke.test.ts:6:     expect(typeof axios).toBe('function');",
+        "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+        "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+        "allowed": false
+      },
+      {
+        "commit": "32fc489632377d214db55bfa4e2c48486a7d7ce2",
+        "subject": "fix: malformed http urls (#11000)",
+        "rule_id": "AC006",
+        "rule_name": "hardcoded-test-expectation",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "lib/adapters/fetch.js",
+        "line": 258,
+        "title": "New source literal matches a test expectation",
+        "evidence": "        const password = utils.getSafeProp(configAuth, 'password') || '';\ntests/unit/core/AxiosError.test.js:360:       expect(error.toJSON().config.redact).toEqual(['password']);",
+        "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+        "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+        "allowed": false
+      }
+    ],
+    "AC008": [
+      {
+        "commit": "d19040bda7a8be2f82c3c6e1a5bc03917daee39a",
+        "subject": "fix: harden runtime option handling (#11141)",
+        "rule_id": "AC008",
+        "rule_name": "exception-swallowed",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "lib/helpers/shouldBypassProxy.js",
+        "line": 363,
+        "title": "Catch handler discards failures",
+        "evidence": "catch (_err) {\n      return null;\n    }",
+        "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+        "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+        "allowed": false
+      },
+      {
+        "commit": "a75bf44647e5132e39b778730394b0a2b983265c",
+        "subject": "fix(core): tolerate non-string stack when decorating request errors (#11109)",
+        "rule_id": "AC008",
+        "rule_name": "exception-swallowed",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "lib/core/Axios.js",
+        "line": 73,
+        "title": "Catch handler discards failures",
+        "evidence": "catch (e) {\n                                                                                     \n        }",
+        "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+        "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+        "allowed": false
+      },
+      {
+        "commit": "6bb12c191f5380fad321322fb90216ae0dc36985",
+        "subject": "fix: custom auth headers not stripped on cross-origin redirects (#10892)",
+        "rule_id": "AC008",
+        "rule_name": "exception-swallowed",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "lib/adapters/http.js",
+        "line": 198,
+        "title": "Catch handler discards failures",
+        "evidence": "catch (e) {\n                                                                \n    return false;\n  }",
+        "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+        "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+        "allowed": false
+      }
+    ],
+    "AC010": [
+      {
+        "commit": "56a5f1acdc41965f464eb59bec6cc828113ba546",
+        "subject": "fix(fetch): preserve response size errors across runtime wrappers (#11179)",
+        "rule_id": "AC010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "tests/module/cjs/tests/helpers/cjs-fetch-types.ts",
+        "line": 51,
+        "title": "2 lint/type suppression(s) added",
+        "evidence": "// @ts-expect-error Response bodies cannot be numbers.\n    // @ts-expect-error String-only constructors cannot accept the existing body inputs.",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      },
+      {
+        "commit": "56a5f1acdc41965f464eb59bec6cc828113ba546",
+        "subject": "fix(fetch): preserve response size errors across runtime wrappers (#11179)",
+        "rule_id": "AC010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "tests/module/esm/tests/helpers/esm-fetch-types.ts",
+        "line": 51,
+        "title": "2 lint/type suppression(s) added",
+        "evidence": "// @ts-expect-error Response bodies cannot be numbers.\n    // @ts-expect-error String-only constructors cannot accept the existing body inputs.",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      },
+      {
+        "commit": "fbe2e8260c86961ff2319da8450f170ca4ae3866",
+        "subject": "fix(types): expose the response default marker type (#11125)",
+        "rule_id": "AC010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "tests/module/esm/tests/helpers/declaration-consumer.ts",
+        "line": 22,
+        "title": "2 lint/type suppression(s) added",
+        "evidence": "// @ts-expect-error -- default responses preserve the requested data type\n// @ts-expect-error -- custom responses use R without an AxiosResponse wrapper",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      },
+      {
+        "commit": "3077e62097726d22ba30f1cb847d7a07050e339a",
+        "subject": "feat(types): Allow the Params property to be typed, instead of `any` (#11081)",
+        "rule_id": "AC010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "tests/module/cjs/tests/helpers/cjs-added-types.ts",
+        "line": 61,
+        "title": "8 lint/type suppression(s) added",
+        "evidence": "    // @ts-expect-error -- serializer params use the request params type\n  // @ts-expect-error -- AxiosPromise preserves the request data type\n  // @ts-expect-error -- AxiosPromise preserves the request params type\n  // @ts-expect-error -- default alias responses preserve the request data type\n  // @ts-expect-error -- default alias responses preserve the request params type\n    // @ts-expect-error -- the default serializer input remains a params record, not any\n  // @ts-expect-error -- params must match the explicit request params type\n  // @ts-expect-error -- request aliases enforce their trailing params type",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      },
+      {
+        "commit": "3077e62097726d22ba30f1cb847d7a07050e339a",
+        "subject": "feat(types): Allow the Params property to be typed, instead of `any` (#11081)",
+        "rule_id": "AC010",
+        "rule_name": "lint-or-type-suppression-added",
+        "severity": "low",
+        "confidence": "normal",
+        "file": "tests/module/cjs/tests/helpers/cjs-is-cancel-typing.ts",
+        "line": 22,
+        "title": "2 lint/type suppression(s) added",
+        "evidence": "  // @ts-expect-error -- The generic request data must not be widened to any.\n  // @ts-expect-error -- The generic request params must not be widened to any.",
+        "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+        "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      }
+    ]
+  },
+  "errors": 0,
+  "stderr_lines": 0,
+  "rule_errors": 0,
+  "commits": [
+    {
+      "commit": "2b169bbb0cf67e6539e4cec222ced5ac8a923e00",
+      "subject": "fix(http): decode percent-encoded Base64 data URLs (#11294)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "28e9b84ac59c034260c1927f4a0b7c022b6b0071",
+      "subject": "fix: normalize parsed protocols to lowercase (#11163)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6576f5753e26444d8d04b0a7c0b4d9d0a83bdaa0",
+      "subject": "fix(fromDataURI): accept case-insensitive base64 tokens (#11138)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "057930bdb839201f2f99885c1626159f16890430",
+      "subject": "docs: clarify that `npm test` requires playwright browsers (#11284)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e1a8a57519d1b896c2a795d0ec0138fe24a77a33",
+      "subject": "fix(AxiosHeaders): store a header named __proto__ instead of writing through Object.prototype (#11134)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c4303eeb601d3d5914a0f425cc7539616fdc7ea7",
+      "subject": "fix(core): preserve short reconstructed request stacks (#11132)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "aab2d17f6e0bcee0e44bef45e7c7c320114e6569",
+      "subject": "chore(deps-dev): bump the development_dependencies group across 1 directory with 6 updates (#11271)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b6e62b1612609d38ac29eaad683c2a026e368994",
+      "subject": "chore(deps-dev): bump brace-expansion from 1.1.12 to 1.1.21 in /tests/module/cjs (#11270)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "9799ef5cb37902ea80358d61b83d367d31dba27c",
+      "subject": "chore(deps-dev): bump brace-expansion from 5.0.7 to 5.0.12 (#11269)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b328ecefbe7b2007525fa668ca615382f6d2c68f",
+      "subject": "chore(deps): bump axios from 1.18.1 to 1.20.0 in /docs (#11268)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3fa309539889c2bad961b54e6848335b3c5d4b32",
+      "subject": "docs: require prerelease notes and PR validation (#11223)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "79286c66743f91a580bbae363a640905675151c8",
+      "subject": "chore: standardize pull request labels (#11273)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "581cd01683e242738c1bf87d842865d644270df4",
+      "subject": "chore(deps): remove unused chai from CJS module tests (#11272)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "bc0f5c966accee1f8491b3685a58bdef60d56812",
+      "subject": "chore(deps): remove unused root chalk dependency (#11267)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "8046ddc7b552e9a4f7321d511ed0479a9e8d0df1",
+      "subject": "chore(docs): remove unused dayjs dependency (#11266)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2426e03ba9020be31ed013873423cea6b7cd2e67",
+      "subject": "docs: add Code for Japan and Sweepico sponsors (#11252)",
+      "findings": [
+        {
+          "rule_id": "AC000",
+          "rule_name": "parse-skipped",
+          "severity": "info",
+          "confidence": "normal",
+          "file": "docs/public/sponsors/code-for-japan.jpg",
+          "line": 1,
+          "title": "Content could not be parsed",
+          "evidence": "Binary content is not parsed",
+          "why_flagged": "This content could not be analyzed completely; review it separately.",
+          "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "572142c68b5d1e9c8c9a3e524c3b8520e3d1659b",
+      "subject": "chore: remove CLAUDE.md in favor of AGENTS.md (#11238)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2498c233438eb72c9a9ee8540ded19c6ef4224fa",
+      "subject": "fix: align request handling across runtimes (v1.x) (#11242)",
+      "findings": [
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "lib/core/assertParamsAcyclic.js",
+          "line": 41,
+          "title": "New source literal matches a test expectation",
+          "evidence": "        if (descriptor && utils.hasOwnProp(descriptor, 'value')) {\ntests/unit/helpers/formDataToJSON.test.js:91:           y: 'value',",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "961241f6c19798eff16b0869486c125430a17961",
+      "subject": "docs: promote Axios v0 security updates (#11249)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5fc40e1c7478d342ec64c4e865ed4cd1a334207c",
+      "subject": "chore(deps): bump zizmorcore/zizmor-action from 0.6.3 to 0.6.4 in the github-actions group (#11245)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "24278bd9048ab7e58db7626c31343ecbfd5c14aa",
+      "subject": "chore(deps-dev): bump the development_dependencies group with 3 updates (#11244)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "56a5f1acdc41965f464eb59bec6cc828113ba546",
+      "subject": "fix(fetch): preserve response size errors across runtime wrappers (#11179)",
+      "findings": [
+        {
+          "rule_id": "AC010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "tests/module/cjs/tests/helpers/cjs-fetch-types.ts",
+          "line": 51,
+          "title": "2 lint/type suppression(s) added",
+          "evidence": "// @ts-expect-error Response bodies cannot be numbers.\n    // @ts-expect-error String-only constructors cannot accept the existing body inputs.",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "tests/module/esm/tests/helpers/esm-fetch-types.ts",
+          "line": 51,
+          "title": "2 lint/type suppression(s) added",
+          "evidence": "// @ts-expect-error Response bodies cannot be numbers.\n    // @ts-expect-error String-only constructors cannot accept the existing body inputs.",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fbe2e8260c86961ff2319da8450f170ca4ae3866",
+      "subject": "fix(types): expose the response default marker type (#11125)",
+      "findings": [
+        {
+          "rule_id": "AC010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "tests/module/esm/tests/helpers/declaration-consumer.ts",
+          "line": 22,
+          "title": "2 lint/type suppression(s) added",
+          "evidence": "// @ts-expect-error -- default responses preserve the requested data type\n// @ts-expect-error -- custom responses use R without an AxiosResponse wrapper",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ba0f3a0c568e68de5e7d455ae8c566ed43525550",
+      "subject": "chore(deps-dev): bump the development_dependencies group with 4 updates (#11234)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ed95c083f574e869bfe894866d95a01825f8ff4e",
+      "subject": "chore(deps): bump nanoid from 3.3.17 to 3.3.19 in /docs (#11230)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "dfa30a76dcaedaeec7f7e53153d46ee9a14987da",
+      "subject": "docs: fix interceptor test links (#11228)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f8df2e2429a2e6bf6e34161e57d04feb62ed1573",
+      "subject": "fix(fetch): apply the default cache mode only where the runtime accepts it (#11194)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "18e7dfedf30c96e58652887f930642ae82e0130c",
+      "subject": "docs: add HeroDevs as a permanent gold sponsor (#11222)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1226e6c53eeb0e9d7159bea83556c2ff117b5f2e",
+      "subject": "chore(deps-dev): bump js-yaml from 4.3.1 to 4.3.2 (#11221)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "9ecb985a6eaa6d31d8e133f5b3b46278cb77a4b6",
+      "subject": "chore(deps): bump @vitest/mocker and vitest in /tests/smoke/esm (#11220)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d1f060dddebb9353c269c32ca4f8334492ca252c",
+      "subject": "chore(deps-dev): bump js-yaml from 4.1.0 to 4.3.2 in /tests/smoke/cjs (#11218)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "aaf20baf1893cf73ca307791f72d4df21a842939",
+      "subject": "chore(deps-dev): bump the development_dependencies group with 3 updates (#11212)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6598b71446db81462557a1f41d768c22a60b679f",
+      "subject": "chore(deps): bump zizmorcore/zizmor-action from 0.6.2 to 0.6.3 in the github-actions group (#11213)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b8d67bbbd6b381e1f4b1887e32686fcc89c5b0a8",
+      "subject": "chore(deps-dev): bump fast-uri from 3.1.5 to 3.1.7 (#11195)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "81df7a519431f5d703074df700dc40782a61fa9e",
+      "subject": "chore(deps-dev): bump browserslist from 4.28.4 to 4.28.8 (#11189)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ba1d1f63943985425129ff1129cf7d00c4cae3b2",
+      "subject": "chore(deps-dev): bump the development_dependencies group with 5 updates (#11188)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fede1d1562e308077da7994305d63fb7722b66ac",
+      "subject": "chore(deps-dev): bump the development_dependencies group across 1 directory with 4 updates (#11169)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "84a9f3b9a4f3244b8c8e818f557d64c7b964fb25",
+      "subject": "chore(release): prepare release 1.20.0 (#11152)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e6824eec5fcf9da467a9792724396badc490c469",
+      "subject": "fix: core methodList, HTTP adapter errors, and add tests (#11096)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d8a919fd81403d59058c0e9dbefc540407dee83f",
+      "subject": "fix(xhr): flush final progress during the live loadend dispatch (#11121)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2d2a21af8a433089474a2149781799c93acbcf3c",
+      "subject": "fix(interceptors): tolerate nullish handlers in syncHandlerEntries (#11118)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d19040bda7a8be2f82c3c6e1a5bc03917daee39a",
+      "subject": "fix: harden runtime option handling (#11141)",
+      "findings": [
+        {
+          "rule_id": "AC008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "lib/helpers/shouldBypassProxy.js",
+          "line": 363,
+          "title": "Catch handler discards failures",
+          "evidence": "catch (_err) {\n      return null;\n    }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e0a02dd16671deabe2b809334d4c2ebede29a233",
+      "subject": "chore(deps): bump zizmorcore/zizmor-action from 0.6.1 to 0.6.2 in the github-actions group (#11144)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d10cb3aa3cda1d78721ddf96be590478df26cd81",
+      "subject": "chore(deps-dev): bump the development_dependencies group with 4 updates (#11143)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2c94646eb7cb7ab9dcb2aefdb04ab1b040c28e16",
+      "subject": "chore(deps): bump js-yaml and mocha in /tests/smoke/cjs (#11133)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "76c12bce5a4fe9a45bef9a5bf2baaf599d7d382e",
+      "subject": "chore(deps-dev): bump js-yaml from 4.3.0 to 4.3.1 (#11140)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ba98559a7f5a18e531b5762387e5957bd281af3d",
+      "subject": "docs: add ScrapingBee sponsor (#11137)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f5e83e49ee32b1004db82dad2b14d1e273a99e07",
+      "subject": "docs: refresh sponsor data (#11136)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a339fe124a4b120ac419f9c8c11b6e9ba74b9421",
+      "subject": "chore(deps-dev): bump the development_dependencies group across 1 directory with 7 updates (#11123)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e8147e6ae25a74793e48b4e00e2f98bc303f5b29",
+      "subject": "fix(http): stop per-socket error listener from retaining the installing request's context (memory leak) (#11091)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "39955a6ebed53217a524a3c8c7e5568fc0faa4bd",
+      "subject": "feat(HttpStatusCode): add RFC 9110 aliases for 413 and 422 (#11082)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1ac4aeb77ac1b33b29c885aa1bea93d5a05e7bfd",
+      "subject": "chore(deps-dev): bump fast-uri from 3.1.4 to 3.1.5 (#11126)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3a00a92c83e277b22068e2babae4f1cc05df1aa0",
+      "subject": "chore(deps): bump postcss from 8.5.12 to 8.5.25 in /docs (#11127)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ceb4176f5440faebc76c9560798cda010b3f118b",
+      "subject": "docs(readme): fix broken interceptor test link (#11119)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f64e4586e9a6a6458af9364bc0b5839ce8cac571",
+      "subject": "docs: add localized global search (#11097)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ac2813149c7ffaf7bcc6dfde3731eb61cdaa5a5d",
+      "subject": "ci: use locked ESM smoke dependencies (#11128)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "66d349055c977f3cbbc21effc86221e86ec18162",
+      "subject": "chore(deps): bump zizmorcore/zizmor-action from 0.6.0 to 0.6.1 in the github-actions group (#11122)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "f02b722c082f55486d708fe6aea290a8d1ac3441",
+      "subject": "docs: update sponsorship link and add new sponsor information (#11124)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c3f553c740ebf3dff5e22dae24e9caaafafddd2d",
+      "subject": "fix(xhr): reject navigation-canceled requests as ECONNABORTED (#11094)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "529ce70296334a0397f9e45e7dfa5658f6b6fdba",
+      "subject": "docs: add missing fs import to README stream example (#11113)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a75bf44647e5132e39b778730394b0a2b983265c",
+      "subject": "fix(core): tolerate non-string stack when decorating request errors (#11109)",
+      "findings": [
+        {
+          "rule_id": "AC008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "lib/core/Axios.js",
+          "line": 73,
+          "title": "Catch handler discards failures",
+          "evidence": "catch (e) {\n                                                                                     \n        }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "712e02373f1c5ac72fdf5da16f04838338ba817e",
+      "subject": "fix(interceptors): trim trailing ejected handlers (#11087)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "609dacd8cce089adc7720e11cd62405adf3b6867",
+      "subject": "chore(deps): bump the github-actions group with 2 updates (#11107)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "dc122b57d9da9ac08fe5425925a5c73a0b5ae351",
+      "subject": "chore(deps-dev): bump the development_dependencies group with 2 updates (#11106)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "800504c6283115e38f3e2d2a56dc03e71e9bda9a",
+      "subject": "docs: apply v1.19.0 release updates (#11101)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "509719387e4993392ca40da03a49678269cdfb90",
+      "subject": "chore(deps-dev): bump postcss from 8.5.10 to 8.5.23 in /tests/module/esm (#11099)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "8918811f872bffdb0b27736c533dfc52d226d170",
+      "subject": "chore(deps-dev): bump postcss from 8.5.16 to 8.5.23 (#11098)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "95d4cb0fdb1b798fa6de6e7b1d1fd66b72389c39",
+      "subject": "chore(deps-dev): bump fast-uri from 3.1.3 to 3.1.4 (#11092)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "311fcc5c8d989b7248f05d390bb83bfbfb009977",
+      "subject": "chore(release): prepare release 1.19.0 (#11095)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "cb4fd743abd1c595761c8eda25d1323fc62a3b93",
+      "subject": "chore(deps): bump axios from 1.16.1 to 1.18.1 in /docs (#11088)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "004c93a9d2acd0561c498eff7bb4431c6bad78af",
+      "subject": "chore(deps): bump actions/setup-node from 6.4.0 to 7.0.0 in the github-actions group (#11090)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "122edde91b1183572f4ba399b5b6bc4e3b989718",
+      "subject": "chore(deps-dev): bump the development_dependencies group with 3 updates (#11089)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c44f8d0a910df99486da9175584b99f56a94a73b",
+      "subject": "ci: use bundled npm for v1 publish (#11083)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "878bb29de570765b0d4c0970e30400d9ea9399f7",
+      "subject": "fix(sandbox): resolve TypeError on constant variable path assignment (#11073)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a092bae50d1884782151b2fcea12974d6da6e376",
+      "subject": "fix(core): synchronous interceptors swallow errors and proceed with request (#11071)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3041b8fd1daf17404d1bad1f9d94026ea5ab400b",
+      "subject": "feat(HttpStatusCode): add missing 520 status code (#11067)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "58b16c88f0bddf1fadb321aed58ba3f49a90481b",
+      "subject": "refactor(helpers): extract duplicated setFormDataHeaders into a shared helper (#11062)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3077e62097726d22ba30f1cb847d7a07050e339a",
+      "subject": "feat(types): Allow the Params property to be typed, instead of `any` (#11081)",
+      "findings": [
+        {
+          "rule_id": "AC010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "tests/module/cjs/tests/helpers/cjs-added-types.ts",
+          "line": 61,
+          "title": "8 lint/type suppression(s) added",
+          "evidence": "    // @ts-expect-error -- serializer params use the request params type\n  // @ts-expect-error -- AxiosPromise preserves the request data type\n  // @ts-expect-error -- AxiosPromise preserves the request params type\n  // @ts-expect-error -- default alias responses preserve the request data type\n  // @ts-expect-error -- default alias responses preserve the request params type\n    // @ts-expect-error -- the default serializer input remains a params record, not any\n  // @ts-expect-error -- params must match the explicit request params type\n  // @ts-expect-error -- request aliases enforce their trailing params type",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "tests/module/cjs/tests/helpers/cjs-is-cancel-typing.ts",
+          "line": 22,
+          "title": "2 lint/type suppression(s) added",
+          "evidence": "  // @ts-expect-error -- The generic request data must not be widened to any.\n  // @ts-expect-error -- The generic request params must not be widened to any.",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "tests/module/esm/tests/helpers/esm-added-types.ts",
+          "line": 77,
+          "title": "10 lint/type suppression(s) added",
+          "evidence": "    // @ts-expect-error -- serializer params use the request params type\n  // @ts-expect-error -- AxiosPromise preserves the request data type\n  // @ts-expect-error -- AxiosPromise preserves the request params type\n  // @ts-expect-error -- default alias responses preserve the request data type\n  // @ts-expect-error -- default alias responses preserve the request params type\n  // @ts-expect-error -- canceled request data must not be widened to any\n  // @ts-expect-error -- canceled request params must not be widened to any\n    // @ts-expect-error -- the default serializer input remains a params record, not any\n  // @ts-expect-error -- params must match the explicit request params type\n  // @ts-expect-error -- request aliases enforce their trailing params type",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b72d3ef190b599bf95e89bf79c46311e8ff7e1b0",
+      "subject": "docs: update sponsors",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "042aed0530b07dcb38d3fb85efdbb50f8918acf7",
+      "subject": "chore(deps-dev): bump the development_dependencies group with 3 updates (#11079)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "53a0a0b0fc888ee28e1b6c839370780e39eaf743",
+      "subject": "chore(deps): bump denoland/setup-deno from 2.0.4 to 2.0.5 in the github-actions group (#11080)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "05acca21c888e44e2125d4813be3311d32f72483",
+      "subject": "fix(helpers): correct data: URL base64 size estimate for maxContentLength guard (#11061)",
+      "findings": [
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "lib/helpers/estimateDataURLDecodedBytes.js",
+          "line": 62,
+          "title": "Input-specific literal output lacks test corroboration",
+          "evidence": "    if (code === 37           && isPercentEncodedByte(body, i, len)) {\n      code = hexValue(body.charCodeAt(i + 1)) * 16 + hexValue(body.charCodeAt(i + 2));",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1de8d518e62e068fffae9a9b54ccba779e2773e8",
+      "subject": "docs: scope the provenance claim in SECURITY.md to attested versions (#11076)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "9439894b7a56382950ece6ce01e3e4e9a15847cc",
+      "subject": "docs: fix typo in Config defaults documentation (#11078)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a93b1c90d919542987cc38591d10eed949a345d0",
+      "subject": "fix(core): synthesize AxiosError message from AggregateError.errors (#11059)",
+      "findings": [
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "lib/core/AxiosError.js",
+          "line": 95,
+          "title": "New source literal matches a test expectation",
+          "evidence": "  return message || error.name || 'AggregateError';\ntests/unit/core/AxiosError.test.js:130:       expect(axiosError.message).toBe('AggregateError');",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ff60b43277c32a5b2f7589c917db16d8e043c0d4",
+      "subject": "fix: honor wildcard entries in NO_PROXY lists (#11053)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3ebc76240c835a07fc6af23cb10d41579371a08f",
+      "subject": "feat(AxiosHeaders): add opt-in RFC-aware parameter parser (#11051)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7a6615e421578081743161eab032d009dc6583a4",
+      "subject": "docs: clarify baseURL path scope (#11068)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e435384f36bdd310ae784d652e97a0383d1c52a7",
+      "subject": "fix(utils): serialize Set values in toJSONObject (#11044)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a85da2918eb540928b54bb3d57692efc8f2f83f1",
+      "subject": "feat(core): support symbol keys in mergeConfig (#11043)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "97131238cab2e56f58f26b5bfd95e40bb5b9df14",
+      "subject": "fix(http): flush download progress before stream close (#11040)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3d253b4f17a5107e6f274ee5b2e96e03508dceb2",
+      "subject": "fix: clamp negative progress values (#11039)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "02c2c4f891d76b15712a9edd149a2d9f7978774f",
+      "subject": "fix: normalize repeated base URL slashes (#11038)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "bdba132964d91d2e74341cf0af0a54e4d2346870",
+      "subject": "chore: update packages (#11058)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7b1825ff0832981f02a7aa6f3995522b0be297ee",
+      "subject": "build: generate sourcemaps only for published bundles (#11054)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "7737fae3c54937105d3ab27ae814d857856fe058",
+      "subject": "chore(deps-dev): bump the development_dependencies group with 3 updates (#11055)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "36e6c5f046433b1cd3356dfc43df1619708c329a",
+      "subject": "chore(deps): bump the github-actions group with 2 updates (#11056)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e566ea39a22e55a05073b035c51852b4863de012",
+      "subject": "fix: return set-cookie values consistently (#11037)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "78b5187ee7b6b97e416caf4e116fe7c8d3c2c2ca",
+      "subject": "fix: preserve empty duplicate header values (#11036)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4106dda9abe43bd3a1471b24dd5d0627470570fc",
+      "subject": "fix: abort composed signals immediately (#11035)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "9e5c894ef7a07666b38973cd3031bc51e9924c6a",
+      "subject": "fix(no_proxy): canonicalise IPv4 shorthand/octal/hex in shouldBypassProxy (#11029)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "d45e737718876f3c7a1ad9384693622eb68a739a",
+      "subject": "fix(core): include offending URL in malformed protocol error (#11024)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3243566a188507e69692d94a36d6fca4a64c6765",
+      "subject": "fix: replace Buffer.from with Uint8Array in toFormData (#11018)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "44de1e484dcd65809d13c54d3220fe3de9113d4f",
+      "subject": "fix(formDataToJSON): only split keys on bracket and dot notation (#11006)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "debf320ec8387b23edf846de33192b5cc7a257ef",
+      "subject": "chore: update README.md (#11041)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a7d7a714498452e611943d9d8e5c2ed8b00aa6b9",
+      "subject": "chore(deps-dev): bump the development_dependencies group with 9 updates (#11031)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "c4f5252a7188c942dea49c7d0c1407954d965f66",
+      "subject": "chore: update gitignore (#11032)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5d2af0485354580dce4b6b77890b84cadc0ead0e",
+      "subject": "chore(deps): bump form-data floor to ^4.0.6 to patch CRLF injection (#11028)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a209bfb1e5dcbce3cecbf4bd955339d006358887",
+      "subject": "chore(release): prepare release 1.18.1 (#11027)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fa6a55ef99235074d2c11d80a1064ef02850d598",
+      "subject": "chore(deps-dev): bump multer from 2.1.1 to 2.2.0 (#11026)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "40e7be8a78dd43caaeb2313cc4be3f8e714be91d",
+      "subject": "docs: clarifies that request data is request-specific in axios (#11025)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a446b39b19c8b570214a4158520c5ddd5b020366",
+      "subject": "fix(AxiosURLSearchParams): use arrow function so encoder.call(this) receives the instance (#11019)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "cf1306a42d97960b635c894c83658f2692e53585",
+      "subject": "docs: add Deno to install instructions (#11023)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b32880af48017457a1203ab2e63720902d3b71b3",
+      "subject": "fix: incorrect use of error (#11021)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1792eda11aff8fe0f8c8a6e5ae6ff305740a6460",
+      "subject": "fix: ensure maxBodyLength is explicitly passed to follow-redirects (#10993)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "30499d6af0961ec38619792013a534d1933b08a9",
+      "subject": "fix: various runtime crashes and type definition mismatches (#10959)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "20ce9c412ebd88823d1a4a47000cb133a8f79440",
+      "subject": "fix(http): defer env proxy handling to Node (#10942)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e64bcf9c5af231d6f37d8389b1e57ded314fff86",
+      "subject": "chore(deps): merge branch 'v1.x' into tests/module/cjs (#11014)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "608afef9e93873334a53212ecdbbbf85ca5c1902",
+      "subject": "chore(deps): bump js-yaml in /tests/smoke/cjs (#11016)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "edbb267df9029a5704215a0f2e5f4b76b0e4bade",
+      "subject": "chore(deps): bump form-data from 4.0.5 to 4.0.6 (#11015)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "1ad426a12a925a58bd4353455892abe6080faf9e",
+      "subject": "chore(deps): bump form-data from 4.0.5 to 4.0.6 in /docs (#11013)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4c57ff172af705b4f4e178f9c5b97a411d567f08",
+      "subject": "chore(deps-dev): bump vite from 8.0.13 to 8.0.16 (#11017)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "01e869dd28cefc52b144c8234e40cf3d56fcb182",
+      "subject": "fix(http): accept path-only url when socketPath is set (#6611) (#10930)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "97fb8af785bcdbbc03110429354c365754a072e7",
+      "subject": "chore(deps-dev): bump rollup from 4.61.0 to 4.61.1 in the development_dependencies group (#11012)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3fb00c7d21e066d61b66329ffe2ee96feb735bb5",
+      "subject": "chore(deps-dev): bump vite from 8.0.9 to 8.0.16 in /tests/smoke/esm (#11011)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "227c788eb702ee88791451eb53e76ef3dca67f8a",
+      "subject": "fix(http): guard socket.setKeepAlive for proxy agent streams (#10917)",
+      "findings": [
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "lib/adapters/http.js",
+          "line": 1210,
+          "title": "New source literal matches a test expectation",
+          "evidence": "        if (typeof socket.setKeepAlive === 'function') {\ntests/smoke/bun/tests/import.smoke.test.ts:6:     expect(typeof axios).toBe('function');",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "885b3e8507b900e69a810686647d0616193edfa9",
+      "subject": "chore: prep clean docs (#11010)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4918457aad892a32b2b0cd585c40d22870d48c4a",
+      "subject": "fix(core): make AxiosError cause non-enumerable to prevent circular JSON errors (#10913)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "e24659d33a600f8e5e610d4074e46b1319e28440",
+      "subject": "docs: document sensitive headers and status transition (#11007)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2d06f96e8602c2db13b65a26340ee4a1bbc0b61f",
+      "subject": "chore(release): prepare release 1.18.0 (#11003)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "32fc489632377d214db55bfa4e2c48486a7d7ce2",
+      "subject": "fix: malformed http urls (#11000)",
+      "findings": [
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "lib/adapters/fetch.js",
+          "line": 258,
+          "title": "New source literal matches a test expectation",
+          "evidence": "        const password = utils.getSafeProp(configAuth, 'password') || '';\ntests/unit/core/AxiosError.test.js:360:       expect(error.toJSON().config.redact).toEqual(['password']);",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "lib/core/buildFullPath.js",
+          "line": 23,
+          "title": "New source literal matches a test expectation",
+          "evidence": "  if (typeof url === 'string' && malformedHttpProtocol.test(normalizeURLForProtocolCheck(url))) {\ntests/smoke/bun/tests/import.smoke.test.ts:17:     expect(typeof exports.VERSION).toBe('string');",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "lib/helpers/resolveConfig.js",
+          "line": 66,
+          "title": "New source literal matches a test expectation",
+          "evidence": "    const password = utils.getSafeProp(auth, 'password') || '';\ntests/unit/core/AxiosError.test.js:360:       expect(error.toJSON().config.redact).toEqual(['password']);",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "lib/core/buildFullPath.js",
+          "line": 25,
+          "title": "New source literal matches a test expectation",
+          "evidence": "      'Invalid URL: missing \"//\" after protocol',\ntests/browser/requests.browser.test.js:240:     expect(reason.message).toBe('Invalid URL: missing \"//\" after protocol');",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "b40ce498abfa10d90b873b4fd08f520afa5d2545",
+      "subject": "chore(deps-dev): bump the development_dependencies group with 10 updates (#10997)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fe964f960ecb52c3e1155b0daf7be77541956b01",
+      "subject": "docs: mark proxy config as Node.js only (#10995)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "5f229d2d1f018d1db3dab6bbe034dbf3f9041b99",
+      "subject": "chore(deps): bump actions/checkout from 6.0.2 to 6.0.3 in the github-actions group (#10996)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fae9d4e7db6a858c407c75e607a071c533c5c4f6",
+      "subject": "docs: clarify package update PR policy (#10992)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "28ab2ced820e55192806c53472ab3eb0cbb68dc2",
+      "subject": "chore(deps-dev): bump the development_dependencies group with 2 updates (#10989)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a8e4f13aeecc45a3b8fab3ecfd9ddb5d70fb772b",
+      "subject": "fix(core): keep default validateStatus when request passes undefined (#10899)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "614f4552a17de757d4171ad7c3bd38c9c1025fd8",
+      "subject": "docs: publish v1.17.0 release notes (#10988)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "6bb12c191f5380fad321322fb90216ae0dc36985",
+      "subject": "fix: custom auth headers not stripped on cross-origin redirects (#10892)",
+      "findings": [
+        {
+          "rule_id": "AC008",
+          "rule_name": "exception-swallowed",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "lib/adapters/http.js",
+          "line": 198,
+          "title": "Catch handler discards failures",
+          "evidence": "catch (e) {\n                                                                \n    return false;\n  }",
+          "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+          "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "550f0d80a8c0aebaf1ec3a862a9a75287c13f8a3",
+      "subject": "fix: correct 'the the' typo in CHANGELOG.md (#10984)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "4306df21e84332fc576e98c2de549347c06bfb76",
+      "subject": "chore: add fun 88 sponsorship",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "931cc8f0106db4c9885403f85364b9e09ae1f6dc",
+      "subject": "chore(release): prepare release 1.17.0 (#10983)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "38ba1b3d2b0aa5ada0463a37a548feb83a84dfa1",
+      "subject": "fix(fetch): support basic auth from URL (#10896)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "32e2515f1e09b649723e4acd89d920df13eee77e",
+      "subject": "fix: replace ternary side effect in script (#10931)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "030e7223831b0f562af3eb7501b24242c8a4c5ba",
+      "subject": "chore(deps): bump axios from 1.15.2 to 1.16.1 in /docs (#10960)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "ec63164ac6b7a1fcd6b742a8628d3fffe23ce001",
+      "subject": "chore: remove openspec (#10958)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "3dec28f94ce29d396d5f2d9718805b47428dc7ab",
+      "subject": "fix(http): preserve TLS options for proxy tunnels (#10957)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "a2390a5c059342bcac2a5297728181dd9939f562",
+      "subject": "fix: correct isCancel type to narrow to CanceledError<T> (#10952)",
+      "findings": [
+        {
+          "rule_id": "AC010",
+          "rule_name": "lint-or-type-suppression-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "tests/module/cjs/tests/helpers/cjs-is-cancel-typing.ts",
+          "line": 8,
+          "title": "1 lint/type suppression(s) added",
+          "evidence": "  // @ts-expect-error -- The generic response data must not be widened to any.",
+          "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+          "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+          "allowed": false
+        }
+      ],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "fa01b9255d71e72599826428bc6c60f34994c6ce",
+      "subject": "chore(deps-dev): bump tmp from 0.2.5 to 0.2.7 in /docs (#10954)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    },
+    {
+      "commit": "2d2314a1ac29ce6723eb53e130b4a36617fd201c",
+      "subject": "fix: AxiosHeaders `toJSON()` return types (#10956)",
+      "findings": [],
+      "error": null,
+      "stderr": ""
+    }
+  ]
+}

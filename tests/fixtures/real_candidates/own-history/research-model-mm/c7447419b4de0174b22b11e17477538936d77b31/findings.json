@@ -1,1 +1,41 @@
-[]
+[
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/qualify_nvidia.py",
+    "line": 255,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "                os.sysconf(\"SC_PHYS_PAGES\") * os.sysconf(\"SC_PAGE_SIZE\")\n                os.sysconf(\"SC_PHYS_PAGES\") * os.sysconf(\"SC_PAGE_SIZE\")",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/qualify_nvidia.py",
+    "line": 386,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "        return int(peak * (1024 if platform.system() != \"Darwin\" else 1))\n        return int(peak * (1024 if platform.system() != \"Darwin\" else 1))",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/qualify_nvidia.py",
+    "line": 555,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "    if args.worker_phase == \"resume\":\n        resume_checkpoint = run_dir / f\"checkpoint-{FIRST_STAGE_STEP}\"",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  }
+]

@@ -1,5 +1,44 @@
 [
   {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/pipeline.py",
+    "line": 106,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "        base='data/heldout' if split=='heldout' else 'data/pretrain'\n        base='data/heldout' if split=='heldout' else 'data/pretrain'",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/pipeline.py",
+    "line": 107,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "        raw_name='raw.jsonl' if split=='heldout' else f'{split}.jsonl'\n        raw_name='raw.jsonl' if split=='heldout' else f'{split}.jsonl'",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/pipeline.py",
+    "line": 109,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "        base='data/heldout' if split=='heldout' else 'data/sft'\n        base='data/heldout' if split=='heldout' else 'data/sft'",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
     "rule_id": "AC008",
     "rule_name": "exception-swallowed",
     "severity": "medium",
@@ -10,6 +49,19 @@
     "evidence": "except Exception: return None",
     "why_flagged": "A broad exception handler silently converts failures into apparent success.",
     "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/train.py",
+    "line": 97,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "        if args.smoke or n%CONFIG['save_steps']==0 or n==steps:\n            checkpoint=out/f'checkpoint-{n:03d}';model.save_pretrained(checkpoint,safe_serialization=True)",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
     "allowed": false
   }
 ]

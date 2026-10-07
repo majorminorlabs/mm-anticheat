@@ -13,6 +13,45 @@
     "allowed": false
   },
   {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "src/worker.mjs",
+    "line": 139,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "  if (!value || typeof value !== 'object' || Array.isArray(value)) throw Object.assign(new Error('Send a valid analytics event.'), { status: 400, code: 'INVALID_ANALYTICS_EVENT' });\n  const path = analyticsText(value.path, 180);",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "src/worker.mjs",
+    "line": 149,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "  if (eventType === 'scroll' && (eventValue === null || eventValue > 100)) throw Object.assign(new Error('Scroll depth must be between 0 and 100.'), { status: 400, code: 'INVALID_ANALYTICS_EVENT' });\n  if (eventType === 'scroll' && (eventValue === null || eventValue > 100)) throw Object.assign(new Error('Scroll depth must be between 0 and 100.'), { status: 400, code: 'INVALID_ANALYTICS_EVENT' });",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "src/worker.mjs",
+    "line": 161,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "    if (origin && origin !== url.origin) throw Object.assign(new Error('Analytics events must come from this site.'), { status: 403, code: 'INVALID_ORIGIN' });\n    if (origin && origin !== url.origin) throw Object.assign(new Error('Analytics events must come from this site.'), { status: 403, code: 'INVALID_ORIGIN' });",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
     "rule_id": "AC008",
     "rule_name": "exception-swallowed",
     "severity": "low",

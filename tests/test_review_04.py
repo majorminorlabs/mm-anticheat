@@ -217,3 +217,18 @@ def test_generated_bytecode_is_ignored_but_test_move_still_blocks(repo):
     assert not scan(load_git(working=True, cwd=repo)).findings
     git(repo, "mv", "tests/test_a.py", "tests/__pycache__/hidden.py")
     assert any(f.severity == "high" for f in selected(repo, "AC001"))
+
+
+def test_m19_grep_failure_is_not_a_silent_miss(repo, monkeypatch):
+    from types import SimpleNamespace
+
+    from mm_anticheat.git import InputError, _git
+
+    monkeypatch.setattr(
+        "mm_anticheat.git.subprocess.run",
+        lambda *args, **kwargs: SimpleNamespace(
+            returncode=2, stdout=b"", stderr=b"fatal: grep failed"
+        ),
+    )
+    with pytest.raises(InputError, match="grep failed"):
+        _git(repo, "grep", "-F", "literal", allow_no_matches=True)

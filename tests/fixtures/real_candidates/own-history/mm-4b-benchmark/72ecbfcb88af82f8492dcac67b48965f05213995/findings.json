@@ -11,5 +11,31 @@
     "why_flagged": "A broad exception handler silently converts failures into apparent success.",
     "legit_if": "The operation is best effort, and discarding this failure is intentional.",
     "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "runner/candidate_field_execution.py",
+    "line": 66,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "        if http != 200:\n            status = 'transport_invalid'",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "runner/candidate_field_execution.py",
+    "line": 94,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "            if event.get('invalid') or event.get('prohibited'): errors.append('model_malformed_arguments' if event.get('invalid') else 'model_prohibited_action')\n            if event.get('invalid') or event.get('prohibited'): errors.append('model_malformed_arguments' if event.get('invalid') else 'model_prohibited_action')",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
   }
 ]

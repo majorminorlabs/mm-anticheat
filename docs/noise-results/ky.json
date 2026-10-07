@@ -4,45 +4,50 @@
   "requested_commits": 150,
   "commits_scanned": 150,
   "commits_with_high": 2,
-  "commits_with_high_or_medium": 4,
+  "commits_with_high_or_medium": 5,
   "counts": [
     {
-      "rule_id": "GH001",
+      "rule_id": "AC001",
       "severity": "high",
       "count": 1
     },
     {
-      "rule_id": "GH002",
+      "rule_id": "AC002",
       "severity": "high",
       "count": 1
     },
     {
-      "rule_id": "GH003",
+      "rule_id": "AC003",
       "severity": "low",
       "count": 1
     },
     {
-      "rule_id": "GH008",
+      "rule_id": "AC006",
+      "severity": "medium",
+      "count": 1
+    },
+    {
+      "rule_id": "AC008",
       "severity": "low",
       "count": 3
     },
     {
-      "rule_id": "GH008",
+      "rule_id": "AC008",
       "severity": "medium",
       "count": 5
     },
     {
-      "rule_id": "GH010",
+      "rule_id": "AC010",
       "severity": "low",
       "count": 51
     }
   ],
   "examples": {
-    "GH001": [
+    "AC001": [
       {
         "commit": "1f2ad7f20dcb778a4f0758432e8a8eb5c597a3e9",
         "subject": "Add `baseUrl` option, rename `prefixUrl` to `prefix`, and allow leading slashes in input (#606)",
-        "rule_id": "GH001",
+        "rule_id": "AC001",
         "rule_name": "test-file-deleted",
         "severity": "high",
         "confidence": "normal",
@@ -55,11 +60,11 @@
         "allowed": false
       }
     ],
-    "GH002": [
+    "AC002": [
       {
         "commit": "433febd55cc19c98c7a643be934693927ac38503",
         "subject": "Strip Ky-specific properties from normalized options passed to hooks (#826)",
-        "rule_id": "GH002",
+        "rule_id": "AC002",
         "rule_name": "test-count-decreased",
         "severity": "high",
         "confidence": "normal",
@@ -72,11 +77,11 @@
         "allowed": false
       }
     ],
-    "GH003": [
+    "AC003": [
       {
         "commit": "cd1dba0e4502d95be93846e6c77bf0479dc0e385",
         "subject": "More tests",
-        "rule_id": "GH003",
+        "rule_id": "AC003",
         "rule_name": "skip-marker-added",
         "severity": "low",
         "confidence": "normal",
@@ -89,11 +94,28 @@
         "allowed": false
       }
     ],
-    "GH008": [
+    "AC006": [
+      {
+        "commit": "51b31777058c13f24b640a0ef1a47565f011e080",
+        "subject": "Support readonly inputs and explicit undefined in TypeScript options",
+        "rule_id": "AC006",
+        "rule_name": "hardcoded-test-expectation",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "test-d/retry.ts",
+        "line": 18,
+        "title": "Input-specific literal output lacks test corroboration",
+        "evidence": "\tif (typeof options.retry === 'object') {\n\t\toptions.retry.afterStatusCodes?.push(503);",
+        "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+        "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+        "allowed": false
+      }
+    ],
+    "AC008": [
       {
         "commit": "06ebf18e1927b3772726037bda5a78d4b7eb6dba",
         "subject": "Handle unsupported streaming uploads gracefully",
-        "rule_id": "GH008",
+        "rule_id": "AC008",
         "rule_name": "exception-swallowed",
         "severity": "medium",
         "confidence": "normal",
@@ -108,7 +130,7 @@
       {
         "commit": "4b37c9636a601b8f121d47485f794dcd404d0984",
         "subject": "Minor tweaks",
-        "rule_id": "GH008",
+        "rule_id": "AC008",
         "rule_name": "exception-swallowed",
         "severity": "low",
         "confidence": "normal",
@@ -123,7 +145,7 @@
       {
         "commit": "1341f5ca56c96c9440e6e8d0d624c871bb1b7929",
         "subject": "Add `data` property to `HTTPError` with pre-parsed response body (#823)",
-        "rule_id": "GH008",
+        "rule_id": "AC008",
         "rule_name": "exception-swallowed",
         "severity": "medium",
         "confidence": "normal",
@@ -138,7 +160,7 @@
       {
         "commit": "1341f5ca56c96c9440e6e8d0d624c871bb1b7929",
         "subject": "Add `data` property to `HTTPError` with pre-parsed response body (#823)",
-        "rule_id": "GH008",
+        "rule_id": "AC008",
         "rule_name": "exception-swallowed",
         "severity": "medium",
         "confidence": "normal",
@@ -153,7 +175,7 @@
       {
         "commit": "1341f5ca56c96c9440e6e8d0d624c871bb1b7929",
         "subject": "Add `data` property to `HTTPError` with pre-parsed response body (#823)",
-        "rule_id": "GH008",
+        "rule_id": "AC008",
         "rule_name": "exception-swallowed",
         "severity": "medium",
         "confidence": "normal",
@@ -166,11 +188,11 @@
         "allowed": false
       }
     ],
-    "GH010": [
+    "AC010": [
       {
         "commit": "0d59458a0a58e1c3d7c6db0ab17ed5c7cd671e47",
         "subject": "Add `maxResponseSize` option",
-        "rule_id": "GH010",
+        "rule_id": "AC010",
         "rule_name": "lint-or-type-suppression-added",
         "severity": "low",
         "confidence": "normal",
@@ -185,7 +207,7 @@
       {
         "commit": "0d59458a0a58e1c3d7c6db0ab17ed5c7cd671e47",
         "subject": "Add `maxResponseSize` option",
-        "rule_id": "GH010",
+        "rule_id": "AC010",
         "rule_name": "lint-or-type-suppression-added",
         "severity": "low",
         "confidence": "normal",
@@ -200,7 +222,7 @@
       {
         "commit": "a8753dcc9a4e8771d4226f9b6d196064325a0fbc",
         "subject": "Preserve symbol-keyed context in init hooks",
-        "rule_id": "GH010",
+        "rule_id": "AC010",
         "rule_name": "lint-or-type-suppression-added",
         "severity": "low",
         "confidence": "normal",
@@ -215,7 +237,7 @@
       {
         "commit": "b28ba903c322b84b5d9cf47a6fc0af6a61d5954f",
         "subject": "Simplify request state and retry normalization",
-        "rule_id": "GH010",
+        "rule_id": "AC010",
         "rule_name": "lint-or-type-suppression-added",
         "severity": "low",
         "confidence": "normal",
@@ -230,7 +252,7 @@
       {
         "commit": "cd1dba0e4502d95be93846e6c77bf0479dc0e385",
         "subject": "More tests",
-        "rule_id": "GH010",
+        "rule_id": "AC010",
         "rule_name": "lint-or-type-suppression-added",
         "severity": "low",
         "confidence": "normal",
@@ -253,7 +275,7 @@
       "subject": "Add `maxResponseSize` option",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -266,7 +288,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -308,7 +330,7 @@
       "subject": "Preserve symbol-keyed context in init hooks",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -329,7 +351,7 @@
       "subject": "Simplify request state and retry normalization",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -350,7 +372,7 @@
       "subject": "More tests",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -363,7 +385,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH003",
+          "rule_id": "AC003",
           "rule_name": "skip-marker-added",
           "severity": "low",
           "confidence": "normal",
@@ -384,7 +406,7 @@
       "subject": "Type custom fetch callbacks with Request inputs",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -419,7 +441,20 @@
       "subject": "Support readonly inputs and explicit undefined in TypeScript options",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC006",
+          "rule_name": "hardcoded-test-expectation",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "test-d/retry.ts",
+          "line": 18,
+          "title": "Input-specific literal output lacks test corroboration",
+          "evidence": "\tif (typeof options.retry === 'object') {\n\t\toptions.retry.afterStatusCodes?.push(503);",
+          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -432,7 +467,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -445,7 +480,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -458,7 +493,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -471,7 +506,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -527,7 +562,7 @@
       "subject": "Preserve non-Error values in retry errors and hooks",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -548,7 +583,7 @@
       "subject": "Handle unsupported streaming uploads gracefully",
       "findings": [
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -625,7 +660,7 @@
       "subject": "Fix headers set to `undefined` not removing the header from a `Request` input",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -653,7 +688,7 @@
       "subject": "Fix a user abort in Chromium being reported as `NetworkError` and retried",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -674,7 +709,7 @@
       "subject": "Fix `fetch: window.fetch` throwing \"Illegal invocation\" in browsers",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -695,7 +730,7 @@
       "subject": "Fix a stale timeout timer aborting the retried attempt when a custom `fetch` throws synchronously",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -716,7 +751,7 @@
       "subject": "Fix timeouts and user aborts not cancelling a `Request` returned from `beforeRequest` or `beforeRetry` hooks",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -744,7 +779,7 @@
       "subject": "Fix header overrides and removals in `.extend()` ignoring header name case with plain objects",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -765,7 +800,7 @@
       "subject": "Document that `null` is intentionally rejected by the `searchParams` type",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -807,7 +842,7 @@
       "subject": "Fix a connection dropped while reading the body through shortcuts surfacing as a raw `TypeError`",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -842,7 +877,7 @@
       "subject": "Fix `hooks: {x: undefined}` and `signal: undefined` failing to type-check with `exactOptionalPropertyTypes`",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -855,7 +890,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -883,7 +918,7 @@
       "subject": "Fix `ky.extend()` callback mutations leaking into the parent instance",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -911,7 +946,7 @@
       "subject": "Fix `onDownloadProgress` dropping response `url`, `redirected`, and `type`",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -932,7 +967,7 @@
       "subject": "Fix option merging rewriting nested user data and flattening class instances",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -953,7 +988,7 @@
       "subject": "Preserve caller stack for schema validation errors (#883)",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -966,7 +1001,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1064,7 +1099,7 @@
       "subject": "Harden retry",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1077,7 +1112,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1090,7 +1125,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1118,7 +1153,7 @@
       "subject": "Improve `Retry-After` handling (#874)",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1188,7 +1223,7 @@
       "subject": "Fix init hook URLSearchParams deletions",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1230,7 +1265,7 @@
       "subject": "Improve compatibility with custom `fetch` implementations (#858)",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1335,7 +1370,7 @@
       "subject": "Merge `searchParams` with input URL (#840)",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1419,7 +1454,7 @@
       "subject": "Gracefully ignore `onUploadProgress` when request streams are unsupported (#845)",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1468,7 +1503,7 @@
       "subject": "Treat hook errors as fatal outside retry handling (#834)",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1481,7 +1516,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1509,7 +1544,7 @@
       "subject": "Minor tweaks",
       "findings": [
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1537,7 +1572,7 @@
       "subject": "Add `baseUrl` option, rename `prefixUrl` to `prefix`, and allow leading slashes in input (#606)",
       "findings": [
         {
-          "rule_id": "GH001",
+          "rule_id": "AC001",
           "rule_name": "test-file-deleted",
           "severity": "high",
           "confidence": "normal",
@@ -1550,7 +1585,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1563,7 +1598,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1576,7 +1611,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1618,7 +1653,7 @@
       "subject": "Skip request cloning when retries are disabled to prevent buffering large streaming bodies",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1639,7 +1674,7 @@
       "subject": "Make `beforeError` hook receive all errors (#829)",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1652,7 +1687,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1701,7 +1736,7 @@
       "subject": "Strip Ky-specific properties from normalized options passed to hooks (#826)",
       "findings": [
         {
-          "rule_id": "GH002",
+          "rule_id": "AC002",
           "rule_name": "test-count-decreased",
           "severity": "high",
           "confidence": "normal",
@@ -1743,7 +1778,7 @@
       "subject": "Require Node.js 22",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1756,7 +1791,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1769,7 +1804,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1782,7 +1817,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1810,7 +1845,7 @@
       "subject": "Add `data` property to `HTTPError` with pre-parsed response body (#823)",
       "findings": [
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1823,7 +1858,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1836,7 +1871,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1849,7 +1884,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "medium",
           "confidence": "normal",
@@ -1862,7 +1897,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -1875,7 +1910,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -1917,7 +1952,7 @@
       "subject": "Fix response body cleanup after hooks (#809)",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -2001,7 +2036,7 @@
       "subject": "Add `ky.retry()` to force retries from `afterResponse` hooks (#779)",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -2099,7 +2134,7 @@
       "subject": "Add `retryOnTimeout` and `shouldRetry` options (#767)",
       "findings": [
         {
-          "rule_id": "GH008",
+          "rule_id": "AC008",
           "rule_name": "exception-swallowed",
           "severity": "low",
           "confidence": "normal",
@@ -2112,7 +2147,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",

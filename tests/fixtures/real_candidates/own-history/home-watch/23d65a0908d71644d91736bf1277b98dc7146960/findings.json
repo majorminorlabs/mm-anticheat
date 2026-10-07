@@ -1,5 +1,31 @@
 [
   {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "src/app/api/concierge/events/route.ts",
+    "line": 63,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "  if (!value || typeof value !== \"object\" || Array.isArray(value)) return null;\n  const type = boundedString(event.type, 40);",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "src/app/api/concierge/events/route.ts",
+    "line": 109,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "    summary: type === \"session_ended\" ? boundedString(event.summary, 500) : undefined,\n    summary: type === \"session_ended\" ? boundedString(event.summary, 500) : undefined,",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
     "rule_id": "AC008",
     "rule_name": "exception-swallowed",
     "severity": "medium",
@@ -10,6 +36,19 @@
     "evidence": "catch {\n    return undefined;\n  }",
     "why_flagged": "A broad exception handler silently converts failures into apparent success.",
     "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "src/components/concierge-panel.tsx",
+    "line": 408,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "                    link.id === \"contact\" ? (\n                        className=\"concierge-text-link\"",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
     "allowed": false
   },
   {

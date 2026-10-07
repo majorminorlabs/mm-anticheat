@@ -1,1 +1,41 @@
-[]
+[
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/evaluate.py",
+    "line": 83,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "    if adapter and '/l5/' in f'/{adapter}/':\n        run['l5_dataset_hashes']={split: sha((ROOT/('data/l5' if split=='train' else 'data/l3')/f'{split}.jsonl').read_bytes())",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/evaluate.py",
+    "line": 84,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "        run['l5_dataset_hashes']={split: sha((ROOT/('data/l5' if split=='train' else 'data/l3')/f'{split}.jsonl').read_bytes())\n        run['l5_dataset_hashes']={split: sha((ROOT/('data/l5' if split=='train' else 'data/l3')/f'{split}.jsonl').read_bytes())",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/train_l5.py",
+    "line": 77,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "    dataset_hashes = {split: sha((ROOT / ('data/l5' if split == 'train' else 'data/l3') / f'{split}.jsonl').read_bytes())\n    dataset_hashes = {split: sha((ROOT / ('data/l5' if split == 'train' else 'data/l3') / f'{split}.jsonl').read_bytes())",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  }
+]

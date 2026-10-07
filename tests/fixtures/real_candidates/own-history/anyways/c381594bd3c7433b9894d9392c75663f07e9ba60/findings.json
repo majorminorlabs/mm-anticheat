@@ -13,6 +13,32 @@
     "allowed": false
   },
   {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "src/pipeline/orchestrator.mjs",
+    "line": 262,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "      const doc = { id: `source:${candidateId}:${run.id}:${documents.length + 1}`, candidate_id: candidateId, processing_run_id: run.id, discovery_id: null, url: canonical, canonical_url: canonical, title: fetched.title || source.title, content: fetched.text.slice(0, this.limits.sourceChars), source_type: source.provider === 'direct' ? 'candidate_primary' : primaryResearchUrl(source.url) ? 'primary_research' : 'research_expansion', retrieval_timestamp: fetched.fetched_at || now(), provenance: { provider: source.provider, query: candidate.title, fetched_url: source.url }, extraction: fetched };\n      const doc = { id: `source:${candidateId}:${run.id}:${documents.length + 1}`, candidate_id: candidateId, processing_run_id: run.id, discovery_id: null, url: canonical, canonical_url: canonical, title: fetched.title || source.title, content: fetched.text.slice(0, this.limits.sourceChars), source_type: source.provider === 'direct' ? 'candidate_primary' : primaryResearchUrl(source.url) ? 'primary_research' : 'research_expansion', retrieval_timestamp: fetched.fetched_at || now(), provenance: { provider: source.provider, query: candidate.title, fetched_url: source.url }, extraction: fetched };",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "src/pipeline/research-router.mjs",
+    "line": 11,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "const ttlFor = type => type === 'news' ? 6 * 3600_000 : type === 'academic' ? 30 * 24 * 3600_000 : 7 * 24 * 3600_000;\nconst ttlFor = type => type === 'news' ? 6 * 3600_000 : type === 'academic' ? 30 * 24 * 3600_000 : 7 * 24 * 3600_000;",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
     "rule_id": "AC008",
     "rule_name": "exception-swallowed",
     "severity": "medium",
@@ -26,6 +52,32 @@
     "allowed": false
   },
   {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "src/pipeline/research-router.mjs",
+    "line": 34,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "  if (query.type === 'primary' && primary.length < config.minimumPrimarySources) reasons.push('too_few_primary_sources');\n  if (query.type === 'primary' && primary.length < config.minimumPrimarySources) reasons.push('too_few_primary_sources');",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "src/pipeline/research-router.mjs",
+    "line": 67,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "    const data = await fetchJson('https://api.tavily.com/search', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ api_key: env.TAVILY_API_KEY, query: query.text, max_results: query.maxResults, search_depth: 'basic', include_domains: query.domains, exclude_domains: query.excludeDomains, topic: query.type === 'news' ? 'news' : 'general' }) }, fetchImpl);\n    return (data.results || []).map((item, rank) => ({ title: item.title, url: item.url, snippet: item.content || '', publishedAt: item.published_date || null, provider: 'tavily', rank: rank + 1 }));",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
     "rule_id": "AC008",
     "rule_name": "exception-swallowed",
     "severity": "medium",
@@ -36,6 +88,19 @@
     "evidence": "catch { return null; }",
     "why_flagged": "A broad exception handler silently converts failures into apparent success.",
     "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "src/pipeline/research-router.mjs",
+    "line": 109,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "        const status = Number(error.status || 0); const permanent = status === 401 || status === 403 || status === 429; if (permanent || attempts === 2) { warnings.push(`${providerId}: ${status ? `HTTP ${status}` : error.message}`); if (permanent) this.disabled.set(`${runId}:${providerId}`, true); break; }\n    const results = dedupeSearchResults(all).slice(0, query.maxResults * 3); const coverage = scoreSearchCoverage(results, query, this.config);",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
     "allowed": false
   },
   {

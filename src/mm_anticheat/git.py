@@ -37,7 +37,7 @@ class ScanInput:
     extra_configs: dict[str, str] = field(default_factory=dict)
 
 
-def _git(root: Path, *args: str, check: bool = True) -> bytes:
+def _git(root: Path, *args: str, check: bool = True, allow_no_matches: bool = False) -> bytes:
     result = subprocess.run(
         [
             "git",
@@ -52,7 +52,7 @@ def _git(root: Path, *args: str, check: bool = True) -> bytes:
         capture_output=True,
         check=False,
     )
-    if check and result.returncode:
+    if check and result.returncode and not (allow_no_matches and result.returncode == 1):
         raise InputError(result.stderr.decode("utf8", errors="replace").strip())
     return result.stdout if result.returncode == 0 else b""
 
@@ -203,7 +203,7 @@ def _related_tests(
         if head not in {"INDEX", "WORKTREE"}:
             options.append(head)
         options.extend(["--", "."])
-        hits = _git(root, *options, check=False).split(b"\0")
+        hits = _git(root, *options, allow_no_matches=True).split(b"\0")
         for raw in hits:
             path = raw.decode("utf8", errors="surrogateescape")
             if head not in {"INDEX", "WORKTREE"}:

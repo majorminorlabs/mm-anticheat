@@ -2,6 +2,19 @@
   {
     "rule_id": "AC006",
     "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/start_e014_amd003.py",
+    "line": 72,
+    "title": "Input-specific literal output lacks test corroboration",
+    "evidence": "    alive = _tmux_alive(session_name) if launch.get(\"mechanism\") == \"tmux\" else _pid_alive(launch.get(\"runner_pid\"))\n    alive = _tmux_alive(session_name) if launch.get(\"mechanism\") == \"tmux\" else _pid_alive(launch.get(\"runner_pid\"))",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "AC006",
+    "rule_name": "hardcoded-test-expectation",
     "severity": "low",
     "confidence": "normal",
     "file": "scripts/amd003_status.py",

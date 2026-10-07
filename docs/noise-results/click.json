@@ -4,35 +4,40 @@
   "requested_commits": 80,
   "commits_scanned": 80,
   "commits_with_high": 1,
-  "commits_with_high_or_medium": 2,
+  "commits_with_high_or_medium": 4,
   "counts": [
     {
-      "rule_id": "GH002",
+      "rule_id": "AC002",
       "severity": "high",
       "count": 1
     },
     {
-      "rule_id": "GH003",
+      "rule_id": "AC003",
       "severity": "low",
       "count": 2
     },
     {
-      "rule_id": "GH004",
+      "rule_id": "AC004",
       "severity": "medium",
       "count": 1
     },
     {
-      "rule_id": "GH010",
+      "rule_id": "AC010",
       "severity": "low",
       "count": 7
+    },
+    {
+      "rule_id": "AC018",
+      "severity": "medium",
+      "count": 4
     }
   ],
   "examples": {
-    "GH002": [
+    "AC002": [
       {
         "commit": "c3535905c77a29afc84861b29d3ad366ce5451bd",
         "subject": "Fix broken fish completion and multiline help string",
-        "rule_id": "GH002",
+        "rule_id": "AC002",
         "rule_name": "test-count-decreased",
         "severity": "high",
         "confidence": "normal",
@@ -45,11 +50,11 @@
         "allowed": false
       }
     ],
-    "GH003": [
+    "AC003": [
       {
         "commit": "2468b70997a6ec27ced4b4867954c90da3f92075",
         "subject": "Fix readline backspace/line-wrapping on linux (#2969)",
-        "rule_id": "GH003",
+        "rule_id": "AC003",
         "rule_name": "skip-marker-added",
         "severity": "low",
         "confidence": "normal",
@@ -64,7 +69,7 @@
       {
         "commit": "0d69b6ce8b25fe31ea580c608adb8e45df3805bb",
         "subject": "Adds support for editing multiple files (#2068)",
-        "rule_id": "GH003",
+        "rule_id": "AC003",
         "rule_name": "skip-marker-added",
         "severity": "low",
         "confidence": "normal",
@@ -77,11 +82,11 @@
         "allowed": false
       }
     ],
-    "GH004": [
+    "AC004": [
       {
         "commit": "0e0c00324a5af35f8995c7ff88df67b0f5594a58",
         "subject": "Keep track of `<stderr>` and `<stdout>` mix in `CliRunner` results (#2523)",
-        "rule_id": "GH004",
+        "rule_id": "AC004",
         "rule_name": "assertion-count-decreased",
         "severity": "medium",
         "confidence": "normal",
@@ -94,11 +99,11 @@
         "allowed": false
       }
     ],
-    "GH010": [
+    "AC010": [
       {
         "commit": "c69643b60cf971cd5d8e5d3902632807ceab9b8f",
         "subject": "Add file-like pager: `click.get_pager_file()` (#1572)",
-        "rule_id": "GH010",
+        "rule_id": "AC010",
         "rule_name": "lint-or-type-suppression-added",
         "severity": "low",
         "confidence": "normal",
@@ -113,7 +118,7 @@
       {
         "commit": "c5cced7b3096804567688df645194e3ed3dfa88b",
         "subject": "fix: `_termui_impl.open_url()` \u2014 'start' on Windows is a cmd built-in, not an executable (#3186)",
-        "rule_id": "GH010",
+        "rule_id": "AC010",
         "rule_name": "lint-or-type-suppression-added",
         "severity": "low",
         "confidence": "normal",
@@ -128,7 +133,7 @@
       {
         "commit": "f14b75063fb36b9208b13a920326926363616b39",
         "subject": "update dev dependencies",
-        "rule_id": "GH010",
+        "rule_id": "AC010",
         "rule_name": "lint-or-type-suppression-added",
         "severity": "low",
         "confidence": "normal",
@@ -143,7 +148,7 @@
       {
         "commit": "45f89cd5d39db37b9aa1a014da000f12da532ddc",
         "subject": "Improve typing on Windows (#2803)",
-        "rule_id": "GH010",
+        "rule_id": "AC010",
         "rule_name": "lint-or-type-suppression-added",
         "severity": "low",
         "confidence": "normal",
@@ -158,7 +163,7 @@
       {
         "commit": "45f89cd5d39db37b9aa1a014da000f12da532ddc",
         "subject": "Improve typing on Windows (#2803)",
-        "rule_id": "GH010",
+        "rule_id": "AC010",
         "rule_name": "lint-or-type-suppression-added",
         "severity": "low",
         "confidence": "normal",
@@ -168,6 +173,68 @@
         "evidence": "        from collections.abc import Buffer  # type: ignore",
         "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
         "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+        "allowed": false
+      }
+    ],
+    "AC018": [
+      {
+        "commit": "2468b70997a6ec27ced4b4867954c90da3f92075",
+        "subject": "Fix readline backspace/line-wrapping on linux (#2969)",
+        "rule_id": "AC018",
+        "rule_name": "expectation-rewritten",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "tests/test_utils.py",
+        "line": 229,
+        "title": "Expected literal rewritten alongside source",
+        "evidence": "'Password:\\ninterrupted\\n' \u2192 '\\ninterrupted\\n'; actual expression unchanged",
+        "why_flagged": "This change can let a test pass without checking the intended behavior.",
+        "legit_if": "The behavior is intentional and independently reviewed.",
+        "allowed": false
+      },
+      {
+        "commit": "4ece17a107d7b2e8bc3bd14356c2b53038fe41cf",
+        "subject": "Expand `Choice` token normalization + make generic (#2796)",
+        "rule_id": "AC018",
+        "rule_name": "expectation-rewritten",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "tests/test_normalization.py",
+        "line": 37,
+        "title": "Expected literal rewritten alongside source",
+        "evidence": "'Foo\\n' \u2192 'PascalCase\\n'; actual expression unchanged",
+        "why_flagged": "This change can let a test pass without checking the intended behavior.",
+        "legit_if": "The behavior is intentional and independently reviewed.",
+        "allowed": false
+      },
+      {
+        "commit": "0e0c00324a5af35f8995c7ff88df67b0f5594a58",
+        "subject": "Keep track of `<stderr>` and `<stdout>` mix in `CliRunner` results (#2523)",
+        "rule_id": "AC018",
+        "rule_name": "expectation-rewritten",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "tests/test_testing.py",
+        "line": 312,
+        "title": "Expected literal rewritten alongside source",
+        "evidence": "'stdout\\nstderr\\n' \u2192 '1 - stdout\\n2 - stderr\\n3 - stdout\\n4 - stderr\\n'; actual expression unchanged",
+        "why_flagged": "This change can let a test pass without checking the intended behavior.",
+        "legit_if": "The behavior is intentional and independently reviewed.",
+        "allowed": false
+      },
+      {
+        "commit": "0e0c00324a5af35f8995c7ff88df67b0f5594a58",
+        "subject": "Keep track of `<stderr>` and `<stdout>` mix in `CliRunner` results (#2523)",
+        "rule_id": "AC018",
+        "rule_name": "expectation-rewritten",
+        "severity": "medium",
+        "confidence": "normal",
+        "file": "tests/test_testing.py",
+        "line": 313,
+        "title": "Expected literal rewritten alongside source",
+        "evidence": "'stdout\\nstderr\\n' \u2192 '1 - stdout\\n3 - stdout\\n'; actual expression unchanged",
+        "why_flagged": "This change can let a test pass without checking the intended behavior.",
+        "legit_if": "The behavior is intentional and independently reviewed.",
         "allowed": false
       }
     ]
@@ -181,7 +248,7 @@
       "subject": "Fix broken fish completion and multiline help string",
       "findings": [
         {
-          "rule_id": "GH002",
+          "rule_id": "AC002",
           "rule_name": "test-count-decreased",
           "severity": "high",
           "confidence": "normal",
@@ -258,7 +325,7 @@
       "subject": "Add file-like pager: `click.get_pager_file()` (#1572)",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -279,7 +346,7 @@
       "subject": "fix: `_termui_impl.open_url()` \u2014 'start' on Windows is a cmd built-in, not an executable (#3186)",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -300,7 +367,20 @@
       "subject": "Fix readline backspace/line-wrapping on linux (#2969)",
       "findings": [
         {
-          "rule_id": "GH003",
+          "rule_id": "AC018",
+          "rule_name": "expectation-rewritten",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/test_utils.py",
+          "line": 229,
+          "title": "Expected literal rewritten alongside source",
+          "evidence": "'Password:\\ninterrupted\\n' \u2192 '\\ninterrupted\\n'; actual expression unchanged",
+          "why_flagged": "This change can let a test pass without checking the intended behavior.",
+          "legit_if": "The behavior is intentional and independently reviewed.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC003",
           "rule_name": "skip-marker-added",
           "severity": "low",
           "confidence": "normal",
@@ -419,7 +499,7 @@
       "subject": "update dev dependencies",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -473,7 +553,21 @@
     {
       "commit": "4ece17a107d7b2e8bc3bd14356c2b53038fe41cf",
       "subject": "Expand `Choice` token normalization + make generic (#2796)",
-      "findings": [],
+      "findings": [
+        {
+          "rule_id": "AC018",
+          "rule_name": "expectation-rewritten",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/test_normalization.py",
+          "line": 37,
+          "title": "Expected literal rewritten alongside source",
+          "evidence": "'Foo\\n' \u2192 'PascalCase\\n'; actual expression unchanged",
+          "why_flagged": "This change can let a test pass without checking the intended behavior.",
+          "legit_if": "The behavior is intentional and independently reviewed.",
+          "allowed": false
+        }
+      ],
       "error": null,
       "stderr": ""
     },
@@ -482,7 +576,7 @@
       "subject": "Improve typing on Windows (#2803)",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -495,7 +589,7 @@
           "allowed": false
         },
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -565,7 +659,7 @@
       "subject": "Adds support for editing multiple files (#2068)",
       "findings": [
         {
-          "rule_id": "GH003",
+          "rule_id": "AC003",
           "rule_name": "skip-marker-added",
           "severity": "low",
           "confidence": "normal",
@@ -649,7 +743,7 @@
       "subject": "Keep track of `<stderr>` and `<stdout>` mix in `CliRunner` results (#2523)",
       "findings": [
         {
-          "rule_id": "GH004",
+          "rule_id": "AC004",
           "rule_name": "assertion-count-decreased",
           "severity": "medium",
           "confidence": "normal",
@@ -659,6 +753,32 @@
           "evidence": "test_stderr\n    assert result.output == \"stdout\\n\"\n    assert result.stdout == \"stdout\\n\"\n    assert result.stderr == \"stderr\\n\"\n    assert result_mix.output == \"stdout\\nstderr\\n\"\n    assert result_mix.stdout == \"stdout\\nstderr\\n\"\n    with pytest.raises(ValueError):\n        assert result_mix.stderr  # noqa B018",
           "why_flagged": "Fewer assertions can make a test pass while checking less behavior.",
           "legit_if": "Redundant checks were removed, or equivalent checks moved into a shared helper.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC018",
+          "rule_name": "expectation-rewritten",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/test_testing.py",
+          "line": 312,
+          "title": "Expected literal rewritten alongside source",
+          "evidence": "'stdout\\nstderr\\n' \u2192 '1 - stdout\\n2 - stderr\\n3 - stdout\\n4 - stderr\\n'; actual expression unchanged",
+          "why_flagged": "This change can let a test pass without checking the intended behavior.",
+          "legit_if": "The behavior is intentional and independently reviewed.",
+          "allowed": false
+        },
+        {
+          "rule_id": "AC018",
+          "rule_name": "expectation-rewritten",
+          "severity": "medium",
+          "confidence": "normal",
+          "file": "tests/test_testing.py",
+          "line": 313,
+          "title": "Expected literal rewritten alongside source",
+          "evidence": "'stdout\\nstderr\\n' \u2192 '1 - stdout\\n3 - stdout\\n'; actual expression unchanged",
+          "why_flagged": "This change can let a test pass without checking the intended behavior.",
+          "legit_if": "The behavior is intentional and independently reviewed.",
           "allowed": false
         }
       ],
@@ -684,7 +804,7 @@
       "subject": "Fix metavar for Choice options when show_choices=False (#2365)",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
@@ -747,7 +867,7 @@
       "subject": "update dev dependencies",
       "findings": [
         {
-          "rule_id": "GH010",
+          "rule_id": "AC010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
           "confidence": "normal",
