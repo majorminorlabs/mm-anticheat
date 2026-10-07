@@ -32,7 +32,15 @@ def _environment(condition: ast.AST) -> bool:
     for node in ast.walk(condition):
         name = _name(node)
         if name.startswith(
-            ("sys.platform", "sys.version_info", "platform.", "os.name", "importlib.util.find_spec")
+            (
+                "sys.platform",
+                "sys.version_info",
+                "platform.",
+                "os.name",
+                "os.environ",
+                "os.getenv",
+                "importlib.util.find_spec",
+            )
         ):
             return True
         if (
@@ -83,7 +91,9 @@ def _markers(content: str) -> list[tuple[ast.Call, str, bool, str]]:
             or name.startswith("unittest.skip")
         ):
             continue
-        environment = name.endswith("skipif") and bool(node.args) and _environment(node.args[0])
+        environment = (
+            name.lower().endswith("skipif") and bool(node.args) and _environment(node.args[0])
+        )
         parent = parents.get(node)
         module_marker = False
         while parent is not None:
@@ -98,7 +108,9 @@ def _markers(content: str) -> list[tuple[ast.Call, str, bool, str]]:
         test = next((test.name for test in definitions if test.line <= node.lineno <= test.end), "")
         # Ignore formatting/reason-only changes to a marker already on this test.
         signature = (
-            name + ":" + (ast.dump(node.args[0]) if name.endswith("skipif") and node.args else "")
+            name
+            + ":"
+            + (ast.dump(node.args[0]) if name.lower().endswith("skipif") and node.args else "")
         )
         result.append((node, test if not module_marker else "<pytestmark>", environment, signature))
     return result
@@ -156,7 +168,9 @@ class SkipMarkerAdded(RuleBase):
                     row in added for row in range(node.lineno, (node.end_lineno or node.lineno) + 1)
                 ):
                     continue
-                new = test not in old_tests and test not in {"", "<pytestmark>"}
+                new = change.old_path is None or (
+                    test not in old_tests and test not in {"", "<pytestmark>"}
+                )
                 severity = "low" if new else "medium" if environment else "high"
                 findings.append(
                     self.finding(
@@ -184,7 +198,7 @@ class SkipMarkerAdded(RuleBase):
             if not PATTERN.search(code):
                 continue
             module = bool(re.search(r"\bpytestmark\s*=", code))
-            new = self._new_test(line, change, ctx) and not module
+            new = change.old_path is None or (self._new_test(line, change, ctx) and not module)
             environment = False
             if "skipif" in code:
                 match = re.search(r"skipif\s*\((.*)", line.value)

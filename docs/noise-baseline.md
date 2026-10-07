@@ -1,37 +1,39 @@
-# Gate 1 noise baseline
+# Noise baseline — REVIEW_03
 
-Measured 2026-10-05 on Python 3.14.7 after REVIEW_02 M12/M13. These are maintainer
-histories used to measure review noise; findings do not establish cheating.
-**Gate 1 release conditions pass:** 10/680 high-flagged commits, GH006 high 0,
-scan/rule errors 0 and stderr lines 0. REVIEW_01b waived the former eight-commit
-budget and set **≤10/680** as the regression limit. No rule was loosened to reach it.
+Measured 2026-10-07 on Python 3.14.7 after M14–M18 and S12–S17.
+**Gate limit passes: 10/680 high-flagged commits; GH006 high 0; errors 0.**
+High/medium flagged commits fall from 42 to 31. These are maintainer histories
+used to measure review noise; findings do not establish cheating.
 
-M11 only corroborates a move when the destination has assertions. Full matches
-retain at least the removed assertion count; reduced counts give medium; empty
-stubs never corroborate movement. The Pydantic `69fd688e` move changed GH002 from
-info to medium because a destination has fewer assertions. The high-flagged
-commit count is unchanged and there are no new high commits.
+## Method and comparison
 
-The Phase 4 and REVIEW_02 builds were rerun on the same pins and windows on
-2026-10-05. All five complete JSON reports match the M11 run exactly, including
-each commit, finding, evidence string and error count. S11 passes: none of the
-corpus repos has a root `.goodhart.toml`, so trusted config loading and inline
-approval validation leave these results unchanged. The saved output below is
-byte-identical to the REVIEW_02 rerun.
+Scan the newest N first-parent, non-merge commits at each pinned head against
+its first parent in full mode. All 680 rows are retained; each script exits 0,
+with no scan error, rule-error diagnostic or stderr. Four GH000 info findings
+concern binary content. Rescanning reads Git snapshots and never executes tests.
 
-## Method
+The 2026-10-05 REVIEW_02 and 2026-10-06 Phase 5 baseline had the same 10 high
+commits and GH006 high 0. The high commit set is unchanged. Medium noise is
+reduced by the reviewed same-diff expectation and small-integer policy; no
+repository- or commit-specific exception was introduced. The five complete
+JSON/text/stderr reports below replace the old saved reports with this rerun.
 
-For each pinned head, scan the newest N first-parent, non-merge commits against
-their first parent in full mode. The head need not be checked out. All 680
-requested rows were retained. Each script exited 0; no scan error, rule-error
-diagnostic or stderr line occurred. Four GH000 info notes concern binary content
-(two HTTPX, two Vitest); no other parsing or resource-limit diagnostic occurred.
+## Pins and results
 
-Clone with `git clone --depth 202 --no-checkout https://github.com/OWNER/REPO.git PATH`.
-The clones used here already contained each pin and its required first-parent
-window. As remote heads advance, fetch enough history (or the pin explicitly)
-to retain the same window; the script reports missing history/count mismatches.
-Install the project editable first, then run:
+| Repository | Full pinned SHA | Commits | With high | With high or medium |
+|---|---|---:|---:|---:|
+| pallets/click | `06b2a678741131fd577ce170e23e5ca0aeba0309` | 80 | 1 | 2 |
+| encode/httpx | `b5addb64f0161ff6bfe94c124ef76f6a1fba5254` | 150 | 3 | 7 |
+| sindresorhus/ky | `0d59458a0a58e1c3d7c6db0ab17ed5c7cd671e47` | 150 | 2 | 4 |
+| pydantic/pydantic | `e87e11b7a74068c2d8107e48ffed6102744abef8` | 150 | 2 | 11 |
+| vitest-dev/vitest | `964e1a4404c31bf8fd37cb05ea0095483b506802` | 150 | 2 | 7 |
+| **Total** | | **680** | **10** | **31** |
+
+## Reproduce
+
+Install the project editable into .venv. Clones must contain the pinned heads
+and their complete windows. The head need not be checked out. The script exits
+3 for missing/incomplete history, scan errors or rule errors. For example:
 
 ```sh
 .venv/bin/python scripts/noise_check.py /path/to/click 80 --head 06b2a678741131fd577ce170e23e5ca0aeba0309 --json /tmp/click-noise.json
@@ -41,36 +43,21 @@ Install the project editable first, then run:
 .venv/bin/python scripts/noise_check.py /path/to/vitest 150 --head 964e1a4404c31bf8fd37cb05ea0095483b506802 --json /tmp/vitest-noise.json
 ```
 
-The tool prints rule/severity totals and up to five examples per rule. JSON
-includes every commit, full finding evidence, per-rule counts, examples, errors
-and captured stderr. It exits 3 for incomplete windows, scan errors or rule errors.
-CLI empty-range/large-commit notices are intentionally outside this quiet library
-measurement; their presence is separately tested. These notices were requested
-in M3/S5b and are not scanner warnings.
+## Checks
 
-## Pins and results
-
-| Repository | Full pinned SHA | Commits | With high | With high or medium |
-|---|---|---:|---:|---:|
-| pallets/click | `06b2a678741131fd577ce170e23e5ca0aeba0309` | 80 | 1 | 2 |
-| encode/httpx | `b5addb64f0161ff6bfe94c124ef76f6a1fba5254` | 150 | 3 | 8 |
-| sindresorhus/ky | `0d59458a0a58e1c3d7c6db0ab17ed5c7cd671e47` | 150 | 2 | 4 |
-| pydantic/pydantic | `e87e11b7a74068c2d8107e48ffed6102744abef8` | 150 | 2 | 19 |
-| vitest-dev/vitest | `964e1a4404c31bf8fd37cb05ea0095483b506802` | 150 | 2 | 9 |
-| **Total** | | **680** | **10** | **42** |
-
-| Release target | Result |
+| Check | Result |
 |---|---|
-| High-flagged commits ≤10/680 | **Pass: 10/680** |
-| GH006 high findings =0 | 0 |
-| GH009 high from plain CI checks =0 | 0 (all GH009 highs are zero) |
-| Corpus stderr lines =0 | 0, including captured per-commit stderr |
-| Complete corpus and no scan/rule errors | 680/680; 0 scan errors; 0 rule errors |
-| Original scenarios plus regression suite; Ruff clean | 363 tests on Python 3.11.15 and 3.14.7; check/format pass |
+| High commits ≤10/680 | 10/680 |
+| GH006 high | 0 |
+| GH009 high from plain CI checks | 0 |
+| Complete window | 680/680 |
+| Scan / rule errors / stderr lines | 0 / 0 / 0 |
+| Regression suite | 412 tests on Python 3.11.15 and 3.14.7 |
+| Ruff check/format | Pass |
 
 ## Findings by rule and severity
 
-These are finding counts, not commit counts. Missing combinations are zero.
+Counts are findings rather than commits. Missing combinations are zero.
 
 | Rule | Severity | Click | HTTPX | Ky | Pydantic | Vitest | Total |
 |---|---|---:|---:|---:|---:|---:|---:|
@@ -81,11 +68,12 @@ These are finding counts, not commit counts. Missing combinations are zero.
 | GH002 | high | 1 | 8 | 1 | 2 | 2 | 14 |
 | GH002 | info | 0 | 2 | 0 | 0 | 0 | 2 |
 | GH002 | medium | 0 | 1 | 0 | 2 | 0 | 3 |
-| GH003 | low | 2 | 0 | 1 | 16 | 1 | 20 |
-| GH003 | medium | 0 | 0 | 0 | 19 | 0 | 19 |
+| GH003 | low | 2 | 0 | 1 | 22 | 1 | 26 |
+| GH003 | medium | 0 | 0 | 0 | 13 | 0 | 13 |
 | GH004 | medium | 1 | 1 | 0 | 3 | 0 | 5 |
 | GH005 | medium | 0 | 0 | 0 | 1 | 0 | 1 |
-| GH006 | medium | 0 | 3 | 0 | 30 | 5 | 38 |
+| GH006 | low | 0 | 2 | 0 | 18 | 5 | 25 |
+| GH006 | medium | 0 | 1 | 0 | 6 | 0 | 7 |
 | GH008 | low | 0 | 0 | 3 | 0 | 38 | 41 |
 | GH008 | medium | 0 | 0 | 5 | 0 | 27 | 32 |
 | GH009 | medium | 0 | 0 | 0 | 0 | 1 | 1 |
@@ -115,7 +103,7 @@ be needed to reduce these without repository/commit-specific exceptions.
 
 ## Saved output and regressions
 
-Complete machine-readable results and original summary output are included:
+Complete machine-readable results and refreshed summary output are included:
 
 - pallets/click: [JSON](noise-results/click.json), [text](noise-results/click.txt), [stderr](noise-results/click.stderr) (empty).
 - encode/httpx: [JSON](noise-results/httpx.json), [text](noise-results/httpx.txt), [stderr](noise-results/httpx.stderr) (empty).

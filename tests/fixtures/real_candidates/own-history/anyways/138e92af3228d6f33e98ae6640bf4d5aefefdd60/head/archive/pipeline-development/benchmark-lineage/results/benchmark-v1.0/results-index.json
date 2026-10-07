@@ -1,0 +1,212 @@
+{
+  "schema_version": "1.0.0",
+  "benchmark_version": "1.0",
+  "benchmark_manifest_hash": "8a9384f44fd26e2f2ff2bb279bec7460801b777a50c6c712bb8699929265b2ae",
+  "indexed_model_count": 1,
+  "models": [
+    {
+      "model_identifier": "local-qwen3-14b",
+      "provider": "ollama",
+      "model_digest": "bdbd181c33f2ed1b31c972991882db3cf4d192569092138a7d29e973cd9debe8",
+      "benchmark": {
+        "version": "1.0",
+        "manifest_hash": "8a9384f44fd26e2f2ff2bb279bec7460801b777a50c6c712bb8699929265b2ae",
+        "repository_commit": "ce57b628901a1b865297366ac7581de333d81a33",
+        "controller_repository_commit": null
+      },
+      "run": {
+        "id": "2026-07-31T00-46-02-939Z-ffa2dbd5",
+        "execution_timestamp": "2026-07-31T00:46:02.942Z",
+        "finished_at": "2026-07-31T01:44:46.998Z",
+        "completion_status": "completed_with_failures"
+      },
+      "fixture_scores": {
+        "apple-digital-repo": {
+          "scores": {
+            "draft": 6,
+            "revision": 4,
+            "reviewer": 3,
+            "evidence_selector": 4,
+            "research_planner": 5
+          },
+          "average": 4.4,
+          "publication_readiness": "moderate edit",
+          "confidence": "high",
+          "incomplete_stages": [],
+          "review_package": "generated/2026-07-31T00-46-02-939Z-ffa2dbd5/review/packages/apple-digital-repo/candidate-a/review-package.json"
+        },
+        "logitech": {
+          "scores": {
+            "draft": 5,
+            "revision": 3,
+            "reviewer": 2,
+            "evidence_selector": null,
+            "research_planner": 5
+          },
+          "average": 3.75,
+          "publication_readiness": "major rewrite",
+          "confidence": "high",
+          "incomplete_stages": [
+            "evidence_selector"
+          ],
+          "review_package": "generated/2026-07-31T00-46-02-939Z-ffa2dbd5/review/packages/logitech/candidate-a/review-package.json"
+        }
+      },
+      "stage_averages": {
+        "draft": 5.5,
+        "revision": 3.5,
+        "reviewer": 2.5,
+        "evidence_selector": 4,
+        "research_planner": 5
+      },
+      "overall_average": 4.11,
+      "timeout_statistics": {
+        "count": 1,
+        "planned_stage_count": 10,
+        "rate": 0.1
+      },
+      "stage_outcomes": {
+        "apple-digital-repo/draft": {
+          "status": "completed",
+          "attempts": 1,
+          "failure_classification": null
+        },
+        "apple-digital-repo/revision": {
+          "status": "completed",
+          "attempts": 1,
+          "failure_classification": null
+        },
+        "apple-digital-repo/reviewer": {
+          "status": "completed",
+          "attempts": 1,
+          "failure_classification": null
+        },
+        "apple-digital-repo/evidence_selector": {
+          "status": "completed",
+          "attempts": 1,
+          "failure_classification": null
+        },
+        "apple-digital-repo/research_planner": {
+          "status": "completed",
+          "attempts": 1,
+          "failure_classification": null
+        },
+        "logitech/draft": {
+          "status": "completed",
+          "attempts": 1,
+          "failure_classification": null
+        },
+        "logitech/revision": {
+          "status": "completed",
+          "attempts": 1,
+          "failure_classification": null
+        },
+        "logitech/reviewer": {
+          "status": "completed",
+          "attempts": 1,
+          "failure_classification": null
+        },
+        "logitech/evidence_selector": {
+          "status": "failed",
+          "attempts": 1,
+          "failure_classification": "model_generation_timeout"
+        },
+        "logitech/research_planner": {
+          "status": "completed",
+          "attempts": 1,
+          "failure_classification": null
+        }
+      },
+      "stage_durations_ms": {
+        "apple-digital-repo/draft": 233593.36,
+        "apple-digital-repo/revision": 245139.66,
+        "apple-digital-repo/reviewer": 212685.36,
+        "apple-digital-repo/evidence_selector": 179538.81,
+        "apple-digital-repo/research_planner": 159758.85,
+        "logitech/draft": 519161.23,
+        "logitech/revision": 550067.67,
+        "logitech/reviewer": 459842.17,
+        "logitech/evidence_selector": 600009.02,
+        "logitech/research_planner": 356171.98
+      },
+      "publication_readiness": {
+        "summary": "major rewrite",
+        "distribution": {
+          "unsuitable": 0,
+          "major rewrite": 1,
+          "moderate edit": 1,
+          "light edit": 0,
+          "publish with no edits": 0
+        }
+      },
+      "review_confidence": "high",
+      "incomplete_stages": [
+        {
+          "fixture": "logitech",
+          "stage": "evidence_selector",
+          "status": "failed"
+        }
+      ],
+      "reliability": {
+        "restoration_failures": 0,
+        "benchmark_failures": 1
+      },
+      "artifacts": {
+        "run_manifest": "generated/2026-07-31T00-46-02-939Z-ffa2dbd5/private/run-manifest.json",
+        "review_lock": "reporting/review-locks/qwen-candidate-a.json",
+        "fixture_packages": {
+          "apple-digital-repo": "generated/2026-07-31T00-46-02-939Z-ffa2dbd5/review/packages/apple-digital-repo/candidate-a/review-package.json",
+          "logitech": "generated/2026-07-31T00-46-02-939Z-ffa2dbd5/review/packages/logitech/candidate-a/review-package.json"
+        }
+      }
+    }
+  ],
+  "historical_executions": [
+    {
+      "run_id": "2026-07-31T00-46-02-939Z-ffa2dbd5",
+      "execution_timestamp": "2026-07-31T00:46:02.942Z",
+      "finished_at": "2026-07-31T01:44:46.998Z",
+      "model_identifier": "local-qwen3-14b",
+      "provider": "ollama",
+      "completion_status": "completed_with_failures"
+    }
+  ],
+  "excluded_runs": [
+    {
+      "run_id": "2026-07-30T17-38-36-761Z-e08f0af8",
+      "reason": "incomplete run"
+    },
+    {
+      "run_id": "2026-07-30T17-38-44-758Z-ad1e5814",
+      "reason": "pre-v1.0 run"
+    },
+    {
+      "run_id": "2026-07-30T17-40-57-528Z-0adc930a",
+      "reason": "pre-v1.0 run"
+    },
+    {
+      "run_id": "2026-07-30T17-46-14-456Z-222df588",
+      "reason": "incomplete run"
+    },
+    {
+      "run_id": "2026-07-30T17-46-29-108Z-1fd7ead2",
+      "reason": "pre-v1.0 run"
+    },
+    {
+      "run_id": "2026-07-30T20-32-44-841Z-c5ebe2d8",
+      "reason": "incomplete run"
+    },
+    {
+      "run_id": "2026-07-30T21-06-09-134Z-78a12720",
+      "reason": "incomplete run"
+    },
+    {
+      "run_id": "2026-07-30T21-56-19-331Z-4fd2aedb",
+      "reason": "incomplete run"
+    },
+    {
+      "run_id": "2026-07-30T23-15-12-027Z-b4ce6819",
+      "reason": "incomplete run"
+    }
+  ]
+}

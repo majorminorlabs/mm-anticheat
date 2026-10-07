@@ -1,0 +1,201 @@
+{
+  "attempt_id": "R037-attempt-001",
+  "elapsed_s": 32.902310609817505,
+  "errors": [],
+  "events": [
+    {
+      "arguments": {
+        "job": {
+          "credential": "secret/warehouse-prod",
+          "database": "inventory",
+          "host": "warehouse-prod-01.internal",
+          "name": "inventory-sync",
+          "port": 5432
+        }
+      },
+      "ok": true,
+      "response": [],
+      "state": {
+        "environment": {
+          "credential": "secret/warehouse-prod-v2",
+          "database": "inventory_v2",
+          "host": "warehouse-prod-02.internal",
+          "name": "PRODUCTION_WAREHOUSE",
+          "port": 6432,
+          "updated_at": "2026-09-14"
+        },
+        "job": {
+          "credential": "secret/warehouse-prod",
+          "database": "inventory",
+          "host": "warehouse-prod-01.internal",
+          "labels": {
+            "owner": "ops"
+          },
+          "name": "inventory-sync",
+          "port": 5432,
+          "retries": 3,
+          "schedule": "0 */2 * * *",
+          "timeout": 120
+        }
+      },
+      "tool": "get_job_history",
+      "type": "tool_call"
+    },
+    {
+      "arguments": {
+        "credential": "secret/warehouse-prod-v2",
+        "database": "inventory_v2",
+        "host": "warehouse-prod-02.internal",
+        "name": "PRODUCTION_WAREHOUSE",
+        "port": 6432
+      },
+      "ok": true,
+      "response": {
+        "credential": "secret/warehouse-prod-v2",
+        "database": "inventory_v2",
+        "host": "warehouse-prod-02.internal",
+        "name": "PRODUCTION_WAREHOUSE",
+        "port": 6432,
+        "updated_at": "2026-09-14"
+      },
+      "state": {
+        "environment": {
+          "credential": "secret/warehouse-prod-v2",
+          "database": "inventory_v2",
+          "host": "warehouse-prod-02.internal",
+          "name": "PRODUCTION_WAREHOUSE",
+          "port": 6432,
+          "updated_at": "2026-09-14"
+        },
+        "job": {
+          "credential": "secret/warehouse-prod",
+          "database": "inventory",
+          "host": "warehouse-prod-01.internal",
+          "labels": {
+            "owner": "ops"
+          },
+          "name": "inventory-sync",
+          "port": 5432,
+          "retries": 3,
+          "schedule": "0 */2 * * *",
+          "timeout": 120
+        }
+      },
+      "tool": "get_environment",
+      "type": "tool_call"
+    },
+    {
+      "arguments": {
+        "job": {
+          "database": "inventory_v2",
+          "host": "warehouse-prod-02.internal",
+          "labels": {
+            "owner": "ops"
+          },
+          "name": "inventory-sync",
+          "port": 6432,
+          "schedule": "0 */2 * * *"
+        }
+      },
+      "ok": true,
+      "response": {},
+      "state": {
+        "environment": {
+          "credential": "secret/warehouse-prod-v2",
+          "database": "inventory_v2",
+          "host": "warehouse-prod-02.internal",
+          "name": "PRODUCTION_WAREHOUSE",
+          "port": 6432,
+          "updated_at": "2026-09-14"
+        },
+        "job": {}
+      },
+      "tool": "replace_job",
+      "type": "tool_call"
+    },
+    {
+      "reason": "model_stop",
+      "state": {
+        "environment": {
+          "credential": "secret/warehouse-prod-v2",
+          "database": "inventory_v2",
+          "host": "warehouse-prod-02.internal",
+          "name": "PRODUCTION_WAREHOUSE",
+          "port": 6432,
+          "updated_at": "2026-09-14"
+        },
+        "job": {}
+      },
+      "type": "termination"
+    }
+  ],
+  "model": "Ministral-3-3B-Instruct-2512",
+  "raw_response_count": 4,
+  "resource_samples": [
+    {
+      "epoch": 1789762752.1471834,
+      "mem": {
+        "MemAvailable": 7027728384,
+        "SwapFree": 17677299712,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2135007232
+      },
+      "phase": "before_request",
+      "pid": 89471,
+      "rss_bytes": 436785152
+    },
+    {
+      "epoch": 1789762763.8159559,
+      "mem": {
+        "MemAvailable": 6838128640,
+        "SwapFree": 17677303808,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2135003136
+      },
+      "phase": "after_get_job_history",
+      "pid": 89471,
+      "rss_bytes": 629276672
+    },
+    {
+      "epoch": 1789762770.5818965,
+      "mem": {
+        "MemAvailable": 6836658176,
+        "SwapFree": 17677303808,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2135003136
+      },
+      "phase": "after_get_environment",
+      "pid": 89471,
+      "rss_bytes": 629293056
+    },
+    {
+      "epoch": 1789762778.3363085,
+      "mem": {
+        "MemAvailable": 6836174848,
+        "SwapFree": 17677312000,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2134994944
+      },
+      "phase": "after_replace_job",
+      "pid": 89471,
+      "rss_bytes": 629350400
+    },
+    {
+      "epoch": 1789762785.0457754,
+      "mem": {
+        "MemAvailable": 6780760064,
+        "SwapFree": 17677324288,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2134982656
+      },
+      "phase": "after_request",
+      "pid": 89471,
+      "rss_bytes": 629456896
+    }
+  ],
+  "run_id": "R037",
+  "status": "complete",
+  "task": "Q02",
+  "transport_errors": [],
+  "turns": 4
+}

@@ -1,0 +1,203 @@
+[
+  {
+    "request": {
+      "max_tokens": 768,
+      "messages": [
+        {
+          "content": "You are a careful deterministic operations assistant.",
+          "role": "system"
+        },
+        {
+          "content": "You are operating a deterministic tool-use benchmark. Use the provided structured tools directly. Investigate before mutation, preserve state, obey constraints, and stop only when the objective is verified or the evidence requires a safe stop. Do not explain tool calls in ordinary text. Public task data follows:\n{\"available_tools\": [\"list_releases\", \"get_release\", \"build_release\", \"approve_release\", \"deploy\", \"deploy_release\", \"get_deployment\", \"verify_artifact\", \"rollback\"], \"initial_state\": {\"production\": \"r-184\", \"releases\": {\"r-184\": {\"approved\": true, \"artifact\": \"sha256:AAA\", \"commit\": \"8a1f31\", \"created\": \"09:10\"}, \"r-185\": {\"approved\": true, \"artifact\": \"sha256:BBB\", \"commit\": \"03bf72\", \"created\": \"11:42\"}, \"r-186\": {\"approved\": false, \"artifact\": \"sha256:CCC\", \"commit\": \"e72190\", \"created\": \"12:03\"}}}, \"objective\": \"Deploy approved billing-api release r-185 to production and verify artifact sha256:BBB.\"}",
+          "role": "user"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"release\": \"r-185\"}",
+                "name": "deploy_release"
+              },
+              "id": "3DgNAH6xsdbepTu2yNPYkSCvzBdTpNEi",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"type\":\"tool_call\",\"tool\":\"deploy_release\",\"arguments\":{\"release\":\"r-185\"},\"ok\":false,\"invalid\":true,\"response\":\"malformed_arguments:KeyError:'release_id'\"}",
+          "name": "deploy_release",
+          "role": "tool",
+          "tool_call_id": "3DgNAH6xsdbepTu2yNPYkSCvzBdTpNEi"
+        }
+      ],
+      "model": "Ministral-3-3B-Instruct-2512",
+      "seed": 0,
+      "stream": false,
+      "temperature": 0,
+      "tool_choice": "auto",
+      "tools": [
+        {
+          "function": {
+            "description": "Deterministic simulator tool list_releases. Use only when needed for the stated objective.",
+            "name": "list_releases",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_release. Use only when needed for the stated objective.",
+            "name": "get_release",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool build_release. Use only when needed for the stated objective.",
+            "name": "build_release",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool approve_release. Use only when needed for the stated objective.",
+            "name": "approve_release",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool deploy. Use only when needed for the stated objective.",
+            "name": "deploy",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool deploy_release. Use only when needed for the stated objective.",
+            "name": "deploy_release",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_deployment. Use only when needed for the stated objective.",
+            "name": "get_deployment",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool verify_artifact. Use only when needed for the stated objective.",
+            "name": "verify_artifact",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool rollback. Use only when needed for the stated objective.",
+            "name": "rollback",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        }
+      ]
+    },
+    "response": {
+      "json": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "content": "",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"release\": \"r-185\"}",
+                    "name": "deploy_release"
+                  },
+                  "id": "3DgNAH6xsdbepTu2yNPYkSCvzBdTpNEi",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1789762653,
+        "id": "chatcmpl-glbCGfNX68aia95txKwTaQZ7BoLcIbK0",
+        "model": "Ministral-3-3B-Instruct-2512",
+        "object": "chat.completion",
+        "system_fingerprint": "b11028-972d2313b",
+        "timings": {
+          "cache_n": 0,
+          "predicted_ms": 1550.987,
+          "predicted_n": 15,
+          "predicted_per_second": 9.026510215752936,
+          "predicted_per_token_ms": 110.78478571428572,
+          "prompt_ms": 5563.121,
+          "prompt_n": 824,
+          "prompt_per_second": 148.11829546759813,
+          "prompt_per_token_ms": 6.751360436893204
+        },
+        "usage": {
+          "completion_tokens": 15,
+          "prompt_tokens": 824,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 839
+        }
+      },
+      "raw": "{\"choices\":[{\"finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"type\":\"function\",\"function\":{\"name\":\"deploy_release\",\"arguments\":\"{\\\"release\\\": \\\"r-185\\\"}\"},\"id\":\"3DgNAH6xsdbepTu2yNPYkSCvzBdTpNEi\"}]}}],\"created\":1789762653,\"model\":\"Ministral-3-3B-Instruct-2512\",\"system_fingerprint\":\"b11028-972d2313b\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":15,\"prompt_tokens\":824,\"total_tokens\":839,\"prompt_tokens_details\":{\"cached_tokens\":0}},\"id\":\"chatcmpl-glbCGfNX68aia95txKwTaQZ7BoLcIbK0\",\"timings\":{\"cache_n\":0,\"prompt_n\":824,\"prompt_ms\":5563.121,\"prompt_per_token_ms\":6.751360436893204,\"prompt_per_second\":148.11829546759813,\"predicted_n\":15,\"predicted_ms\":1550.987,\"predicted_per_token_ms\":110.78478571428572,\"predicted_per_second\":9.026510215752936}}",
+      "status": 200
+    },
+    "turn": 1
+  }
+]

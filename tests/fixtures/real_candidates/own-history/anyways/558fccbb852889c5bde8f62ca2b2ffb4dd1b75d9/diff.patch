@@ -1,0 +1,2122 @@
+diff --git a/README.md b/README.md
+index 5072033..6b0e5a8 100644
+--- a/README.md
++++ b/README.md
+@@ -73,6 +73,14 @@ variables documented in `.env.example`.
+ npm run pipeline:process -- <candidate-id>
+ ```
+ 
++The controller is versioned in [`apps/controller`](./apps/controller). Build,
++test, restart, and health-check it from the repository root with
++`npm run controller:build`, `npm run controller:test`,
++`npm run controller:restart`, and `npm run controller:health`. Its LaunchAgent
++must use the reviewed absolute Codex executable and the artifact under
++`apps/controller/dist/`; keep `PIPELINE_V1_ENABLED=false` except for an
++explicitly authorized production activation.
++
+ 
+ ## Supabase setup
+ 
+diff --git a/apps/controller/.env.example b/apps/controller/.env.example
+new file mode 100644
+index 0000000..299141d
+--- /dev/null
++++ b/apps/controller/.env.example
+@@ -0,0 +1,25 @@
++SUPABASE_URL=
++SUPABASE_SERVICE_ROLE_KEY=
++ANYWAYS_REPO_PATH=/Volumes/External/GitHub/IGNORED/anyways
++OLLAMA_BASE_URL=http://127.0.0.1:11434
++OLLAMA_MODEL=qwen3:14b
++# Absolute executable used for Codex version checks and provider subprocesses.
++ANYWAYS_CODEX_BIN=/absolute/path/to/codex
++PIPELINE_V1_ENABLED=false
++# When the global flag is false, only this exact controller job ID may use V1.
++PIPELINE_V1_ALLOWED_JOB_ID=
++CONTROLLER_ID=
++POLL_INTERVAL_SECONDS=5
++LEASE_DURATION_SECONDS=120
++HEARTBEAT_INTERVAL_SECONDS=30
++MODEL_IDLE_TIMEOUT_MINUTES=10
++MINIMUM_AVAILABLE_MEMORY_GB=6
++MAX_PARALLEL_HEAVY_JOBS=1
++HEALTH_HOST=127.0.0.1
++HEALTH_PORT=4317
++LOG_DIRECTORY=
++JOB_TIMEOUT_SECONDS=900
++PHASE2_JOB_TIMEOUT_SECONDS=2400
++CHILD_KILL_GRACE_SECONDS=5
++MAX_ATTEMPTS=3
++BASE_RETRY_DELAY_SECONDS=60
+diff --git a/apps/controller/.gitignore b/apps/controller/.gitignore
+new file mode 100644
+index 0000000..4274b51
+--- /dev/null
++++ b/apps/controller/.gitignore
+@@ -0,0 +1,5 @@
++node_modules/
++dist/
++.env
++*.log
++.DS_Store
+diff --git a/apps/controller/AGENTS.md b/apps/controller/AGENTS.md
+new file mode 100644
+index 0000000..169c39c
+--- /dev/null
++++ b/apps/controller/AGENTS.md
+@@ -0,0 +1,7 @@
++# Anyways Controller
++
++This repository is deterministic local infrastructure. It may claim and execute only
++the fixed job registry. It must not add editorial logic, publish, alter Obsidian,
++accept shell strings, expose a public endpoint, or place credentials in logs.
++
++Keep Supabase as operational truth and the Anyways repository as pipeline owner.
+diff --git a/apps/controller/OPERATOR_RUNBOOK.md b/apps/controller/OPERATOR_RUNBOOK.md
+new file mode 100644
+index 0000000..301a9bf
+--- /dev/null
++++ b/apps/controller/OPERATOR_RUNBOOK.md
+@@ -0,0 +1,112 @@
++# Anyways Controller operator runbook
++
++## Safe operating boundary
++
++The controller is a loopback-only LaunchAgent. It receives work from the Supabase queue, invokes a fixed local pipeline adapter, and writes queue state. It does not publish, alter the Obsidian vault, or expose an Internet-reachable endpoint.
++
++`/Volumes/External/GitHub/IGNORED/anyways/apps/controller/.env` is mode `0600`; do not print or commit it. The service-role key is local-service-only.
++
++## Routine commands
++
++```sh
++cd /Volumes/External/GitHub/IGNORED/anyways/apps/controller
++npm run launchd -- status
++curl -fsS http://127.0.0.1:4317/health
++npm run job:list
++npm run job:get -- <job-id>
++npm run launchd -- tail
++```
++
++The health response should report `status: ok`, queue and Ollama connectivity, and no unexpected `current_job_id` when idle.
++
++## Source configuration and discovery
++
++Source registration is local at `/Volumes/External/GitHub/IGNORED/anyways/pipeline-state/sources.json`. It must be an array of validated source objects with canonical `default_section` and `default_recurring_beats`. It is not a publishing taxonomy and does not override the pipeline classifier.
++
++Start from `pipeline-state/sources.example.json`. To add a source, append one object with an `id`, `name`, supported `type`, HTTPS `url`, `enabled`, integer `priority`, controlled default section/beats, tags, polling interval, and optional `credential_env`. To disable it without deleting history, set `enabled` to `false`, then validate. Never put credential values in the file; name an environment variable instead.
++
++```sh
++cd /Volumes/External/GitHub/IGNORED/anyways
++node --input-type=module -e "import('./src/pipeline/source-config.mjs').then(({loadSourceConfig}) => loadSourceConfig('pipeline-state/sources.json')).then(() => console.log('valid'))"
++cd /Volumes/External/GitHub/IGNORED/anyways/apps/controller
++npm run job:submit -- discover
++```
++
++Inspect the completed job for `sources_checked`, `items_fetched`, `items_rejected`, `candidates_created`, `duplicates_skipped`, and `clusters`.
++
++## Process, review, and sync
++
++```sh
++npm run job:submit -- process_candidate --candidate-id <candidate-id>
++npm run job:get -- <job-id>
++```
++
++Only a candidate that reaches local `ready_for_review` can be synced:
++
++```sh
++npm run job:submit -- sync_candidate --candidate-id <candidate-id>
++```
++
++`sync_candidate` uses the existing Supabase importer and does not publish. A `research_blocked` or `verification_failed` candidate must not be force-synced as a review package. Review and approval remain in the existing Newsroom workflow.
++
++## Cancellation, restart, and recovery
++
++```sh
++npm run job:cancel -- <job-id>
++npm run launchd -- restart
++npm run launchd -- status
++npm run launchd -- install
++npm run launchd -- stop
++npm run launchd -- uninstall
++```
++
++Do not run `npm start` while the LaunchAgent is loaded. Before the first
++LaunchAgent installation, verify that no manually started controller owns the
++health port:
++
++```sh
++lsof -nP -iTCP:4317 -sTCP:LISTEN
++```
++
++The July 28 installation encountered `EADDRINUSE` because an earlier
++controller process still owned port 4317 when launchd first started the
++service. Once installed, use `npm run launchd -- restart`; it replaces the
++single registered process instead of starting a second controller.
++
++Cancellation is cooperative for a running pipeline stage. After a crash/restart, wait for the 120-second lease to expire or use the controller’s normal expired-lease recovery; inspect the job event trail before manually retrying. Do not delete local state or artifacts to clear a stuck job.
++
++The current verified pipeline command only marks a local run as retry-requested:
++
++```sh
++npm run job:submit -- retry_run --run-id <pipeline-run-uuid>
++```
++
++Use it only after inspecting the retained artifacts and the queue event trail.
++
++## Model and resource policy
++
++```sh
++ollama ps
++```
++
++Only one `process_candidate` job may hold the `heavy_model` lock. The controller requires at least 8 GB available memory and unloads `qwen3:14b` after ten idle minutes using Ollama `keep_alive: 0`. To force an unload during maintenance, stop or cancel active heavy work first, then run:
++
++```sh
++curl -fsS http://127.0.0.1:11434/api/generate \
++  -H 'content-type: application/json' \
++  -d '{"model":"qwen3:14b","keep_alive":0}'
++ollama ps
++```
++
++This unloads the model only. It must not be used to stop Ollama, Hermes, MLX, or another user workload.
++
++## Troubleshooting
++
++- `PIPELINE_STATE_NOT_CONFIGURED`: restore a valid local `sources.json` from the example and validate it.
++- `SOURCE_FETCH_FAILED` or `research_blocked`: preserve the retained artifact/run evidence; source accessibility or extraction needs review.
++- `MODEL_UNAVAILABLE`: verify local Ollama and `qwen3:14b`; do not install a model from the controller.
++- `RESOURCE_BUSY` or `MEMORY_PRESSURE`: wait for the other heavy workload. Do not terminate it automatically.
++- `failed` jobs: read the queue event trail and local `~/Library/Logs/AnywaysController/job-<id>.log`; retry only after the recorded cause is addressed.
++# Queue ordering
++
++The Supabase queue is authoritative. Editors can reorder only `queued` jobs in the Newsroom Pipeline page. `Move to next` assigns urgent rank; priority ranks are urgent `300`, high `200`, normal `100`, and low `0`. The controller claims eligible work atomically by `priority_rank DESC`, `queue_position ASC`, then `created_at ASC`. Claimed, running, completed, failed, and cancelled jobs cannot be reordered. Reordering never interrupts the current job.
+diff --git a/apps/controller/README.md b/apps/controller/README.md
+new file mode 100644
+index 0000000..36972b1
+--- /dev/null
++++ b/apps/controller/README.md
+@@ -0,0 +1,90 @@
++# Anyways Controller
++
++The Anyways Controller is a local Node 22 service for the Mac Studio. It polls the Supabase-backed `pipeline_jobs` queue, claims a lease atomically, runs a fixed existing Anyways pipeline command, writes redacted local logs, reports status/results, retries only retryable infrastructure failures, and releases its model lock. It does not contain editorial prompts, publish stories, change the vault, or expose a public endpoint.
++
++## Supported jobs
++
++| Job type | Existing command | Parameters | Retry safety |
++| --- | --- | --- | --- |
++| `commission_article` | `node bin/anyways-ops.mjs commission <encoded-request>` | Editor brief, fixed section, beats, tags, source URLs, and notes | Deterministic request fingerprint prevents duplicate local candidates; the result still stops at editorial review. |
++| `discover` | `node bin/anyways-ops.mjs discover` | none | Safe to retry; it deduplicates URLs in local state. |
++| `process_candidate` | `node bin/anyways-ops.mjs process <candidate-id>` | Existing candidate UUID or 64-character SHA-256 ID | Resumes a ready-for-review candidate; otherwise reruns retained stages where available. |
++| `retry_run` | `node bin/anyways-ops.mjs retry <run-id>` | UUID `run_id` | Only marks an existing local run for retry. |
++| `sync_candidate` | `node bin/pipeline-sync-supabase.mjs <candidate-id>` | Existing candidate UUID or 64-character SHA-256 ID | Idempotent sync of a retained ready-for-review candidate. |
++| `health_check` | controller-native | none | No pipeline/model work. |
++
++`regenerate_draft` is intentionally absent: no verified existing command supports it. The controller invokes `bin/anyways-pipeline-command.mjs`, a fixed adapter that emits one final JSON result line and never accepts arbitrary shell commands. Article commissions are validated structured data, not executable prompt strings.
++
++## Install and configure
++
++```sh
++cd /Volumes/External/GitHub/IGNORED/anyways/apps/controller
++npm install
++cp .env.example .env
++chmod 600 .env
++npm run build
++```
++
++Set `SUPABASE_URL` and a dedicated `SUPABASE_SERVICE_ROLE_KEY` in `.env`. Do not place either in the Anyways browser app or commit `.env`. `ANYWAYS_REPO_PATH` must point to the parent Anyways checkout. The deployed artifact is `apps/controller/dist/src/index.js`. Apply the additive queue migration in the Anyways repository before starting:
++
++```sh
++cd /Volumes/External/GitHub/IGNORED/anyways
++supabase db push --linked
++```
++
++Before discovery, create `pipeline-state/sources.json` in the Anyways repository from `pipeline-state/sources.example.json`. It is intentionally ignored because it can contain local source credentials through `credential_env`; validate it without sending a job:
++
++```sh
++cd /Volumes/External/GitHub/IGNORED/anyways
++node --input-type=module -e "import('./src/pipeline/source-config.mjs').then(({loadSourceConfig}) => loadSourceConfig('pipeline-state/sources.json')).then(() => console.log('valid'))"
++```
++
++## Start, health, and logs
++
++```sh
++npm start
++curl http://127.0.0.1:4317/health
++```
++
++Logs live in `~/Library/Logs/AnywaysController/`: `controller.log`, a per-job `job-<uuid>.log`, and LaunchAgent stdout/stderr logs. Supabase receives only a 12 KB summary and structured result/error, while detailed logs remain local.
++
++The controller checks Ollama at `OLLAMA_BASE_URL`, confirms `OLLAMA_MODEL`, and keeps Ollama loopback-only. It uses `POST /api/generate` with `keep_alive: 0` after the final heavy job has been idle for ten minutes. It never stops the Ollama server and never starts a second heavy job. Under 8 GB of estimated available memory, a process job fails retryably and returns to the queue after the configured delay.
++
++## Queue CLI
++
++```sh
++npm run job:submit -- discover
++npm run job:submit -- process_candidate --candidate-id <candidate-id>
++npm run job:list
++npm run job:get -- <job-id>
++npm run job:cancel -- <job-id>
++```
++
++The CLI validates types and existing candidate ID formats. It uses the service credential and is intended for the local operator only.
++
++## Recovery, retries, and cancellation
++
++Jobs have 120-second leases and 30-second heartbeats by default. Startup releases expired claims: retryable jobs with attempts remaining return to `queued`; exhausted jobs become `failed`. A cancellation request immediately cancels queued work and terminates a running child at the next check. Retry happens only for result-marked retryable errors or controller infrastructure failures. Invalid parameters, unsupported types, explicit cancellation, and pipeline schema/editorial failures do not retry.
++
++## LaunchAgent
++
++The installer is intentionally manual and reversible:
++
++```sh
++npm run build
++npm run launchd -- install
++npm run launchd -- status
++npm run launchd -- restart
++npm run launchd -- tail
++npm run launchd -- stop
++npm run launchd -- uninstall
++```
++
++It creates `~/Library/LaunchAgents/com.anyways.controller.plist`, starts at login, restarts after unexpected failure, and throttles rapid crash loops. It does not run automatically during installation of this repository.
++
++## Troubleshooting and security
++
++- `PIPELINE_STATE_NOT_CONFIGURED`: create/configure the existing pipeline state/source registry before submitting discovery or process work.
++- `MODEL_UNAVAILABLE`: verify `ollama ps`, `ollama list`, and `qwen3:14b`; controller startup does not install or expose models.
++- `RESOURCE_BUSY` or `MEMORY_PRESSURE`: wait for the heavy lock or reduce other workload. The controller never stops MLX, Hermes, or another user process.
++- The controller listens only on `127.0.0.1`. Newsroom and Hermes integrations are intentionally not part of this phase. Supabase polling is the remote coordination path.
+diff --git a/apps/controller/launchd/com.anyways.controller.plist.template b/apps/controller/launchd/com.anyways.controller.plist.template
+new file mode 100644
+index 0000000..48e9d6d
+--- /dev/null
++++ b/apps/controller/launchd/com.anyways.controller.plist.template
+@@ -0,0 +1,3 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
++<plist version="1.0"><dict><key>Label</key><string>com.anyways.controller</string><key>ProgramArguments</key><array><string>__NODE__</string><string>__CONTROLLER__/dist/src/index.js</string></array><key>WorkingDirectory</key><string>__CONTROLLER__</string><key>EnvironmentVariables</key><dict><key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string><key>ANYWAYS_CODEX_BIN</key><string>__CODEX_BIN__</string></dict><key>RunAtLoad</key><true/><key>KeepAlive</key><dict><key>SuccessfulExit</key><false/></dict><key>ThrottleInterval</key><integer>10</integer><key>StandardOutPath</key><string>__LOG_DIR__/launchd.stdout.log</string><key>StandardErrorPath</key><string>__LOG_DIR__/launchd.stderr.log</string></dict></plist>
+diff --git a/apps/controller/package-lock.json b/apps/controller/package-lock.json
+new file mode 100644
+index 0000000..1a15d6d
+--- /dev/null
++++ b/apps/controller/package-lock.json
+@@ -0,0 +1,708 @@
++{
++  "name": "anyways-controller",
++  "version": "0.1.0",
++  "lockfileVersion": 3,
++  "requires": true,
++  "packages": {
++    "": {
++      "name": "anyways-controller",
++      "version": "0.1.0",
++      "dependencies": {
++        "@supabase/supabase-js": "2.110.9",
++        "dotenv": "16.6.1"
++      },
++      "devDependencies": {
++        "@types/node": "24.3.0",
++        "tsx": "4.20.5",
++        "typescript": "5.9.2"
++      },
++      "engines": {
++        "node": ">=22"
++      }
++    },
++    "node_modules/@esbuild/aix-ppc64": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/aix-ppc64/-/aix-ppc64-0.25.12.tgz",
++      "integrity": "sha512-Hhmwd6CInZ3dwpuGTF8fJG6yoWmsToE+vYgD4nytZVxcu1ulHpUQRAB1UJ8+N1Am3Mz4+xOByoQoSZf4D+CpkA==",
++      "cpu": [
++        "ppc64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "aix"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/android-arm": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/android-arm/-/android-arm-0.25.12.tgz",
++      "integrity": "sha512-VJ+sKvNA/GE7Ccacc9Cha7bpS8nyzVv0jdVgwNDaR4gDMC/2TTRc33Ip8qrNYUcpkOHUT5OZ0bUcNNVZQ9RLlg==",
++      "cpu": [
++        "arm"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "android"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/android-arm64": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/android-arm64/-/android-arm64-0.25.12.tgz",
++      "integrity": "sha512-6AAmLG7zwD1Z159jCKPvAxZd4y/VTO0VkprYy+3N2FtJ8+BQWFXU+OxARIwA46c5tdD9SsKGZ/1ocqBS/gAKHg==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "android"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/android-x64": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/android-x64/-/android-x64-0.25.12.tgz",
++      "integrity": "sha512-5jbb+2hhDHx5phYR2By8GTWEzn6I9UqR11Kwf22iKbNpYrsmRB18aX/9ivc5cabcUiAT/wM+YIZ6SG9QO6a8kg==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "android"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/darwin-arm64": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.25.12.tgz",
++      "integrity": "sha512-N3zl+lxHCifgIlcMUP5016ESkeQjLj/959RxxNYIthIg+CQHInujFuXeWbWMgnTo4cp5XVHqFPmpyu9J65C1Yg==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "darwin"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/darwin-x64": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/darwin-x64/-/darwin-x64-0.25.12.tgz",
++      "integrity": "sha512-HQ9ka4Kx21qHXwtlTUVbKJOAnmG1ipXhdWTmNXiPzPfWKpXqASVcWdnf2bnL73wgjNrFXAa3yYvBSd9pzfEIpA==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "darwin"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/freebsd-arm64": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/freebsd-arm64/-/freebsd-arm64-0.25.12.tgz",
++      "integrity": "sha512-gA0Bx759+7Jve03K1S0vkOu5Lg/85dou3EseOGUes8flVOGxbhDDh/iZaoek11Y8mtyKPGF3vP8XhnkDEAmzeg==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "freebsd"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/freebsd-x64": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/freebsd-x64/-/freebsd-x64-0.25.12.tgz",
++      "integrity": "sha512-TGbO26Yw2xsHzxtbVFGEXBFH0FRAP7gtcPE7P5yP7wGy7cXK2oO7RyOhL5NLiqTlBh47XhmIUXuGciXEqYFfBQ==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "freebsd"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/linux-arm": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/linux-arm/-/linux-arm-0.25.12.tgz",
++      "integrity": "sha512-lPDGyC1JPDou8kGcywY0YILzWlhhnRjdof3UlcoqYmS9El818LLfJJc3PXXgZHrHCAKs/Z2SeZtDJr5MrkxtOw==",
++      "cpu": [
++        "arm"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/linux-arm64": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/linux-arm64/-/linux-arm64-0.25.12.tgz",
++      "integrity": "sha512-8bwX7a8FghIgrupcxb4aUmYDLp8pX06rGh5HqDT7bB+8Rdells6mHvrFHHW2JAOPZUbnjUpKTLg6ECyzvas2AQ==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/linux-ia32": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/linux-ia32/-/linux-ia32-0.25.12.tgz",
++      "integrity": "sha512-0y9KrdVnbMM2/vG8KfU0byhUN+EFCny9+8g202gYqSSVMonbsCfLjUO+rCci7pM0WBEtz+oK/PIwHkzxkyharA==",
++      "cpu": [
++        "ia32"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/linux-loong64": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/linux-loong64/-/linux-loong64-0.25.12.tgz",
++      "integrity": "sha512-h///Lr5a9rib/v1GGqXVGzjL4TMvVTv+s1DPoxQdz7l/AYv6LDSxdIwzxkrPW438oUXiDtwM10o9PmwS/6Z0Ng==",
++      "cpu": [
++        "loong64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/linux-mips64el": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/linux-mips64el/-/linux-mips64el-0.25.12.tgz",
++      "integrity": "sha512-iyRrM1Pzy9GFMDLsXn1iHUm18nhKnNMWscjmp4+hpafcZjrr2WbT//d20xaGljXDBYHqRcl8HnxbX6uaA/eGVw==",
++      "cpu": [
++        "mips64el"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/linux-ppc64": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/linux-ppc64/-/linux-ppc64-0.25.12.tgz",
++      "integrity": "sha512-9meM/lRXxMi5PSUqEXRCtVjEZBGwB7P/D4yT8UG/mwIdze2aV4Vo6U5gD3+RsoHXKkHCfSxZKzmDssVlRj1QQA==",
++      "cpu": [
++        "ppc64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/linux-riscv64": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/linux-riscv64/-/linux-riscv64-0.25.12.tgz",
++      "integrity": "sha512-Zr7KR4hgKUpWAwb1f3o5ygT04MzqVrGEGXGLnj15YQDJErYu/BGg+wmFlIDOdJp0PmB0lLvxFIOXZgFRrdjR0w==",
++      "cpu": [
++        "riscv64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/linux-s390x": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/linux-s390x/-/linux-s390x-0.25.12.tgz",
++      "integrity": "sha512-MsKncOcgTNvdtiISc/jZs/Zf8d0cl/t3gYWX8J9ubBnVOwlk65UIEEvgBORTiljloIWnBzLs4qhzPkJcitIzIg==",
++      "cpu": [
++        "s390x"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/linux-x64": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.25.12.tgz",
++      "integrity": "sha512-uqZMTLr/zR/ed4jIGnwSLkaHmPjOjJvnm6TVVitAa08SLS9Z0VM8wIRx7gWbJB5/J54YuIMInDquWyYvQLZkgw==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "linux"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/netbsd-arm64": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/netbsd-arm64/-/netbsd-arm64-0.25.12.tgz",
++      "integrity": "sha512-xXwcTq4GhRM7J9A8Gv5boanHhRa/Q9KLVmcyXHCTaM4wKfIpWkdXiMog/KsnxzJ0A1+nD+zoecuzqPmCRyBGjg==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "netbsd"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/netbsd-x64": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/netbsd-x64/-/netbsd-x64-0.25.12.tgz",
++      "integrity": "sha512-Ld5pTlzPy3YwGec4OuHh1aCVCRvOXdH8DgRjfDy/oumVovmuSzWfnSJg+VtakB9Cm0gxNO9BzWkj6mtO1FMXkQ==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "netbsd"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/openbsd-arm64": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/openbsd-arm64/-/openbsd-arm64-0.25.12.tgz",
++      "integrity": "sha512-fF96T6KsBo/pkQI950FARU9apGNTSlZGsv1jZBAlcLL1MLjLNIWPBkj5NlSz8aAzYKg+eNqknrUJ24QBybeR5A==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "openbsd"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/openbsd-x64": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/openbsd-x64/-/openbsd-x64-0.25.12.tgz",
++      "integrity": "sha512-MZyXUkZHjQxUvzK7rN8DJ3SRmrVrke8ZyRusHlP+kuwqTcfWLyqMOE3sScPPyeIXN/mDJIfGXvcMqCgYKekoQw==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "openbsd"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/openharmony-arm64": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/openharmony-arm64/-/openharmony-arm64-0.25.12.tgz",
++      "integrity": "sha512-rm0YWsqUSRrjncSXGA7Zv78Nbnw4XL6/dzr20cyrQf7ZmRcsovpcRBdhD43Nuk3y7XIoW2OxMVvwuRvk9XdASg==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "openharmony"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/sunos-x64": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/sunos-x64/-/sunos-x64-0.25.12.tgz",
++      "integrity": "sha512-3wGSCDyuTHQUzt0nV7bocDy72r2lI33QL3gkDNGkod22EsYl04sMf0qLb8luNKTOmgF/eDEDP5BFNwoBKH441w==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "sunos"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/win32-arm64": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/win32-arm64/-/win32-arm64-0.25.12.tgz",
++      "integrity": "sha512-rMmLrur64A7+DKlnSuwqUdRKyd3UE7oPJZmnljqEptesKM8wx9J8gx5u0+9Pq0fQQW8vqeKebwNXdfOyP+8Bsg==",
++      "cpu": [
++        "arm64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "win32"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/win32-ia32": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/win32-ia32/-/win32-ia32-0.25.12.tgz",
++      "integrity": "sha512-HkqnmmBoCbCwxUKKNPBixiWDGCpQGVsrQfJoVGYLPT41XWF8lHuE5N6WhVia2n4o5QK5M4tYr21827fNhi4byQ==",
++      "cpu": [
++        "ia32"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "win32"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@esbuild/win32-x64": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/@esbuild/win32-x64/-/win32-x64-0.25.12.tgz",
++      "integrity": "sha512-alJC0uCZpTFrSL0CCDjcgleBXPnCrEAhTBILpeAp7M/OFgoqtAetfBzX0xM00MUsVVPpVjlPuMbREqnZCXaTnA==",
++      "cpu": [
++        "x64"
++      ],
++      "dev": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "win32"
++      ],
++      "engines": {
++        "node": ">=18"
++      }
++    },
++    "node_modules/@supabase/auth-js": {
++      "version": "2.110.9",
++      "resolved": "https://registry.npmjs.org/@supabase/auth-js/-/auth-js-2.110.9.tgz",
++      "integrity": "sha512-XQIWyJfwEUdtzinuLUWPNSJbJKWdCQPqC7dDY45lA1qhX/OzvGPE+4OyPPZVOVWVh4DlPvk5RT2XL6SEAY0MoA==",
++      "license": "MIT",
++      "dependencies": {
++        "tslib": "2.8.1"
++      },
++      "engines": {
++        "node": ">=22.0.0"
++      }
++    },
++    "node_modules/@supabase/functions-js": {
++      "version": "2.110.9",
++      "resolved": "https://registry.npmjs.org/@supabase/functions-js/-/functions-js-2.110.9.tgz",
++      "integrity": "sha512-iSL6ih4vWK5Myc1lCuDoApfeB3Ov3cZIExvlCuQEZTzyzOKG4SLxVKPrBZG/QzwAjp7TEy0LCd0zZQtE5UAaDQ==",
++      "license": "MIT",
++      "dependencies": {
++        "tslib": "2.8.1"
++      },
++      "engines": {
++        "node": ">=22.0.0"
++      }
++    },
++    "node_modules/@supabase/phoenix": {
++      "version": "0.4.5",
++      "resolved": "https://registry.npmjs.org/@supabase/phoenix/-/phoenix-0.4.5.tgz",
++      "integrity": "sha512-aAn9H9ovVyeApKy11OWOrrOGq8DV68yWeH4ud2lN9fzn4aO8Zb5GLL9m1pUg9nLqIcT+ZDfAcsZe0E/nqdv2lw==",
++      "license": "MIT"
++    },
++    "node_modules/@supabase/postgrest-js": {
++      "version": "2.110.9",
++      "resolved": "https://registry.npmjs.org/@supabase/postgrest-js/-/postgrest-js-2.110.9.tgz",
++      "integrity": "sha512-YEfUzBMNkDE9OMfjzZnVgJH9h7y+wxxXryrgYk/t3boVtjPPlfwTdWRx8YkihuIbl4zxzdG4I0yiS4nd4Lmj8Q==",
++      "license": "MIT",
++      "dependencies": {
++        "tslib": "2.8.1"
++      },
++      "engines": {
++        "node": ">=22.0.0"
++      }
++    },
++    "node_modules/@supabase/realtime-js": {
++      "version": "2.110.9",
++      "resolved": "https://registry.npmjs.org/@supabase/realtime-js/-/realtime-js-2.110.9.tgz",
++      "integrity": "sha512-XHau+5jIOEAtS9hNiSrL4/2SXSt0EApChsj+f2VJL2mL+eicpUYLkANBu+5awFLIjXGOkys+ClYQ7Dg/3UTHcA==",
++      "license": "MIT",
++      "dependencies": {
++        "@supabase/phoenix": "0.4.5",
++        "tslib": "2.8.1"
++      },
++      "engines": {
++        "node": ">=22.0.0"
++      }
++    },
++    "node_modules/@supabase/storage-js": {
++      "version": "2.110.9",
++      "resolved": "https://registry.npmjs.org/@supabase/storage-js/-/storage-js-2.110.9.tgz",
++      "integrity": "sha512-UmyL+SB4cOBsejAaJ8LnLIm31585shJtnTezCCLMHyo2AauoH13sKJqPllf/8HMcGYqd0a4kHrA5t2nz+MSARA==",
++      "license": "MIT",
++      "dependencies": {
++        "iceberg-js": "^0.8.1",
++        "tslib": "2.8.1"
++      },
++      "engines": {
++        "node": ">=22.0.0"
++      }
++    },
++    "node_modules/@supabase/supabase-js": {
++      "version": "2.110.9",
++      "resolved": "https://registry.npmjs.org/@supabase/supabase-js/-/supabase-js-2.110.9.tgz",
++      "integrity": "sha512-C8UVe+x6hymwiLdJntQCm9zMD5+40tWF6j+17Z6g8NJnBAWEiuM9wXYAqgDzGAQF6oqrkHddmnZwWZZtEp0zeA==",
++      "license": "MIT",
++      "dependencies": {
++        "@supabase/auth-js": "2.110.9",
++        "@supabase/functions-js": "2.110.9",
++        "@supabase/postgrest-js": "2.110.9",
++        "@supabase/realtime-js": "2.110.9",
++        "@supabase/storage-js": "2.110.9"
++      },
++      "engines": {
++        "node": ">=22.0.0"
++      }
++    },
++    "node_modules/@types/node": {
++      "version": "24.3.0",
++      "resolved": "https://registry.npmjs.org/@types/node/-/node-24.3.0.tgz",
++      "integrity": "sha512-aPTXCrfwnDLj4VvXrm+UUCQjNEvJgNA8s5F1cvwQU+3KNltTOkBm1j30uNLyqqPNe7gE3KFzImYoZEfLhp4Yow==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "undici-types": "~7.10.0"
++      }
++    },
++    "node_modules/dotenv": {
++      "version": "16.6.1",
++      "resolved": "https://registry.npmjs.org/dotenv/-/dotenv-16.6.1.tgz",
++      "integrity": "sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==",
++      "license": "BSD-2-Clause",
++      "engines": {
++        "node": ">=12"
++      },
++      "funding": {
++        "url": "https://dotenvx.com"
++      }
++    },
++    "node_modules/esbuild": {
++      "version": "0.25.12",
++      "resolved": "https://registry.npmjs.org/esbuild/-/esbuild-0.25.12.tgz",
++      "integrity": "sha512-bbPBYYrtZbkt6Os6FiTLCTFxvq4tt3JKall1vRwshA3fdVztsLAatFaZobhkBC8/BrPetoa0oksYoKXoG4ryJg==",
++      "dev": true,
++      "hasInstallScript": true,
++      "license": "MIT",
++      "bin": {
++        "esbuild": "bin/esbuild"
++      },
++      "engines": {
++        "node": ">=18"
++      },
++      "optionalDependencies": {
++        "@esbuild/aix-ppc64": "0.25.12",
++        "@esbuild/android-arm": "0.25.12",
++        "@esbuild/android-arm64": "0.25.12",
++        "@esbuild/android-x64": "0.25.12",
++        "@esbuild/darwin-arm64": "0.25.12",
++        "@esbuild/darwin-x64": "0.25.12",
++        "@esbuild/freebsd-arm64": "0.25.12",
++        "@esbuild/freebsd-x64": "0.25.12",
++        "@esbuild/linux-arm": "0.25.12",
++        "@esbuild/linux-arm64": "0.25.12",
++        "@esbuild/linux-ia32": "0.25.12",
++        "@esbuild/linux-loong64": "0.25.12",
++        "@esbuild/linux-mips64el": "0.25.12",
++        "@esbuild/linux-ppc64": "0.25.12",
++        "@esbuild/linux-riscv64": "0.25.12",
++        "@esbuild/linux-s390x": "0.25.12",
++        "@esbuild/linux-x64": "0.25.12",
++        "@esbuild/netbsd-arm64": "0.25.12",
++        "@esbuild/netbsd-x64": "0.25.12",
++        "@esbuild/openbsd-arm64": "0.25.12",
++        "@esbuild/openbsd-x64": "0.25.12",
++        "@esbuild/openharmony-arm64": "0.25.12",
++        "@esbuild/sunos-x64": "0.25.12",
++        "@esbuild/win32-arm64": "0.25.12",
++        "@esbuild/win32-ia32": "0.25.12",
++        "@esbuild/win32-x64": "0.25.12"
++      }
++    },
++    "node_modules/fsevents": {
++      "version": "2.3.3",
++      "resolved": "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz",
++      "integrity": "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==",
++      "dev": true,
++      "hasInstallScript": true,
++      "license": "MIT",
++      "optional": true,
++      "os": [
++        "darwin"
++      ],
++      "engines": {
++        "node": "^8.16.0 || ^10.6.0 || >=11.0.0"
++      }
++    },
++    "node_modules/get-tsconfig": {
++      "version": "4.14.0",
++      "resolved": "https://registry.npmjs.org/get-tsconfig/-/get-tsconfig-4.14.0.tgz",
++      "integrity": "sha512-yTb+8DXzDREzgvYmh6s9vHsSVCHeC0G3PI5bEXNBHtmshPnO+S5O7qgLEOn0I5QvMy6kpZN8K1NKGyilLb93wA==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "resolve-pkg-maps": "^1.0.0"
++      },
++      "funding": {
++        "url": "https://github.com/privatenumber/get-tsconfig?sponsor=1"
++      }
++    },
++    "node_modules/iceberg-js": {
++      "version": "0.8.1",
++      "resolved": "https://registry.npmjs.org/iceberg-js/-/iceberg-js-0.8.1.tgz",
++      "integrity": "sha512-1dhVQZXhcHje7798IVM+xoo/1ZdVfzOMIc8/rgVSijRK38EDqOJoGula9N/8ZI5RD8QTxNQtK/Gozpr+qUqRRA==",
++      "license": "MIT",
++      "engines": {
++        "node": ">=20.0.0"
++      }
++    },
++    "node_modules/resolve-pkg-maps": {
++      "version": "1.0.0",
++      "resolved": "https://registry.npmjs.org/resolve-pkg-maps/-/resolve-pkg-maps-1.0.0.tgz",
++      "integrity": "sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw==",
++      "dev": true,
++      "license": "MIT",
++      "funding": {
++        "url": "https://github.com/privatenumber/resolve-pkg-maps?sponsor=1"
++      }
++    },
++    "node_modules/tslib": {
++      "version": "2.8.1",
++      "resolved": "https://registry.npmjs.org/tslib/-/tslib-2.8.1.tgz",
++      "integrity": "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==",
++      "license": "0BSD"
++    },
++    "node_modules/tsx": {
++      "version": "4.20.5",
++      "resolved": "https://registry.npmjs.org/tsx/-/tsx-4.20.5.tgz",
++      "integrity": "sha512-+wKjMNU9w/EaQayHXb7WA7ZaHY6hN8WgfvHNQ3t1PnU91/7O8TcTnIhCDYTZwnt8JsO9IBqZ30Ln1r7pPF52Aw==",
++      "dev": true,
++      "license": "MIT",
++      "dependencies": {
++        "esbuild": "~0.25.0",
++        "get-tsconfig": "^4.7.5"
++      },
++      "bin": {
++        "tsx": "dist/cli.mjs"
++      },
++      "engines": {
++        "node": ">=18.0.0"
++      },
++      "optionalDependencies": {
++        "fsevents": "~2.3.3"
++      }
++    },
++    "node_modules/typescript": {
++      "version": "5.9.2",
++      "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.9.2.tgz",
++      "integrity": "sha512-CWBzXQrc/qOkhidw1OzBTQuYRbfyxDXJMVJ1XNwUHGROVmuaeiEm3OslpZ1RV96d7SKKjZKrSJu3+t/xlw3R9A==",
++      "dev": true,
++      "license": "Apache-2.0",
++      "bin": {
++        "tsc": "bin/tsc",
++        "tsserver": "bin/tsserver"
++      },
++      "engines": {
++        "node": ">=14.17"
++      }
++    },
++    "node_modules/undici-types": {
++      "version": "7.10.0",
++      "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-7.10.0.tgz",
++      "integrity": "sha512-t5Fy/nfn+14LuOc2KNYg75vZqClpAiqscVvMygNnlsHBFpSXdJaYtXMcdNLpl/Qvc3P2cB3s6lOV51nqsFq4ag==",
++      "dev": true,
++      "license": "MIT"
++    }
++  }
++}
+diff --git a/apps/controller/package.json b/apps/controller/package.json
+new file mode 100644
+index 0000000..dec5be9
+--- /dev/null
++++ b/apps/controller/package.json
+@@ -0,0 +1,20 @@
++{
++  "name": "anyways-controller",
++  "version": "0.1.0",
++  "private": true,
++  "type": "module",
++  "engines": { "node": ">=22" },
++  "scripts": {
++    "build": "tsc -p tsconfig.json",
++    "dev": "tsx src/index.ts",
++    "start": "node dist/src/index.js",
++    "test": "tsx --test tests/**/*.test.ts",
++    "job:submit": "tsx scripts/job-submit.ts",
++    "job:list": "tsx scripts/job-list.ts",
++    "job:get": "tsx scripts/job-get.ts",
++    "job:cancel": "tsx scripts/job-cancel.ts",
++    "launchd": "bash scripts/launchd.sh"
++  },
++  "dependencies": { "@supabase/supabase-js": "2.110.9", "dotenv": "16.6.1" },
++  "devDependencies": { "@types/node": "24.3.0", "tsx": "4.20.5", "typescript": "5.9.2" }
++}
+diff --git a/apps/controller/scripts/job-cancel.ts b/apps/controller/scripts/job-cancel.ts
+new file mode 100644
+index 0000000..cb8f98a
+--- /dev/null
++++ b/apps/controller/scripts/job-cancel.ts
+@@ -0,0 +1 @@
++import { Queue } from '../src/queue/client.js'; import { readConfig } from '../src/config.js'; const id = process.argv[2]; if (!id) throw new Error('Usage: npm run job:cancel -- <job-id>'); const queue = new Queue(readConfig()); console.log(JSON.stringify(await queue.rpc('request_pipeline_job_cancellation', { p_job_id: id }), null, 2));
+diff --git a/apps/controller/scripts/job-get.ts b/apps/controller/scripts/job-get.ts
+new file mode 100644
+index 0000000..da3b2c4
+--- /dev/null
++++ b/apps/controller/scripts/job-get.ts
+@@ -0,0 +1 @@
++import { Queue } from '../src/queue/client.js'; import { readConfig } from '../src/config.js'; const id = process.argv[2]; if (!id) throw new Error('Usage: npm run job:get -- <job-id>'); const queue = new Queue(readConfig()); const { data, error } = await queue.db.from('pipeline_jobs').select('*,pipeline_job_events(*)').eq('id', id).single(); if (error) throw error; console.log(JSON.stringify(data, null, 2));
+diff --git a/apps/controller/scripts/job-list.ts b/apps/controller/scripts/job-list.ts
+new file mode 100644
+index 0000000..65222f1
+--- /dev/null
++++ b/apps/controller/scripts/job-list.ts
+@@ -0,0 +1 @@
++import { Queue } from '../src/queue/client.js'; import { readConfig } from '../src/config.js'; const queue = new Queue(readConfig()); const { data, error } = await queue.db.from('pipeline_jobs').select('*').order('created_at', { ascending: false }).limit(50); if (error) throw error; console.log(JSON.stringify(data, null, 2));
+diff --git a/apps/controller/scripts/job-submit.ts b/apps/controller/scripts/job-submit.ts
+new file mode 100644
+index 0000000..27d6b1b
+--- /dev/null
++++ b/apps/controller/scripts/job-submit.ts
+@@ -0,0 +1,2 @@
++import { readConfig } from '../src/config.js'; import { Queue } from '../src/queue/client.js'; import { JOB_TYPES, validateJob } from '../src/jobs/types.js';
++const [type, ...args] = process.argv.slice(2); const value = (flag: string) => { const i = args.indexOf(flag); return i < 0 ? null : args[i + 1] || null; }; const parameters: Record<string, unknown> = {}; if (value('--candidate-id')) parameters.candidate_id = value('--candidate-id'); if (value('--run-id')) parameters.run_id = value('--run-id'); if (!JOB_TYPES.includes(type as any)) throw new Error(`Unsupported job type. Use ${JOB_TYPES.join(', ')}.`); validateJob(type, parameters); const queue = new Queue(readConfig()); const result = await queue.rpc('submit_pipeline_job', { p_job_type: type, p_parameters: parameters, p_source: 'cli', p_priority: Number(value('--priority') || 50), p_max_attempts: readConfig().maxAttempts }); console.log(JSON.stringify(result, null, 2));
+diff --git a/apps/controller/scripts/launchd.sh b/apps/controller/scripts/launchd.sh
+new file mode 100644
+index 0000000..7ac6faa
+--- /dev/null
++++ b/apps/controller/scripts/launchd.sh
+@@ -0,0 +1,130 @@
++#!/bin/bash
++set -euo pipefail
++
++ROOT="$(cd "$(dirname "$0")/.." && pwd)"
++LABEL=com.anyways.controller
++DOMAIN="gui/$(id -u)"
++PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
++ENV_FILE="$ROOT/.env"
++LOG_DIR="${LOG_DIRECTORY:-$HOME/Library/Logs/AnywaysController}"
++NODE_BIN="$(command -v node)"
++CODEX_BIN=""
++
++read_codex_bin() {
++  CODEX_BIN="$(awk -F= '$1 == "ANYWAYS_CODEX_BIN" { sub(/^[^=]*=/, ""); print; exit }' "$ENV_FILE")"
++  [ -n "$CODEX_BIN" ] || { echo "ANYWAYS_CODEX_BIN is required in $ENV_FILE." >&2; return 1; }
++  case "$CODEX_BIN" in /*) ;; *) echo "ANYWAYS_CODEX_BIN must be an absolute path." >&2; return 1 ;; esac
++  [ -f "$CODEX_BIN" ] || { echo "Configured Codex executable does not exist: $CODEX_BIN" >&2; return 1; }
++  [ -x "$CODEX_BIN" ] || { echo "Configured Codex executable is not executable: $CODEX_BIN" >&2; return 1; }
++}
++
++render_plist() {
++  read_codex_bin
++  sed -e "s|__NODE__|$NODE_BIN|g" -e "s|__CONTROLLER__|$ROOT|g" -e "s|__LOG_DIR__|$LOG_DIR|g" "$ROOT/launchd/com.anyways.controller.plist.template" > "$PLIST"
++  /usr/bin/plutil -replace EnvironmentVariables.ANYWAYS_CODEX_BIN -string "$CODEX_BIN" "$PLIST"
++}
++
++mkdir -p "$LOG_DIR" "$HOME/Library/LaunchAgents"
++
++service_pid() {
++  launchctl print "$DOMAIN/$LABEL" 2>/dev/null | awk '$1 == "pid" && $2 == "=" { print $3; exit }'
++}
++
++listener_pids() {
++  lsof -nP -t -iTCP:4317 -sTCP:LISTEN 2>/dev/null || true
++}
++
++pid_alive() {
++  [ -n "${1:-}" ] && kill -0 "$1" 2>/dev/null
++}
++
++wait_for_exit() {
++  local pid="$1" deadline=$((SECONDS + 30))
++  while pid_alive "$pid"; do
++    [ "$SECONDS" -lt "$deadline" ] || { echo "Controller PID $pid did not exit." >&2; return 1; }
++    sleep 0.2
++  done
++}
++
++wait_for_listener_exit() {
++  local expected_pid="${1:-}" deadline=$((SECONDS + 30)) current
++  while true; do
++    current="$(listener_pids)"
++    if [ -z "$current" ]; then return 0; fi
++    if [ -n "$expected_pid" ] && printf '%s\n' "$current" | grep -vxF "$expected_pid" >/dev/null; then
++      echo "Port 4317 is owned by an unexpected process: $current" >&2
++      return 1
++    fi
++    [ "$SECONDS" -lt "$deadline" ] || { echo "Port 4317 did not become free." >&2; return 1; }
++    sleep 0.2
++  done
++}
++
++wait_for_started_listener() {
++  local deadline=$((SECONDS + 30)) pid listener
++  while [ "$SECONDS" -lt "$deadline" ]; do
++    pid="$(service_pid || true)"
++    listener="$(listener_pids)"
++    if [ -n "$pid" ] && [ "$listener" = "$pid" ]; then
++      echo "$pid"
++      return 0
++    fi
++    if [ -n "$listener" ] && [ -n "$pid" ] && [ "$listener" != "$pid" ]; then
++      echo "LaunchAgent PID $pid does not own port 4317; listener owner is $listener." >&2
++      return 1
++    fi
++    sleep 0.2
++  done
++  echo "Controller did not acquire port 4317 within 30 seconds." >&2
++  return 1
++}
++
++stop_loaded_service() {
++  local old_pid="${1:-}" listener
++  listener="$(listener_pids)"
++  if [ -n "$listener" ] && [ -z "$old_pid" ]; then
++    echo "Refusing to stop: port 4317 is owned by unmanaged process PID $listener." >&2
++    return 1
++  fi
++  if [ -n "$listener" ] && [ -n "$old_pid" ] && [ "$listener" != "$old_pid" ]; then
++    echo "Refusing to stop: port 4317 is owned by PID $listener, not LaunchAgent PID $old_pid." >&2
++    return 1
++  fi
++  launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || true
++  [ -z "$old_pid" ] || wait_for_exit "$old_pid"
++  wait_for_listener_exit "$old_pid"
++}
++
++bootstrap_service() {
++  launchctl bootstrap "$DOMAIN" "$PLIST"
++  wait_for_started_listener >/dev/null
++  echo "started"
++}
++
++case "${1:-}" in
++  install)
++    test -f "$ENV_FILE" || { echo "Create protected $ENV_FILE from .env.example first."; exit 1; }
++    render_plist
++    launchctl bootstrap "$DOMAIN" "$PLIST"
++    wait_for_started_listener >/dev/null
++    echo "installed";;
++  start)
++    render_plist
++    if [ -n "$(listener_pids)" ]; then echo "Port 4317 is already owned; use restart only through this LaunchAgent." >&2; exit 1; fi
++    if launchctl print "$DOMAIN/$LABEL" >/dev/null 2>&1; then echo "LaunchAgent is already loaded; refusing a second start." >&2; exit 1; fi
++    bootstrap_service;;
++  stop)
++    stop_loaded_service "$(service_pid || true)"; echo "stopped";;
++  restart)
++    old_pid="$(service_pid || true)"
++    stop_loaded_service "$old_pid"
++    render_plist
++    bootstrap_service;;
++  status) launchctl print "$DOMAIN/$LABEL";;
++  uninstall)
++    stop_loaded_service "$(service_pid || true)" || true
++    launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || true
++    rm -f "$PLIST";;
++  tail) tail -f "$LOG_DIR/controller.log";;
++  *) echo "Usage: $0 {install|start|restart|status|uninstall|tail}"; exit 1;;
++esac
+diff --git a/apps/controller/src/codex-readiness.ts b/apps/controller/src/codex-readiness.ts
+new file mode 100644
+index 0000000..3374cd6
+--- /dev/null
++++ b/apps/controller/src/codex-readiness.ts
+@@ -0,0 +1,58 @@
++import { accessSync, constants, statSync } from 'node:fs';
++import { spawn } from 'node:child_process';
++import os from 'node:os';
++import path from 'node:path';
++import type { Config } from './config.js';
++
++export type CodexReadiness = {
++  ok: boolean;
++  executable: string;
++  version: string | null;
++  error: string | null;
++};
++
++function executableFile(file: string) {
++  try {
++    return statSync(file).isFile() && (accessSync(file, constants.X_OK), true);
++  } catch {
++    return false;
++  }
++}
++
++function run(file: string, args: string[], timeoutMs = 5_000): Promise<{ code: number | null; stdout: string; stderr: string }> {
++  return new Promise((resolve, reject) => {
++    const child = spawn(file, args, {
++      shell: false,
++      cwd: path.dirname(file),
++      env: { ...process.env, HOME: process.env.HOME || os.homedir(), PATH: [path.dirname(file), process.env.PATH].filter(Boolean).join(':') },
++      stdio: ['ignore', 'pipe', 'pipe']
++    });
++    let stdout = '';
++    let stderr = '';
++    const timer = setTimeout(() => { child.kill('SIGTERM'); reject(new Error(`${args.join(' ')} timed out.`)); }, timeoutMs);
++    child.stdout.on('data', chunk => { stdout += chunk.toString(); });
++    child.stderr.on('data', chunk => { stderr += chunk.toString(); });
++    child.once('error', error => { clearTimeout(timer); reject(error); });
++    child.once('close', code => { clearTimeout(timer); resolve({ code, stdout, stderr }); });
++  });
++}
++
++export async function checkCodexReadiness(config: Pick<Config, 'codexExecutable'>): Promise<CodexReadiness> {
++  const executable = config.codexExecutable;
++  if (!path.isAbsolute(executable)) return { ok: false, executable, version: null, error: 'ANYWAYS_CODEX_BIN must be absolute.' };
++  if (!executableFile(executable)) return { ok: false, executable, version: null, error: 'Configured Codex executable is missing or not executable.' };
++  try {
++    const versionResult = await run(executable, ['--version']);
++    const version = versionResult.stdout.trim();
++    if (versionResult.code !== 0 || version !== 'codex-cli 0.146.0') return { ok: false, executable, version: version || null, error: `Codex version check failed: ${version || versionResult.stderr.trim() || `exit ${versionResult.code}`}.` };
++    const loginResult = await run(executable, ['login', 'status']);
++    const loginStatus = `${loginResult.stdout}${loginResult.stderr}`.trim().replace(/\s+/g, ' ');
++    if (Number(loginResult.code) !== 0 || !loginStatus.includes('Logged in using ChatGPT')) {
++      const detail = [loginResult.stdout.trim(), loginResult.stderr.trim(), `exit ${loginResult.code}`].filter(Boolean).join(' ').slice(0, 300);
++      return { ok: false, executable, version, error: `Codex authentication status is unavailable${detail ? `: ${detail}` : ''}.` };
++    }
++    return { ok: true, executable, version, error: null };
++  } catch (error) {
++    return { ok: false, executable, version: null, error: error instanceof Error ? error.message : String(error) };
++  }
++}
+diff --git a/apps/controller/src/config.ts b/apps/controller/src/config.ts
+new file mode 100644
+index 0000000..e5ca97c
+--- /dev/null
++++ b/apps/controller/src/config.ts
+@@ -0,0 +1,8 @@
++import path from 'node:path';
++import os from 'node:os';
++import { config as loadDotenv } from 'dotenv';
++loadDotenv();
++export type Config = { supabaseUrl: string; serviceRoleKey: string; anywaysRepoPath: string; ollamaBaseUrl: string; ollamaModel: string; codexExecutable: string; pipelineV1Enabled: boolean; pipelineV1AllowedJobId: string | null; controllerId: string; pollIntervalMs: number; leaseSeconds: number; heartbeatMs: number; idleMs: number; minimumMemoryGb: number; healthHost: string; healthPort: number; logDirectory: string; jobTimeoutMs: number; phase2JobTimeoutMs: number; childKillGraceMs: number; maxAttempts: number; retryDelaySeconds: number; };
++const required = (name: string) => { const value = process.env[name]?.trim(); if (!value) throw new Error(`${name} is required`); return value; };
++const integer = (name: string, fallback: number, min = 1) => { const value = Number(process.env[name] || fallback); if (!Number.isInteger(value) || value < min) throw new Error(`${name} must be an integer >= ${min}`); return value; };
++export function readConfig(): Config { return { supabaseUrl: required('SUPABASE_URL'), serviceRoleKey: required('SUPABASE_SERVICE_ROLE_KEY'), anywaysRepoPath: process.env.ANYWAYS_REPO_PATH || '/Volumes/External/GitHub/IGNORED/anyways', ollamaBaseUrl: process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434', ollamaModel: process.env.OLLAMA_MODEL || 'qwen3:14b', codexExecutable: process.env.ANYWAYS_CODEX_BIN?.trim() || path.join(path.dirname(process.execPath), 'codex'), pipelineV1Enabled: /^(1|true|yes)$/i.test(process.env.PIPELINE_V1_ENABLED || ''), pipelineV1AllowedJobId: process.env.PIPELINE_V1_ALLOWED_JOB_ID?.trim() || null, controllerId: process.env.CONTROLLER_ID || `${os.hostname()}-${process.pid}`, pollIntervalMs: integer('POLL_INTERVAL_SECONDS', 5) * 1000, leaseSeconds: integer('LEASE_DURATION_SECONDS', 120, 30), heartbeatMs: integer('HEARTBEAT_INTERVAL_SECONDS', 30) * 1000, idleMs: integer('MODEL_IDLE_TIMEOUT_MINUTES', 10) * 60_000, minimumMemoryGb: integer('MINIMUM_AVAILABLE_MEMORY_GB', 6), healthHost: process.env.HEALTH_HOST || '127.0.0.1', healthPort: integer('HEALTH_PORT', 4317), logDirectory: process.env.LOG_DIRECTORY || path.join(os.homedir(), 'Library/Logs/AnywaysController'), jobTimeoutMs: integer('JOB_TIMEOUT_SECONDS', 900) * 1000, phase2JobTimeoutMs: integer('PHASE2_JOB_TIMEOUT_SECONDS', 2400) * 1000, childKillGraceMs: integer('CHILD_KILL_GRACE_SECONDS', 5) * 1000, maxAttempts: integer('MAX_ATTEMPTS', 3), retryDelaySeconds: integer('BASE_RETRY_DELAY_SECONDS', 60) }; }
+diff --git a/apps/controller/src/health.ts b/apps/controller/src/health.ts
+new file mode 100644
+index 0000000..675e809
+--- /dev/null
++++ b/apps/controller/src/health.ts
+@@ -0,0 +1,92 @@
++import http, { type Server } from 'node:http';
++
++export type HealthErrorSource = 'queue' | 'job' | null;
++
++export type HealthState = {
++  controllerId: string;
++  startedAt: number;
++  queue: boolean;
++  ollama: boolean;
++  model: boolean;
++  currentJobId: string | null;
++  lastCompletedJobId: string | null;
++  lastError: string | null;
++  lastRecordedError: string | null;
++  errorSource: HealthErrorSource;
++  codexProviderReady?: boolean;
++  codexExecutable?: string | null;
++  codexReadinessError?: string | null;
++};
++
++const errorMessage = (error: unknown) => error instanceof Error ? error.message : String(error);
++
++export function recordQueueFailure(state: HealthState, error: unknown) {
++  const message = errorMessage(error);
++  state.queue = false;
++  state.lastError = message;
++  state.lastRecordedError = message;
++  state.errorSource = 'queue';
++  return message;
++}
++
++export function recordQueueSuccess(state: HealthState) {
++  state.queue = true;
++  if (state.errorSource === 'queue') {
++    state.lastError = null;
++    state.errorSource = null;
++  }
++}
++
++export function recordJobFailure(state: HealthState, error: unknown) {
++  const message = errorMessage(error);
++  state.lastError = message;
++  state.lastRecordedError = message;
++  state.errorSource = 'job';
++  return message;
++}
++
++export function clearResolvedJobFailure(state: HealthState) {
++  if (state.errorSource === 'job' && state.currentJobId === null) {
++    state.lastError = null;
++    state.errorSource = null;
++  }
++}
++
++export function healthPayload(state: HealthState, now = Date.now()) {
++  return {
++    status: state.queue && state.ollama && state.model && state.codexProviderReady !== false && !state.lastError ? 'ok' : 'degraded',
++    controller_id: state.controllerId,
++    uptime_seconds: Math.floor((now - state.startedAt) / 1000),
++    queue_connectivity: state.queue,
++    ollama_connectivity: state.ollama,
++    model_available: state.model,
++    current_job_id: state.currentJobId,
++    last_completed_job_id: state.lastCompletedJobId,
++    last_error: state.lastError,
++    last_recorded_error: state.lastRecordedError,
++    codex_provider_ready: state.codexProviderReady ?? null,
++    codex_executable: state.codexExecutable ?? null,
++    codex_readiness_error: state.codexReadinessError ?? null
++  };
++}
++
++export async function startHealthServer(host: string, port: number, state: HealthState): Promise<Server> {
++  const server = http.createServer((_request, response) => {
++    response.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
++    response.end(JSON.stringify(healthPayload(state)));
++  });
++  await new Promise<void>((resolve, reject) => {
++    const onError = (error: Error) => {
++      server.off('listening', onListening);
++      reject(error);
++    };
++    const onListening = () => {
++      server.off('error', onError);
++      resolve();
++    };
++    server.once('error', onError);
++    server.once('listening', onListening);
++    server.listen(port, host);
++  });
++  return server;
++}
+diff --git a/apps/controller/src/index.ts b/apps/controller/src/index.ts
+new file mode 100644
+index 0000000..2647141
+--- /dev/null
++++ b/apps/controller/src/index.ts
+@@ -0,0 +1,162 @@
++import fs from 'node:fs/promises';
++import path from 'node:path';
++import type { Server } from 'node:http';
++import { readConfig } from './config.js';
++import { Logger } from './logger.js';
++import { Queue } from './queue/client.js';
++import { validateJob, type Job } from './jobs/types.js';
++import { ollamaHealth, unloadModel } from './ollama/health.js';
++import { availableMemoryGb } from './resources/memory.js';
++import { runPipeline } from './pipeline/runner.js';
++import { resourceClassForJob, resourceLockName, RESOURCE_CLASSES } from './resources/classes.js';
++import { clearResolvedJobFailure, recordJobFailure, recordQueueFailure, recordQueueSuccess, startHealthServer, type HealthState } from './health.js';
++import { checkCodexReadiness } from './codex-readiness.js';
++
++const config = readConfig();
++const logger = new Logger(config.logDirectory);
++const queue = new Queue(config);
++const state: HealthState = { controllerId: config.controllerId, startedAt: Date.now(), queue: false, ollama: false, model: false, currentJobId: null, lastCompletedJobId: null, lastError: null, lastRecordedError: null, errorSource: null, codexProviderReady: false, codexExecutable: config.codexExecutable, codexReadinessError: null };
++let stopping = false;
++let stopPromise: Promise<void> | null = null;
++let idleTimer: NodeJS.Timeout | undefined;
++let loop: NodeJS.Timeout | undefined;
++let healthServer: Server | undefined;
++let activeResourceLock: { id: string; name: string } | null = null;
++let currentExecutionPromise: Promise<void> | null = null;
++let currentExecution: { job: Job; interrupt: (reason: { code: string; message: string }) => Promise<void> } | null = null;
++let currentTickPromise: Promise<void> | null = null;
++let codexProviderReady = false;
++
++const isV1Job = (job: Job) => ['v1', 'pipeline-v1'].includes(String(job.parameters?.pipeline_version || ''));
++const resetIdle = () => { if (idleTimer) clearTimeout(idleTimer); idleTimer = setTimeout(async () => { try { await unloadModel(config); await logger.write('info', 'Ollama model unloaded after idle timeout.'); } catch (error) { await logger.write('warn', `Ollama model unload failed: ${error instanceof Error ? error.message : String(error)}`); } }, config.idleMs); };
++const cancelled = async (id: string) => { const { data, error } = await queue.db.from('pipeline_jobs').select('cancellation_requested_at').eq('id', id).single(); if (error) return false; return Boolean(data?.cancellation_requested_at); };
++
++async function execute(job: Job) {
++  const jobLogger = new Logger(config.logDirectory, job.id);
++  state.currentJobId = job.id;
++  let lock = false;
++  let lockName: string | null = null;
++  let heartbeat: NodeJS.Timeout | undefined;
++  let interrupted: { code: string; message: string } | null = null;
++  const abortController = new AbortController();
++  const interrupt = async (reason: { code: string; message: string }) => {
++    if (interrupted) return;
++    interrupted = reason;
++    await logger.write('warn', 'Job interruption requested.', { job_id: job.id, code: reason.code });
++    try { await queue.fail(job.id, { ...reason, retryable: false }, reason.message); } catch (error) { await logger.write('error', 'Interrupted job could not be terminalized through the queue RPC.', { job_id: job.id, error: error instanceof Error ? error.message : String(error) }); }
++    try { await queue.terminalizeInterruptedCandidate(job, reason); } catch (error) { await logger.write('error', 'Interrupted candidate could not be terminalized.', { job_id: job.id, error: error instanceof Error ? error.message : String(error) }); }
++    abortController.abort();
++  };
++  try {
++    validateJob(job.job_type, job.parameters);
++    if (stopping) { await interrupt({ code: 'CONTROLLER_SHUTDOWN', message: 'Controller shutdown began before execution.' }); return; }
++    if (await cancelled(job.id)) { await queue.cancel(job.id, 'Cancellation observed before execution.'); return; }
++    const resourceClass = resourceClassForJob(job);
++    const managed = resourceClass !== RESOURCE_CLASSES.deterministicWork;
++    const localHeavy = resourceClass === RESOURCE_CLASSES.localHeavyModel;
++    lockName = resourceLockName(resourceClass);
++    if (managed) {
++      const memory = await availableMemoryGb(); if (memory < config.minimumMemoryGb) throw Object.assign(new Error(`Available memory ${memory.toFixed(1)} GB is below policy.`), { code: 'MEMORY_PRESSURE', retryable: true });
++      lock = await queue.lock(job.id, lockName || 'heavy_model'); if (!lock) throw Object.assign(new Error(`${resourceClass} resource lock is unavailable.`), { code: 'RESOURCE_BUSY', retryable: true }); activeResourceLock = { id: job.id, name: lockName || 'heavy_model' };
++    }
++    if (localHeavy) {
++      const ollama = await ollamaHealth(config); state.ollama = ollama.reachable; state.model = ollama.modelAvailable; if (!ollama.reachable || !ollama.modelAvailable) throw Object.assign(new Error(`Ollama or ${config.ollamaModel} is unavailable.`), { code: 'MODEL_UNAVAILABLE', retryable: true });
++    }
++    if (!await queue.start(job.id)) throw new Error('Job lease could not transition to running.');
++    currentExecution = { job, interrupt };
++    await logger.write('info', 'Job execution started.', { job_id: job.id, pid: process.pid, pipeline_version: isV1Job(job) ? 'v1' : 'legacy' });
++    const heartbeatOnce = async () => {
++      if (stopping || interrupted) return;
++      try {
++        const ok = await queue.heartbeat(job.id);
++        if (!ok) await interrupt({ code: 'LEASE_HEARTBEAT_LOST', message: 'Controller could not renew the job lease.' });
++      } catch (error) {
++        await jobLogger.write('error', 'Lease heartbeat failed.', { code: 'LEASE_HEARTBEAT_ERROR', error: error instanceof Error ? error.message : String(error) });
++      }
++    };
++    heartbeat = setInterval(() => { void heartbeatOnce(); if (lock) void queue.lock(job.id, lockName || 'heavy_model'); }, config.heartbeatMs);
++    const result = await runPipeline(config, job, async (line, stderr) => { await jobLogger.write(stderr ? 'warn' : 'info', line); }, () => cancelled(job.id), abortController.signal);
++    if (interrupted) { await queue.terminalizeInterruptedCandidate(job, interrupted); return; }
++    if (await cancelled(job.id)) { await queue.cancel(job.id, result.log.slice(-12000)); await jobLogger.write('warn', 'Job cancelled.'); }
++    else if (result.ok) { await queue.complete(job.id, result.result || {}, result.log.slice(-12000)); state.lastCompletedJobId = job.id; await jobLogger.write('info', 'Job completed.'); }
++    else { await queue.fail(job.id, result.error || { code: 'PIPELINE_FAILED', message: 'Pipeline failed.', retryable: false }, result.log.slice(-12000)); await jobLogger.write('error', result.error?.message || 'Pipeline failed.'); }
++  } catch (error) {
++    const details = { code: (error as any)?.code || 'CONTROLLER_ERROR', message: error instanceof Error ? error.message : String(error), retryable: Boolean((error as any)?.retryable) };
++    recordJobFailure(state, details.message); await queue.fail(job.id, details, details.message); if (isV1Job(job)) await queue.terminalizeInterruptedCandidate(job, details); await jobLogger.write('error', details.message, details);
++  } finally {
++    if (heartbeat) clearInterval(heartbeat);
++    if (lock) await queue.unlock(job.id, lockName || 'heavy_model');
++    if (activeResourceLock?.id === job.id) activeResourceLock = null;
++    if (currentExecution?.job.id === job.id) currentExecution = null;
++    state.currentJobId = null;
++    clearResolvedJobFailure(state);
++    if (lockName === 'heavy_model') resetIdle();
++  }
++}
++
++async function tick() {
++  if (stopping || currentExecutionPromise) return;
++  try {
++    await queue.reconcileExpiredV1Jobs();
++    if (stopping) return;
++    const job = await queue.claim(codexProviderReady);
++    recordQueueSuccess(state);
++    if (!job) return;
++    if (stopping) { await queue.fail(job.id, { code: 'CONTROLLER_SHUTDOWN', message: 'Controller shutdown began after job claim.', retryable: false }, 'Controller shutdown began after job claim.'); await queue.terminalizeInterruptedCandidate(job, { code: 'CONTROLLER_SHUTDOWN', message: 'Controller shutdown began after job claim.' }); return; }
++    currentExecutionPromise = execute(job);
++    await currentExecutionPromise;
++  } catch (error) {
++    const message = recordQueueFailure(state, error);
++    await logger.write('error', message);
++  } finally { currentExecutionPromise = null; }
++}
++
++async function closeHealthServer() {
++  if (!healthServer) return;
++  const server = healthServer;
++  healthServer = undefined;
++  await new Promise<void>(resolve => server.close(() => resolve()));
++}
++
++async function stop(reason = 'SIGTERM') {
++  if (stopPromise) return stopPromise;
++  stopping = true;
++  if (loop) clearInterval(loop);
++  stopPromise = (async () => {
++    await logger.write('info', 'Shutdown requested.', { controller_id: config.controllerId, pid: process.pid, reason });
++    if (currentExecution) await currentExecution.interrupt({ code: 'CONTROLLER_SHUTDOWN', message: 'Controller shutdown interrupted the in-flight job.' });
++    if (currentTickPromise) await currentTickPromise;
++    if (currentExecutionPromise) await currentExecutionPromise;
++    if (activeResourceLock) { await queue.unlock(activeResourceLock.id, activeResourceLock.name); activeResourceLock = null; }
++    await logger.write('info', 'Job drain completed.', { controller_id: config.controllerId, pid: process.pid });
++    await closeHealthServer();
++    await logger.write('info', 'Controller stopping.', { controller_id: config.controllerId, pid: process.pid });
++    process.exit(0);
++  })();
++  return stopPromise;
++}
++
++async function main() {
++  await fs.access(path.join(config.anywaysRepoPath, 'bin', 'anyways-pipeline-command.mjs'));
++  if (Number(process.versions.node.split('.')[0]) < 22) throw new Error('Node 22 or newer is required.');
++  await fs.mkdir(config.logDirectory, { recursive: true });
++  const ollama = await ollamaHealth(config); state.ollama = ollama.reachable; state.model = ollama.modelAvailable;
++  const codex = await checkCodexReadiness(config);
++  codexProviderReady = codex.ok;
++  state.codexProviderReady = codex.ok;
++  state.codexExecutable = codex.executable;
++  state.codexReadinessError = codex.error;
++  healthServer = await startHealthServer(config.healthHost, config.healthPort, state);
++  await logger.write('info', 'Listener acquired.', { controller_id: config.controllerId, pid: process.pid, host: config.healthHost, port: config.healthPort });
++  await logger.write('info', 'Controller initialized.', { controller_id: config.controllerId, pid: process.pid, ollama: ollama.reachable, model: ollama.modelAvailable, codex_provider_ready: codex.ok, codex_executable: codex.executable, codex_readiness_error: codex.error });
++  process.on('SIGINT', () => { void stop('SIGINT'); });
++  process.on('SIGTERM', () => { void stop('SIGTERM'); });
++  currentTickPromise = tick();
++  await currentTickPromise;
++  currentTickPromise = null;
++  if (stopping) return;
++  loop = setInterval(() => { currentTickPromise = tick(); void currentTickPromise; }, config.pollIntervalMs);
++  await logger.write('info', 'Queue polling started.', { controller_id: config.controllerId, pid: process.pid, poll_interval_ms: config.pollIntervalMs });
++}
++
++main().catch(async error => { await logger.write('error', error instanceof Error ? error.message : String(error), { controller_id: config.controllerId, pid: process.pid }); process.exit(1); });
+diff --git a/apps/controller/src/jobs/types.ts b/apps/controller/src/jobs/types.ts
+new file mode 100644
+index 0000000..30c4f17
+--- /dev/null
++++ b/apps/controller/src/jobs/types.ts
+@@ -0,0 +1,24 @@
++export const JOB_TYPES = ['commission_article', 'create_editorial_pitch', 'discover', 'run_editorial_batch', 'process_candidate', 'polish_candidate', 'retry_run', 'sync_candidate', 'health_check'] as const;
++export type JobType = typeof JOB_TYPES[number]; export type Job = { id: string; job_type: JobType; parameters: Record<string, unknown>; attempt_count: number; max_attempts: number; cancellation_requested_at: string | null; pipeline_candidate_id: string | null; };
++const uuid = (value: unknown) => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
++const candidateId = (value: unknown) => uuid(value) || (typeof value === 'string' && /^[a-f0-9]{64}$/i.test(value));
++export function validateJob(type: string, parameters: unknown): asserts parameters is Record<string, unknown> {
++  if (!JOB_TYPES.includes(type as JobType) || !parameters || Array.isArray(parameters) || typeof parameters !== 'object') throw new Error('INVALID_PARAMETERS');
++  const p = parameters as Record<string, unknown>;
++  if (['process_candidate', 'polish_candidate', 'sync_candidate'].includes(type) && !candidateId(p.candidate_id)) throw new Error('INVALID_PARAMETERS');
++  if (type === 'process_candidate' && p.pipeline_version !== undefined && !['v1', 'pipeline-v1'].includes(String(p.pipeline_version))) throw new Error('INVALID_PARAMETERS');
++  if (type === 'process_candidate' && p.authorization !== undefined && (!['research_again'].includes(String(p.authorization)) || !['v1', 'pipeline-v1'].includes(String(p.pipeline_version)))) throw new Error('INVALID_PARAMETERS');
++  if (type === 'polish_candidate' && (p.pipeline_version !== 'v1' || p.authorization !== 'polish_with_sol')) throw new Error('INVALID_PARAMETERS');
++  if (type === 'retry_run' && !uuid(p.run_id)) throw new Error('INVALID_PARAMETERS');
++  if (type === 'run_editorial_batch' && !uuid(p.batch_run_id)) throw new Error('INVALID_PARAMETERS');
++  if (type === 'commission_article' || type === 'create_editorial_pitch') {
++    const strings = (value: unknown) => Array.isArray(value) && value.every(item => typeof item === 'string');
++    if (typeof p.brief !== 'string' || p.brief.length < 20 || p.brief.length > 3000
++      || typeof p.section_id !== 'string' || (p.story_form !== undefined && typeof p.story_form !== 'string') || !strings(p.beats) || !strings(p.tags)
++      || !strings(p.source_urls) || !(p.source_urls as string[]).length
++      || (p.source_urls as string[]).length > 20 || (p.source_urls as string[]).some(value => {
++        try { return !['http:', 'https:'].includes(new URL(value).protocol); } catch { return true; }
++      })
++      || typeof p.notes !== 'string' || p.notes.length > 4000) throw new Error('INVALID_PARAMETERS');
++  }
++}
+diff --git a/apps/controller/src/logger.ts b/apps/controller/src/logger.ts
+new file mode 100644
+index 0000000..21347db
+--- /dev/null
++++ b/apps/controller/src/logger.ts
+@@ -0,0 +1,4 @@
++import fs from 'node:fs/promises'; import path from 'node:path';
++const secret = /(service_role|supabase.*key|authorization|bearer)\s*[=:]\s*[^\s]+/ig;
++export const redact = (value: string) => value.replace(secret, '$1=[REDACTED]');
++export class Logger { constructor(private dir: string, private jobId?: string) {} async write(level: string, message: string, meta: Record<string, unknown> = {}) { const line = JSON.stringify({ at: new Date().toISOString(), level, job_id: this.jobId || null, message: redact(message), ...meta }) + '\n'; await fs.mkdir(this.dir, { recursive: true }); await fs.appendFile(path.join(this.dir, this.jobId ? `job-${this.jobId}.log` : 'controller.log'), line); process.stdout.write(line); } }
+diff --git a/apps/controller/src/ollama/health.ts b/apps/controller/src/ollama/health.ts
+new file mode 100644
+index 0000000..9e929f9
+--- /dev/null
++++ b/apps/controller/src/ollama/health.ts
+@@ -0,0 +1,3 @@
++import type { Config } from '../config.js';
++export async function ollamaHealth(config: Config) { try { const response = await fetch(`${config.ollamaBaseUrl.replace(/\/$/, '')}/api/tags`, { signal: AbortSignal.timeout(5_000) }); if (!response.ok) return { reachable: false, modelAvailable: false }; const data = await response.json() as { models?: Array<{ name: string }> }; return { reachable: true, modelAvailable: Boolean(data.models?.some(model => model.name === config.ollamaModel)), models: data.models?.map(model => model.name) || [] }; } catch { return { reachable: false, modelAvailable: false, models: [] as string[] }; } }
++export async function unloadModel(config: Config) { const response = await fetch(`${config.ollamaBaseUrl.replace(/\/$/, '')}/api/generate`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ model: config.ollamaModel, keep_alive: 0 }), signal: AbortSignal.timeout(15_000) }); if (!response.ok) throw new Error(`Ollama unload returned ${response.status}`); }
+diff --git a/apps/controller/src/pipeline/runner.ts b/apps/controller/src/pipeline/runner.ts
+new file mode 100644
+index 0000000..fe520f2
+--- /dev/null
++++ b/apps/controller/src/pipeline/runner.ts
+@@ -0,0 +1,42 @@
++import { spawn } from 'node:child_process';
++import type { Config } from '../config.js';
++import type { Job } from '../jobs/types.js';
++
++export const jobArguments = (job: Job) => {
++  const p = job.parameters;
++  if (job.job_type === 'commission_article') return ['commission_article', '--request', Buffer.from(JSON.stringify(p)).toString('base64url')];
++  if (job.job_type === 'create_editorial_pitch') return ['create_editorial_pitch', '--request', Buffer.from(JSON.stringify(p)).toString('base64url')];
++  if (job.job_type === 'discover') return ['discover'];
++  if (job.job_type === 'run_editorial_batch') return ['run_editorial_batch'];
++  if (job.job_type === 'process_candidate') return ['process_candidate', '--candidate-id', String(p.candidate_id), ...(p.pipeline_version === 'v1' || p.pipeline_version === 'pipeline-v1' ? ['--pipeline-version', 'v1'] : []), ...(p.authorization ? ['--action', String(p.authorization)] : []), ...(p.revision_instructions ? ['--revision-instructions', String(p.revision_instructions)] : []), '--job-id', String(job.id)];
++  if (job.job_type === 'polish_candidate') return ['polish_candidate', '--candidate-id', String(p.candidate_id), '--pipeline-version', 'v1', '--job-id', String(job.id)];
++  if (job.job_type === 'retry_run') return ['retry_run', '--run-id', String(p.run_id)];
++  if (job.job_type === 'sync_candidate') return ['sync_candidate', '--candidate-id', String(p.candidate_id)];
++  return null;
++};
++
++export type PipelineResult = { ok: boolean; result?: unknown; error?: { code: string; message: string; retryable: boolean }; log: string };
++
++export function pipelineTimeoutMs(config: Config, job: Job) {
++  const phase2 = ['process_candidate', 'polish_candidate'].includes(job.job_type) && ['v1', 'pipeline-v1'].includes(String(job.parameters.pipeline_version || ''));
++  return phase2 ? config.phase2JobTimeoutMs : config.jobTimeoutMs;
++}
++
++export async function runPipeline(config: Config, job: Job, onLine: (line: string, stderr: boolean) => Promise<void>, cancelled: () => Promise<boolean>, signal?: AbortSignal): Promise<PipelineResult> {
++  const args = jobArguments(job);
++  if (!args) return { ok: true, result: { health: 'ok' }, log: 'Controller health check completed.' };
++  return new Promise(resolve => {
++    const child = spawn(process.execPath, ['bin/anyways-pipeline-command.mjs', ...args], { cwd: config.anywaysRepoPath, env: { ...process.env, ANYWAYS_CODEX_BIN: config.codexExecutable }, stdio: ['ignore', 'pipe', 'pipe'] });
++    let all = ''; let final: any; let terminated = false; let settled = false; let killTimer: NodeJS.Timeout | undefined;
++    const consume = (chunk: Buffer, stderr: boolean) => { const text = chunk.toString(); all += text; for (const line of text.split(/\r?\n/).filter(Boolean)) { void onLine(line, stderr); try { final = JSON.parse(line); } catch {} } };
++    const terminate = () => { if (terminated) return; terminated = true; child.kill('SIGTERM'); killTimer = setTimeout(() => { if (!settled) child.kill('SIGKILL'); }, config.childKillGraceMs); };
++    child.stdout.on('data', chunk => consume(chunk, false)); child.stderr.on('data', chunk => consume(chunk, true));
++    const onAbort = () => terminate();
++    if (signal?.aborted) terminate(); else signal?.addEventListener('abort', onAbort, { once: true });
++    const timeout = setTimeout(terminate, pipelineTimeoutMs(config, job));
++    const cancellation = setInterval(async () => { if (await cancelled()) terminate(); }, Math.min(config.heartbeatMs, 5000));
++    const finish = (result: PipelineResult) => { if (settled) return; settled = true; clearTimeout(timeout); clearTimeout(killTimer); clearInterval(cancellation); signal?.removeEventListener('abort', onAbort); resolve(result); };
++    child.on('error', error => finish({ ok: false, error: { code: 'PIPELINE_SPAWN_FAILED', message: error.message, retryable: true }, log: all }));
++    child.on('close', code => finish(final?.ok ? { ok: true, result: final.result, log: all } : { ok: false, error: final?.error || { code: terminated ? 'PIPELINE_TIMEOUT' : 'PIPELINE_EXIT_NONZERO', message: `Pipeline exited ${code ?? 'unknown'}.`, retryable: terminated }, log: all }));
++  });
++}
+diff --git a/apps/controller/src/queue/client.ts b/apps/controller/src/queue/client.ts
+new file mode 100644
+index 0000000..17b9863
+--- /dev/null
++++ b/apps/controller/src/queue/client.ts
+@@ -0,0 +1,79 @@
++import { createClient, SupabaseClient } from '@supabase/supabase-js';
++import type { Config } from '../config.js';
++import type { Job } from '../jobs/types.js';
++
++type CandidateRecord = { id: string; status: string; classification: Record<string, unknown> | null };
++
++export function canClaimNextJob(job: Job | null, providerReady: boolean) {
++  const v1 = ['v1', 'pipeline-v1'].includes(String(job?.parameters?.pipeline_version || ''));
++  return !v1 || providerReady;
++}
++
++export class Queue {
++  readonly db: SupabaseClient;
++
++  constructor(private config: Config) {
++    this.db = createClient(config.supabaseUrl, config.serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });
++  }
++
++  async rpc<T>(fn: string, args: Record<string, unknown> = {}) {
++    const { data, error } = await this.db.rpc(fn, args);
++    if (error) throw new Error(`${fn}: ${error.message}`);
++    return data as T;
++  }
++
++  async nextQueued() {
++    const { data, error } = await this.db.from('pipeline_jobs').select('*').eq('status', 'queued').lte('not_before', new Date().toISOString()).is('cancellation_requested_at', null).order('priority_rank', { ascending: false }).order('queue_position', { ascending: true }).order('created_at', { ascending: true }).limit(1).maybeSingle();
++    if (error) throw new Error(`next_pipeline_job: ${error.message}`);
++    return data as Job | null;
++  }
++
++  async claim(providerReady = true) {
++    const next = await this.nextQueued();
++    if (!canClaimNextJob(next, providerReady)) return null;
++    const job = await this.rpc<Job>('claim_next_pipeline_job', { p_lease_owner: this.config.controllerId, p_lease_seconds: this.config.leaseSeconds });
++    return job?.id ? job : null;
++  }
++
++  start(id: string) { return this.rpc<boolean>('start_pipeline_job', { p_job_id: id, p_lease_owner: this.config.controllerId }); }
++  heartbeat(id: string) { return this.rpc<boolean>('heartbeat_pipeline_job', { p_job_id: id, p_lease_owner: this.config.controllerId, p_lease_seconds: this.config.leaseSeconds }); }
++  complete(id: string, result: unknown, log: string) { return this.rpc<boolean>('complete_pipeline_job', { p_job_id: id, p_lease_owner: this.config.controllerId, p_result: result, p_summary_log: log }); }
++  fail(id: string, error: unknown, log: string) { return this.rpc<Job>('fail_pipeline_job', { p_job_id: id, p_lease_owner: this.config.controllerId, p_error: error, p_summary_log: log, p_retry_delay_seconds: this.config.retryDelaySeconds }); }
++  cancel(id: string, log: string) { return this.rpc<boolean>('cancel_pipeline_job', { p_job_id: id, p_lease_owner: this.config.controllerId, p_summary_log: log }); }
++  releaseExpired() { return this.rpc<number>('release_expired_pipeline_job_leases'); }
++  lock(id: string, resourceName = 'heavy_model') { return this.rpc<boolean>('acquire_pipeline_resource_lock', { p_name: resourceName, p_lease_owner: this.config.controllerId, p_job_id: id, p_lease_seconds: this.config.leaseSeconds }); }
++  unlock(id: string, resourceName = 'heavy_model') { return this.rpc<boolean>('release_pipeline_resource_lock', { p_name: resourceName, p_job_id: id, p_lease_owner: this.config.controllerId }); }
++  event(id: string, level: string, type: string, message: string, metadata: Record<string, unknown> = {}) { return this.rpc<void>('append_pipeline_job_event', { p_job_id: id, p_level: level, p_event_type: type, p_message: message, p_metadata: metadata }); }
++
++  async expiredV1Jobs() {
++    const { data, error } = await this.db.from('pipeline_jobs').select('*').in('status', ['claimed', 'running']).lt('lease_expires_at', new Date().toISOString());
++    if (error) throw new Error(`expired_pipeline_jobs: ${error.message}`);
++    return (data || []).filter(job => ['v1', 'pipeline-v1'].includes(String(job.parameters?.pipeline_version || ''))) as Job[];
++  }
++
++  async terminalizeInterruptedCandidate(job: Job, reason: { code: string; message: string }) {
++    if (!['v1', 'pipeline-v1'].includes(String(job.parameters?.pipeline_version || '')) || !job.pipeline_candidate_id) return false;
++    const { data, error: readError } = await this.db.from('candidate_stories').select('id,status,classification').eq('id', job.pipeline_candidate_id).maybeSingle();
++    if (readError) throw new Error(`candidate_terminalization_read: ${readError.message}`);
++    const candidate = data as CandidateRecord | null;
++    if (!candidate || candidate.status !== 'researching') return false;
++    const classification = candidate.classification && typeof candidate.classification === 'object' ? candidate.classification : {};
++    const nextClassification = {
++      ...classification,
++      phase2_state: 'failed',
++      phase2_terminal_state: 'aborted',
++      phase2_failure: { code: reason.code, message: reason.message, job_id: job.id, at: new Date().toISOString() }
++    };
++    const { error: updateError } = await this.db.from('candidate_stories').update({ status: 'verification_failed', classification: nextClassification, updated_at: new Date().toISOString() }).eq('id', candidate.id).eq('status', 'researching');
++    if (updateError) throw new Error(`candidate_terminalization_update: ${updateError.message}`);
++    await this.event(job.id, 'error', 'candidate_terminalized', 'Pipeline V1 candidate terminalized after controller interruption.', { candidate_id: candidate.id, status: 'verification_failed', ...reason });
++    return true;
++  }
++
++  async reconcileExpiredV1Jobs() {
++    const expired = await this.expiredV1Jobs();
++    const released = await this.releaseExpired();
++    for (const job of expired) await this.terminalizeInterruptedCandidate(job, { code: 'LEASE_EXPIRED', message: 'Controller lease expired before completion.' });
++    return { released, expired };
++  }
++}
+diff --git a/apps/controller/src/resources/classes.ts b/apps/controller/src/resources/classes.ts
+new file mode 100644
+index 0000000..f301071
+--- /dev/null
++++ b/apps/controller/src/resources/classes.ts
+@@ -0,0 +1,28 @@
++export const RESOURCE_CLASSES = {
++  deterministicWork: 'deterministic-work',
++  cloudCodexGeneration: 'cloud-codex-generation',
++  localHeavyModel: 'local-heavy-model'
++} as const;
++export type ResourceClass = typeof RESOURCE_CLASSES[keyof typeof RESOURCE_CLASSES];
++
++export function canRunPipelineV1(job: { id?: string; parameters?: Record<string, unknown> }, env: NodeJS.ProcessEnv = process.env): boolean {
++  const pipelineV1 = ['v1', 'pipeline-v1'].includes(String(job.parameters?.pipeline_version || '').trim());
++  if (!pipelineV1) return false;
++  if (/^(1|true|yes)$/i.test(env.PIPELINE_V1_ENABLED || '')) return true;
++  const allowedJobId = String(env.PIPELINE_V1_ALLOWED_JOB_ID || '').trim();
++  return Boolean(allowedJobId && String(job.id || '').trim() === allowedJobId);
++}
++
++export function resourceClassForJob(job: { id?: string; job_type: string; parameters?: Record<string, unknown> }, env: NodeJS.ProcessEnv = process.env): ResourceClass {
++  const pipelineV1 = ['v1', 'pipeline-v1'].includes(String(job.parameters?.pipeline_version || '').trim());
++  if (['process_candidate', 'polish_candidate'].includes(job.job_type) && pipelineV1 && canRunPipelineV1(job, env)) return RESOURCE_CLASSES.cloudCodexGeneration;
++  if (job.job_type === 'run_editorial_batch' && pipelineV1 && canRunPipelineV1(job, env)) return RESOURCE_CLASSES.cloudCodexGeneration;
++  if (['commission_article', 'create_editorial_pitch', 'process_candidate', 'run_editorial_batch'].includes(job.job_type)) return RESOURCE_CLASSES.localHeavyModel;
++  return RESOURCE_CLASSES.deterministicWork;
++}
++
++export function resourceLockName(resourceClass: ResourceClass): string | null {
++  if (resourceClass === RESOURCE_CLASSES.cloudCodexGeneration) return 'cloud_codex_generation';
++  if (resourceClass === RESOURCE_CLASSES.localHeavyModel) return 'heavy_model';
++  return null;
++}
+diff --git a/apps/controller/src/resources/memory.ts b/apps/controller/src/resources/memory.ts
+new file mode 100644
+index 0000000..9632304
+--- /dev/null
++++ b/apps/controller/src/resources/memory.ts
+@@ -0,0 +1,2 @@
++import { execFile } from 'node:child_process'; import { promisify } from 'node:util'; const exec = promisify(execFile);
++export async function availableMemoryGb() { try { const { stdout } = await exec('vm_stat', []); const pages = Object.fromEntries([...stdout.matchAll(/^Pages (free|inactive|speculative|purgeable):\s+(\d+)\./gm)].map(match => [match[1], Number(match[2])])); return ((pages.free || 0) + (pages.inactive || 0) + (pages.speculative || 0) + (pages.purgeable || 0)) * 16384 / 1024 ** 3; } catch { return 0; } }
+diff --git a/apps/controller/tests/codex-readiness.test.ts b/apps/controller/tests/codex-readiness.test.ts
+new file mode 100644
+index 0000000..7b9797a
+--- /dev/null
++++ b/apps/controller/tests/codex-readiness.test.ts
+@@ -0,0 +1,46 @@
++import assert from 'node:assert/strict';
++import { chmod, mkdtemp, rm, writeFile } from 'node:fs/promises';
++import os from 'node:os';
++import path from 'node:path';
++import test from 'node:test';
++import { checkCodexReadiness } from '../src/codex-readiness.js';
++
++async function fixture(body: string, executable = true) {
++  const root = await mkdtemp(path.join(os.tmpdir(), 'anyways-codex-readiness- with spaces-'));
++  const file = path.join(root, 'codex wrapper');
++  await writeFile(file, `#!/bin/sh\n${body}\n`);
++  await chmod(file, executable ? 0o700 : 0o600);
++  return { root, file };
++}
++
++test('minimal PATH is irrelevant when the configured absolute executable is valid', async t => {
++  const files = await fixture("if [ \"$1\" = '--version' ]; then printf 'codex-cli 0.146.0\\n'; elif [ \"$1\" = 'login' ]; then printf 'Logged in using ChatGPT\\n'; else exit 9; fi");
++  t.after(() => rm(files.root, { recursive: true, force: true }));
++  const previous = process.env.PATH;
++  process.env.PATH = '/usr/bin:/bin';
++  t.after(() => { process.env.PATH = previous; });
++  const result = await checkCodexReadiness({ codexExecutable: files.file });
++  assert.equal(result.ok, true);
++  assert.equal(result.executable, files.file);
++  assert.equal(result.version, 'codex-cli 0.146.0');
++});
++
++test('missing and non-executable paths fail before any provider invocation', async () => {
++  const missing = await checkCodexReadiness({ codexExecutable: '/tmp/anyways-codex-does-not-exist' });
++  assert.equal(missing.ok, false);
++  const files = await fixture("printf 'codex-cli 0.146.0\\n'", false);
++  try {
++    const result = await checkCodexReadiness({ codexExecutable: files.file });
++    assert.equal(result.ok, false);
++  } finally {
++    await rm(files.root, { recursive: true, force: true });
++  }
++});
++
++test('version mismatch fails closed', async t => {
++  const files = await fixture("if [ \"$1\" = '--version' ]; then printf 'codex-cli old\\n'; else exit 9; fi");
++  t.after(() => rm(files.root, { recursive: true, force: true }));
++  const result = await checkCodexReadiness({ codexExecutable: files.file });
++  assert.equal(result.ok, false);
++  assert.match(result.error || '', /version/);
++});
+diff --git a/apps/controller/tests/controller.test.ts b/apps/controller/tests/controller.test.ts
+new file mode 100644
+index 0000000..a3203f7
+--- /dev/null
++++ b/apps/controller/tests/controller.test.ts
+@@ -0,0 +1,178 @@
++import assert from 'node:assert/strict'; import test from 'node:test'; import { validateJob } from '../src/jobs/types.js'; import { redact } from '../src/logger.js';
++import { jobArguments, pipelineTimeoutMs, runPipeline } from '../src/pipeline/runner.js';
++import { canClaimNextJob } from '../src/queue/client.js';
++import { canRunPipelineV1, resourceClassForJob, resourceLockName, RESOURCE_CLASSES } from '../src/resources/classes.js';
++import {
++  clearResolvedJobFailure,
++  healthPayload,
++  recordJobFailure,
++  recordQueueFailure,
++  recordQueueSuccess,
++  startHealthServer,
++  type HealthState
++} from '../src/health.js';
++import type { AddressInfo } from 'node:net';
++
++function healthyState(): HealthState {
++  return {
++    controllerId: 'test-controller',
++    startedAt: 0,
++    queue: true,
++    ollama: true,
++    model: true,
++    currentJobId: null,
++    lastCompletedJobId: null,
++    lastError: null,
++    lastRecordedError: null,
++    errorSource: null
++  };
++}
++
++const closeServer = (server: import('node:http').Server) => new Promise<void>((resolve, reject) => {
++  server.close(error => error ? reject(error) : resolve());
++});
++test('accepts only verified job payloads', () => { assert.doesNotThrow(() => validateJob('discover', {})); assert.doesNotThrow(() => validateJob('run_editorial_batch', { batch_run_id: '73457200-fd06-483c-9ccc-ab71dc037601' })); assert.throws(() => validateJob('run_editorial_batch', {}), /INVALID_PARAMETERS/); assert.throws(() => validateJob('regenerate_draft', {}), /INVALID_PARAMETERS/); assert.throws(() => validateJob('process_candidate', {}), /INVALID_PARAMETERS/); });
++test('accepts pipeline candidate hashes and requires UUID run identifiers', () => { assert.doesNotThrow(() => validateJob('process_candidate', { candidate_id: 'a'.repeat(64) })); assert.throws(() => validateJob('retry_run', { run_id: 'bad' }), /INVALID_PARAMETERS/); });
++test('routes only the explicitly enabled commissioned path to the cloud Codex resource', () => {
++  const job = { id: 'job-1', job_type: 'process_candidate', parameters: { candidate_id: 'a'.repeat(64), pipeline_version: 'v1' } };
++  assert.equal(resourceClassForJob(job, {}), RESOURCE_CLASSES.localHeavyModel);
++  assert.equal(resourceLockName(RESOURCE_CLASSES.cloudCodexGeneration), 'cloud_codex_generation');
++  assert.equal(resourceClassForJob({ job_type: 'process_candidate', parameters: { candidate_id: 'a'.repeat(64) } }, {}), RESOURCE_CLASSES.localHeavyModel);
++  assert.equal(resourceClassForJob({ job_type: 'discover', parameters: {} }, {}), RESOURCE_CLASSES.deterministicWork);
++  assert.equal(resourceClassForJob(job, { PIPELINE_V1_ENABLED: 'true' }), RESOURCE_CLASSES.cloudCodexGeneration);
++  assert.equal(canRunPipelineV1(job, { PIPELINE_V1_ALLOWED_JOB_ID: 'job-1' }), true);
++  assert.equal(resourceClassForJob(job, { PIPELINE_V1_ALLOWED_JOB_ID: 'job-1' }), RESOURCE_CLASSES.cloudCodexGeneration);
++  assert.equal(canRunPipelineV1({ ...job, id: 'job-2' }, { PIPELINE_V1_ALLOWED_JOB_ID: 'job-1' }), false);
++  assert.equal(resourceClassForJob({ ...job, id: 'job-2' }, { PIPELINE_V1_ALLOWED_JOB_ID: 'job-1' }), RESOURCE_CLASSES.localHeavyModel);
++  assert.equal(resourceClassForJob({ job_type: 'run_editorial_batch', parameters: { batch_run_id: '73457200-fd06-483c-9ccc-ab71dc037601' } }, {}), RESOURCE_CLASSES.localHeavyModel);
++  assert.equal(resourceClassForJob({ job_type: 'run_editorial_batch', parameters: { batch_run_id: '73457200-fd06-483c-9ccc-ab71dc037601', pipeline_version: 'v1' } }, { PIPELINE_V1_ENABLED: 'true' }), RESOURCE_CLASSES.cloudCodexGeneration);
++});
++test('accepts a structured newsroom article commission and rejects missing evidence', () => {
++  const request = { brief: 'Explain how independent newsletters are changing local media economics.', section_id: 'media', story_form: 'receipts', beats: ['brands'], tags: ['newsletters'], source_urls: ['https://example.com/report'], notes: 'Follow the money.' };
++  assert.doesNotThrow(() => validateJob('commission_article', request));
++  assert.doesNotThrow(() => validateJob('commission_article', (({ story_form, ...legacy }) => legacy)(request)));
++  assert.throws(() => validateJob('commission_article', { ...request, source_urls: [] }), /INVALID_PARAMETERS/);
++  assert.doesNotThrow(() => validateJob('create_editorial_pitch', request));
++  const args = jobArguments({ id: 'job', job_type: 'commission_article', parameters: request, attempt_count: 0, max_attempts: 3, cancellation_requested_at: null, pipeline_candidate_id: null });
++  assert.equal(args?.[0], 'commission_article');
++  const pitchArgs = jobArguments({ id: 'job', job_type: 'create_editorial_pitch', parameters: request, attempt_count: 0, max_attempts: 3, cancellation_requested_at: null, pipeline_candidate_id: null });
++  assert.equal(pitchArgs?.[0], 'create_editorial_pitch');
++  assert.deepEqual(jobArguments({ id: 'job', job_type: 'process_candidate', parameters: { candidate_id: 'a'.repeat(64), pipeline_version: 'v1' }, attempt_count: 0, max_attempts: 3, cancellation_requested_at: null, pipeline_candidate_id: null }), ['process_candidate', '--candidate-id', 'a'.repeat(64), '--pipeline-version', 'v1', '--job-id', 'job']);
++  assert.deepEqual(jobArguments({ id: 'job-2', job_type: 'process_candidate', parameters: { candidate_id: 'a'.repeat(64), pipeline_version: 'v1', authorization: 'research_again' }, attempt_count: 0, max_attempts: 1, cancellation_requested_at: null, pipeline_candidate_id: null }), ['process_candidate', '--candidate-id', 'a'.repeat(64), '--pipeline-version', 'v1', '--action', 'research_again', '--job-id', 'job-2']);
++  assert.deepEqual(jobArguments({ id: 'job-3', job_type: 'polish_candidate', parameters: { candidate_id: 'a'.repeat(64), pipeline_version: 'v1', authorization: 'polish_with_sol' }, attempt_count: 0, max_attempts: 1, cancellation_requested_at: null, pipeline_candidate_id: null }), ['polish_candidate', '--candidate-id', 'a'.repeat(64), '--pipeline-version', 'v1', '--job-id', 'job-3']);
++  assert.deepEqual(JSON.parse(Buffer.from(args?.[2] || '', 'base64url').toString('utf8')), request);
++  assert.deepEqual(jobArguments({ id: 'job', job_type: 'run_editorial_batch', parameters: { batch_run_id: '73457200-fd06-483c-9ccc-ab71dc037601' }, attempt_count: 0, max_attempts: 2, cancellation_requested_at: null, pipeline_candidate_id: null }), ['run_editorial_batch']);
++});
++test('redacts credential-shaped log fragments', () => { assert.match(redact('SUPABASE_SERVICE_ROLE_KEY=super-secret'), /REDACTED/); });
++
++test('queue failure causes degraded health', () => {
++  const state = healthyState();
++  recordQueueFailure(state, new Error('transient queue failure'));
++  const payload = healthPayload(state, 1000);
++  assert.equal(payload.status, 'degraded');
++  assert.equal(payload.queue_connectivity, false);
++  assert.equal(payload.last_error, 'transient queue failure');
++});
++
++test('successful queue polling clears a transient queue error and restores ok health', () => {
++  const state = healthyState();
++  recordQueueFailure(state, new Error('transient queue failure'));
++  recordQueueSuccess(state);
++  const payload = healthPayload(state, 1000);
++  assert.equal(payload.status, 'ok');
++  assert.equal(payload.last_error, null);
++  assert.equal(payload.last_recorded_error, 'transient queue failure');
++});
++
++test('queue success does not hide a current active-job error', () => {
++  const state = healthyState();
++  state.currentJobId = 'active-job';
++  recordJobFailure(state, new Error('active job failure'));
++  recordQueueSuccess(state);
++  assert.equal(healthPayload(state, 1000).status, 'degraded');
++  assert.equal(healthPayload(state, 1000).last_error, 'active job failure');
++  state.currentJobId = null;
++  clearResolvedJobFailure(state);
++  assert.equal(healthPayload(state, 1000).status, 'ok');
++  assert.equal(healthPayload(state, 1000).last_recorded_error, 'active job failure');
++});
++
++test('current queue failures remain visible until a successful poll', () => {
++  const state = healthyState();
++  recordQueueFailure(state, new Error('first queue failure'));
++  recordQueueFailure(state, new Error('current queue failure'));
++  assert.equal(healthPayload(state, 1000).last_error, 'current queue failure');
++  assert.equal(healthPayload(state, 1000).status, 'degraded');
++});
++
++test('health startup rejects a duplicate listener without replacing the live server', async t => {
++  const first = await startHealthServer('127.0.0.1', 0, healthyState());
++  t.after(() => first.listening ? closeServer(first) : undefined);
++  const port = (first.address() as AddressInfo).port;
++  await assert.rejects(
++    () => startHealthServer('127.0.0.1', port, healthyState()),
++    (error: NodeJS.ErrnoException) => error.code === 'EADDRINUSE'
++  );
++  assert.equal(first.listening, true);
++});
++
++test('health server can restart cleanly on the same port after shutdown', async () => {
++  const first = await startHealthServer('127.0.0.1', 0, healthyState());
++  const port = (first.address() as AddressInfo).port;
++  await closeServer(first);
++  const replacement = await startHealthServer('127.0.0.1', port, healthyState());
++  assert.equal(replacement.listening, true);
++  assert.equal((replacement.address() as AddressInfo).port, port);
++  await closeServer(replacement);
++});
++
++test('V1 timeout and one-attempt behavior remain explicit', () => {
++  const config = { phase2JobTimeoutMs: 2_400_000, jobTimeoutMs: 900_000 } as any;
++  const job = { id: 'job', job_type: 'process_candidate', parameters: { candidate_id: 'a'.repeat(64), pipeline_version: 'v1' }, max_attempts: 1 } as any;
++  assert.equal(pipelineTimeoutMs(config, job), 2_400_000);
++  assert.equal(job.max_attempts, 1);
++});
++
++test('provider readiness prevents claiming a V1 job while legacy jobs remain claimable', () => {
++  const v1 = { id: 'v1-job', parameters: { pipeline_version: 'v1' } } as any;
++  const legacy = { id: 'legacy-job', parameters: {} } as any;
++  assert.equal(canClaimNextJob(v1, false), false);
++  assert.equal(canClaimNextJob(v1, true), true);
++  assert.equal(canClaimNextJob(legacy, false), true);
++});
++
++test('runner abort terminates an in-flight child without a second spawn', async () => {
++  const fs = await import('node:fs/promises');
++  const os = await import('node:os');
++  const path = await import('node:path');
++  const repo = await fs.mkdtemp(path.join(os.tmpdir(), 'anyways-controller-runner-'));
++  await fs.mkdir(path.join(repo, 'bin'));
++  await fs.writeFile(path.join(repo, 'bin', 'anyways-pipeline-command.mjs'), 'setInterval(() => {}, 1000);');
++  const controller = new AbortController();
++  const job = { id: 'job', job_type: 'process_candidate', parameters: { candidate_id: 'a'.repeat(64), pipeline_version: 'v1' }, attempt_count: 1, max_attempts: 1, cancellation_requested_at: null, pipeline_candidate_id: null } as any;
++  const promise = runPipeline({ ...({ phase2JobTimeoutMs: 30_000, jobTimeoutMs: 30_000 } as any), anywaysRepoPath: repo, childKillGraceMs: 50, heartbeatMs: 20 }, job, async () => {}, async () => false, controller.signal);
++  setTimeout(() => controller.abort(), 20);
++  const result = await promise;
++  assert.equal(result.ok, false);
++  assert.match(result.error?.code || '', /PIPELINE_/);
++  await fs.rm(repo, { recursive: true, force: true });
++});
++
++test('LaunchAgent restart drains the old instance before bootstrapping the replacement', async () => {
++  const fs = await import('node:fs/promises');
++  const script = await fs.readFile(new URL('../scripts/launchd.sh', import.meta.url), 'utf8');
++  assert.match(script, /launchctl bootout/);
++  assert.match(script, /wait_for_exit/);
++  assert.match(script, /wait_for_listener_exit/);
++  assert.match(script, /wait_for_started_listener/);
++  assert.doesNotMatch(script, /kickstart -k/);
++  assert.match(script, /unexpected process/);
++});
++
++test('controller lifecycle logs initialization, polling, interruption, and drain events', async () => {
++  const fs = await import('node:fs/promises');
++  const source = await fs.readFile(new URL('../src/index.ts', import.meta.url), 'utf8');
++  for (const event of ['Listener acquired.', 'Controller initialized.', 'Queue polling started.', 'Job interruption requested.', 'Job drain completed.']) assert.match(source, new RegExp(event.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
++  assert.match(source, /terminalizeInterruptedCandidate/);
++  assert.match(source, /reconcileExpiredV1Jobs/);
++});
+diff --git a/apps/controller/tsconfig.json b/apps/controller/tsconfig.json
+new file mode 100644
+index 0000000..f4d2220
+--- /dev/null
++++ b/apps/controller/tsconfig.json
+@@ -0,0 +1 @@
++{ "compilerOptions": { "target": "ES2022", "module": "NodeNext", "moduleResolution": "NodeNext", "outDir": "dist", "rootDir": ".", "strict": true, "esModuleInterop": true, "skipLibCheck": true }, "include": ["src", "tests", "scripts"] }
+diff --git a/package.json b/package.json
+index 03890cc..5a86b40 100644
+--- a/package.json
++++ b/package.json
+@@ -19,6 +19,11 @@
+     "pipeline:process": "node bin/anyways-ops.mjs process",
+     "pipeline:status": "node bin/anyways-ops.mjs status",
+     "pipeline:sync-supabase": "node bin/pipeline-sync-supabase.mjs",
++    "controller:build": "npm --prefix apps/controller run build",
++    "controller:test": "npm --prefix apps/controller run test",
++    "controller:restart": "npm --prefix apps/controller run launchd -- restart",
++    "controller:health": "/usr/bin/curl -fsS http://127.0.0.1:4317/health",
++    "validate:all": "npm test && npm run lint && npm run build && npm run controller:test && npm run controller:build",
+     "benchmark:validate": "node pipeline-benchmark/src/cli.mjs fixtures validate",
+     "benchmark:package-apple": "node pipeline-benchmark/src/cli.mjs fixtures package-apple",
+     "benchmark:test": "node --test pipeline-benchmark/tests/*.test.mjs",
+diff --git a/packages/pipeline-contracts/contracts.json b/packages/pipeline-contracts/contracts.json
+new file mode 100644
+index 0000000..ffdacf7
+--- /dev/null
++++ b/packages/pipeline-contracts/contracts.json
+@@ -0,0 +1,42 @@
++{
++  "pipeline_versions": {
++    "request": "v1",
++    "storage": "pipeline-v1"
++  },
++  "research_requirements": ["none", "required"],
++  "resource_classes": {
++    "cloud_codex_generation": "cloud-codex-generation",
++    "legacy_local_heavy_model": "local-heavy-model"
++  },
++  "resource_locks": {
++    "cloud_codex_generation": "cloud_codex_generation",
++    "legacy_local_heavy_model": "heavy_model"
++  },
++  "v1_limits": {
++    "max_attempts": 1,
++    "phase2_timeout_seconds": 2400
++  },
++  "models": {
++    "discovery": {"model": "gpt-5.6-luna", "reasoning": "high"},
++    "research": {"model": "gpt-5.6-terra", "reasoning": "high"},
++    "draft": {"model": "gpt-5.6-luna", "reasoning": "high"},
++    "polish": {"model": "gpt-5.6-sol", "reasoning": "medium"}
++  },
++  "rpc_names": {
++    "commission_v1": "commission_editorial_pitch_v1",
++    "persist_phase2_stage": "persist_pipeline_phase2_stage_v3",
++    "research_again": "authorize_pipeline_v1_research_again",
++    "sol_polish": "authorize_pipeline_v1_sol_polish"
++  },
++  "job_types": [
++    "commission_article",
++    "create_editorial_pitch",
++    "discover",
++    "run_editorial_batch",
++    "process_candidate",
++    "polish_candidate",
++    "retry_run",
++    "sync_candidate",
++    "health_check"
++  ]
++}
+diff --git a/test/pipeline-contracts.test.mjs b/test/pipeline-contracts.test.mjs
+new file mode 100644
+index 0000000..f191eeb
+--- /dev/null
++++ b/test/pipeline-contracts.test.mjs
+@@ -0,0 +1,39 @@
++import assert from 'node:assert/strict';
++import fs from 'node:fs/promises';
++import test from 'node:test';
++import { PIPELINE_V1_VERSION, isPipelineV1Job } from '../src/pipeline/feature-flags.mjs';
++import { PHASE2_VERSION } from '../src/pipeline/phase2-state.mjs';
++import { PIPELINE_CONFIG, PRODUCTION_MODELS } from '../src/pipeline/config.mjs';
++
++const contracts = JSON.parse(await fs.readFile(new URL('../packages/pipeline-contracts/contracts.json', import.meta.url), 'utf8'));
++
++test('shared Pipeline V1 contracts match the application runtime', () => {
++  assert.equal(PIPELINE_V1_VERSION, contracts.pipeline_versions.request);
++  assert.equal(PHASE2_VERSION, contracts.pipeline_versions.storage);
++  assert.deepEqual(contracts.research_requirements, ['none', 'required']);
++  assert.equal(PIPELINE_CONFIG.discoveryModel, contracts.models.discovery.model);
++  assert.equal(PIPELINE_CONFIG.discoveryReasoning, contracts.models.discovery.reasoning);
++  assert.equal(PIPELINE_CONFIG.researchModel, contracts.models.research.model);
++  assert.equal(PIPELINE_CONFIG.researchReasoning, contracts.models.research.reasoning);
++  assert.equal(PIPELINE_CONFIG.draftModel, contracts.models.draft.model);
++  assert.equal(PIPELINE_CONFIG.draftReasoning, contracts.models.draft.reasoning);
++  assert.equal(PRODUCTION_MODELS.polish.model, contracts.models.polish.model);
++  assert.equal(PRODUCTION_MODELS.polish.reasoning, contracts.models.polish.reasoning);
++  assert.equal(isPipelineV1Job({ pipeline_version: contracts.pipeline_versions.request }), true);
++});
++
++test('controller source is pinned to the same operational contract values', async () => {
++  const [classes, config, jobTypes, queue, runner] = await Promise.all([
++    fs.readFile(new URL('../apps/controller/src/resources/classes.ts', import.meta.url), 'utf8'),
++    fs.readFile(new URL('../apps/controller/src/config.ts', import.meta.url), 'utf8'),
++    fs.readFile(new URL('../apps/controller/src/jobs/types.ts', import.meta.url), 'utf8'),
++    fs.readFile(new URL('../apps/controller/src/queue/client.ts', import.meta.url), 'utf8'),
++    fs.readFile(new URL('../apps/controller/src/pipeline/runner.ts', import.meta.url), 'utf8')
++  ]);
++  assert.match(classes, new RegExp(`cloudCodexGeneration: '${contracts.resource_classes.cloud_codex_generation}'`));
++  assert.match(classes, new RegExp(`return '${contracts.resource_locks.cloud_codex_generation}'`));
++  assert.match(config, new RegExp(`phase2JobTimeoutMs: integer\\('PHASE2_JOB_TIMEOUT_SECONDS', ${contracts.v1_limits.phase2_timeout_seconds}\\)`));
++  for (const jobType of contracts.job_types) assert.match(jobTypes, new RegExp(`'${jobType}'`));
++  assert.match(classes, /PIPELINE_V1_ALLOWED_JOB_ID/);
++  assert.match(runner, /pipeline_version.*v1/);
++});

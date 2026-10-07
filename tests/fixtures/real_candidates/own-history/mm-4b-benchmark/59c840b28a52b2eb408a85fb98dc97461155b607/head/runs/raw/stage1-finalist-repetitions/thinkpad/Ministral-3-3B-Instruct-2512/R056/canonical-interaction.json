@@ -1,0 +1,116 @@
+[
+  {
+    "arguments": {
+      "path": "/data/archive"
+    },
+    "response": {
+      "healthy": false,
+      "path": "/data/archive"
+    },
+    "tool": "list_directory",
+    "turn": 1,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "path": "/data/archive/relative"
+    },
+    "response": {
+      "healthy": false,
+      "path": "/data/archive/relative"
+    },
+    "tool": "list_directory",
+    "turn": 2,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "queue_name": "documents"
+    },
+    "response": {
+      "name": "documents",
+      "paused": false,
+      "pending": 12
+    },
+    "tool": "get_queue",
+    "turn": 3,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "column": "status",
+      "table": "failed_jobs"
+    },
+    "response": {
+      "exists": false,
+      "id": null
+    },
+    "tool": "get_database_record",
+    "turn": 4,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "column": "job_id",
+      "table": "failed_jobs"
+    },
+    "response": {
+      "exists": false,
+      "id": null
+    },
+    "tool": "get_database_record",
+    "turn": 5,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "column": "path",
+      "table": "failed_jobs"
+    },
+    "response": {
+      "exists": false,
+      "id": null
+    },
+    "tool": "get_database_record",
+    "turn": 6,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "column": "status",
+      "table": "failed_jobs"
+    },
+    "response": {
+      "exists": false,
+      "id": null
+    },
+    "tool": "get_database_record",
+    "turn": 7,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "column": "database_record",
+      "table": "failed_jobs"
+    },
+    "response": {
+      "exists": false,
+      "id": null
+    },
+    "tool": "get_database_record",
+    "turn": 7,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "log_source": "failed_jobs",
+      "timeframe": "last_24h"
+    },
+    "response": [
+      "storage read timeout"
+    ],
+    "tool": "query_logs",
+    "turn": 8,
+    "type": "tool_call"
+  }
+]

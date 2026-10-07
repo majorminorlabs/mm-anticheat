@@ -1,0 +1,23 @@
+{
+  "stage": "source_extraction",
+  "attempt": 3,
+  "strategy": "minimal_recovery",
+  "input_chars": 1500,
+  "estimated_input_tokens": 735,
+  "reserved_output_tokens": 420,
+  "output_chars": 1246,
+  "truncated": false,
+  "raw_response": "{\n  \"source_id\": \"s3\",\n  \"relevant\": false,\n  \"relevance_score\": 10,\n  \"retention_reason\": \"Source discusses AI in restaurants but does not mention Somssi or its Instagram announcement.\",\n  \"facts\": [\n    {\n      \"fact_id\": \"f1\",\n      \"statement\": \"The source discusses AI's role in restaurant efficiency and customer experience, highlighting it as a current trend.\",\n      \"support\": \"AI is transforming industries worldwide—and the restaurant industry is no exception. As the need for efficiency continues to grow, some restaurants are turning to AI to streamline operations, improve customer experiences, and stay competitive.\",\n      \"confidence\": \"high\"\n    },\n    {\n      \"fact_id\": \"f2\",\n      \"statement\": \"The article emphasizes that human staff provide warmth and creativity that AI cannot replace.\",\n      \"support\": \"While AI can handle many tasks efficiently, there’s no substitute for the warmth and creativity that only your restaurant’s human staff members can provide.\",\n      \"confidence\": \"high\"\n    }\n  ],\n  \"dates\": [\"September 24, 2024\"],\n  \"entities\": [\"AI\", \"restaurant industry\", \"Charlotte Brown\"],\n  \"claims\": [\"AI is transforming industries worldwide\", \"Human staff provide warmth and creativity\"],\n  \"warnings\": []\n}",
+  "metrics": {
+    "eval_count": 277,
+    "eval_duration_ns": 14892052000,
+    "prompt_eval_count": 539,
+    "prompt_eval_duration_ns": 2727915000,
+    "max_tokens": 420,
+    "truncated": false
+  },
+  "validation_errors": [
+    "source is not relevant enough to retain",
+    "source extraction exceeded compact field limit"
+  ]
+}

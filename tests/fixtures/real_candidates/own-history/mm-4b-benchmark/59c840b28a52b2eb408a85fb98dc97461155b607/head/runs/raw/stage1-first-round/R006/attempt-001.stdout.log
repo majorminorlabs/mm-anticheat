@@ -1,0 +1,43 @@
+0.00.041.515 I llama_completion: llama backend init
+0.00.041.523 I llama_completion: load the model and apply lora adapter, if any
+0.00.473.289 W load_arch_hparams: Phi SWA is currently disabled - results might be suboptimal for some models (see https://github.com/ggml-org/llama.cpp/pull/13676)
+0.03.344.138 I cmn          init: llama threadpool init, n_threads = 8
+0.03.820.242 I llama_completion: chat template is available, enabling conversation mode (disable it with -no-cnv)
+0.03.820.247 W *** User-specified prompt will pre-start conversation, did you mean to set --system-prompt (-sys) instead?
+0.03.821.516 I llama_completion: chat template example:
+<|system|>You are a helpful assistant<|end|><|user|>Hello<|end|><|assistant|>Hi there<|end|><|user|>How are you?<|end|><|assistant|>
+0.03.821.519 I 
+0.03.821.611 I system_info: n_threads = 8 (n_threads_batch = 8) / 16 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1 | 
+0.03.821.613 I 
+0.03.824.702 I llama_completion: interactive mode on.
+0.03.824.709 I sampler seed: 0
+0.03.824.719 I sampler params: 
+	repeat_last_n = 64, repeat_penalty = 1.000, frequency_penalty = 0.000, presence_penalty = 0.000
+	dry_multiplier = 0.000, dry_base = 1.750, dry_allowed_length = 2, dry_penalty_last_n = 64
+	top_k = 40, top_p = 0.950, min_p = 0.050, xtc_probability = 0.000, xtc_threshold = 0.100, typical_p = 1.000, top_n_sigma = -1.000, temp = 0.000
+	mirostat = 0, mirostat_lr = 0.100, mirostat_ent = 5.000, adaptive_target = -1.000, adaptive_decay = 0.900
+0.03.824.726 I sampler chain: logits -> ?penalties -> ?dry -> ?top-n-sigma -> top-k -> ?typical -> top-p -> min-p -> ?xtc -> temp-ext -> dist 
+0.03.824.726 I generate: n_ctx = 16384, n_batch = 2048, n_predict = 768, n_keep = 0
+0.03.824.727 I 
+0.03.824.727 I == Running in interactive mode. ==
+0.03.824.727 I  - Press Ctrl+C to interject at any time.
+0.03.824.727 I  - Press Return to return control to the AI.
+ - To return control without starting a new line, end your input with '/'.
+ - If you want to submit another line, end your input with '\'.
+0.03.824.727 I  - Not using system message. To change it, set a different value via -sys PROMPT
+0.03.824.727 I 
+```json
+{"calls":[{"tool":"search_customer","arguments":{"email":"mreed@example.com"}},{"calls":[{"tool":"get_account","arguments":{"account_id": "8814"}},{"calls":[{"tool":"get_account","arguments":{"account_id": "9921"}}]}],"done":true}]
+```
+
+> EOF by user
+
+
+0.13.120.986 I common_perf_print:    sampling time =      36.81 ms
+0.13.120.992 I common_perf_print:    samplers time =      12.90 ms /   295 tokens
+0.13.120.999 I common_perf_print:        load time =    3345.83 ms
+0.13.121.002 I common_perf_print: prompt eval time =    1731.55 ms /   230 tokens (    7.53 ms per token,   132.83 tokens per second)
+0.13.121.011 I common_perf_print:        eval time =    7519.12 ms /    64 runs   (  117.49 ms per token,     8.51 tokens per second)
+0.13.121.013 I common_perf_print:       total time =    9300.77 ms /   294 tokens
+0.13.121.015 I common_perf_print: unaccounted time =      13.28 ms /   0.1 %      (total - sampling - prompt eval - eval) / (total)
+0.13.121.015 I common_perf_print:    graphs reused =         62

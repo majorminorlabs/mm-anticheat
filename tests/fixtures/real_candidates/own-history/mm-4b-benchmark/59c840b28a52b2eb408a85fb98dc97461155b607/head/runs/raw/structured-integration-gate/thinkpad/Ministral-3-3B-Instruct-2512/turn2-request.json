@@ -1,0 +1,60 @@
+{
+  "max_tokens": 256,
+  "messages": [
+    {
+      "content": "You are a neutral tool-routing test assistant.",
+      "role": "system"
+    },
+    {
+      "content": "Use get_weather for test-city.",
+      "role": "user"
+    },
+    {
+      "content": "",
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "function": {
+            "arguments": "{\"city\": \"test-city\"}",
+            "name": "get_weather"
+          },
+          "id": "lbrkfUhaf8BWmYaj6k9VAe09CIPnWBru",
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "content": "{\"city\":\"test-city\",\"temperature_c\":21,\"status\":\"ok\"}",
+      "name": "get_weather",
+      "role": "tool",
+      "tool_call_id": "lbrkfUhaf8BWmYaj6k9VAe09CIPnWBru"
+    }
+  ],
+  "model": "Ministral-3-3B-Instruct-2512",
+  "seed": 0,
+  "stream": false,
+  "temperature": 0,
+  "tool_choice": "auto",
+  "tools": [
+    {
+      "function": {
+        "description": "Retrieve weather for a city.",
+        "name": "get_weather",
+        "parameters": {
+          "additionalProperties": false,
+          "properties": {
+            "city": {
+              "description": "Test city name",
+              "type": "string"
+            }
+          },
+          "required": [
+            "city"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    }
+  ]
+}

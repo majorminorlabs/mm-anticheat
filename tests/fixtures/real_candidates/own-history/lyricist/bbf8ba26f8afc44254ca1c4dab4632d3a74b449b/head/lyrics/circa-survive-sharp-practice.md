@@ -1,0 +1,56 @@
+# Sharp Practice
+
+Artist: Circa Survive
+
+## Lyrics
+
+```text
+[Intro]
+Tripping over things unsaid in a constant motion
+I cannot recognize the truth ‘cause it’s unfamiliar
+
+[Verse 1]
+If you didn’t have so much left to prove, would there be resistance?
+Kicking up this cloud of dust till it covers us
+I had been there and done it a thousand times but never with my eyes open
+
+[Chorus]
+You get what you paid for
+We can’t sell our goddamn souls anymore, anymore
+Don’t let them give you the runaround again, again
+It’s up to you to make sense of it
+
+(Yeah, talk)
+
+[Verse 2]
+No one hesitates to taste when they come and throw the feed down
+If you wanna not make haste, keep your feet on the ground
+I see you coming from a million miles away like a stampede of footsteps
+Kicking up this cloud of dust till it covers us
+You can’t control what has happened to your heart
+Till you give it away - till you give it away
+
+
+[Chorus]
+You get what you paid for
+We can’t sell our goddamn souls anymore, anymore
+Don’t let them give you the runaround again, again
+It’s up to you to make sense of it
+
+[Bridge]
+So many words flooded in my vacant lie
+So little space, too little sleep, too little time
+Tripping over things unsaid in a constant motion
+I cannot recognize the truth ‘cause I’ve never known it
+I’ve never known it - I’ve never known it - known
+
+[Chorus]
+You get what you paid for
+We can’t sell our goddamn souls anymore, anymore
+Don’t let them give you the runaround again, again
+It’s up to you to make sense of it
+
+[Outro]
+I hear you coming from a million miles away
+I hear you coming from a million miles away
+```

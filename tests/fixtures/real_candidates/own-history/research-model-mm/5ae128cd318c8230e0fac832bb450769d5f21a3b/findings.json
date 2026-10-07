@@ -1,0 +1,67 @@
+[
+  {
+    "rule_id": "GH006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "low",
+    "confidence": "normal",
+    "file": "scripts/qualify_amd.py",
+    "line": 266,
+    "title": "New source literal matches a test expectation",
+    "evidence": "    if invariant_result[\"status\"] != \"passed\":\ntests/test_amd_qualification.py:34:     assert result[\"status\"] == \"passed\", result[\"failures\"]",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "low",
+    "confidence": "normal",
+    "file": "scripts/qualify_amd.py",
+    "line": 516,
+    "title": "New source literal matches a test expectation",
+    "evidence": "    if invariant_result[\"status\"] != \"passed\":\ntests/test_amd_qualification.py:34:     assert result[\"status\"] == \"passed\", result[\"failures\"]",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "low",
+    "confidence": "normal",
+    "file": "scripts/qualify_amd.py",
+    "line": 610,
+    "title": "New source literal matches a test expectation",
+    "evidence": "            \"status\": \"passed\",\ntests/test_amd_qualification.py:34:     assert result[\"status\"] == \"passed\", result[\"failures\"]",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "low",
+    "confidence": "normal",
+    "file": "scripts/validate_e014_invariants.py",
+    "line": 158,
+    "title": "New source literal matches a test expectation",
+    "evidence": "        \"status\": \"passed\" if not failures else \"failed\",\ntests/test_amd_qualification.py:34:     assert result[\"status\"] == \"passed\", result[\"failures\"]",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "low",
+    "confidence": "normal",
+    "file": "scripts/validate_e014_invariants.py",
+    "line": 177,
+    "title": "New source literal matches a test expectation",
+    "evidence": "    return 0 if result[\"status\"] == \"passed\" else 1\ntests/test_amd_qualification.py:34:     assert result[\"status\"] == \"passed\", result[\"failures\"]",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  }
+]

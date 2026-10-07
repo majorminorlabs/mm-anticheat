@@ -1,0 +1,84 @@
+from typing import Optional, List
+
+
+def solve_grid(n: int, r: str, c: str) -> Optional[List[str]]:
+    """ Given an integer N and strings R and C of length N consisting of 'A', 'B', and 'C',
+    determine if it's possible to fill an N×N grid such that:
+    - Each row and column contains exactly one 'A', one 'B', and one 'C'
+    - The leftmost character written in the i-th row matches the i-th character of R
+    - The topmost character written in the i-th column matches the i-th character of C
+    
+    Empty cells are represented by '.' in the output.
+    
+    Args:
+        n: The size of the grid (3 <= n <= 5)
+        r: String of length n specifying leftmost characters in each row
+        c: String of length n specifying topmost characters in each column
+    
+    Returns:
+        A list of n strings representing the filled grid if possible, None otherwise.
+        Each string has length n, where '.' represents empty cells.
+    
+    >>> solve_grid(3, 'ABC', 'ABC')
+    ['ABC', 'BCA', 'CAB']
+    >>> solve_grid(3, 'AAA', 'BBB')
+    None
+    """
+    pass
+from typing import Optional, List
+from itertools import permutations
+
+def solve_grid(n: int, r: str, c: str) -> Optional[List[str]]:
+    """ Given an integer N and strings R and C of length N consisting of 'A', 'B', and 'C',
+    determine if it's possible to fill an N×N grid such that:
+    - Each row and column contains exactly one 'A', one 'B', and one 'C'
+    - The leftmost character written in the i-th row matches the i-th character of R
+    - The topmost character written in the i-th column matches the i-th character of C
+    
+    Empty cells are represented by '.' in the output.
+    
+    Args:
+        n: The size of the grid (3 <= n <= 5)
+        r: String of length n specifying leftmost characters in each row
+        c: String of length n specifying topmost characters in each column
+    
+    Returns:
+        A list of n strings representing the filled grid if possible, None otherwise.
+        Each string has length n, where '.' represents empty cells.
+    """
+    
+    def is_valid(grid):
+        for i in range(n):
+            row_count = {'A': 0, 'B': 0, 'C': 0}
+            col_count = {'A': 0, 'B': 0, 'C': 0}
+            for j in range(n):
+                if grid[i][j] != '.':
+                    row_count[grid[i][j]] += 1
+                if grid[j][i] != '.':
+                    col_count[grid[j][i]] += 1
+            if any(count != 1 for count in row_count.values()) or any(count != 1 for count in col_count.values()):
+                return False
+        return True
+    
+    def backtrack(grid, row):
+        if row == n:
+            return grid
+        
+        for perm in permutations('ABC'):
+            new_grid = [list(grid[i]) for i in range(n)]
+            new_grid[row] = list(perm)
+            if new_grid[row][0] == r[row]:
+                if is_valid(new_grid):
+                    result = backtrack(new_grid, row + 1)
+                    if result:
+                        return result
+        return None
+    
+    initial_grid = [['.' for _ in range(n)] for _ in range(n)]
+    for i in range(n):
+        initial_grid[i][0] = r[i]
+    
+    return backtrack(initial_grid, 0)
+
+# Use check(solve_grid) to run tests.
+

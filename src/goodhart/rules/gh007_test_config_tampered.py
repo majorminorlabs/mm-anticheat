@@ -196,6 +196,7 @@ class TestConfigTampered(RuleBase):
         after = change.head_content or "" if ctx.mode == "full" else change.visible("head")
         if ".goodhart.toml" in {change.old_path, change.new_path}:
             return self._scanner_config(change, before, after, ctx.mode == "full")
+        new_file = change.old_path is None
         # Patch fragments need not be valid JSON/TOML/INI; use local property heuristics.
         if ctx.mode == "full":
             old, new = _structured(before, change.path), _structured(after, change.path)
@@ -205,7 +206,7 @@ class TestConfigTampered(RuleBase):
         for key, value in new.items():
             leaf = key.rsplit(".", 1)[-1]
             previous = old.get(key)
-            if leaf in LIST_KEYS:
+            if leaf in LIST_KEYS and not new_file:
                 if leaf == "testpaths":
                     if _narrower(_entries(previous), _entries(value)):
                         reasons.append("testpaths narrowed")
@@ -220,7 +221,7 @@ class TestConfigTampered(RuleBase):
                 except (TypeError, ValueError):
                     pass
         for key in {key for key in old | new if key.endswith("addopts")}:
-            if _selectors(new.get(key)) - _selectors(old.get(key)):
+            if not new_file and _selectors(new.get(key)) - _selectors(old.get(key)):
                 reasons.append("pytest addopts gained or changed test selection/disabled plugins")
         old_cov = re.search(r"--cov-fail-under[=\s]+(\d+(?:\.\d+)?)", before)
         new_cov = re.search(r"--cov-fail-under[=\s]+(\d+(?:\.\d+)?)", after)
@@ -245,7 +246,9 @@ class TestConfigTampered(RuleBase):
                     r"\|\|\s*true\b|--passWithNoTests\b|\bexit\s+0\b",
                     new_script,
                 )
-                or _narrower(_script_paths(old_script), _script_paths(new_script))
+                or (
+                    not new_file and _narrower(_script_paths(old_script), _script_paths(new_script))
+                )
             ):
                 reasons.append("test script masks failures or narrows paths")
         is_ci = change.path.startswith(".github/workflows/") or change.path == ".gitlab-ci.yml"

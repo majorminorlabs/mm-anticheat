@@ -1,0 +1,93 @@
+[
+  {
+    "rule_id": "GH002",
+    "rule_name": "test-count-decreased",
+    "severity": "high",
+    "confidence": "normal",
+    "file": "test/codex-writer.test.mjs",
+    "line": 5,
+    "title": "Test count decreased: 4 \u2192 2",
+    "evidence": "Removed tests: Terra pitch invocation is ephemeral, read-only, and explicitly model-pinned, article writing uses the local Ollama adapter instead of Codex, writer prompt asks for a lens-led Anyways article and supplies source URLs and extracted text",
+    "why_flagged": "Fewer test definitions may leave previously checked behavior untested.",
+    "legit_if": "Tests were consolidated into parametrized cases or obsolete behavior was removed.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH008",
+    "rule_name": "exception-swallowed",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "src/pipeline/atomic-json.mjs",
+    "line": 59,
+    "title": "Catch handler discards failures",
+    "evidence": ".catch(() => {})",
+    "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+    "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH008",
+    "rule_name": "exception-swallowed",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "src/pipeline/atomic-json.mjs",
+    "line": 65,
+    "title": "Catch handler discards failures",
+    "evidence": ".catch(() => {})",
+    "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+    "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH008",
+    "rule_name": "exception-swallowed",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "src/pipeline/config.mjs",
+    "line": 12,
+    "title": "Catch handler discards failures",
+    "evidence": "catch {\n    return false;\n  }",
+    "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+    "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH008",
+    "rule_name": "exception-swallowed",
+    "severity": "low",
+    "confidence": "normal",
+    "file": "src/app.mjs",
+    "line": 1295,
+    "title": "Catch handler discards failures",
+    "evidence": "catch {}",
+    "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+    "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH008",
+    "rule_name": "exception-swallowed",
+    "severity": "low",
+    "confidence": "normal",
+    "file": "src/pipeline/codex-adapter.mjs",
+    "line": 197,
+    "title": "Catch handler discards failures",
+    "evidence": "catch {\n                                                                     \n                                                                  \n  }",
+    "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+    "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH000",
+    "rule_name": "parse-skipped",
+    "severity": "info",
+    "confidence": "normal",
+    "file": "public/app.js",
+    "line": 1,
+    "title": "Content could not be parsed",
+    "evidence": "Line exceeds the 20,000 character analysis limit",
+    "why_flagged": "This content could not be analyzed completely; review it separately.",
+    "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+    "allowed": false
+  }
+]

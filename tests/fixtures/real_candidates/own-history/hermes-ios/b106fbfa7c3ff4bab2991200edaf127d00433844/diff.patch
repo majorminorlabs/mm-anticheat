@@ -1,0 +1,1593 @@
+diff --git a/.gitignore b/.gitignore
+index 7c0c4e7..fbc141c 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -41,3 +41,16 @@ __pycache__/
+ # Editors
+ .idea/
+ *.swp
++
++# Deployment/release output and local signing overrides
++dist/
++*.xcarchive
++Signing.local.xcconfig
++*.pem
++*.key
++# Private deployment credentials belong outside the checkout
++mobile-pairing.json
++operator.json
++dashboard-token
++installation.json
++transport.json
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+new file mode 100644
+index 0000000..cddebb5
+--- /dev/null
++++ b/CHANGELOG.md
+@@ -0,0 +1,18 @@
++# Changelog
++
++Changes relevant to users of Hermes for iPhone and the Studio bridge.
++
++## 0.1.0 — 2026-10-02
++
++- Added the native SwiftUI iPhone client with Simulation mode and a production client for `hermes-mobile-bridge`.
++- Added the Studio bridge API for sessions, durable runs and replay, profiles, scheduled jobs, Kanban, Home aggregation, usage, inventory, and registered artifacts.
++- Added bearer-token pairing with device-scoped revocation; the iOS app stores bridge credentials in Keychain.
++- Added bridge, Hermes health, and reconnect state handling, while keeping Hermes execution and persistent records on the Studio.
++- Kept remote dangerous tool approvals unavailable because Hermes does not guarantee exact-target approval semantics.
++- Added per-user launchd installation, controlled lifecycle logs, start/stop/status/update/uninstall, guarded updates and retained-state reinstall.
++- Configured and exercised private Tailscale Serve HTTPS with application authentication on the Studio.
++- Added unsigned Release archive/bridge source packaging and a physical-validation gate before SideStore IPA generation.
++- Fixed importing previously unseen Hermes sessions into the bridge.
++- Physical iPhone installation and SideStore updates remain pending device-specific Apple signing and phone access.
++
++This changelog describes repository features. It does not assert that a physical iPhone, SideStore package, has been validated. Studio deployment and HTTPS results are recorded separately. See [the integration test report](INTEGRATION_TEST_REPORT.md) for the completed local validation and [the physical device report](PHYSICAL_DEVICE_TEST_REPORT.md) for this deployment pass's device status.
+diff --git a/HermesTests/StudioTransportTests.swift b/HermesTests/StudioTransportTests.swift
+new file mode 100644
+index 0000000..25798c2
+--- /dev/null
++++ b/HermesTests/StudioTransportTests.swift
+@@ -0,0 +1,35 @@
++import Foundation
++import Testing
++@testable import Hermes
++
++/// Opt-in check of the real configured Studio HTTPS path using iOS URLSession
++/// and Keychain. The private fixture is outside the repo; no token launch args.
++@Suite(.serialized)
++struct StudioTransportTests {
++    @MainActor
++    @Test(.enabled(if: ProcessInfo.processInfo.environment["HERMES_STUDIO_FIXTURE"] != nil))
++    func productionStudioHTTPS() async throws {
++        let path = try #require(ProcessInfo.processInfo.environment["HERMES_STUDIO_FIXTURE"])
++        let fixture = try JSONDecoder().decode(BridgeJSON.self, from: Data(contentsOf: URL(fileURLWithPath: path)))
++        let url = try #require(fixture["url"].string)
++        #expect(URL(string: url)?.scheme == "https")
++        let token = try #require(fixture["token"].string)
++        let namespace = "studio-validation-\(UUID().uuidString)"
++        let defaults = try #require(UserDefaults(suiteName: namespace))
++        defer { defaults.removePersistentDomain(forName: namespace) }
++        let credentials = KeychainBridgeCredentialStore(service: "com.dippo.hermes.\(namespace)")
++        let host = Host(id: namespace, name: "Studio HTTPS validation", address: url, network: .tailscale)
++        try credentials.save(token, forHostID: host.id)
++        defer { try? credentials.remove(forHostID: host.id) }
++        let client = BridgeHermesClient(credentials: credentials, defaults: defaults)
++        await client.connect(to: host)
++        #expect(try await client.status(hostID: host.id).connection == .connected)
++        _ = try await client.listConversations()
++        #expect(try await client.listProfiles().contains { $0.id == "default" })
++        _ = try await client.listRoutines()
++        _ = try await client.listTasks()
++        _ = try await client.usage(period: .day)
++        #expect(try await client.homeSummary().host.connection == .connected)
++        await client.disconnect(hostID: host.id)
++    }
++}
+diff --git a/PHYSICAL_DEVICE_TEST_REPORT.md b/PHYSICAL_DEVICE_TEST_REPORT.md
+new file mode 100644
+index 0000000..ac62261
+--- /dev/null
++++ b/PHYSICAL_DEVICE_TEST_REPORT.md
+@@ -0,0 +1,78 @@
++# Studio deployment and physical-device test report
++
++Date: 2026-10-02. Upstream Hermes: `2a4c9afd7bd7b56d3e1f95524ca8956092f2904c`.
++
++physical_device_validation: PENDING
++
++No physical iPhone was installed or used in this pass. `xcrun devicectl list devices` returned **No devices found**; `security find-identity -v -p codesigning` returned **0 valid identities**. The candidate iPhone peer was offline in Tailscale. No personal Apple credentials, Team ID, certificate or provisioning profile were added to the repository. The app remains `com.dippo.hermes`, automatic signing, iOS 18.0 minimum.
++
++## Studio deployment completed
++
++| Component | Verified state |
++|---|---|
++| Dedicated Hermes desktop backend | Per-user LaunchAgent `com.dippo.hermes-mobile-backend`, loopback `127.0.0.1:9119`, existing Hermes home, private workspace |
++| Bridge | Per-user LaunchAgent `com.dippo.hermes-mobile-bridge`, loopback `127.0.0.1:8787`, versioned installed runtime independent of checkout |
++| Public-facing app URL within tailnet | `https://dippos-mac-studio.taildd4b84.ts.net` |
++| Transport | Tailscale 1.102.2 Serve background HTTPS port 443; trusted TLS; no Funnel configuration |
++| Application authentication | Missing/invalid credential → 401; read-only mutation → 403; authorized requests succeed |
++| State/credentials | Private user-owned directories 0700 and config/credential files 0600, journal retained; mobile transfer token prepared but not displayed in tool output |
++| Logs | Lifecycle-only JSON, 1 MiB per file plus two rotated backups per role; raw child output discarded; actual credential values absent from logs |
++| Existing Hermes | Source and existing gateway supervisors unchanged; prior unrelated upstream dirty work preserved |
++
++LaunchAgents start when the owning account logs in, restart crashed jobs, and stop on logout. Reboot/login and logout were **not physically exercised**. They do not offer pre-login availability. Current Studio power settings report `sleep 0`; no power settings were changed. See [Studio setup](docs/STUDIO_SETUP.md).
++
++## Automated results
++
++| Suite | Passed | Skipped / scope |
++|---|---:|---|
++| Swift unit/integration tests | 37 | 36 existing checks plus production HTTPS/Keychain inventory check in Simulator; two separate isolated-stack helpers skipped |
++| Swift UI tests | 5 | Existing simulated UI tests; optional isolated-stack UI smoke skipped |
++| Bridge pytest suite | 27 | All original 26, including installed-Hermes E2E, plus existing-session import regression |
++| Deployment safety regressions | 8 | Private files, symlinks, failed-write preservation, active/unknown work guards, update rollback, Serve ownership |
++| Physical iPhone tests | 0 | Blocked by absent connected/trusted phone and signing identity |
++
++Commands: full `xcodebuild test` with ad-hoc Simulator signing and parallel testing disabled; final unit run additionally sets `TEST_RUNNER_HERMES_STUDIO_FIXTURE` to a private external fixture path. Bridge: `HERMES_BRIDGE_E2E=1 .../python -m pytest hermes-mobile-bridge/tests -q -s -p no:cacheprovider`. Deployment: `python3 scripts/test_studio_service.py -v`.
++
++The initial optional HTTPS Simulator invocation used Xcode's parallel clone runner, which reported an IPC/server-died retry; it eventually succeeded. A sequential rerun passed the HTTPS check in 4.77 seconds. No physical or remote-peer result is inferred from it.
++
++## Real Studio / Tailscale HTTPS checks
++
++These used the actual private Serve hostname, normal certificate validation, scoped bearer authentication, production bridge and installed Hermes with the configured `gpt-5.6-luna` / `openai-codex` provider. They ran from the Studio and iOS Simulator, **not a physical phone**.
++
++- Sessions/history listing, profiles, cron, Kanban `default`, usage and Home aggregation succeed.
++- A repeated submission with the same idempotency key returned the same durable run ID.
++- Real SSE opened over HTTPS, disconnected deliberately, and replayed retained events on reconnect. Journal sequences were ordered and unique; no command was restarted by stream reconnect.
++- A safe live run completed with assistant deltas, one logical completed response, and a read-only `pwd` terminal call.
++- A fresh run performing a bounded, read-only sleep accepted steering as `queued, consumed=false`. Stop acknowledged without claiming immediate termination; the subsequent run outcome was `cancelled`.
++- Actual bridge child crash automatically recovered. Intentional bridge stop/restart recovered. Dedicated Hermes stop left the bridge authenticated and reachable with Hermes unhealthy and replay still available; backend restart recovered.
++- Full start/stop and uninstall/reinstall were exercised. All **12 lifecycle assertions passed**, including retained credential, journal epoch, completed run ID and replay history. HTTPS was restored after reinstall.
++
++The first cold run failed with Hermes's literal `agent initialization timed out` (`tui_gateway/server.py:890`, 30-second agent-ready limit). An explicit retry of the confirmed failed run completed; the subsequent fresh control-test conversation initialized and executed successfully. No upstream timeout was changed and no uncertain command was automatically resubmitted. Cold initialization after a restart remains a known reliability limitation to check on the phone.
++
++A separate concrete bridge defect initially made imported session listings return 500 (`int(None)` for a new unowned record). The ownership flag now normalizes to a Boolean; a public endpoint regression confirms stable import IDs without executing a prompt. Production listings and the 27-test suite passed after the fix.
++
++## Physical-phone checklist — all pending
++
++| Area | Checks awaiting actual phone |
++|---|---|
++| Installation/signing | USB trust/unlock; Apple Account/Personal Team; Developer Mode; device install and launch |
++| Pairing | Add Host → manual HTTPS URL + token; authenticated save; actual device Keychain retention after relaunch |
++| Connection | Connect/disconnect/reconnect; foreground/background; Wi-Fi → cellular and cellular → Wi-Fi; Tailscale outage recovery |
++| Chat | List/open/create sessions, send, streaming, tools, stable assistant message, no duplicate final bubble |
++| Runs | Background active run, return/replay, steer, stop, completion while backgrounded |
++| Status | Home, profiles/Bots, routines, Kanban, usage |
++| Failures/cache | Bridge and Hermes outages/restarts, network outage, authentication failure, stale cache and recovery |
++| Device UI | Safe areas, keyboard, scrolling, touch targets, truncation, Dynamic Type, navigation, banners, performance |
++| SideStore | Installation, refresh, update over existing bundle, application data and Keychain preservation; VPN switching |
++
++No device-specific UI fixes were made without on-device evidence. Tailscale ACL reachability from the phone, mobile-network handoff and simultaneous/alternating SideStore LocalDevVPN usage remain unverified.
++
++## Release and exact next action
++
++The unsigned device Release archive builds with zero compiler errors at `build/release/Hermes.xcarchive` (approximately 20 MiB). The bridge source archive and checksums are prepared under `build/release/`. **No IPA was produced**: the release script requires a real physical validation PASS report before SideStore packaging. No release was published or pushed.
++
++Connect and unlock the iPhone by USB and accept **Trust This Computer**. Open `Hermes.xcodeproj`; in Xcode → Settings → Accounts sign in if needed, then Hermes target → Signing & Capabilities → select your **Personal Team**, preserving `com.dippo.hermes`. Enable Developer Mode if prompted and connect the phone's Tailscale app to the same tailnet. Installation/physical checks can proceed once Xcode sees the trusted device and can sign it.
++
++When ready to pair, display the token only in a private terminal with `scripts/pairing-token.sh --show`. Enter it in the app; after verified Keychain storage, remove the transfer file using `--forget-transfer`. See [INSTALL](docs/INSTALL.md), [SideStore](docs/SIDESTORE.md) and [RELEASE](RELEASE.md).
++
++The source repository is prepared for a GitHub push after review; release readiness remains blocked by physical/SideStore validation. No distribution license has been selected.
+diff --git a/README.md b/README.md
+index 81f6f4f..2ea884e 100644
+--- a/README.md
++++ b/README.md
+@@ -9,8 +9,7 @@ Tailscale through `hermes-mobile-bridge`. Production startup uses the configured
+ 2. Choose the **Hermes** scheme and an iPhone simulator.
+ 3. Press Run.
+ 
+-To run on a device, set your team under Signing & Capabilities. The bundle ID
+-is `com.dippo.hermes`.
++For a physical iPhone, follow [installation](docs/INSTALL.md) and [personal signing / SideStore](docs/SIDESTORE.md). The bundle ID remains `com.dippo.hermes`; no personal team or signing material is committed.
+ 
+ ```sh
+ xcodebuild -project Hermes.xcodeproj -scheme Hermes \
+@@ -34,10 +33,14 @@ xcodebuild -project Hermes.xcodeproj -scheme Hermes \
+ 
+ The app now starts with `BridgeHermesClient`. A fresh install opens unpaired; it does not silently run mock data. Existing UI tests (`-uiTesting`) and SwiftUI previews still use mocks. Explicit Simulation mode in Settings takes effect after relaunch and uses separate hosts/preferences/cache; its controls never configure the real client.
+ 
+-1. Install/configure the Studio package using [bridge setup](hermes-mobile-bridge/README.md). Each configured Hermes profile requires its own exclusive desktop backend. Keep the bridge state directory across restarts.
+-2. Provision a scoped mobile token through the Studio bridge CLI. Configure HTTPS through your intended Tailscale hostname/proxy and restrict tailnet access. This implementation does not deploy or expose a production service automatically.
+-3. In More → Hosts → Add Host, enter a display name, complete bridge HTTPS URL and the mobile token. Save authenticates and selects it. Tokens are stored in device-only Keychain, never saved host records, UserDefaults, snapshots or logs.
+-4. Pair Again opens the same secure editor. Editing with an empty token preserves the Keychain item. Remove Local Credential forgets it on the phone; revoke the Studio credential using `token-revoke DEVICE_ID` on Studio. There is no mobile revocation endpoint.
++1. Install existing Hermes at the audited commit `2a4c9afd7bd`, including its Python environment. Run `scripts/install-bridge.sh --board default` as the Studio user. This installs two per-user LaunchAgents: a dedicated loopback Hermes desktop backend and the bridge. It preserves existing gateways and upstream source.
++2. Run `scripts/configure-tailscale.sh`. It configures private **Tailscale Serve HTTPS**, never Funnel. The current Studio address is **https://dippos-mac-studio.taildd4b84.ts.net**. Restrict permitted tailnet peers; application authentication is still required.
++3. Run `scripts/pairing-token.sh --name iPhone`, then `scripts/pairing-token.sh --show` in a private terminal when ready to pair. In More → Hosts → Add Host, enter a display name, the complete HTTPS URL and token. Save authenticates and selects it. Tokens live in device-only Keychain, never host records, UserDefaults, snapshots or logs. Manual pairing is V1; no QR enrollment service is exposed.
++4. After successful pairing, run `scripts/pairing-token.sh --forget-transfer`. Pair Again opens the secure editor; an empty token preserves the Keychain item. Remove Local Credential forgets it on the phone. Revoke on Studio with `scripts/pairing-token.sh --revoke DEVICE_ID`; there is no mobile revocation endpoint.
++
++Use `scripts/status-bridge.sh`, `start-bridge.sh`, `stop-bridge.sh`, `update-bridge.sh` and `uninstall-bridge.sh` from `scripts/`. Updates retain credentials and the run journal, refuse active/uncertain chat runs, and roll back unhealthy runtimes. Services recover after crashes and start after login; they stop on logout and do not serve before login. Keep the Studio powered, awake and logged in. Logs contain bounded lifecycle records; raw child output is discarded to avoid leaking tokens or prompts.
++
++See [Studio setup](docs/STUDIO_SETUP.md), [installation](docs/INSTALL.md), [release packaging](RELEASE.md), and [deployment/device evidence](PHYSICAL_DEVICE_TEST_REPORT.md). No physical iPhone or SideStore installation has been validated yet.
+ 
+ See [API](BRIDGE_API.md), [Swift mappings](INTEGRATION_POINTS.md), [integration guide](IOS_INTEGRATION_GUIDE.md) and [validation report](INTEGRATION_TEST_REPORT.md).
+ 
+@@ -73,3 +76,19 @@ HERMES_BRIDGE_E2E=1 hermes-mobile-bridge/.venv/bin/python -m pytest hermes-mobil
+ Dangerous remote approval responses stay unavailable. Exact fresh clarification questions can be answered through the conversation composer. Stop is cooperative; unknown/lost outcomes remain explicit and never trigger a new execution. Cron Run Now advances due time and needs Hermes's scheduler. Kanban queueing needs its dispatcher. Profiles/skills are read-only; memory contents, integrations, logs, camera, voice and uploads are not exposed in this pass. Artifact metadata/download is restricted to bridge-registered files. APNs is deferred.
+ 
+ Run configuration is applied only when creating a conversation. Workspaces display administrator-chosen IDs; the phone cannot choose arbitrary Studio paths. Shared control with independent native desktop clients remains an upstream ownership limitation. Cursor retention expiry causes explicit snapshot resync. No physical-iPhone/Tailscale result is implied by loopback simulator testing.
++
++## Release artifacts
++
++`scripts/build-ios-release.sh` builds an unsigned device Release archive and a clean bridge source tarball with checksums under ignored `build/release/`. It does not embed Studio configuration or credentials. IPA production is gated on actual physical-device validation; see [RELEASE.md](RELEASE.md). Nothing is published automatically. No distribution license has been selected in this repository.
++
++The optional Simulator HTTPS check uses a private mode-0600 JSON fixture outside the repository with `url` and `token` keys. It creates a temporary Keychain namespace and removes it after checking the real Studio inventories. Pass only the fixture path:
++
++```sh
++TEST_RUNNER_HERMES_STUDIO_FIXTURE=/private/path/studio-fixture.json xcodebuild test \
++  -project Hermes.xcodeproj -scheme Hermes \
++  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
++  -only-testing:HermesTests/StudioTransportTests CODE_SIGN_IDENTITY=- CODE_SIGNING_ALLOWED=YES
++python3 scripts/test_studio_service.py -v
++```
++
++This confirms the iOS networking/Keychain path on Simulator, not physical-phone connectivity. Never commit the fixture or pass a token as a launch argument.
+diff --git a/RELEASE.md b/RELEASE.md
+new file mode 100644
+index 0000000..21b5def
+--- /dev/null
++++ b/RELEASE.md
+@@ -0,0 +1,48 @@
++# Release packaging
++
++The app bundle identifier is `com.dippo.hermes`; the current app and bridge version is `0.1.0`. Keep that bundle identifier for updates so iOS and SideStore recognize the same app. The Xcode project does not contain a personal Team ID or signing certificate.
++
++## Build the device archive
++
++On macOS with the project’s Xcode toolchain installed:
++
++```sh
++scripts/build-ios-release.sh
++```
++
++This builds a Release `Hermes.xcarchive` with code signing disabled, packages the tracked bridge runtime and service files, and writes output beneath `build/release/`. Xcode’s temporary DerivedData is placed outside the repository and removed when the build ends. The default command does not create an IPA.
++
++To create a SideStore import package after physical device validation, the report must include the exact line `physical_device_validation: PASS`:
++
++```sh
++scripts/build-ios-release.sh \
++  --sidestore-ipa \
++  --physical-validation-report PHYSICAL_DEVICE_TEST_REPORT.md
++```
++
++That produces `build/release/Hermes.ipa`, an unsigned `Payload/Hermes.app` package for SideStore to sign during installation, plus `SHA256SUMS.txt`. The script checks the bundle identifier and verifies that the SideStore package contains neither an embedded provisioning profile nor a code-signature directory. The report gate records human validation; it does not cryptographically attest to a device test.
++
++SideStore applies its own development signing identity to apps that it installs and refreshes. A free Apple Account has a seven-day provisioning window and other app limits; see [Apple’s Personal Team limits](https://developer.apple.com/help/account/basics/about-your-developer-account) and the [SideStore FAQ](https://docs.sidestore.io/docs/faq).
++
++For direct Xcode installation, sign in under **Xcode → Settings → Accounts**, connect and unlock the iPhone, accept its trust prompt, and select it as the run destination. In the project editor, select the **Hermes** app target → **Signing & Capabilities**, leave **Automatically manage signing** enabled, and choose your **Personal Team**. Keep `com.dippo.hermes` as the bundle identifier. Xcode can register the connected device and create the development profile; press **Run** to install. A Personal Team profile expires after seven days, so rebuild and reinstall after it expires. Apple documents this flow in [Running your app on a physical device](https://developer.apple.com/documentation/xcode/running-your-app-on-simulated-or-physical-devices) and the [developer account overview](https://developer.apple.com/help/account/basics/about-your-developer-account).
++
++## Bridge source package
++
++The build script invokes `scripts/package-bridge.sh`. The bridge tarball contains tracked bridge runtime source, example configuration, API contracts, launchd plist, and Studio install/update scripts. It excludes tests, virtual environments, caches, logs, databases, private configuration, and local signing material. The packager fails if any required installation or service file is untracked or missing. Commit the release scripts, launchd plist, and setup documents before creating a release archive.
++
++For a standalone bridge source package:
++
++```sh
++scripts/package-bridge.sh --output-dir build/release
++```
++
++It writes `hermes-mobile-bridge-v0.1.0.tar.gz` and a sibling `.sha256` file. Verify a standalone bridge package from its output directory with:
++
++```sh
++cd build/release
++shasum -a 256 -c hermes-mobile-bridge-v0.1.0.tar.gz.sha256
++```
++
++The full release build writes `SHA256SUMS.txt` for the bridge archive and, when enabled, the IPA.
++
++Do not add signing certificates, provisioning profiles, bridge tokens, private Studio configuration, or Hermes/provider credentials to a release. Do not publish artifacts until the physical-device validation report records the completed checks.
+diff --git a/docs/INSTALL.md b/docs/INSTALL.md
+new file mode 100644
+index 0000000..ba0b7bc
+--- /dev/null
++++ b/docs/INSTALL.md
+@@ -0,0 +1,93 @@
++# Install Hermes for iPhone
++
++Hermes for iPhone is a native client. Hermes Agent and the mobile bridge run on the Mac Studio; the phone connects to the bridge over your tailnet. The bridge does not replace Hermes and does not connect through SSH.
++
++## Requirements
++
++- A Mac Studio with the audited Hermes installation and its desktop API available to a dedicated local backend.
++- macOS, Python 3.11 or newer, and Tailscale signed in to the same tailnet as the iPhone.
++- Tailscale MagicDNS and HTTPS enabled for the tailnet. Tailscale Serve also needs the phone-to-Studio connection allowed by the tailnet access policy.
++- An iPhone running iOS 18 or newer, and an installation route: Xcode with a signed-in Apple ID for development, or SideStore for repeatable personal-device installs.
++
++The checked-in bundle identifier is `com.dippo.hermes` and the app version is `0.1.0`. Installation requires your own Apple signing identity; no signing certificate or provisioning profile is included.
++
++## Mac Studio
++
++Clone this repository on the Studio, then install the bridge for the macOS account that owns the Hermes installation:
++
++```sh
++git clone <repository-url> ~/src/hermes-ios
++cd ~/src/hermes-ios
++./scripts/install-bridge.sh
++```
++
++The installer creates a versioned bridge runtime and virtual environment under `~/Library/Application Support/HermesMobileBridge`, separate from both the source checkout and Hermes's Python environment. It keeps service configuration, bridge state, upstream token files, and generated mobile credentials in that private service root. Logs go to `~/Library/Logs/HermesMobileBridge`. It installs per-user LaunchAgents for the bridge and a dedicated Hermes desktop backend process.
++
++The defaults use Hermes source `~/.hermes/hermes-agent`, the existing Hermes home `~/.hermes`, a private workspace beneath the service root, bridge loopback port 8787, and desktop backend loopback port 9119. The installer checks that the Hermes source is the audited `2a4c9afd7bd` commit. The separate backend process serves that selected Hermes home; it does not replace existing Hermes gateways. Override the source/home/workspace or ports during installation if your Studio uses different locations:
++
++```sh
++./scripts/install-bridge.sh \
++  --hermes-source "$HOME/.hermes/hermes-agent" \
++  --workspace "$HOME/Projects/my-workspace"
++```
++
++Use `--board NAME` for each Kanban board to expose. Review the installer summary before accepting it. The dedicated backend must use the audited Hermes checkout and have exclusive ownership of its configured chat transport. Existing Hermes gateways are left in place and unchanged.
++
++Configure HTTPS through Tailscale Serve and check the service:
++
++```sh
++./scripts/configure-tailscale.sh
++./scripts/status-bridge.sh
++```
++
++The configured Studio URL is `https://dippos-mac-studio.taildd4b84.ts.net`. Confirm it matches the Studio's current MagicDNS name before pairing. Tailscale Serve proxies HTTPS on port 443 to the bridge at `127.0.0.1:8787`; the bridge remains bound to loopback and requires its own mobile bearer token.
++
++Create a device credential. The default command provisions a scoped token without printing it:
++
++```sh
++./scripts/pairing-token.sh --name iPhone
++```
++
++Follow the command's private-provisioning instructions. The helper keeps the token in a mode-0600 `mobile-pairing.json` file until you remove the transfer copy or revoke it. When the app's Add Host flow asks for the token, display it in a private terminal:
++
++```sh
++./scripts/pairing-token.sh --show
++```
++
++Copy it directly into the iPhone app; do not put it in shell history, a file in the checkout, chat, screenshots, or logs. The app stores it in Keychain. After pairing, remove the separate protected plaintext transfer copy with `./scripts/pairing-token.sh --forget-transfer`; the token remains valid in the app. The bridge's credential database stores only the credential hash and registry metadata. If the token is exposed, revoke its device ID with `./scripts/pairing-token.sh --revoke DEVICE_ID`, then provision a replacement.
++
++## iPhone
++
++1. Install and sign in to Tailscale on the iPhone. Confirm the Studio and phone are members of the same tailnet.
++2. Install Hermes using Xcode or SideStore. See [SideStore installation](SIDESTORE.md) for personal-device signing and update steps.
++3. Open Hermes → More → Hosts → Add Host.
++4. Enter a name such as `Mac Studio`, the HTTPS bridge URL, and the one-time displayed mobile token. Saving checks authentication and stores the token in the iPhone Keychain.
++5. Open Home and confirm that both the bridge and Hermes report healthy.
++
++Use the full HTTPS URL shown by `configure-tailscale.sh`. Do not enter the Studio's loopback bridge URL, a raw HTTP URL, an SSH address, or a Hermes provider key.
++
++### Direct Xcode installation
++
++For development, connect and unlock the iPhone, accept its Trust This Computer prompt, and open the project in Xcode. Under the **Hermes** target's **Signing & Capabilities**, select your Apple Account's **Personal Team** and leave automatic signing enabled. Preserve `com.dippo.hermes`; select the connected iPhone as the run destination and press **Run**. Xcode requires an Apple Account sign-in, but a paid Developer Program membership is not required for personal-device testing. Apple's Personal Team provisioning is temporary: registered App IDs/devices and development profiles expire after seven days, so the app must be rebuilt/reinstalled periodically. [Apple account and Personal Team limits](https://developer.apple.com/help/account/basics/about-your-developer-account) · [Installing on personal devices with Xcode](https://developer.apple.com/help/account/membership/program-enrollment).
++
++## Service controls and updates
++
++Run these commands from the repository checkout:
++
++```sh
++./scripts/status-bridge.sh
++./scripts/stop-bridge.sh
++./scripts/start-bridge.sh
++./scripts/update-bridge.sh
++./scripts/uninstall-bridge.sh
++```
++
++The update command installs the checked-out bridge source into a new versioned runtime while retaining the service's private configuration, credentials, run journal and logs. It refuses to update while an active or uncertain run may be controlled. Stop or reconcile that work in the app/Studio first, then retry. Uninstall removes the LaunchAgents and installed runtime but retains configuration and state by default. Use `./scripts/uninstall-bridge.sh --purge` only when you deliberately want to erase the retained service data and device credentials too.
++
++For full Studio service, backup, and network details, read [Studio setup](STUDIO_SETUP.md). For development builds and simulator tests, see the root [README](../README.md).
++
++## Current installation limits
++
++The bridge and Hermes LaunchAgents start when the owning user logs in and are kept alive after crashes. They stop at logout; they do not run before login as root services. The Mac must be powered, awake, logged into the configured account, and connected to Tailscale for iPhone access. This is an intentional per-user service design so the processes use the normal Hermes configuration without system-wide privileges.
++
++Pairing is manual host URL plus token. There is no QR enrollment endpoint in bridge v0.1.0. Physical iPhone behavior depends on the actual tailnet policy, Apple signing, and device network; the repository's local Simulator results do not establish those outcomes.
+diff --git a/docs/SIDESTORE.md b/docs/SIDESTORE.md
+new file mode 100644
+index 0000000..07972c3
+--- /dev/null
++++ b/docs/SIDESTORE.md
+@@ -0,0 +1,40 @@
++# Install Hermes with SideStore
++
++This guide covers a personal install of Hermes for iPhone. The Hermes app talks to the Studio bridge over its configured HTTPS/Tailscale address; SideStore does not provide that connection.
++
++## Install SideStore once
++
++SideStore currently documents a macOS first-install path using `iloader`. Have an iPhone with a passcode, a Mac with Wi-Fi, and an Apple Account available. Follow the current [SideStore prerequisites](https://docs.sidestore.io/docs/installation/prerequisites) and [installation guide](https://docs.sidestore.io/docs/installation/install) because supported iOS steps can vary by OS release.
++
++1. Install LocalDevVPN and connect it as SideStore’s guide requires for app installation and refresh.
++2. Download and open the current stable `iloader` release from the link in SideStore’s prerequisites.
++3. Connect the iPhone to the Mac by USB, unlock it, enter the passcode, and accept **Trust This Computer** on the phone if prompted.
++4. In iloader, sign in to the Apple Account to use for SideStore, select the phone, and install **SideStore (Stable)**.
++5. On the phone, trust the Developer App under **Settings → General → VPN & Device Management**. On iOS versions that require it, enable **Developer Mode** under **Settings → Privacy & Security** and allow the restart.
++6. Connect LocalDevVPN, open SideStore, sign in with the same Apple Account, and refresh SideStore from **My Apps** to finish setup.
++
++With a free Apple Account, SideStore’s development signing expires after seven days; that account is limited to three installed apps at a time and ten App IDs in a seven-day period. SideStore requires LocalDevVPN when installing, updating, or refreshing apps. See the [SideStore FAQ](https://docs.sidestore.io/docs/faq) for current limits and paid-account details.
++
++## Install Hermes
++
++Create a SideStore package only after the physical-device checks are recorded as passing. The release script requires `physical_device_validation: PASS` in the validation report before it writes an IPA:
++
++```sh
++scripts/build-ios-release.sh \
++  --sidestore-ipa \
++  --physical-validation-report PHYSICAL_DEVICE_TEST_REPORT.md
++```
++
++Transfer `build/release/Hermes.ipa` to the phone using a trusted method such as AirDrop or Files. In SideStore, import/sideload that IPA using the app’s current import flow. SideStore re-signs installed apps with the Apple Account’s development identity. The IPA produced here is a standard `Payload/Hermes.app` archive without a developer’s embedded signing profile or signature.
++
++Launch Hermes, add the Studio host using its stable Tailscale HTTPS URL, and enter the bridge token once. The app stores that token in the iOS Keychain. The bridge token is not part of the IPA.
++
++## Updating Hermes
++
++Build a new IPA using the same `com.dippo.hermes` bundle identifier, then install the new IPA over the existing app through SideStore. **Do not delete the installed app first.** SideStore says that sideloading the same or updated IPA this way should retain app data, but this repository has not yet verified data preservation on the target iPhone. The app’s Keychain token may need to be paired again if the signing identity or Keychain access group changes.
++
++Keep SideStore refreshed before its signing period expires. Its current guidance requires LocalDevVPN during install, update, and refresh; the VPN is a SideStore maintenance path, separate from the Tailscale connection the Hermes app uses to reach the Studio. If switching to LocalDevVPN disconnects Tailscale, reconnect Tailscale before using Hermes. VPN switching on the target phone remains unverified.
++
++## Current validation status
++
++SideStore installation and update-in-place have not yet been tested on the target phone. Do not treat a simulator build, Xcode device build, or unsigned IPA layout check as physical SideStore validation. First record the actual phone, iOS version, Xcode installation, pairing and run/reconnect checks in `PHYSICAL_DEVICE_TEST_REPORT.md`. That physical Xcode validation enables IPA packaging; SideStore installation and data-preservation checks follow using the generated IPA and must be recorded separately.
+diff --git a/docs/STUDIO_SETUP.md b/docs/STUDIO_SETUP.md
+new file mode 100644
+index 0000000..808e9f9
+--- /dev/null
++++ b/docs/STUDIO_SETUP.md
+@@ -0,0 +1,120 @@
++# Mac Studio service setup
++
++This guide installs a small persistent adapter between the iPhone app and the installed Hermes desktop API. Hermes remains the execution runtime. The bridge exposes only the mobile contract in [BRIDGE_API.md](../BRIDGE_API.md).
++
++## Service layout and ownership
++
++Run installation as the ordinary macOS account that owns Hermes, not with `sudo`. The installer uses these locations:
++
++| Data | Location |
++|---|---|
++| Installed bridge releases, current pointer, private config/state, backend token and mobile credential metadata | `~/Library/Application Support/HermesMobileBridge` (directory mode 0700; private files mode 0600) |
++| Bounded lifecycle-only JSON logs (raw child stdout/stderr discarded) | `~/Library/Logs/HermesMobileBridge` |
++| User launchd jobs | `~/Library/LaunchAgents/com.dippo.hermes-mobile-bridge.plist` and `~/Library/LaunchAgents/com.dippo.hermes-mobile-backend.plist` |
++| Installed Hermes source (default) | `~/.hermes/hermes-agent` |
++
++The installer creates a standalone Python environment for the bridge. It does not install packages into the Hermes virtual environment, alter Hermes source, or change existing Hermes gateways. It configures a dedicated Hermes desktop backend process on loopback, using the selected Hermes home (by default the existing `~/.hermes`) and a private workspace. Each profile exposed by the bridge must have its own exclusive backend; avoid directing multiple bridge profiles at a single dashboard listener. The backend's structured session socket has one event owner, so do not attach an independent desktop client to the same live session while expecting both clients to control/observe it reliably.
++
++The automatic installer exposes the default profile and only explicitly authorized boards (`--board default` for the current Studio). Additional profiles need separate exclusive backends and private configuration. Private configuration, state, and secret files are mode restricted to the service user. The state directory contains the durable run/event journal and credential hashes; preserve it across updates and restarts. Keep it on local Studio storage, outside synchronized folders, and include it in a protected backup plan. Logs are stored separately and must not be copied into public support bundles without review. The supervisors discard raw child stdout/stderr and log only service start/stop/exit metadata. Each role uses a 1 MiB lifecycle log with two rotated backups. This prevents request bodies, authorization headers and upstream token URLs from entering those logs; private bridge journal/debug data remains protected state, not a public support bundle.
++
++## Install and inspect
++
++The installer requires Hermes commit `2a4c9afd7bd` and its existing Python environment. It uses the existing `~/.hermes` home by default and starts a distinct desktop backend process on loopback. It does not replace or edit any existing gateway or upstream source. From a clone of this repository:
++
++```sh
++./scripts/install-bridge.sh \
++  --hermes-source "$HOME/.hermes/hermes-agent" \
++  --hermes-home "$HOME/.hermes" \
++  --bridge-port 8787 \
++  --hermes-port 9119
++./scripts/status-bridge.sh --json
++```
++
++Optional `--workspace PATH` sets the dedicated backend's working directory. The default workspace is private under the installation root. Add one `--board NAME` per Kanban board you intentionally authorize for the mobile profile. Review directory and port choices before installation. To use an alternate Python 3.11+ interpreter, pass `--python PATH`.
++
++`status-bridge.sh` reports the service processes, local bridge/Hermes health and the HTTPS endpoint configuration. It does not return a mobile bearer token. Service controls are `start-bridge.sh` and `stop-bridge.sh`; update with `update-bridge.sh` after checking for active or uncertain runs. `uninstall-bridge.sh` removes the jobs and runtime but retains configuration, state and mobile credential records. `uninstall-bridge.sh --purge` explicitly deletes those retained files.
++
++The launchd jobs are per-user LaunchAgents with start-on-login and crash restart behavior. Apple documents that a user LaunchAgent runs on behalf of the logged-in user and is terminated at logout; it is not a pre-login system daemon. This keeps the service under the Hermes owner account and avoids root permissions. If the Mac reboots, the jobs return when that account logs in. If the Mac must provide service before any login, that is a different root LaunchDaemon design and is not included here. [Apple's launchd guide](https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html) describes the user-session launch and logout behavior.
++
++## Tailscale HTTPS
++
++The bridge listens only on `127.0.0.1:8787`. Use Tailscale Serve as an HTTPS reverse proxy:
++
++```sh
++./scripts/configure-tailscale.sh
++tailscale serve status
++```
++
++The intended mapping is HTTPS port 443 on the Studio's tailnet hostname to `http://127.0.0.1:8787`. The current expected app URL is:
++
++```text
++https://dippos-mac-studio.taildd4b84.ts.net
++```
++
++Use the URL printed by `configure-tailscale.sh` if the Studio's MagicDNS name changes. The helper checks the existing Serve configuration and refuses to replace unrelated routes; it does not enable Tailscale Funnel. Tailscale documents `tailscale serve --bg --https=443 http://127.0.0.1:8787` as a persistent background HTTPS reverse proxy to a loopback service. Serve terminates TLS using a certificate for the tailnet DNS name and keeps the endpoint within the tailnet. [Tailscale Serve CLI](https://tailscale.com/docs/reference/tailscale-cli/serve) · [Serve vs. Funnel](https://tailscale.com/docs/features/tailscale-funnel).
++
++In the Tailscale admin console:
++
++1. Enable MagicDNS and HTTPS certificates under DNS settings if they are not enabled.
++2. Allow the intended iPhone/device identity to reach the Studio on TCP 443 in the tailnet access policy.
++3. Keep Funnel disabled for this service. Serve makes the endpoint available within the tailnet; Funnel would make it reachable from the public internet.
++4. Verify the configured route with `tailscale serve status`, and verify from the app using the HTTPS hostname while the phone is connected to Tailscale.
++
++Tailscale HTTPS certificate provisioning requires enabling HTTPS in the tailnet and uses the Studio's `*.ts.net` MagicDNS name. Tailscale notes that device hostnames and the tailnet DNS name appear in the public Certificate Transparency ledger when a certificate is issued. This publishes the names, not access to the device; tailnet access controls still apply. Review the Studio machine name before enabling the certificate if it contains private identifying information. [Tailscale HTTPS certificates](https://tailscale.com/docs/how-to/set-up-https-certificates).
++
++TLS is only the transport layer. The bridge still requires `Authorization: Bearer ...` for every API and event-stream request, checks the token's scopes/profile allowlist, and supports revocation. Do not add a certificate-validation bypass or send a bearer token in a URL. The app's production networking expects HTTPS without an ATS exception.
++
++## Pair and revoke a phone
++
++Create a credential for the app:
++
++```sh
++./scripts/pairing-token.sh --name iPhone
++```
++
++The helper records its generated token in a private, mode-0600 `mobile-pairing.json` file so it can be shown later; the bridge credential store retains only the token hash and registry metadata. The default output gives pairing instructions but redacts the token. Display it in a private interactive terminal only when ready to enter it directly on the phone:
++
++```sh
++./scripts/pairing-token.sh --show
++```
++
++Use **More → Hosts → Add Host** in the iPhone app. Enter the stable HTTPS URL and token. The app authenticates, then stores the bearer in the iOS Keychain. Do not send credentials in email/chat, paste them into source/config, or capture them in screenshots. Hermes provider keys and the upstream desktop token remain Studio-side. The pairing helper file is a protected plaintext token copy; after the app has saved its Keychain credential, remove the transfer copy with `./scripts/pairing-token.sh --forget-transfer`. Revoke the device token if the file is exposed.
++
++List or revoke a device as needed:
++
++```sh
++./scripts/pairing-token.sh --list
++./scripts/pairing-token.sh --revoke DEVICE_ID
++```
++
++Revocation is immediate for new authenticated requests. Removing a host from the phone only deletes the local Keychain credential and saved host record; revoke its Studio token separately if the device should lose access.
++
++The transfer-only plaintext copy can be removed without revoking a paired phone:
++
++```sh
++./scripts/pairing-token.sh --forget-transfer
++```
++
++## Start, update, and remove
++
++```sh
++./scripts/start-bridge.sh
++./scripts/stop-bridge.sh
++./scripts/status-bridge.sh
++./scripts/update-bridge.sh
++./scripts/uninstall-bridge.sh
++```
++
++Updates install a fresh bridge release and environment while retaining the state database and private configuration. Close clients to new submissions and stop or reconcile active/uncertain chat work before updating. The helper checks all active/unknown states before staging and immediately before stopping; these are preflight snapshots, not an atomic maintenance lock against another client submitting concurrently. Unhealthy startup rolls back to the prior installed runtime. Uninstall retains state/credentials for a later reinstall unless `--purge` is supplied. Tailscale Serve is independently owned by the Tailscale client; inspect it before removing or changing the route. The setup helper refuses to overwrite a route it does not own.
++
++## Failure checks
++
++- **Bridge stopped, Hermes available:** restart the bridge job and check local service status. Persistent run IDs, cursors and device credentials come from the retained bridge state.
++- **Hermes backend stopped, bridge available:** Home should distinguish Hermes unavailable from bridge unreachable. Restart the dedicated backend; the bridge reconnects. Do not launch another Hermes process on the same desktop port.
++- **Phone cannot connect:** check that it is on the tailnet, MagicDNS resolves the Studio name, the tailnet policy permits TCP 443, Tailscale Serve shows the loopback proxy, and `status-bridge.sh` reports both local services healthy.
++- **401/authentication required:** list the credential records and revoke/re-provision deliberately. Do not retry by substituting Hermes dashboard or provider credentials.
++- **Run state after reconnect:** the bridge journal is canonical for bridge run identity and retained event replay. Keep its state directory. Expired event history requires the app to resynchronize a canonical snapshot.
++
++## Removal
++
++Run `./scripts/uninstall-bridge.sh` as the service user. It unloads and removes the two LaunchAgents and installed bridge runtime, retaining private configuration, state, and credentials by default. Use `--purge` only when you also intend to delete the bridge's durable IDs, replay journal, pairing metadata, and upstream secret files. Disable only the Tailscale Serve route created by this helper; do not run `tailscale serve reset` if the Studio has unrelated Serve routes. Existing Hermes services/gateways are not removed by bridge uninstall.
+diff --git a/hermes-mobile-bridge/src/hermes_mobile_bridge/store.py b/hermes-mobile-bridge/src/hermes_mobile_bridge/store.py
+index a50ebc9..43e75e8 100644
+--- a/hermes-mobile-bridge/src/hermes_mobile_bridge/store.py
++++ b/hermes-mobile-bridge/src/hermes_mobile_bridge/store.py
+@@ -89,7 +89,7 @@ class Store:
+         old = self.db.execute("SELECT * FROM conversations WHERE id=?", (cid,)).fetchone()
+         merged = (json.loads(old["data"]) if old else {}) | (data or {})
+         self.db.execute("INSERT OR IGNORE INTO aliases VALUES (?,?,?)", (profile, stored, cid))
+-        self.db.execute("INSERT INTO conversations VALUES (?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET stored_id=excluded.stored_id,live_id=excluded.live_id,owned=excluded.owned,data=excluded.data", (cid, profile, stored, live, int(owned or (old and old["owned"])), json.dumps(merged)))
++        self.db.execute("INSERT INTO conversations VALUES (?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET stored_id=excluded.stored_id,live_id=excluded.live_id,owned=excluded.owned,data=excluded.data", (cid, profile, stored, live, int(bool(owned or (old and old["owned"]))), json.dumps(merged)))
+         self.db.commit()
+ 
+     def run(self, cid, profile, live, prompt, parent=None):
+diff --git a/hermes-mobile-bridge/tests/test_bridge.py b/hermes-mobile-bridge/tests/test_bridge.py
+index d493342..3b3698f 100644
+--- a/hermes-mobile-bridge/tests/test_bridge.py
++++ b/hermes-mobile-bridge/tests/test_bridge.py
+@@ -10,6 +10,17 @@ from hermes_mobile_bridge.store import Store
+ from conftest import eventually
+ 
+ 
++async def test_list_imports_preexisting_unowned_session(harness):
++    h = harness
++    h.fake.sessions['existing'] = {'stored': 'preexisting-history', 'status': 'idle', 'title': 'Existing history', 'messages': []}
++    first = await h.request('GET', '/conversations')
++    imported = next(c for c in first['conversations'] if c['title'] == 'Existing history')
++    assert imported['owned'] is False
++    second = await h.request('GET', '/conversations')
++    assert next(c for c in second['conversations'] if c['title'] == 'Existing history')['id'] == imported['id']
++    assert h.fake.prompts == 0
++
++
+ async def test_auth_scopes_and_revocation(harness):
+     h = harness
+     async with aiohttp.ClientSession() as client:
+diff --git a/launchd/com.dippo.hermes-mobile-backend.plist b/launchd/com.dippo.hermes-mobile-backend.plist
+new file mode 100644
+index 0000000..b627add
+--- /dev/null
++++ b/launchd/com.dippo.hermes-mobile-backend.plist
+@@ -0,0 +1,38 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
++<plist version="1.0">
++<dict>
++	<key>ExitTimeOut</key>
++	<integer>15</integer>
++	<key>HardResourceLimits</key>
++	<dict>
++		<key>Core</key>
++		<integer>0</integer>
++	</dict>
++	<key>KeepAlive</key>
++	<true/>
++	<key>Label</key>
++	<string>com.dippo.hermes-mobile-backend</string>
++	<key>ProcessType</key>
++	<string>Background</string>
++	<key>ProgramArguments</key>
++	<array>
++		<string>@PYTHON@</string>
++		<string>@RUNTIME@</string>
++		<string>backend</string>
++		<string>@INSTALL_ROOT@</string>
++	</array>
++	<key>RunAtLoad</key>
++	<true/>
++	<key>StandardErrorPath</key>
++	<string>/dev/null</string>
++	<key>StandardOutPath</key>
++	<string>/dev/null</string>
++	<key>ThrottleInterval</key>
++	<integer>10</integer>
++	<key>Umask</key>
++	<integer>63</integer>
++	<key>WorkingDirectory</key>
++	<string>@WORKSPACE@</string>
++</dict>
++</plist>
+diff --git a/launchd/com.dippo.hermes-mobile-bridge.plist b/launchd/com.dippo.hermes-mobile-bridge.plist
+new file mode 100644
+index 0000000..72f7611
+--- /dev/null
++++ b/launchd/com.dippo.hermes-mobile-bridge.plist
+@@ -0,0 +1,38 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
++<plist version="1.0">
++<dict>
++	<key>ExitTimeOut</key>
++	<integer>15</integer>
++	<key>HardResourceLimits</key>
++	<dict>
++		<key>Core</key>
++		<integer>0</integer>
++	</dict>
++	<key>KeepAlive</key>
++	<true/>
++	<key>Label</key>
++	<string>com.dippo.hermes-mobile-bridge</string>
++	<key>ProcessType</key>
++	<string>Background</string>
++	<key>ProgramArguments</key>
++	<array>
++		<string>@PYTHON@</string>
++		<string>@RUNTIME@</string>
++		<string>bridge</string>
++		<string>@INSTALL_ROOT@</string>
++	</array>
++	<key>RunAtLoad</key>
++	<true/>
++	<key>StandardErrorPath</key>
++	<string>/dev/null</string>
++	<key>StandardOutPath</key>
++	<string>/dev/null</string>
++	<key>ThrottleInterval</key>
++	<integer>10</integer>
++	<key>Umask</key>
++	<integer>63</integer>
++	<key>WorkingDirectory</key>
++	<string>@WORKSPACE@</string>
++</dict>
++</plist>
+diff --git a/scripts/bridge-service.py b/scripts/bridge-service.py
+new file mode 100644
+index 0000000..8c47d07
+--- /dev/null
++++ b/scripts/bridge-service.py
+@@ -0,0 +1,339 @@
++#!/usr/bin/env python3
++"""Private per-user Studio service management. No upstream Hermes edits."""
++import argparse
++import datetime
++import json
++import os
++from pathlib import Path
++import plistlib
++import secrets
++import shutil
++import socket
++import subprocess
++import sys
++import time
++import urllib.error
++import urllib.request
++
++ROOT = Path(__file__).resolve().parents[1]
++DEFAULT_ROOT = Path.home() / 'Library/Application Support/HermesMobileBridge'
++LABELS = {'backend': 'com.dippo.hermes-mobile-backend', 'bridge': 'com.dippo.hermes-mobile-bridge'}
++
++
++def private_dir(path):
++    if path.is_symlink():
++        raise ValueError('Private directory cannot be a symlink')
++    path.mkdir(parents=True, exist_ok=True, mode=0o700)
++    if path.stat().st_uid != os.getuid():
++        raise ValueError('Private directory must belong to the current user')
++    path.chmod(0o700)
++
++
++def private_write(path, value):
++    if path.is_symlink():
++        raise ValueError('Private file cannot be a symlink')
++    tmp = path.with_name(path.name + '.new')
++    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
++    try:
++        with os.fdopen(fd, 'w') as f:
++            f.write(value)
++        os.replace(tmp, path)
++    finally:
++        tmp.unlink(missing_ok=True)
++
++
++def read_json(path):
++    if path.is_symlink() or path.stat().st_uid != os.getuid() or path.stat().st_mode & 0o077:
++        raise ValueError('Private configuration must be owned and mode 0600')
++    return json.loads(path.read_text())
++
++
++def command(args, **kwargs):
++    # stdout/stderr can contain dependency URLs, environment or query tokens.
++    return subprocess.run(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True, **kwargs)
++
++
++def launch_domain():
++    return f'gui/{os.getuid()}'
++
++
++def load_manifest(root):
++    return read_json(root / 'installation.json')
++
++
++def plist_path(label):
++    return Path.home() / 'Library/LaunchAgents' / (label + '.plist')
++
++
++def stop(root):
++    manifest = load_manifest(root)
++    for role in ('bridge', 'backend'):
++        subprocess.run(['launchctl', 'bootout', launch_domain() + '/' + manifest['labels'][role]], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
++    deadline = time.monotonic() + 20
++    while time.monotonic() < deadline:
++        loaded = any(subprocess.run(['launchctl', 'print', launch_domain() + '/' + label], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0 for label in manifest['labels'].values())
++        if not loaded and not any(listening(port) for port in (manifest['bridge_port'], manifest['hermes_port'])):
++            return
++        time.sleep(.2)
++    raise ValueError('Service listener did not stop; inspect status before updating')
++
++
++def start(root):
++    manifest = load_manifest(root)
++    for role in ('backend', 'bridge'):
++        label = manifest['labels'][role]
++        command(['launchctl', 'enable', launch_domain() + '/' + label])
++        loaded = subprocess.run(['launchctl', 'print', launch_domain() + '/' + label], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
++        if not loaded:
++            command(['launchctl', 'bootstrap', launch_domain(), str(plist_path(label))])
++        command(['launchctl', 'kickstart', launch_domain() + '/' + label])
++    print('Studio backend and bridge started. Use status-bridge.sh for authenticated health.')
++
++
++def listening(port):
++    with socket.socket() as s:
++        s.settimeout(.3)
++        return s.connect_ex(('127.0.0.1', port)) == 0
++
++
++def request(root, path, timeout=8):
++    manifest = load_manifest(root)
++    credential = read_json(root / 'operator.json')
++    req = urllib.request.Request(f'http://127.0.0.1:{manifest["bridge_port"]}/mobile/v1' + path,
++                                 headers={'Authorization': 'Bearer ' + credential['token']})
++    with urllib.request.urlopen(req, timeout=timeout) as response:
++        return json.load(response)
++
++
++def status(root):
++    manifest = load_manifest(root)
++    result = {'installation_root': str(root), 'services': {}, 'bridge_reachable': False, 'hermes_healthy': False}
++    for role in ('backend', 'bridge'):
++        r = subprocess.run(['launchctl', 'print', launch_domain() + '/' + manifest['labels'][role]], capture_output=True, text=True)
++        state = 'not_loaded'; pid = None
++        for line in r.stdout.splitlines():
++            if line.strip().startswith('state = '): state = line.split('=', 1)[1].strip()
++            if line.strip().startswith('pid = '): pid = int(line.split('=', 1)[1])
++        result['services'][role] = {'label':manifest['labels'][role], 'state':state, 'pid':pid}
++    try:
++        caps = request(root, '/capabilities')
++        result.update(bridge_reachable=True, hermes_healthy=all(p['health']['connected'] for p in caps['profiles'].values()),
++                      capabilities={p: row['features'] for p, row in caps['profiles'].items()}, bridge_version=caps['bridge_version'])
++    except (OSError, ValueError, urllib.error.URLError):
++        result['health_error'] = 'authenticated_bridge_health_unavailable'
++    if (root / 'transport.json').exists():
++        result['studio_url'] = read_json(root / 'transport.json')['url']
++    return result
++
++
++def stage_release(root, python):
++    stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
++    release = root / 'releases' / stamp
++    private_dir(release)
++    package = release / 'package'; package.mkdir()
++    for name in ['pyproject.toml','README.md']:
++        shutil.copyfile(ROOT / 'hermes-mobile-bridge' / name, package / name)
++    for path in (ROOT/'hermes-mobile-bridge/src').rglob('*.py'):
++        target = package/path.relative_to(ROOT/'hermes-mobile-bridge')
++        target.parent.mkdir(parents=True,exist_ok=True); shutil.copyfile(path,target)
++    shutil.copyfile(ROOT / 'scripts/studio-runtime.py', release / 'studio-runtime.py')
++    command([python, '-m', 'venv', str(release / 'venv')])
++    command([str(release / 'venv/bin/python'), '-m', 'pip', 'install', str(release / 'package')])
++    command([str(release / 'venv/bin/python'), '-c', 'import hermes_mobile_bridge,aiohttp'])
++    return release
++
++
++def set_current(root, release):
++    temp = root / 'current.new'
++    temp.unlink(missing_ok=True)
++    temp.symlink_to(release.resolve().relative_to(root.resolve()), target_is_directory=True)
++    os.replace(temp, root / 'current')
++
++
++def provision(root, name, scopes):
++    manifest = load_manifest(root)
++    cmd = [str(root / 'current/venv/bin/hermes-mobile-bridge'), '--config', str(root / 'config.json'), 'token-create', '--name', name, '--scopes', scopes, '--profiles', 'default']
++    r = subprocess.run(cmd, capture_output=True, text=True, check=True)
++    return json.loads(r.stdout)
++
++
++def write_agents(root, manifest, reject_existing=False):
++    for role, label in manifest['labels'].items():
++        template = plistlib.loads((ROOT / f'launchd/{label}.plist').read_bytes())
++        template['ProgramArguments'] = [str(root/'current/venv/bin/python'), str(root/'current/studio-runtime.py'), role, str(root)]
++        template['WorkingDirectory'] = manifest['workspace']
++        plist_path(label).parent.mkdir(parents=True, exist_ok=True)
++        if reject_existing and plist_path(label).exists():
++            raise ValueError('Existing launchd label is not owned by this installation')
++        plist_path(label).write_bytes(plistlib.dumps(template))
++        plist_path(label).chmod(0o600)
++
++
++def install(args, root):
++    if (root / 'installation.json').exists():
++        if (root/'current').exists():
++            raise ValueError('Already installed; use update-bridge.sh to preserve state/configuration')
++        manifest = load_manifest(root)
++        release = stage_release(root, manifest['python']); set_current(root, release)
++        if not (root/'operator.json').exists():
++            private_write(root/'operator.json', json.dumps(provision(root, 'Studio health operator', 'read')))
++        write_agents(root, manifest)
++        start(root)
++        return
++    if root.is_relative_to(ROOT):
++        raise ValueError('Install private state outside the source checkout')
++    source = Path(args.hermes_source).expanduser().resolve()
++    home = Path(args.hermes_home).expanduser().resolve()
++    commit = subprocess.check_output(['git','rev-parse','HEAD'],cwd=source,text=True).strip()
++    if not commit.startswith('2a4c9afd7bd'):
++        raise ValueError('Installed Hermes differs from the audited commit')
++    if not (source / 'venv/bin/python').exists() or not home.is_dir():
++        raise ValueError('Existing Hermes installation/home are required')
++    if listening(args.bridge_port) or listening(args.hermes_port):
++        raise ValueError('A loopback port is already occupied; choose unused ports')
++    if any(plist_path(label).exists() for label in LABELS.values()):
++        raise ValueError('Existing launchd labels must be preserved; choose a separate installation intentionally')
++    private_dir(root); private_dir(root / 'state'); private_dir(root / 'releases')
++    workspace = Path(args.workspace).expanduser().resolve() if args.workspace else root / 'workspace'
++    if not workspace.exists(): private_dir(workspace)
++    logs = Path.home() / 'Library/Logs/HermesMobileBridge'; private_dir(logs)
++    secret = root / 'dashboard-token'
++    private_write(secret, secrets.token_urlsafe(48))
++    artifact = workspace / '.hermes/desktop-attachments'; private_dir(artifact)
++    config = {'state_dir':str(root/'state'), 'listen_host':'127.0.0.1', 'listen_port':args.bridge_port,
++              'backends':{'default':{'url':f'http://127.0.0.1:{args.hermes_port}', 'token_file':str(secret),
++                 'source_dir':str(source), 'boards':args.board, 'workspaces':{'studio':str(workspace)}, 'artifact_roots':[str(artifact)]}}}
++    private_write(root/'config.json', json.dumps(config, indent=2))
++    manifest = {'hermes_source':str(source), 'hermes_home':str(home), 'hermes_port':args.hermes_port,
++                'bridge_port':args.bridge_port, 'workspace':str(workspace), 'logs':str(logs), 'python':args.python,
++                'labels':LABELS, 'installed_commit':commit}
++    private_write(root/'installation.json', json.dumps(manifest, indent=2))
++    release = stage_release(root, args.python); set_current(root, release)
++    private_write(root/'operator.json', json.dumps(provision(root, 'Studio health operator', 'read')))
++    write_agents(root, manifest, reject_existing=True)
++    start(root)
++
++
++def ensure_idle(root):
++    # An unknown run is active too; interruption cannot be justified by a timeout.
++    for state in ('starting', 'running', 'waiting_for_input', 'stop_requested', 'unknown'):
++        if request(root, '/runs?state=' + state + '&limit=1')['runs']:
++            raise ValueError('Active/unknown work exists; resolve it before updating services')
++
++def update(root):
++    manifest = load_manifest(root)
++    ensure_idle(root)
++    release = stage_release(root, manifest['python'])
++    # Recheck after dependency installation; do not interrupt newly accepted work.
++    ensure_idle(root)
++    previous = (root / 'current').resolve()
++    stop(root); set_current(root, release)
++    try:
++        start(root)
++        for _ in range(120):
++            if status(root)['hermes_healthy']:
++                print('Update healthy; canonical journal and credentials preserved.')
++                return
++            time.sleep(.5)
++    except (OSError, ValueError, subprocess.SubprocessError):
++        pass
++    stop(root); set_current(root, previous); start(root)
++    raise ValueError('Update health failed; previous runtime restored')
++
++
++def owns_serve(config, proxy):
++    webs = list(config.get('Web', {}).values())
++    return (not config.get('AllowFunnel') and set(config.get('TCP', {})) == {'443'}
++            and config['TCP']['443'].get('HTTPS') is True and len(webs) == 1
++            and set(webs[0].get('Handlers', {})) == {'/'}
++            and webs[0]['Handlers']['/'].get('Proxy') == proxy)
++
++
++def tailscale_configure(root):
++    manifest = load_manifest(root)
++    binary = shutil.which('tailscale')
++    if not binary: raise ValueError('Install and authenticate Tailscale first')
++    info = json.loads(subprocess.check_output([binary, 'status', '--json'], text=True))
++    if info.get('BackendState') != 'Running': raise ValueError('Tailscale login/connection is required')
++    dns = info['Self']['DNSName'].rstrip('.')
++    expected = f'http://127.0.0.1:{manifest["bridge_port"]}'
++    current = json.loads(subprocess.check_output([binary,'serve','status','--json'],text=True))
++    if current and not owns_serve(current, expected):
++        raise ValueError('Existing Serve/Funnel config is not this bridge; preserve it and choose a separate route')
++    command([binary,'serve','--bg','--https=443','--yes',expected])
++    private_write(root/'transport.json', json.dumps({'url':'https://'+dns, 'proxy':expected, 'https_port':443}))
++    print('https://' + dns)
++
++
++def uninstall(root, purge=False):
++    manifest = load_manifest(root); stop(root)
++    for label in manifest['labels'].values(): plist_path(label).unlink(missing_ok=True)
++    if (root / 'transport.json').exists():
++        # Remove only an unchanged, sole Serve route owned by this installation.
++        binary = shutil.which('tailscale')
++        if binary:
++            config = json.loads(subprocess.check_output([binary,'serve','status','--json'],text=True))
++            owned = read_json(root/'transport.json')
++            if owns_serve(config, owned['proxy']):
++                command([binary,'serve','--https=443','off'])
++            else: print('Modified Serve configuration retained; remove only the bridge route manually.')
++    (root/'current').unlink(missing_ok=True)
++    shutil.rmtree(root/'releases', ignore_errors=True)
++    if purge:
++        shutil.rmtree(root)
++        print('Uninstalled and purged private bridge state. Hermes installation/home were retained.')
++    else:
++        print('Uninstalled runtime/agents. Private state/configuration retained for backup; do not delete if run IDs or tokens are needed.')
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument('action',choices=['install','start','stop','status','update','uninstall','tailscale','pairing'])
++    parser.add_argument('--root',default=str(DEFAULT_ROOT)); parser.add_argument('--json',action='store_true')
++    parser.add_argument('--hermes-source',default=str(Path.home()/'.hermes/hermes-agent'))
++    parser.add_argument('--hermes-home',default=str(Path.home()/'.hermes')); parser.add_argument('--workspace')
++    parser.add_argument('--python',default=sys.executable); parser.add_argument('--bridge-port',type=int,default=8787)
++    parser.add_argument('--hermes-port',type=int,default=9119); parser.add_argument('--board',action='append',default=[])
++    parser.add_argument('--purge',action='store_true'); parser.add_argument('--name',default='iPhone')
++    parser.add_argument('--scopes',default='read,chat.control,tasks.manage,approvals.respond')
++    parser.add_argument('--forget-transfer',action='store_true'); parser.add_argument('--show',action='store_true'); parser.add_argument('--revoke'); parser.add_argument('--list',action='store_true')
++    args = parser.parse_args(); root = Path(args.root).expanduser().absolute()
++    if sys.platform != 'darwin': parser.error('Studio service management requires macOS')
++    if os.getuid() == 0: parser.error('Run as the Studio user, not root')
++    os.umask(0o077)
++    try:
++        if args.action == 'install': install(args, root)
++        elif args.action == 'start': start(root)
++        elif args.action == 'stop': stop(root); print('Bridge and dedicated backend stopped.')
++        elif args.action == 'status': print(json.dumps(status(root),indent=2))
++        elif args.action == 'update': update(root)
++        elif args.action == 'uninstall': uninstall(root,args.purge)
++        elif args.action == 'tailscale': tailscale_configure(root)
++        elif args.action == 'pairing':
++            binary = str(root/'current/venv/bin/hermes-mobile-bridge')
++            base = [binary,'--config',str(root/'config.json')]
++            if args.revoke:
++                command(base+['token-revoke',args.revoke])
++                path = root/'mobile-pairing.json'
++                if path.exists() and read_json(path)['id'] == args.revoke: path.unlink()
++                print('Credential revoked.')
++            elif args.forget_transfer:
++                (root/'mobile-pairing.json').unlink(missing_ok=True)
++                print('Local transfer copy removed. Phone credential remains valid until revoked.')
++            elif args.list:
++                # CLI list contains metadata/hashes? Source exposes no hashes/tokens.
++                subprocess.run(base+['token-list'],check=True)
++            else:
++                path = root/'mobile-pairing.json'
++                if not path.exists(): private_write(path,json.dumps(provision(root,args.name,args.scopes)))
++                data = read_json(path)
++                if args.show:
++                    if not sys.stdout.isatty(): raise ValueError('Token display requires a private interactive terminal')
++                    print(data['token'])
++                else: print('Mobile token prepared in a private file. Use pairing-token.sh --show in a private terminal; never redirect token output to logs. Device ID: '+data['id'])
++    except (ValueError, OSError, KeyError, subprocess.SubprocessError, urllib.error.URLError):
++        print('Studio service operation failed. Check private file permissions, ports, launchd status, audited Hermes installation and network authorization. No secret diagnostics were logged.',file=sys.stderr)
++        return 1
++    return 0
++
++if __name__ == '__main__': sys.exit(main())
+diff --git a/scripts/build-ios-release.sh b/scripts/build-ios-release.sh
+new file mode 100755
+index 0000000..f34e940
+--- /dev/null
++++ b/scripts/build-ios-release.sh
+@@ -0,0 +1,164 @@
++#!/bin/bash
++set -euo pipefail
++
++ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++OUTPUT_DIR="$ROOT/build/release"
++SIDESTORE_IPA=0
++PHYSICAL_REPORT=""
++
++usage() {
++  cat <<'EOF'
++Usage: scripts/build-ios-release.sh [options]
++
++Build a device Release archive and package the Studio bridge source.
++An unsigned SideStore IPA is created only when both --sidestore-ipa and a
++physical-device validation report with `physical_device_validation: PASS`
++are supplied.
++
++Options:
++  --output-dir PATH                  Output directory (default: build/release)
++  --sidestore-ipa                    Create the unsigned IPA for SideStore to sign
++  --physical-validation-report PATH  Report containing the exact PASS marker
++  -h, --help                         Show this help
++EOF
++}
++
++while (($#)); do
++  case "$1" in
++    --output-dir)
++      [[ $# -ge 2 ]] || { echo "Missing value for --output-dir" >&2; exit 2; }
++      OUTPUT_DIR="$2"
++      shift 2
++      ;;
++    --sidestore-ipa)
++      SIDESTORE_IPA=1
++      shift
++      ;;
++    --physical-validation-report)
++      [[ $# -ge 2 ]] || { echo "Missing value for --physical-validation-report" >&2; exit 2; }
++      PHYSICAL_REPORT="$2"
++      shift 2
++      ;;
++    -h|--help)
++      usage
++      exit 0
++      ;;
++    *)
++      echo "Unknown option: $1" >&2
++      usage >&2
++      exit 2
++      ;;
++  esac
++done
++
++if ((SIDESTORE_IPA)); then
++  if [[ -z "$PHYSICAL_REPORT" || ! -f "$PHYSICAL_REPORT" ]]; then
++    echo "SideStore IPA creation requires --physical-validation-report PATH." >&2
++    exit 2
++  fi
++  if ! /usr/bin/grep -Eq '^physical_device_validation:[[:space:]]*PASS[[:space:]]*$' "$PHYSICAL_REPORT"; then
++    echo "The report must contain the exact line: physical_device_validation: PASS" >&2
++    exit 2
++  fi
++fi
++
++for command in xcodebuild git python3 shasum unzip zip; do
++  command -v "$command" >/dev/null 2>&1 || {
++    echo "Required command not found: $command" >&2
++    exit 1
++  }
++done
++
++mkdir -p "$OUTPUT_DIR"
++OUTPUT_DIR="$(cd "$OUTPUT_DIR" && pwd)"
++if [[ "$OUTPUT_DIR" == "/" || "$OUTPUT_DIR" == "$ROOT" ]]; then
++  echo "Choose a dedicated output directory, not the filesystem or repository root." >&2
++  exit 2
++fi
++ARCHIVE_PATH="$OUTPUT_DIR/Hermes.xcarchive"
++DERIVED_DATA="$(/usr/bin/mktemp -d "${TMPDIR:-/tmp}/hermes-ios-derived.XXXXXX")"
++IPA_STAGING=""
++trap 'rm -rf "$DERIVED_DATA"; [[ -z "$IPA_STAGING" ]] || rm -rf "$IPA_STAGING"' EXIT
++
++if [[ -L "$ARCHIVE_PATH" || -e "$ARCHIVE_PATH" ]]; then
++  echo "Refusing to replace an existing archive: $ARCHIVE_PATH" >&2
++  echo "Choose another --output-dir or remove the previous generated archive after inspection." >&2
++  exit 1
++fi
++"$ROOT/scripts/package-bridge.sh" --output-dir "$OUTPUT_DIR"
++
++echo "Building unsigned iOS Release archive (bundle ID is checked after build)."
++xcodebuild \
++  -project "$ROOT/Hermes.xcodeproj" \
++  -scheme Hermes \
++  -configuration Release \
++  -destination 'generic/platform=iOS' \
++  -derivedDataPath "$DERIVED_DATA" \
++  -archivePath "$ARCHIVE_PATH" \
++  CODE_SIGNING_ALLOWED=NO \
++  CODE_SIGNING_REQUIRED=NO \
++  archive
++
++APP_PATH="$ARCHIVE_PATH/Products/Applications/Hermes.app"
++INFO_PLIST="$APP_PATH/Info.plist"
++[[ -d "$APP_PATH" && -f "$INFO_PLIST" ]] || {
++  echo "The iOS archive does not contain Hermes.app." >&2
++  exit 1
++}
++
++BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$INFO_PLIST")"
++if [[ "$BUNDLE_ID" != "com.dippo.hermes" ]]; then
++  echo "Unexpected bundle identifier: $BUNDLE_ID" >&2
++  exit 1
++fi
++
++IPA_PATH=""
++if ((SIDESTORE_IPA)); then
++  IPA_STAGING="$(/usr/bin/mktemp -d "$OUTPUT_DIR/.sidestore-payload.XXXXXX")"
++  mkdir -p "$IPA_STAGING/Payload"
++  /usr/bin/ditto "$APP_PATH" "$IPA_STAGING/Payload/Hermes.app"
++
++  # SideStore applies the device's signing identity during installation.
++  /usr/bin/find "$IPA_STAGING/Payload/Hermes.app" -type d -name _CodeSignature -prune -exec rm -rf {} +
++  /usr/bin/find "$IPA_STAGING/Payload/Hermes.app" -type f -name embedded.mobileprovision -delete
++  IPA_PATH="$OUTPUT_DIR/Hermes.ipa"
++  if [[ -L "$IPA_PATH" ]]; then
++    echo "Refusing to replace a symlink at $IPA_PATH" >&2
++    exit 1
++  fi
++  rm -f "$IPA_PATH"
++  (cd "$IPA_STAGING" && /usr/bin/zip -qry "$IPA_PATH" Payload)
++  rm -rf "$IPA_STAGING"
++  IPA_STAGING=""
++
++  if /usr/bin/unzip -Z1 "$IPA_PATH" | /usr/bin/grep -Eq '(^|/)(_CodeSignature|embedded\.mobileprovision)(/|$)'; then
++    echo "Unsigned SideStore package still contains signing material." >&2
++    rm -f "$IPA_PATH"
++    exit 1
++  fi
++  /usr/bin/unzip -Z1 "$IPA_PATH" | /usr/bin/grep -qx 'Payload/Hermes.app/Info.plist' || {
++    echo "Hermes.ipa has an invalid Payload/Hermes.app layout." >&2
++    rm -f "$IPA_PATH"
++    exit 1
++  }
++fi
++
++SUMS="$OUTPUT_DIR/SHA256SUMS.txt"
++: > "$SUMS"
++for artifact in "$OUTPUT_DIR"/hermes-mobile-bridge-v*.tar.gz; do
++  [[ -f "$artifact" ]] || continue
++  (cd "$OUTPUT_DIR" && shasum -a 256 "$(basename "$artifact")") >> "$SUMS"
++done
++if [[ -n "$IPA_PATH" ]]; then
++  (cd "$OUTPUT_DIR" && shasum -a 256 "$(basename "$IPA_PATH")") >> "$SUMS"
++fi
++
++echo "Release archive: $ARCHIVE_PATH"
++BRIDGE_ARCHIVE="$(find "$OUTPUT_DIR" -maxdepth 1 -type f -name 'hermes-mobile-bridge-v*.tar.gz' -print -quit)"
++echo "Bridge archive: ${BRIDGE_ARCHIVE:-$OUTPUT_DIR (not found)}"
++echo "Checksums: $SUMS"
++if [[ -n "$IPA_PATH" ]]; then
++  echo "SideStore IPA: $IPA_PATH"
++else
++  echo "No IPA created. Physical-device PASS evidence is required before SideStore packaging."
++fi
+diff --git a/scripts/configure-tailscale.sh b/scripts/configure-tailscale.sh
+new file mode 100755
+index 0000000..ba64e25
+--- /dev/null
++++ b/scripts/configure-tailscale.sh
+@@ -0,0 +1,4 @@
++#!/bin/bash
++set -euo pipefail
++script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
++exec python3 "$script_dir/bridge-service.py" tailscale "$@"
+diff --git a/scripts/install-bridge.sh b/scripts/install-bridge.sh
+new file mode 100755
+index 0000000..b56245e
+--- /dev/null
++++ b/scripts/install-bridge.sh
+@@ -0,0 +1,4 @@
++#!/bin/bash
++set -euo pipefail
++script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
++exec python3 "$script_dir/bridge-service.py" install "$@"
+diff --git a/scripts/package-bridge.sh b/scripts/package-bridge.sh
+new file mode 100755
+index 0000000..9c79e0d
+--- /dev/null
++++ b/scripts/package-bridge.sh
+@@ -0,0 +1,158 @@
++#!/bin/bash
++set -euo pipefail
++
++ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++OUTPUT_DIR="$ROOT/build/release"
++
++usage() {
++  cat <<'EOF'
++Usage: scripts/package-bridge.sh [--output-dir PATH]
++
++Create a clean source archive of the tracked Studio bridge runtime, contracts,
++launchd configuration, and bridge install/update scripts. No virtualenv,
++machine configuration, credentials, logs, databases, or build products are
++included.
++EOF
++}
++
++while (($#)); do
++  case "$1" in
++    --output-dir)
++      [[ $# -ge 2 ]] || { echo "Missing value for --output-dir" >&2; exit 2; }
++      OUTPUT_DIR="$2"
++      shift 2
++      ;;
++    -h|--help)
++      usage
++      exit 0
++      ;;
++    *)
++      echo "Unknown option: $1" >&2
++      usage >&2
++      exit 2
++      ;;
++  esac
++done
++
++command -v git >/dev/null 2>&1 || { echo "git is required." >&2; exit 1; }
++command -v python3 >/dev/null 2>&1 || { echo "python3 is required." >&2; exit 1; }
++command -v shasum >/dev/null 2>&1 || { echo "shasum is required." >&2; exit 1; }
++
++mkdir -p "$OUTPUT_DIR"
++OUTPUT_DIR="$(cd "$OUTPUT_DIR" && pwd)"
++VERSION="$(/usr/bin/sed -n 's/^version = "\([^"]*\)"/\1/p' "$ROOT/hermes-mobile-bridge/pyproject.toml" | /usr/bin/head -n 1)"
++[[ -n "$VERSION" ]] || { echo "Could not read bridge version." >&2; exit 1; }
++
++ARCHIVE="$OUTPUT_DIR/hermes-mobile-bridge-v$VERSION.tar.gz"
++export HERMES_PACKAGE_ROOT="$ROOT"
++export HERMES_PACKAGE_ARCHIVE="$ARCHIVE"
++
++python3 - <<'PY'
++import os
++import pathlib
++import subprocess
++import tarfile
++
++root = pathlib.Path(os.environ["HERMES_PACKAGE_ROOT"]).resolve()
++archive = pathlib.Path(os.path.abspath(os.environ["HERMES_PACKAGE_ARCHIVE"]))
++if archive.is_symlink() or archive.with_name(archive.name + ".sha256").is_symlink():
++    raise SystemExit("Refusing to replace a symlink at the release artifact path.")
++temporary = archive.with_name(f".{archive.name}.{os.getpid()}.tmp")
++checksum = archive.with_name(archive.name + ".sha256")
++checksum_temporary = checksum.with_name(f".{checksum.name}.{os.getpid()}.tmp")
++if temporary.exists() or temporary.is_symlink() or checksum_temporary.exists() or checksum_temporary.is_symlink():
++    raise SystemExit("A temporary bridge release artifact already exists; remove it after inspection.")
++raw = subprocess.run(
++    ["git", "-C", str(root), "ls-files", "--cached", "-z"],
++    check=True,
++    stdout=subprocess.PIPE,
++).stdout
++tracked = [path.decode("utf-8") for path in raw.split(b"\0") if path]
++
++runtime_roots = ("hermes-mobile-bridge/src/",)
++runtime_files = {
++    "hermes-mobile-bridge/README.md",
++    "hermes-mobile-bridge/config.example.json",
++    "hermes-mobile-bridge/pyproject.toml",
++}
++contract_files = {
++    "BRIDGE_API.md",
++    "BRIDGE_HERMES_MAPPING.md",
++    "IOS_INTEGRATION_GUIDE.md",
++    "BRIDGE_TEST_REPORT.md",
++    "docs/INSTALL.md",
++    "docs/STUDIO_SETUP.md",
++}
++service_files = {
++    "scripts/bridge-service.py",
++    "scripts/studio-runtime.py",
++    "scripts/install-bridge.sh",
++    "scripts/start-bridge.sh",
++    "scripts/stop-bridge.sh",
++    "scripts/status-bridge.sh",
++    "scripts/update-bridge.sh",
++    "scripts/uninstall-bridge.sh",
++    "scripts/pairing-token.sh",
++    "scripts/configure-tailscale.sh",
++}
++
++def selected(name: str) -> bool:
++    return (
++        name in runtime_files
++        or name in contract_files
++        or name in service_files
++        or name.startswith(runtime_roots)
++        or (name.startswith("launchd/") and name.endswith(".plist"))
++    )
++
++def forbidden(name: str) -> bool:
++    path = pathlib.PurePosixPath(name)
++    blocked_parts = {".git", ".venv", "__pycache__", ".pytest_cache", "build", "dist", "node_modules", ".tox"}
++    if any(part in blocked_parts for part in path.parts):
++        return True
++    lowered = path.name.lower()
++    if lowered in {"config.json", "credentials.json", "secrets.json", "token", "token.txt"}:
++        return True
++    if lowered.startswith(".env") or lowered.endswith((".log", ".sqlite", ".sqlite3", ".db", ".pem", ".key", ".p12", ".cer", ".mobileprovision", ".provisionprofile")):
++        return True
++    return False
++
++members = []
++for name in tracked:
++    if not selected(name):
++        continue
++    if forbidden(name):
++        raise SystemExit(f"Refusing to package sensitive or generated path: {name}")
++    source = (root / name)
++    if source.is_symlink():
++        raise SystemExit(f"Refusing symlink in bridge archive: {name}")
++    if not source.is_file():
++        # A tracked but locally removed file must not silently yield an incomplete package.
++        raise SystemExit(f"Tracked bridge release file is missing: {name}")
++    members.append((name, source))
++
++required = runtime_files | contract_files | service_files
++missing = sorted(required - {name for name, _ in members})
++if missing:
++    raise SystemExit("Required bridge release files are not tracked: " + ", ".join(missing))
++if not any(name.startswith("launchd/") and name.endswith(".plist") for name, _ in members):
++    raise SystemExit("No tracked launchd plist was found for the Studio bridge service.")
++
++try:
++    with tarfile.open(temporary, "x:gz", format=tarfile.PAX_FORMAT) as output:
++        for name, source in sorted(members):
++            output.add(source, arcname=f"hermes-mobile-bridge-release/{name}", recursive=False)
++    os.replace(temporary, archive)
++finally:
++    temporary.unlink(missing_ok=True)
++
++print(f"Packaged {len(members)} tracked source and service files.")
++PY
++
++if [[ -L "$ARCHIVE.sha256" ]]; then
++  echo "Refusing to replace a symlink at $ARCHIVE.sha256" >&2
++  exit 1
++fi
++(cd "$OUTPUT_DIR" && shasum -a 256 "$(basename "$ARCHIVE")") > "$ARCHIVE.sha256"
++echo "Bridge package: $ARCHIVE"
++echo "Checksum: $ARCHIVE.sha256"
+diff --git a/scripts/pairing-token.sh b/scripts/pairing-token.sh
+new file mode 100755
+index 0000000..772b251
+--- /dev/null
++++ b/scripts/pairing-token.sh
+@@ -0,0 +1,4 @@
++#!/bin/bash
++set -euo pipefail
++script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
++exec python3 "$script_dir/bridge-service.py" pairing "$@"
+diff --git a/scripts/start-bridge.sh b/scripts/start-bridge.sh
+new file mode 100755
+index 0000000..320f7dc
+--- /dev/null
++++ b/scripts/start-bridge.sh
+@@ -0,0 +1,4 @@
++#!/bin/bash
++set -euo pipefail
++script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
++exec python3 "$script_dir/bridge-service.py" start "$@"
+diff --git a/scripts/status-bridge.sh b/scripts/status-bridge.sh
+new file mode 100755
+index 0000000..a528756
+--- /dev/null
++++ b/scripts/status-bridge.sh
+@@ -0,0 +1,4 @@
++#!/bin/bash
++set -euo pipefail
++script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
++exec python3 "$script_dir/bridge-service.py" status "$@"
+diff --git a/scripts/stop-bridge.sh b/scripts/stop-bridge.sh
+new file mode 100755
+index 0000000..be4bb49
+--- /dev/null
++++ b/scripts/stop-bridge.sh
+@@ -0,0 +1,4 @@
++#!/bin/bash
++set -euo pipefail
++script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
++exec python3 "$script_dir/bridge-service.py" stop "$@"
+diff --git a/scripts/studio-runtime.py b/scripts/studio-runtime.py
+new file mode 100644
+index 0000000..e3413b4
+--- /dev/null
++++ b/scripts/studio-runtime.py
+@@ -0,0 +1,70 @@
++#!/usr/bin/env python3
++"""launchd supervisor with bounded lifecycle-only logs; raw child output discarded."""
++import datetime
++import json
++import logging
++from logging.handlers import RotatingFileHandler
++import os
++from pathlib import Path
++import signal
++import subprocess
++import sys
++import threading
++
++
++def private_json(path):
++    if path.is_symlink() or path.stat().st_uid != os.getuid() or path.stat().st_mode & 0o077:
++        raise ValueError('Unsafe private configuration')
++    return json.loads(path.read_text())
++
++
++def main():
++    os.umask(0o077)
++    role, directory = sys.argv[1:]
++    root = Path(directory)
++    config = private_json(root/'installation.json')
++    logger = logging.getLogger('studio'); logger.setLevel(logging.INFO)
++    handler = RotatingFileHandler(Path(config['logs'])/(role+'.log'), maxBytes=1024*1024, backupCount=2)
++    logger.addHandler(handler)
++    def log(event, **fields):
++        logger.info(json.dumps({'time':datetime.datetime.now(datetime.timezone.utc).isoformat(), 'service':role, 'event':event, **fields}))
++    env = dict(os.environ)
++    env.update(PATH=str(Path(config['hermes_source'])/'venv/bin')+':/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin',
++               HERMES_HOME=config['hermes_home'], PYTHONUNBUFFERED='1')
++    if role == 'backend':
++        secret = root/'dashboard-token'
++        if secret.is_symlink() or secret.stat().st_uid != os.getuid() or secret.stat().st_mode & 0o077: raise ValueError('Unsafe private credential')
++        env['HERMES_DASHBOARD_SESSION_TOKEN'] = secret.read_text().strip()
++        # Audited entry point. Explicit loopback binding and no browser/client sink.
++        code = 'from hermes_cli.web_server import start_server; start_server(host="127.0.0.1",port='+str(config['hermes_port'])+',open_browser=False)'
++        args = [str(Path(config['hermes_source'])/'venv/bin/python'),'-c',code]
++        env['PYTHONPATH'] = config['hermes_source']
++        cwd = config['workspace']
++    elif role == 'bridge':
++        args = [str(root/'current/venv/bin/hermes-mobile-bridge'),'--config',str(root/'config.json'),'serve']
++        cwd = config['workspace']
++    else: raise ValueError('Unknown service role')
++    # Never persist upstream raw output: it can include prompt/provider/query data.
++    child = subprocess.Popen(args,env=env,cwd=cwd,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,start_new_session=True)
++    log('started',pid=child.pid)
++    def shutdown(signum, frame):
++        log('stop_requested')
++        try: os.killpg(child.pid, signal.SIGTERM)
++        except ProcessLookupError: return
++        # Hermes can retain background threads after its listener shuts down.
++        # Bound shutdown so launchd cannot orphan the dedicated child.
++        def force_stop():
++            try: os.killpg(child.pid, signal.SIGKILL)
++            except ProcessLookupError: pass
++        timer = threading.Timer(5, force_stop); timer.daemon = True; timer.start()
++    signal.signal(signal.SIGTERM,shutdown); signal.signal(signal.SIGINT,shutdown)
++    code = child.wait()
++    log('exited',returncode=code)
++    # launchd KeepAlive handles a crash. Intentional bootout stops the supervisor.
++    return code if code >= 0 else 128-code
++
++if __name__ == '__main__':
++    try: sys.exit(main())
++    except (ValueError,OSError,KeyError):
++        print('Private Studio runtime configuration failed.',file=sys.stderr)
++        sys.exit(1)
+diff --git a/scripts/test_studio_service.py b/scripts/test_studio_service.py
+new file mode 100644
+index 0000000..ca92d11
+--- /dev/null
++++ b/scripts/test_studio_service.py
+@@ -0,0 +1,81 @@
++"""Regression checks for service secrets and safe update boundaries (no live ops)."""
++import importlib.util
++import os
++import copy
++from pathlib import Path
++import tempfile
++import unittest
++from unittest.mock import patch
++
++spec = importlib.util.spec_from_file_location('studio', Path(__file__).with_name('bridge-service.py'))
++studio = importlib.util.module_from_spec(spec)
++spec.loader.exec_module(studio)
++
++
++class StudioServiceTests(unittest.TestCase):
++    def test_serve_ownership_refuses_funnel_or_unrelated_routes(self):
++        expected = 'http://127.0.0.1:8787'
++        config = {'TCP':{'443':{'HTTPS':True}}, 'Web':{'studio:443':{'Handlers':{'/':{'Proxy':expected}}}}}
++        self.assertTrue(studio.owns_serve(config, expected))
++        variants = []
++        funnel = copy.deepcopy(config); funnel['AllowFunnel'] = {'studio:443':True}; variants.append(funnel)
++        other = copy.deepcopy(config); other['Web']['studio:443']['Handlers']['/extra'] = {'Proxy':expected}; variants.append(other)
++        port = copy.deepcopy(config); port['TCP']['22'] = {'TCPForward':'127.0.0.1:22'}; variants.append(port)
++        different = copy.deepcopy(config); different['Web']['studio:443']['Handlers']['/']['Proxy'] = 'http://127.0.0.1:9999'; variants.append(different)
++        for config in variants: self.assertFalse(studio.owns_serve(config, expected))
++
++    def test_private_config_rejects_symlink_and_world_readable_secret(self):
++        with tempfile.TemporaryDirectory() as directory:
++            root = Path(directory)
++            secret = root/'secret'
++            studio.private_write(secret, '{"credential":"private"}')
++            self.assertEqual(secret.stat().st_mode & 0o777, 0o600)
++            link = root/'link'; link.symlink_to(secret)
++            with self.assertRaises(ValueError): studio.read_json(link)
++            with self.assertRaises(ValueError): studio.private_write(link, '{}')
++            secret.chmod(0o644)
++            with self.assertRaises(ValueError): studio.read_json(secret)
++
++    def test_failed_write_keeps_existing_secret_and_refuses_stale_temp(self):
++        with tempfile.TemporaryDirectory() as directory:
++            path = Path(directory)/'config'
++            studio.private_write(path, 'original')
++            path.with_name('config.new').write_text('stale')
++            with self.assertRaises(FileExistsError): studio.private_write(path, 'replacement')
++            self.assertEqual(path.read_text(), 'original')
++
++    def test_private_directory_does_not_follow_symlink(self):
++        with tempfile.TemporaryDirectory() as directory:
++            root = Path(directory); link = root/'link'; link.symlink_to(root, target_is_directory=True)
++            with self.assertRaises(ValueError): studio.private_dir(link)
++
++    def test_update_refuses_every_active_and_unknown_state(self):
++        for state in ('starting','running','waiting_for_input','stop_requested','unknown'):
++            with self.subTest(state=state), patch.object(studio,'request',side_effect=lambda root,path: {'runs':[{'state':state}]} if 'state='+state+'&' in path else {'runs':[]}):
++                with self.assertRaises(ValueError): studio.ensure_idle(Path('/unused'))
++
++    def test_update_queries_state_instead_of_only_recent_run_page(self):
++        paths = []
++        def read(root, path):
++            paths.append(path)
++            return {'runs':[]}
++        with patch.object(studio,'request',side_effect=read): studio.ensure_idle(Path('/unused'))
++        self.assertEqual(len(paths),5)
++        self.assertTrue(all('state=' in p and 'limit=1' in p for p in paths))
++
++    def test_new_run_during_staging_prevents_shutdown(self):
++        with patch.object(studio,'load_manifest',return_value={'python':'python3'}), patch.object(studio,'ensure_idle',side_effect=[None,ValueError('new run')]), patch.object(studio,'stage_release'), patch.object(studio,'stop') as stop:
++            with self.assertRaises(ValueError): studio.update(Path('/unused'))
++            stop.assert_not_called()
++
++    def test_failed_start_restores_previous_runtime(self):
++        with tempfile.TemporaryDirectory() as directory:
++            root = Path(directory).resolve(); previous=root/'old'; previous.mkdir(); (root/'current').symlink_to(previous)
++            release=root/'new'; release.mkdir()
++            with patch.object(studio,'load_manifest',return_value={'python':'python3'}), patch.object(studio,'ensure_idle'), patch.object(studio,'stage_release',return_value=release), patch.object(studio,'stop'), patch.object(studio,'start',side_effect=[ValueError('start failed'),None]) as start:
++                with self.assertRaises(ValueError): studio.update(root)
++                self.assertEqual((root/'current').resolve(),previous)
++                self.assertEqual(start.call_count,2)
++
++
++if __name__ == '__main__': unittest.main()
+diff --git a/scripts/uninstall-bridge.sh b/scripts/uninstall-bridge.sh
+new file mode 100755
+index 0000000..32a936e
+--- /dev/null
++++ b/scripts/uninstall-bridge.sh
+@@ -0,0 +1,4 @@
++#!/bin/bash
++set -euo pipefail
++script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
++exec python3 "$script_dir/bridge-service.py" uninstall "$@"
+diff --git a/scripts/update-bridge.sh b/scripts/update-bridge.sh
+new file mode 100755
+index 0000000..7b885fb
+--- /dev/null
++++ b/scripts/update-bridge.sh
+@@ -0,0 +1,4 @@
++#!/bin/bash
++set -euo pipefail
++script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
++exec python3 "$script_dir/bridge-service.py" update "$@"

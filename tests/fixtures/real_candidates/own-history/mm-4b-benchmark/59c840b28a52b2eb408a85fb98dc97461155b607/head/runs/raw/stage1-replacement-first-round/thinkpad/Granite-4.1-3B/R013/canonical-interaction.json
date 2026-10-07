@@ -1,0 +1,100 @@
+[
+  {
+    "arguments": {},
+    "response": [
+      "parser: expected column account_id",
+      "parser: received account-id",
+      "fallback handler invoked",
+      "reporter: dependency timeout"
+    ],
+    "tool": "query_logs",
+    "turn": 1,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {},
+    "response": {
+      "expected": "account_id",
+      "header": "account-id"
+    },
+    "tool": "inspect_file",
+    "turn": 2,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {},
+    "response": {
+      "error": "connection timeout contacting analytics-db"
+    },
+    "tool": "process_report",
+    "turn": 3,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {},
+    "response": {
+      "database": "healthy"
+    },
+    "tool": "check_service",
+    "turn": 4,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {},
+    "response": {
+      "config": "analytics-db.internal:5432"
+    },
+    "tool": "inspect_config",
+    "turn": 5,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {},
+    "response": [
+      "parser: expected column account_id",
+      "parser: received account-id",
+      "fallback handler invoked",
+      "reporter: dependency timeout"
+    ],
+    "tool": "query_logs",
+    "turn": 6,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {},
+    "response": {
+      "expected": "account_id",
+      "header": "account-id"
+    },
+    "tool": "inspect_file",
+    "turn": 7,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {},
+    "response": {
+      "error": "connection timeout contacting analytics-db"
+    },
+    "tool": "process_report",
+    "turn": 8,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {},
+    "response": {
+      "database": "healthy"
+    },
+    "tool": "check_service",
+    "turn": 9,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {},
+    "response": {
+      "config": "analytics-db.internal:5432"
+    },
+    "tool": "inspect_config",
+    "turn": 10,
+    "type": "tool_call"
+  }
+]

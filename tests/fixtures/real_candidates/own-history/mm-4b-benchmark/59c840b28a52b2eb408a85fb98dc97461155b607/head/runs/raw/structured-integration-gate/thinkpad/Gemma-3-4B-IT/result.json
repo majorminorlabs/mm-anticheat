@@ -1,0 +1,134 @@
+{
+  "client_pid": 84575,
+  "errors": [
+    "StructuredTransportError:missing_structured_message_tool_calls"
+  ],
+  "finished_epoch": 1789754811.9270158,
+  "model": "Gemma-3-4B-IT",
+  "pid": 84540,
+  "props": {
+    "bos_token": "<bos>",
+    "build_info": "b11028-972d2313b",
+    "chat_template": "{{ bos_token }}\n{%- if messages[0]['role'] == 'system' -%}\n    {%- if messages[0]['content'] is string -%}\n        {%- set first_user_prefix = messages[0]['content'] + '\n\n' -%}\n    {%- else -%}\n        {%- set first_user_prefix = messages[0]['content'][0]['text'] + '\n\n' -%}\n    {%- endif -%}\n    {%- set loop_messages = messages[1:] -%}\n{%- else -%}\n    {%- set first_user_prefix = \"\" -%}\n    {%- set loop_messages = messages -%}\n{%- endif -%}\n{%- for message in loop_messages -%}\n    {%- if (message['role'] == 'user') != (loop.index0 % 2 == 0) -%}\n        {{ raise_exception(\"Conversation roles must alternate user/assistant/user/assistant/...\") }}\n    {%- endif -%}\n    {%- if (message['role'] == 'assistant') -%}\n        {%- set role = \"model\" -%}\n    {%- else -%}\n        {%- set role = message['role'] -%}\n    {%- endif -%}\n    {{ '<start_of_turn>' + role + '\n' + (first_user_prefix if loop.first else \"\") }}\n    {%- if message['content'] is string -%}\n        {{ message['content'] | trim }}\n    {%- elif message['content'] is iterable -%}\n        {%- for item in message['content'] -%}\n            {%- if item['type'] == 'image' -%}\n                {{ '<start_of_image>' }}\n            {%- elif item['type'] == 'text' -%}\n                {{ item['text'] | trim }}\n            {%- endif -%}\n        {%- endfor -%}\n    {%- else -%}\n        {{ raise_exception(\"Invalid content type\") }}\n    {%- endif -%}\n    {{ '<end_of_turn>\n' }}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{'<start_of_turn>model\n'}}\n{%- endif -%}",
+    "chat_template_caps": {
+      "supports_object_arguments": false,
+      "supports_parallel_tool_calls": false,
+      "supports_preserve_reasoning": false,
+      "supports_reasoning_effort": false,
+      "supports_string_content": true,
+      "supports_system_role": true,
+      "supports_tool_calls": false,
+      "supports_tools": false,
+      "supports_typed_content": true
+    },
+    "cors_proxy_enabled": false,
+    "default_generation_settings": {
+      "n_ctx": 16384,
+      "params": {
+        "adaptive_decay": 0.8999999761581421,
+        "adaptive_target": -1.0,
+        "backend_sampling": false,
+        "chat_format": "Content-only",
+        "dry_allowed_length": 2,
+        "dry_base": 1.75,
+        "dry_multiplier": 0.0,
+        "dry_penalty_last_n": 64,
+        "dynatemp_exponent": 1.0,
+        "dynatemp_range": 0.0,
+        "frequency_penalty": 0.0,
+        "generation_prompt": "",
+        "ignore_eos": false,
+        "lora": [],
+        "max_tokens": -1,
+        "min_keep": 0,
+        "min_p": 0.05000000074505806,
+        "mirostat": 0,
+        "mirostat_eta": 0.10000000149011612,
+        "mirostat_tau": 5.0,
+        "n_discard": 0,
+        "n_keep": 0,
+        "n_predict": -1,
+        "n_probs": 0,
+        "post_sampling_probs": false,
+        "presence_penalty": 0.0,
+        "reasoning_format": "none",
+        "reasoning_in_content": false,
+        "repeat_last_n": 64,
+        "repeat_penalty": 1.0,
+        "samplers": [
+          "penalties",
+          "dry",
+          "top_n_sigma",
+          "top_k",
+          "typ_p",
+          "top_p",
+          "min_p",
+          "xtc",
+          "temperature"
+        ],
+        "seed": 0,
+        "speculative.types": "none",
+        "stream": false,
+        "temperature": 0.0,
+        "timings_per_token": false,
+        "top_k": 40,
+        "top_n_sigma": -1.0,
+        "top_p": 0.949999988079071,
+        "typical_p": 1.0,
+        "xtc_probability": 0.0,
+        "xtc_threshold": 0.10000000149011612
+      }
+    },
+    "endpoint_metrics": false,
+    "endpoint_props": false,
+    "endpoint_slots": true,
+    "eos_token": "<eos>",
+    "is_sleeping": false,
+    "media_marker": "<__media_HqHBrBtHVaL2ZILGnddKDpcypdyDODm1__>",
+    "modalities": {
+      "audio": false,
+      "video": false,
+      "vision": false
+    },
+    "model_alias": "Gemma-3-4B-IT",
+    "model_ftype": "Q4_K - Medium",
+    "model_path": "/home/dippo/research-inference/models/mm-agent/google_gemma-3-4b-it-Q4_K_M.gguf",
+    "total_slots": 4,
+    "ui": false,
+    "ui_settings": {}
+  },
+  "qwen_thinking_off_requested": false,
+  "resource_samples": [
+    {
+      "mem": {
+        "MemAvailable": 8025464832,
+        "SwapFree": 17603096576,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2209210368
+      },
+      "phase": "before_first_request",
+      "pid": 84540,
+      "self_pid": 84575,
+      "server_rss_bytes": 165609472,
+      "timestamp_epoch": 1789754806.7582247,
+      "timestamp_monotonic": 56852.916306169
+    },
+    {
+      "mem": {
+        "MemAvailable": 7998267392,
+        "SwapFree": 17603125248,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2209181696
+      },
+      "phase": "before_cleanup",
+      "pid": 84540,
+      "self_pid": 84575,
+      "server_rss_bytes": 186318848,
+      "timestamp_epoch": 1789754811.9266992,
+      "timestamp_monotonic": 56858.084779594
+    }
+  ],
+  "started_epoch": 1789754806.7428946,
+  "status": "failed",
+  "turn1_http_status": 200
+}

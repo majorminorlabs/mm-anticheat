@@ -1,0 +1,88 @@
+[
+  {
+    "arguments": {},
+    "ok": true,
+    "response": {
+      "r-184": {
+        "approved": true,
+        "artifact": "sha256:AAA",
+        "commit": "8a1f31",
+        "created": "09:10"
+      },
+      "r-185": {
+        "approved": true,
+        "artifact": "sha256:BBB",
+        "commit": "03bf72",
+        "created": "11:42"
+      },
+      "r-186": {
+        "approved": false,
+        "artifact": "sha256:CCC",
+        "commit": "e72190",
+        "created": "12:03"
+      }
+    },
+    "state": {
+      "production": "r-184",
+      "releases": {
+        "r-184": {
+          "approved": true,
+          "artifact": "sha256:AAA",
+          "commit": "8a1f31",
+          "created": "09:10"
+        },
+        "r-185": {
+          "approved": true,
+          "artifact": "sha256:BBB",
+          "commit": "03bf72",
+          "created": "11:42"
+        },
+        "r-186": {
+          "approved": false,
+          "artifact": "sha256:CCC",
+          "commit": "e72190",
+          "created": "12:03"
+        }
+      }
+    },
+    "tool": "list_releases",
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "release": "r-185"
+    },
+    "invalid": true,
+    "ok": false,
+    "response": "malformed_arguments:KeyError:'release_id'",
+    "tool": "deploy_release",
+    "type": "tool_call"
+  },
+  {
+    "reason": "model_stop",
+    "state": {
+      "production": "r-184",
+      "releases": {
+        "r-184": {
+          "approved": true,
+          "artifact": "sha256:AAA",
+          "commit": "8a1f31",
+          "created": "09:10"
+        },
+        "r-185": {
+          "approved": true,
+          "artifact": "sha256:BBB",
+          "commit": "03bf72",
+          "created": "11:42"
+        },
+        "r-186": {
+          "approved": false,
+          "artifact": "sha256:CCC",
+          "commit": "e72190",
+          "created": "12:03"
+        }
+      }
+    },
+    "type": "termination"
+  }
+]

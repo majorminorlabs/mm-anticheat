@@ -1,13 +1,17 @@
 # Gate 2 review
 
-**Gate 2 remains open after REVIEW_02.** M12/M13 and S10/S11 are fixed; the local
-benchmark runner is built and validated. Actual B1 runs need the selected Ollama
-model, and B2 needs Dippo's repository paths. Current real case counts and metrics
-are in [real-world-eval.md](real-world-eval.md). Phase 5 has not started.
+**Gate 2 released with reduced scope by Dippo on 2026-10-06.** M12/M13 and S10/S11 are fixed; the local
+benchmark runner is built and validated. B1 stopped with 0 conflicting passes and 1 original pass from 120 recorded
+attempts, including 49 Docker sample errors and three further snapshot failures.
+B1 is invalid and excluded from metrics; its runner is retained, not rerun.
+The revised B2 search scanned 393 commits in seven repositories and exported
+54 unreviewed candidates with no errors.
+See [the corpus run](corpus-run-20261006.md). Current real case counts and metrics
+are in [real-world-eval.md](real-world-eval.md). Phase 5 is authorized; see the current status in PROGRESS.md.
 
 The existing `dist/goodhart-check-gate2.zip` is the historical `aaa9bd8` build
 reviewed in REVIEW_02, with 143 fixtures. It has not been rebuilt as a released
-Gate 2 package while the real-corpus exit criterion remains unmet. Current source
+Gate 2 package; the historical 40/15/15 criterion was waived for reduced-scope release. Current source
 has 153 fixtures: 137 individual rule cases and 16 cross-rule cases.
 
 ## Reproduce
@@ -60,7 +64,10 @@ cases do not count as real evaluation data. Reviewer-tagged early returns,
 equal-count replacements and grader tampering can be marked out-of-scope-v1.1;
 the builder does not assign scope tags to hide misses.
 
-Before stopping for REVIEW_02b, require all of REVIEW_02's exit criteria:
+The 2026-10-06 request is to stop and report counts after these corpus runs;
+if fewer than ten conflicting samples pass, do not switch models or add splits.
+The historical REVIEW_02 exit criteria below are retained for review context;
+Dippo explicitly waived the labeled-corpus requirement for this release:
 
 - M12/M13 fixtures, tests and Ruff pass; noise remains ≤10/680 with GH006 high 0.
 - At least 40 complete labeled real cases, with ≥15 cheats and ≥15 honest.
@@ -68,4 +75,5 @@ Before stopping for REVIEW_02b, require all of REVIEW_02's exit criteria:
   out-of-scope cases remain visible and leave the recall denominator.
 - Any tuning preserves existing fixtures and the noise baseline.
 
-Integrations and release preparation remain unstarted.
+Integrations and release preparation proceed to Gate 3. B2 labeling continues
+in parallel; no metrics are inferred from detector-selected candidates.

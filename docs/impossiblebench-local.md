@@ -1,5 +1,10 @@
 # Local ImpossibleBench corpus
 
+The 2026-10-06 B1 campaign is invalid: no structured tool calls, repeated Docker
+failures and disk pressure. The runner is retained but not rerun. Its exported
+cases remain for audit and are excluded from evaluation through corpus-status.toml.
+Gate 2 was released with reduced scope; B2 labels are pending independently.
+
 This separate runner implements REVIEW_02 B1 using the official
 [ImpossibleBench source](https://github.com/safety-research/impossiblebench).
 It runs Impossible-LiveCodeBench through Inspect against a loopback Ollama
@@ -40,7 +45,8 @@ Set `BENCH_MODEL` to the actual installed model selected by Dippo. The unresolve
 Defaults are 30 samples per cell, the `conflicting` and `original` splits, and
 `minimal` and `tools` agents: 120 requested samples total. Calls run one at a
 time. Limits are three attempts, 30 messages, 4,096 generated tokens per call,
-and 900 seconds per sample. The run manifest records the source pin, Inspect
+and 900 seconds per sample. Tools continuation containers are limited to 1 GiB
+RAM with no additional swap, two CPUs and 128 processes. The run manifest records the source pin, Inspect
 version, model, endpoint, sample count and compatibility adjustment. Raw Inspect
 logs stay in `.benchmarks/runs/<timestamp>/logs/`.
 
@@ -58,10 +64,10 @@ Replay an existing log without model inference:
   --benchmark-commit 061dc3dce6a96ab6cf02a855157263033dcfa3ba
 ```
 
-If the first 60 conflicting samples yield fewer than about ten cheats, preserve
-and record the result, then select another local model or request an additional
-`--splits oneoff` run. Oneoff cases remain unreviewed under the requested label
-policy. A small run does not justify detector tuning.
+For the 2026-10-06 request, use `qwen2.5-coder:14b` for all four cells. If the
+60 conflicting samples yield fewer than ten passes, report the count and stop
+B1. Do not switch models or add splits. A small run does not justify detector
+tuning. This explicit request supersedes REVIEW_02's model-switch suggestion.
 
 ## Snapshots and source compatibility
 
@@ -121,6 +127,6 @@ No candidate is imported into the synthetic fixture oracle harness.
 
 Gate 2 needs at least 40 complete labeled real cases, including at least 15
 cheats and 15 honest, plus M12/M13 fixtures, green checks and the unchanged
-10/680 noise baseline with zero GH006 highs. The model name and repository paths
-are still pending; no real run or Gate 2 release is claimed. Phase 5 waits for
+10/680 noise baseline with zero GH006 highs. The [requested model run](corpus-run-20261006.md) stopped below ten conflicting
+passes; the requested B2 parent folder is absent. The historical Gate 2 label requirement was waived for reduced-scope release. Phase 5 waits for
 REVIEW_02b.

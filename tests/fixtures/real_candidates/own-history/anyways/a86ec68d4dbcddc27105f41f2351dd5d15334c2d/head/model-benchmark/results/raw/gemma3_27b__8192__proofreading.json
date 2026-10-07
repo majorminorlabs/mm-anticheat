@@ -1,0 +1,32 @@
+{
+  "model": "gemma3:27b",
+  "quantization": "reported by ollama show; see model metadata",
+  "num_ctx": 8192,
+  "settings": {
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "num_predict": 700,
+    "seed": 42
+  },
+  "test": "proofreading",
+  "kind": "json",
+  "ran_at": "2026-07-28T05:54:08.735Z",
+  "ok": true,
+  "text": "```json\n{\n  \"issues\": [\n    \"Vague and hyperbolic language (\\\"game changer\\\", \\\"future of technology\\\").\",\n    \"Lacks specific details about *how* the data center transforms technology or impacts people.\",\n    \"Contradictory job numbers require investigation; presented as fact without sourcing beyond 'the company says'.\",\n    \"Mentions resident consultation only to state it didn't happen, lacking context on why this matters.\",\n    \"Fails to meet any of the significance tests – doesn’t explain how capability, power, systems, attention, or culture change.\"\n  ],\n  \"minimal_edit\": {\n    \"primarySection\": \"Systems\",\n    \"beats\": [\n      \"cities\"\n    ],\n    \"tags\": [\n      \"data centers\",\n      \"local government\",\n      \"economic development\"\n    ],\n    \"significanceRationale\": \"Illustrates a potential disconnect between projected economic benefits and actual employment outcomes, highlighting the complexities of large-scale infrastructure projects and local governance.\",\n    \"coreQuestion\": \"How do data center projects balance promised economic growth with realistic job creation and community involvement?\"\n  },\n  \"improved_edit\": {\n    \"primarySection\": \"Systems\",\n    \"beats\": [\n      \"cities\"\n    ],\n    \"tags\": [\n      \"data centers\",\n      \"local government\",\n      \"economic development\",\n      \"labor markets\"\n    ],\n    \"significanceRationale\": \"Reveals a potential tension between corporate projections of job creation and independent assessments, exposing the challenges in evaluating the true economic impact of large infrastructure projects. The lack of resident consultation suggests a power imbalance in local development decisions.\",\n    \"coreQuestion\": \"How can communities ensure accurate assessment of promised benefits and meaningful participation in major infrastructure projects like data centers?\"\n  },\n  \"change_log\": [\n    \"Changed primarySection from undefined to 'Systems' because the story focuses on how a complex system (economic development, local governance) operates.\",\n    \"Added 'labor markets' tag for increased specificity.\",\n    \"Strengthened significanceRationale to highlight power dynamics and evaluation challenges.\",\n    \"Refined coreQuestion to focus on community empowerment and accurate assessment.\"\n  ]\n}\n```",
+  "metrics": {
+    "wall_ms": 58016,
+    "eval_count": 485,
+    "eval_duration_ns": 51532773000,
+    "prompt_eval_count": 478,
+    "prompt_eval_duration_ns": 5983725000,
+    "tokens_per_second": 9.41,
+    "prompt_tokens_per_second": 79.88
+  },
+  "error": null,
+  "score": {
+    "json_valid": true,
+    "schema_valid": true,
+    "score": 100,
+    "notes": []
+  }
+}

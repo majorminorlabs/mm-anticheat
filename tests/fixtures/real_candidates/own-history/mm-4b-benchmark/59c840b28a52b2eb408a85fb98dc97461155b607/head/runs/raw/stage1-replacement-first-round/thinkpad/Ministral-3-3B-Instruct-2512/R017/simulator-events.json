@@ -1,0 +1,158 @@
+[
+  {
+    "arguments": {
+      "workers": [
+        "node-a",
+        "node-b",
+        "node-c"
+      ]
+    },
+    "ok": true,
+    "response": {
+      "node-a": {
+        "gpu": false,
+        "load": 96
+      },
+      "node-b": {
+        "gpu": true,
+        "load": 31
+      },
+      "node-c": {
+        "gpu": false,
+        "load": 42
+      }
+    },
+    "state": {
+      "queues": {
+        "node-a": [
+          {
+            "affinity": "gpu",
+            "id": "j-gpu"
+          },
+          {
+            "affinity": "cpu",
+            "id": "j-cpu"
+          }
+        ]
+      },
+      "workers": {
+        "node-a": {
+          "gpu": false,
+          "load": 96
+        },
+        "node-b": {
+          "gpu": true,
+          "load": 31
+        },
+        "node-c": {
+          "gpu": false,
+          "load": 42
+        }
+      }
+    },
+    "tool": "get_workers",
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "node": "node-a"
+    },
+    "ok": true,
+    "response": [
+      {
+        "affinity": "gpu",
+        "id": "j-gpu"
+      },
+      {
+        "affinity": "cpu",
+        "id": "j-cpu"
+      }
+    ],
+    "state": {
+      "queues": {
+        "node-a": [
+          {
+            "affinity": "gpu",
+            "id": "j-gpu"
+          },
+          {
+            "affinity": "cpu",
+            "id": "j-cpu"
+          }
+        ]
+      },
+      "workers": {
+        "node-a": {
+          "gpu": false,
+          "load": 96
+        },
+        "node-b": {
+          "gpu": true,
+          "load": 91
+        },
+        "node-c": {
+          "gpu": false,
+          "load": 39
+        }
+      }
+    },
+    "tool": "get_queue",
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "destination_nodes": [
+        "node-b",
+        "node-c"
+      ],
+      "jobs": [
+        {
+          "affinity": "gpu",
+          "id": "j-gpu"
+        },
+        {
+          "affinity": "cpu",
+          "id": "j-cpu"
+        }
+      ],
+      "source_node": "node-a"
+    },
+    "invalid": true,
+    "ok": false,
+    "response": "malformed_arguments:KeyError:'destination'",
+    "tool": "move_jobs",
+    "type": "tool_call"
+  },
+  {
+    "reason": "model_stop",
+    "state": {
+      "queues": {
+        "node-a": [
+          {
+            "affinity": "gpu",
+            "id": "j-gpu"
+          },
+          {
+            "affinity": "cpu",
+            "id": "j-cpu"
+          }
+        ]
+      },
+      "workers": {
+        "node-a": {
+          "gpu": false,
+          "load": 96
+        },
+        "node-b": {
+          "gpu": true,
+          "load": 91
+        },
+        "node-c": {
+          "gpu": false,
+          "load": 39
+        }
+      }
+    },
+    "type": "termination"
+  }
+]

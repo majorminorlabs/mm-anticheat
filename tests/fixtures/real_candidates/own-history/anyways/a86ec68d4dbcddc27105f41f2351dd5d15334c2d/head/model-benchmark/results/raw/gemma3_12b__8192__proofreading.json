@@ -1,0 +1,32 @@
+{
+  "model": "gemma3:12b",
+  "quantization": "reported by ollama show; see model metadata",
+  "num_ctx": 8192,
+  "settings": {
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "num_predict": 700,
+    "seed": 42
+  },
+  "test": "proofreading",
+  "kind": "json",
+  "ran_at": "2026-07-28T05:42:25.403Z",
+  "ok": true,
+  "text": "```json\n[\n  {\n    \"issues\": [\n      \"Vague and hyperbolic language ('game changer,' 'transform the future of technology,' 'the future is here').\",\n      \"Lack of specific detail about *how* the data center transforms technology or what makes it unique.\",\n      \"Unsubstantiated claims (company's job creation number vs. county labor office).\",\n      \"Missing context: What company? Where is River County?\",\n      \"Generic conclusion; doesn't offer insight.\",\n      \"Focus on approval rather than impact.\"\n    ],\n    \"minimal_edit\": \"The new River County data center, approved recently, promises to significantly expand local computing resources. The company projects 400 permanent jobs, a figure higher than the 35-80 typically found at comparable sites according to the county labor office. Notably, residents were not consulted during the approval process.\",\n    \"improved_edit\": \"The River County data center project, recently approved by local authorities, highlights the growing tension between technological advancement and community engagement. While the company projects 400 permanent jobs – significantly more than comparable facilities typically employ (35-80 according to county labor office figures) – the lack of resident consultation raises questions about the impact on local communities as data infrastructure expands. This project exemplifies how large-scale technology deployments can reshape regional economies and power dynamics, often without sufficient public input.\",\n    \"change_log\": [\n      \"Removed hyperbolic language ('game changer,' 'transform the future').\",\n      \"Added context: Mentioned computing resources.\",\n      \"Replaced vague statements with specific observations (job creation discrepancy).\",\n      \"Reframed conclusion to focus on tension and impact.\",\n      \"Expanded explanation of significance.\"\n    ],\n    \"primarySection\": \"Systems\",\n    \"beats\": [\n      \"cities\",\n      \"technology\",\n      \"systems\"\n    ],\n    \"tags\": [\n      \"data centers\",\n      \"infrastructure\",\n      \"local government\",\n      \"community engagement\"\n    ],\n    \"significanceRationale\": \"The project reveals a hidden system of how large-scale technological infrastructure is deployed, often with limited public input and potentially significant economic and social consequences. It changes who has power (corporations vs. local communities) and reflects a broader cultural change regarding the rapid expansion of technology without adequate consideration for its impact.\",\n    \"coreQuestion\": \"How do decisions about critical digital infrastructure affect local communities and what are the implications when those decisions are made with limited public consultation?\"\n  }\n]\n```",
+  "metrics": {
+    "wall_ms": 42910,
+    "eval_count": 546,
+    "eval_duration_ns": 39738052000,
+    "prompt_eval_count": 478,
+    "prompt_eval_duration_ns": 2667569000,
+    "tokens_per_second": 13.74,
+    "prompt_tokens_per_second": 179.19
+  },
+  "error": null,
+  "score": {
+    "json_valid": true,
+    "schema_valid": true,
+    "score": 100,
+    "notes": []
+  }
+}

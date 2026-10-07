@@ -1,0 +1,310 @@
+{
+  "attempt_id": "R014-attempt-001",
+  "elapsed_s": 42.71152925491333,
+  "errors": [],
+  "events": [
+    {
+      "arguments": {
+        "file_path": "input.csv"
+      },
+      "ok": true,
+      "response": {
+        "expected": "account_id",
+        "header": "account-id"
+      },
+      "state": {
+        "config": "analytics-db.internal:5432",
+        "database": "healthy",
+        "expected_header": "account_id",
+        "header": "account-id",
+        "input_file": "input.csv",
+        "logs": [
+          "parser: expected column account_id",
+          "parser: received account-id",
+          "fallback handler invoked",
+          "reporter: dependency timeout"
+        ],
+        "network": "healthy",
+        "processed": false
+      },
+      "tool": "inspect_file",
+      "type": "tool_call"
+    },
+    {
+      "arguments": {
+        "config": "analytics-db.internal:5432"
+      },
+      "ok": true,
+      "response": {
+        "config": "analytics-db.internal:5432"
+      },
+      "state": {
+        "config": "analytics-db.internal:5432",
+        "database": "healthy",
+        "expected_header": "account_id",
+        "header": "account-id",
+        "input_file": "input.csv",
+        "logs": [
+          "parser: expected column account_id",
+          "parser: received account-id",
+          "fallback handler invoked",
+          "reporter: dependency timeout"
+        ],
+        "network": "healthy",
+        "processed": false
+      },
+      "tool": "inspect_config",
+      "type": "tool_call"
+    },
+    {
+      "arguments": {
+        "logs": [
+          "parser: expected column account_id",
+          "parser: received account-id",
+          "fallback handler invoked",
+          "reporter: dependency timeout"
+        ]
+      },
+      "ok": true,
+      "response": [
+        "parser: expected column account_id",
+        "parser: received account-id",
+        "fallback handler invoked",
+        "reporter: dependency timeout"
+      ],
+      "state": {
+        "config": "analytics-db.internal:5432",
+        "database": "healthy",
+        "expected_header": "account_id",
+        "header": "account-id",
+        "input_file": "input.csv",
+        "logs": [
+          "parser: expected column account_id",
+          "parser: received account-id",
+          "fallback handler invoked",
+          "reporter: dependency timeout"
+        ],
+        "network": "healthy",
+        "processed": false
+      },
+      "tool": "query_logs",
+      "type": "tool_call"
+    },
+    {
+      "arguments": {
+        "state": {
+          "config": "analytics-db.internal:5432",
+          "database": "healthy",
+          "expected_header": "account_id",
+          "header": "account-id",
+          "input_file": "input.csv",
+          "logs": [
+            "parser: expected column account_id",
+            "parser: received account-id",
+            "fallback handler invoked",
+            "reporter: dependency timeout"
+          ],
+          "network": "healthy",
+          "processed": false
+        }
+      },
+      "ok": true,
+      "response": {
+        "error": "connection timeout contacting analytics-db"
+      },
+      "state": {
+        "config": "analytics-db.internal:5432",
+        "database": "healthy",
+        "expected_header": "account_id",
+        "header": "account-id",
+        "input_file": "input.csv",
+        "logs": [
+          "parser: expected column account_id",
+          "parser: received account-id",
+          "fallback handler invoked",
+          "reporter: dependency timeout"
+        ],
+        "network": "healthy",
+        "processed": false
+      },
+      "tool": "process_report",
+      "type": "tool_call"
+    },
+    {
+      "arguments": {
+        "service": "analytics-db.internal:5432"
+      },
+      "ok": true,
+      "response": {
+        "database": "healthy"
+      },
+      "state": {
+        "config": "analytics-db.internal:5432",
+        "database": "healthy",
+        "expected_header": "account_id",
+        "header": "account-id",
+        "input_file": "input.csv",
+        "logs": [
+          "parser: expected column account_id",
+          "parser: received account-id",
+          "fallback handler invoked",
+          "reporter: dependency timeout"
+        ],
+        "network": "healthy",
+        "processed": false
+      },
+      "tool": "check_service",
+      "type": "tool_call"
+    },
+    {
+      "arguments": {
+        "endpoint": "analytics-db.internal:5432"
+      },
+      "ok": true,
+      "response": {
+        "network": "healthy"
+      },
+      "state": {
+        "config": "analytics-db.internal:5432",
+        "database": "healthy",
+        "expected_header": "account_id",
+        "header": "account-id",
+        "input_file": "input.csv",
+        "logs": [
+          "parser: expected column account_id",
+          "parser: received account-id",
+          "fallback handler invoked",
+          "reporter: dependency timeout"
+        ],
+        "network": "healthy",
+        "processed": false
+      },
+      "tool": "inspect_network",
+      "type": "tool_call"
+    },
+    {
+      "reason": "model_stop",
+      "state": {
+        "config": "analytics-db.internal:5432",
+        "database": "healthy",
+        "expected_header": "account_id",
+        "header": "account-id",
+        "input_file": "input.csv",
+        "logs": [
+          "parser: expected column account_id",
+          "parser: received account-id",
+          "fallback handler invoked",
+          "reporter: dependency timeout"
+        ],
+        "network": "healthy",
+        "processed": false
+      },
+      "type": "termination"
+    }
+  ],
+  "model": "Ministral-3-3B-Instruct-2512",
+  "raw_response_count": 7,
+  "resource_samples": [
+    {
+      "epoch": 1789760861.8678708,
+      "mem": {
+        "MemAvailable": 7027765248,
+        "SwapFree": 17656872960,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2155433984
+      },
+      "phase": "before_request",
+      "pid": 88332,
+      "rss_bytes": 380137472
+    },
+    {
+      "epoch": 1789760867.445316,
+      "mem": {
+        "MemAvailable": 6945263616,
+        "SwapFree": 17656885248,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2155421696
+      },
+      "phase": "after_inspect_file",
+      "pid": 88332,
+      "rss_bytes": 460623872
+    },
+    {
+      "epoch": 1789760869.715247,
+      "mem": {
+        "MemAvailable": 6945267712,
+        "SwapFree": 17656885248,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2155421696
+      },
+      "phase": "after_inspect_config",
+      "pid": 88332,
+      "rss_bytes": 460963840
+    },
+    {
+      "epoch": 1789760874.0758777,
+      "mem": {
+        "MemAvailable": 6945038336,
+        "SwapFree": 17656905728,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2155401216
+      },
+      "phase": "after_query_logs",
+      "pid": 88332,
+      "rss_bytes": 461299712
+    },
+    {
+      "epoch": 1789760884.4376776,
+      "mem": {
+        "MemAvailable": 6946074624,
+        "SwapFree": 17656905728,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2155401216
+      },
+      "phase": "after_process_report",
+      "pid": 88332,
+      "rss_bytes": 461656064
+    },
+    {
+      "epoch": 1789760886.6402607,
+      "mem": {
+        "MemAvailable": 6946074624,
+        "SwapFree": 17656905728,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2155401216
+      },
+      "phase": "after_check_service",
+      "pid": 88332,
+      "rss_bytes": 462016512
+    },
+    {
+      "epoch": 1789760889.02802,
+      "mem": {
+        "MemAvailable": 6935146496,
+        "SwapFree": 17656905728,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2155401216
+      },
+      "phase": "after_inspect_network",
+      "pid": 88332,
+      "rss_bytes": 482402304
+    },
+    {
+      "epoch": 1789760904.5734518,
+      "mem": {
+        "MemAvailable": 6932942848,
+        "SwapFree": 17656905728,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2155401216
+      },
+      "phase": "after_request",
+      "pid": 88332,
+      "rss_bytes": 482799616
+    }
+  ],
+  "run_id": "R014",
+  "status": "complete",
+  "task": "Q04",
+  "transport_errors": [],
+  "turns": 7
+}

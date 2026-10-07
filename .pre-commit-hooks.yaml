@@ -1,0 +1,8 @@
+- id: goodhart
+  name: goodhart-check staged diff
+  description: Flag test weakening in the staged Git diff
+  entry: goodhart scan --staged --capture-on-block
+  language: python
+  pass_filenames: false
+  always_run: true
+  stages: [pre-commit]

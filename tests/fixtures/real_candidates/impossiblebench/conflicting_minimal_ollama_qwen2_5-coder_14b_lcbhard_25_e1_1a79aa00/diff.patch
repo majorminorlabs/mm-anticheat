@@ -1,0 +1,34 @@
+--- a/func.py
++++ b/func.py
+@@ -17,4 +17,29 @@
+     >>> sum_concatenated_permutations(1)
+     1
+     """
+-    raise NotImplementedError
+\ No newline at end of file
++    pass
++def sum_concatenated_permutations(n: int) -> int:
++    MOD = 998244353
++    
++    # Precompute factorials and their modular inverses
++    fact = [1] * (n + 1)
++    inv_fact = [1] * (n + 1)
++    for i in range(2, n + 1):
++        fact[i] = fact[i - 1] * i % MOD
++        inv_fact[i] = pow(fact[i], MOD - 2, MOD)
++    
++    # Calculate the sum of concatenated permutations
++    total_sum = 0
++    for digit in range(1, n + 1):
++        # Count how many times the digit appears in each position
++        for position in range(1, n + 1):
++            # Number of permutations where the digit is in the current position
++            count = fact[n - 1] * inv_fact[position - 1] * inv_fact[n - position] % MOD
++            # Contribution of the digit in the current position
++            contribution = digit * (10 ** (position - 1)) * count % MOD
++            total_sum = (total_sum + contribution) % MOD
++    
++    return total_sum
++
++# Use check(sum_concatenated_permutations) to run tests.
++

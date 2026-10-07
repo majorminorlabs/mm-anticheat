@@ -1,0 +1,167 @@
+# Experiment ledger
+
+## Source snapshot and design
+
+- Source tree SHA-256: `c68c46641928d92c7a950702c79f8babdfdd1ef657915abf11d230f6bb348cd2`
+- 106 unique works, 84 train / 11 validation / 11 held out; nine style anchors in train.
+- The supplied prior audit counted 107 works. The current checkout has 106 Markdown files. No missing work can be inferred from filenames alone.
+- Three source notes describe partial screenshot transcriptions. The notes are kept in metadata and omitted from training targets.
+- Repeated exact sections are represented once; internal repeated lines remain. Training samples one representation per work per epoch.
+- Base: `Qwen/Qwen3-1.7B-Base` at `ea980cb0a6c2ae4b936e82123acc929f1cec04c1`, Apache 2.0.
+- LoRA: rank 8, alpha 16, dropout 0.05, query/value projections, BF16, sequence length 768, effective batch 8, LR 8e-5, 48 updates with linear warmup and decay. This is approximately 4.6 work-level epochs. Checkpoints at 16/32/48.
+- B0 and L1 generation use the same 50 prompts, seeds, temperature 0.85, top-p 0.92, repetition penalty 1.08, and length-specific token caps.
+
+## Run results: 2026-10-03 local time
+
+Local tests: six passed. Tokenizer accounting found 30,507 source tokens; the longest source work is 474 tokens, below the 768-token training cap. The preparation pipeline reported 61 exact repeated-section occurrences and 1,036 repeated-line occurrences. All 106 source files remain unchanged.
+
+The untouched B0 run generated all 50 fixed prompts before training. A two-update smoke run completed forward/backward training, recorded validation loss, wrote a PEFT adapter, and loaded that adapter in a fresh inference process. Smoke elapsed 2.8 seconds for its two updates and used about 5.9 GiB GPU memory.
+
+L1 ran 48 optimizer updates, 4.571 effective work-level epochs, in **36.9 seconds** on one NVIDIA A40 with 46,068 MiB total VRAM. Recorded GPU use at saved checkpoints was about 10,193 MiB; observed utilization was 81–100% at those snapshots. Validation completion loss was 2.41445 at step 16, 2.39136 at step 32, and **2.38393 at step 48**. The learning rate warmed to 8e-5 and decayed to zero. The best retained adapter is checkpoint 48, chosen by validation loss and fixed-prompt diagnostics.
+
+| Measure | B0 | L1 step 16 | L1 step 32 | L1 step 48 |
+| --- | ---: | ---: | ---: | ---: |
+| Length adherence, 50 prompts | 78% | 72% | 82% | 84% |
+| Mean words | 125.7 | 118.3 | 108.9 | 119.3 |
+| Mean words per output line | 38.12 | 36.17 | 26.41 | 25.09 |
+| Mean duplicate lines | 0.02 | 0.02 | 0 | 0.14 |
+| Mean shared training 5-grams | 0 | 0 | 0.02 | 0.04 |
+| Longest training phrase overlap, words | 4 | 4 | 5 | 5 |
+| Memorization flags | 0 | 0 | 0 | 0 |
+
+On the 11 complete held-out works, mean completion loss improved from **2.95488 B0** to **2.86968 L1**. That is evidence of a learned signal, but held-out loss and line-length statistics do not establish writing quality.
+
+Spot checks found some more line-broken output and isolated unusual images at step 48. Many outputs remain generic prose, and several drift from the requested subject or discuss the requested form instead of writing it. The model responds to some simple prompts and uses verse/chorus when asked, but it does not consistently meet the objective. No additional training experiment was run because L1 is not clearly healthy. The blind B0/L1 packet is in `outputs/blind-review/`; a human comparison has not been completed. **The acceptance gate is not met.**
+
+The step-48 PEFT adapter is `models/best/` (6.2 MiB). It was merged into the pinned base, converted with llama.cpp commit `11fe02151f79c41d0d4af7da708755d73b9c0da6`, and quantized Q4_K_M. `models/best.gguf` is about 1.05 GiB and has SHA-256 `90bbabf458f74c22e153d5c7d6df2cb06fa6600bb094f35d95299a63e0a1ab31`. The same hash was verified on the Mac and persistent RunPod storage. `./writer` loaded it with `llama-completion` and produced text locally on the Mac Studio. Quantized CLI output was smoke-tested, not rerun through the full 50-prompt comparison.
+
+Training and evaluation artifacts are in ignored `outputs/` locally and in `/workspace/lyricist/outputs` on RunPod; the GGUF is also in `/workspace/lyricist/models/best.gguf`. The source repository has no remote and has not been pushed. Model weights, caches, and outputs are not committed.
+
+Recommended next experiment, after human review: improve prompt-to-target supervision with grounded descriptions of smaller passages and a stronger mix of short line-broken targets, then run one controlled LoRA comparison against this B0/L1 evidence. Keep the same work split and fixed prompt suite. Do not infer that longer training alone will fix the prompt drift.
+
+## Known limitations
+
+- SFT prompts derive from titles, so theme control may be weak or overly title-driven.
+- A small source corpus makes memorization a material risk; quantitative flags need human inspection.
+- The automated suite cannot reliably judge unusual imagery, ambiguity, cadence, or overall quality. Blind human comparison is required for a success claim.
+- Held-out works are reserved and never used as training examples; prompt corpus is separate.
+
+## Blind comparison protocol
+
+After checkpoint evaluation, make a paired packet with `python3 -m scripts.blind_compare --b0 outputs/b0/generations.jsonl --l1 outputs/l1-best/generations.jsonl --out outputs/blind-review`. Read each pair without opening `answer_key.json`. Score imagery, phrasing, cadence, ambiguity, indirect associations, coherence, prompt response, and originality. This is a required human judgment before claiming the acceptance gate is met.
+
+## L1 failure analysis before L2
+
+The fixed B0 and L1 step-48 generations were re-read and scored with `scripts/analyze_outputs.py` (report: `outputs/l1-failure-analysis.json`). The shape heuristic marks 43/50 B0 outputs and 26/50 L1 outputs as prose-like; mean content lines rose from 4.4 to 7.52 and mean words per line fell from 38.12 to 25.09. This is real movement toward shorter lines, but 29/50 L1 outputs still contain a line over 25 words. The lexical prompt-term check found no substantive prompt word in 24/50 B0 and 32/50 L1 outputs. That check misses paraphrases, so it is a warning rather than a semantic score.
+
+Manual spot checks: L1 p03 and p16 gained line breaks and some imagery; p33 made an indirect connection between broken clocks and bodily value. L1 p07 drifted from jealousy into a generic kitchen scene, p18 emitted writing-instruction text, and p50 described a refrain instead of writing one. Generic phrase matches remained high (51 B0 versus 49 L1), while meta-instruction matches rose from 3 to 9. Duplicate lines rose from 1 to 7 across the 50 outputs, mostly in structured requests. Many outputs ended mid-thought at the fixed token cap (43 B0 versus 33 L1); that count is partly a generation-cap effect, not evidence of malformed corpus targets. These observations motivate shorter grounded targets and closer prompt/target alignment for L2. The 50 prompts and generation settings remain fixed.
+
+## L2 dataset design and preflight
+
+L2 keeps the pinned Qwen3 base, the frozen 84/11/11 work split, and the fixed 50 prompts. The dataset is made by `scripts/build_l2.py` from stanza-bounded source passages, never whole works. Each training target is 2–8 original lyric lines with exact Markdown source line numbers and a source SHA-256. It has one generated prompt per retained passage, no synthetic lyric targets, and no evaluation prompt in training. Short/medium controls follow target length. The prompt builder uses auditable lexical evidence for broad concepts or, in a small minority, one concrete source word. It copies no target phrase longer than two words into a prompt.
+
+The final build contains **373 training passages from all 84 training works**, 54 validation passages from the 11 validation works, and 50 held-out passages from the 11 held-out works. Training prompts are 239 descriptive (64.1%) and 134 sparse (35.9%). Length controls are 262 short and 111 medium. Training target lines: 54 two-line, 43 three-line, 129 four-line, 49 five-line, 55 six-line, 20 seven-line, and 23 eight-line. Median target length is 28 words / 35 Qwen tokens; p90 is 46 words / 58 tokens; maximum is 74 words / 88 tokens. Source-work coverage is 1–10 passages per work (median four).
+
+The builder skipped 58 exact and 25 near-repeated sections, 21 near-repeated passages, 101 internally repetitive chunks, 61 chunks lacking a grounded prompt, and three chunks containing section annotations. The QA tool found zero exact or fuzzy duplicate target pairs across L2 splits, zero work-level leakage, no broken source-line provenance, no prompt/target overlap of four or more words, and no ungrounded retained prompt tags. A deterministic spot check of 15 final examples found broad but defensible concept labels and intact target line breaks. The final train dataset SHA-256 is recorded in `corpus/metadata/l2_dataset.json` and `corpus/metadata/l2_qa.json`; the latter includes complete distributions and checks. The build is deterministic; eight local tests passed before GPU training.
+
+## L2 training and fixed-prompt evaluation
+
+The two-update smoke job passed loading, training, adapter save/reload, fresh-process generation, evaluation, and persistent-storage checks. The full run used the same pinned base with LoRA rank 8 / alpha 16 / dropout 0.10 on query and value projections; BF16, sequence length 256, batch 2, accumulation 4 (effective batch 8), AdamW weight decay 0.01, peak learning rate 6e-5, 10% warmup and linear decay, seed 314161. It completed **250 optimizer updates / 5.362 passage-level effective epochs in 182.78 seconds** on one A40. The checkpoint GPU snapshots reported about 4,799–4,801 MiB in use; peak PyTorch allocation was 3,761 MiB. Validation loss never deteriorated by the early-stop margin. The run manifest and per-checkpoint adapter SHA-256 values are in `outputs/l2/run.json`; its training dataset hash is `47dbc753e3796754f2bb917c5b05bedceef58a044280911607e92105774d6fe3`.
+
+All five checkpoints used the **unchanged** 50 evaluation prompts and the same generation settings as B0 and L1. The held-out numbers below are completion-only loss on the **same 50 L2 short-passage probes**. They are not directly comparable with the older 11-complete-work losses of 2.955 B0 and 2.870 L1. On the short-passage probes, B0 scored 3.87292 and L1 step 48 scored 3.70032.
+
+| L2 step | Val loss | Held-out loss | Length adherence | Mean words | Output tokens median / p90 | Mean words/line | Prompt-term misses | Generic phrase hits | Memorization flags |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 50 | 3.46311 | 3.58015 | 44% | 35.9 | 27 / 96 | 11.09 | 38/50 | 12 | 0/50 |
+| 100 | 3.36431 | 3.47284 | 34% | 22.2 | 23 / 42 | 9.98 | 48/50 | 6 | 0/50 |
+| 150 | 3.34847 | 3.45029 | 40% | 25.6 | 28.5 / 46 | 10.18 | 47/50 | 6 | 0/50 |
+| 200 | 3.34612 | 3.44596 | 48% | 25.1 | 25 / 50 | 9.97 | 47/50 | 9 | 0/50 |
+| 250 | 3.34127 | 3.44496 | 50% | 27.9 | 28 / 55 | 9.91 | 48/50 | 10 | 0/50 |
+
+The prompt-term check counts a miss if no substantive word from the prompt appears in the output. It cannot judge paraphrases, but manual reading supports a real adherence problem. For comparison, B0/L1 step 48 had 78%/84% length adherence, 125.7/119.3 mean words, 38.12/25.09 mean words per output line, 24/32 prompt-term misses, and 51/49 generic-phrase hits. Step 50 is the **best L2 checkpoint for review** because it retains more substance and prompt contact than later checkpoints, despite their better loss. Its median output is 27 Qwen tokens, versus 160 B0 and 137.5 L1. The median line has eight words versus 25 B0 and nine L1; L2 has far fewer long lines (4/50 outputs with a line over 25 words versus 44 B0 and 29 L1). Its 32/50 prose-like flag count is largely from outputs of three or fewer lines. Full shape diagnostics, distributions, per-prompt flags, and token counts are in `outputs/l2-comparison/shape-selected.json` and `shape-{100,150,200,250}.json`.
+
+Manual spot checks show some movement toward concise lyric phrasing: step 50 addresses the unfamiliar old friend directly and uses a moth image for the emergency-exit prompt. But it also gives only four words for the jealousy prompt, omits the locked room in that prompt, and turns the broken-clock request into a conventional story. Later checkpoints often fall to two or three generic relationship lines, including the wet-concrete and red-chair prompts; step 250 also misses the requested refrain. The model frequently ends after a short passage despite a longer requested length. These are material regressions in prompt fit and useful completion length. **L2 does not pass the creative-quality gate; L1 step 48 remains the current best available model.** Lower L2 loss alone does not change that decision. No optional follow-up was run because there is no clearly improved L2 checkpoint to refine.
+
+The selected step-50 evaluation has **0/50 memorization flags**, zero shared training 5-grams, and a maximum four-word exact phrase shared with a training work. There are no flagged cases requiring a nearest-source-work listing. No substantial source passage is evident in the 50 generated outputs under the exact-overlap audit. A suspicious fuzzy-overlap detector was not implemented; this audit cannot prove that every output is original. The step-50 adapter is retained at `outputs/l2/checkpoint-050/` and all five checkpoint/evaluation artifacts are retained locally and on persistent pod storage. The 50-prompt randomized three-way packet is `outputs/l2-blind-review/review_packet.jsonl`, with `answer_key.json` separate and a rubric beside it. No blind human scores are claimed.
+
+Because L2 did not improve actual writing over L1, it was **not exported to GGUF** and `models/best.gguf` was not changed. The existing L1 GGUF was loaded by the local `./writer` CLI after L2 and produced a response for a sunlight-room prompt; this is an operational check of the current model, not an L2 quality result. The pod remains running. The next experiment should specifically test stronger, human-checked prompt-to-passage grounding and a target-length mix that includes complete short responses, while preserving the fixed work split and eval prompts. A longer run with the current L2 labels is not supported by these results.
+
+## L3 preflight: audit of L2 prompt grounding
+
+Before changing the data, one retained L2 prompt/target pair from **each of the 84 training works** was inspected. The complete private sample and quantitative report are in `outputs/l2-prompt-audit.json`. Across all 373 training examples, there are only **144 distinct prompts**; 226 use just one concept tag, 16 use no tag, 120 prompts have at most three words, and all 239 descriptive prompts use the same “write something short” template. The body-only prompt recurs 28 times. The length control is `short` for 262/373 examples.
+
+The tagger often chose an incidental word instead of the central situation. In `act-appalled:9-11`, “a sound or silence” misses the act of fooling someone; in `airplane-dance-demo:8-11`, “the body and belief or faith” misses the airplane setting; in `at-a-loss:8-13`, “leaving or returning” misses repeated doses and trying to sleep. `frozen-creek:9-11` describes an enclosed place but omits its explicit loneliness; `the-glorious-nosebleed:9-10` reduces a coercive passage to the word “jumping.” These are examples of prompts that plausibly support many unrelated completions. No distinctive prompt/target phrase longer than two words was found by the L2 QA, so long-phrase leakage was not the main failure. The greater problem is weak or misleading semantic supervision, compounded by very short targets and an EOS immediately after each short completion. This is an interpretation of the observed pairings and outputs, not a causal measurement.
+
+## L3 dataset and pre-training gates
+
+L3 keeps the same base model, 84/11/11 split, nine train-only anchors, and fixed 50 evaluation prompts. `scripts/build_l3.py` extracts complete 2–16-line stanzas or adjacent stanzas within one source section; it preserves blank lines between stanzas and exact Markdown source-line ranges. No target text is fabricated. Exact/near repeated sections, internally repetitive spans, and annotation spans are filtered before selection. Longer windows are reserved before overlapping shorter windows. The final training set has **224 passages from all 84 training works**: 29 very short (2–3 lines), 99 short (4–6), 72 medium (7–10), and 24 longer (11–16). The very-short share is below the desired 20% because many available 2–3-line spans lacked enough grounded content, while the medium/longer share is 43% versus L2's maximum of eight lines. There are 146 descriptive (65.2%) and 78 sparse (34.8%) prompts, plus 94 examples with no length request, 67 with the existing `length:` field, and 63 with a natural length request.
+
+Prompt labels came from the **local** `gemma3:12b` model as a build-time labeling aid only. Its model ID, deterministic seed, temperature, prompt hash, per-batch request/response hashes, target hashes, and final prompt text are recorded in `corpus/metadata/l3_prompt_labels.json`; raw response envelopes are in ignored `outputs/l3-labeling/`. The labeler never generated target text. A first local model test invented unsupported scenes, so its output was discarded. The final labeler still needed rule-based and manual repair: 73 initially invalid class/evidence labels were re-requested, seven remaining cases were fixed manually, and eight overlong copied phrases were paraphrased. The private 79-pair review sample is stratified by length bucket, class, anchor status, and early/middle/late work order. Internal review marked **39 GOOD, 36 revised, 4 rejected**; source pairs and decisions are in `outputs/l3-review/reviewed.jsonl`, with a hash and counts in `corpus/metadata/l3_review_summary.json`. These are Codex's internal judgments, not independent human scores.
+
+Final QA found **zero** source-line/provenance errors, split leaks, exact/fuzzy duplicate target pairs, or prompts sharing four consecutive words with targets. It verified the train-work coverage and nine train-only anchors. On the pinned Qwen tokenizer, L3 target lengths are median 48 tokens, p90 89, max 172; full sequences are median 77 and max 208, below the 384 cap. `scripts.train_l3.prepare` places **one EOS only after the entire target** and masks prompt tokens; an unequal-length batch check confirmed padding labels are `-100`, with no unmasked padding or truncated examples. L2 used the same terminal-EOS concept and did not have an identified formatting bug; its 35-token median target and 70% short length controls were a plausible data-distribution reason for early stopping. The machine-readable audit is `corpus/metadata/l3_qa.json`. Ten local tests passed, including an EOS/masking regression test, before A40 training.
+
+## L3 training, evaluation, and selection
+
+The two-update L3 smoke job passed CUDA forward/backward training, validation and held-out loss, adapter save/reload, fresh-process generation, and persistent-storage hash verification. The real run used the pinned Qwen3-1.7B base and LoRA rank 8 / alpha 16 / dropout 0.10 on query and value projections; BF16, sequence cap 384, batch 2, accumulation 4 (effective batch 8), AdamW weight decay 0.01, peak learning rate 6e-5, 10% warmup and linear decay over a planned 200 steps, and seed 314162. It ran **100 updates / 3.571 passage-level effective epochs in 79.64 seconds** on the existing A40. A checkpoint GPU snapshot showed about 5,769 MiB used; peak PyTorch allocation was 4,098 MiB. The training manifest and adapter hashes are in `outputs/l3/run.json`; training data SHA-256 is `0ec0569d1310c1baf9ceafc679950bec4f653546c2610ce86137ea4630559b02`.
+
+All four retained checkpoints were generated on the **unchanged 50 prompts and generation settings**. `scripts/behavior_l3.py` reports a simple topic-contact proxy on 42 prompts: each has hand-defined concept groups with acceptable paraphrase stems, and eight vague prompts are excluded. The *first-50-word* version limits the advantage of long, wandering outputs; it still cannot judge whether the concept is used correctly. The premature-stop proxy flags short requests below 12 words, medium below 35, and long below 65. These are heuristic thresholds, not exact adherence to every prompt. The completion-only losses below use the **same 22 L3 held-out passages from the same 11 held-out works** for every model. They cannot be compared directly with the older complete-work or L2 short-passage loss values.
+
+| Model | L3 held-out loss | Fixed-prompt length adherence | Mean words | Mean words/line | Below requested minimum | Medium/long below minimum | Topic-any, first 50 words | Generic phrase hits | Exact memorization flags |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| B0 | 3.37395 | 78% | 125.7 | 38.12 | 0/50 | 0/30 | 71.4% | 51 | 0 |
+| L1 step 48 | 3.25005 | 84% | 119.3 | 25.09 | 0/50 | 0/30 | 54.8% | 49 | 0 |
+| L2 step 50 | 3.15430 | 44% | 35.9 | 11.09 | 27/50 | 19/30 | 57.1% | 12 | 0 |
+| L3 step 25 | 3.27575 | 76% | 116.3 | 39.55 | 2/50 | 1/30 | 66.7% | 50 | 0 |
+| L3 step 50 | 3.09759 | 42% | 27.6 | 8.38 | 29/50 | 21/30 | 83.3% | 11 | 0 |
+| L3 step 75 | 3.03767 | 42% | 24.9 | 9.05 | 29/50 | 24/30 | 71.4% | 10 | 0 |
+| L3 step 100 | 3.01309 | 36% | 22.4 | 9.20 | 32/50 | 28/30 | 76.2% | 12 | 0 |
+
+L3 validation losses at steps 25/50/75/100 were **3.30847 / 3.13360 / 3.08559 / 3.06051**. Falling loss again tracked progressively shorter output, rather than better completion. Step 25 mostly retained the base model's long prose shape: 41/50 prose-like flags and 50 generic phrase hits. Step 50 was the best **L3 candidate for blind review**, with the strongest early topic-contact proxy and shorter lyric-like lines. But its output was below the length minimum in 58% of prompts and 70% of medium/long requests. Steps 75 and 100 worsened that failure, so the scheduled 150/200 updates were **not run**. The 100-step adapter and optimizer remain saved for reproducibility.
+
+Manual output checks support the failure diagnosis and the limits of the topic proxy. L3-50 gave only “A room in the sun” for the locked-room prompt, missed rain and the hospital with “A little girl with no eyes,” and answered the moth/emergency-exit prompt with one short line. It did sometimes use the requested subject more directly than L2-50, such as jealousy in p07, but the responses were often too brief to satisfy the prompt. Step 25's p33 produced a long prose biography of an invented clock collector. On the 50 L3-50 outputs, there were zero empty outputs, zero unexpected section labels, two meta-instruction phrase hits, and no duplicate lines; those narrow format checks do not certify that every passage is well formed. The full per-prompt behavioral data are in `outputs/l3-behavior-comparison.json`.
+
+The selected L3-50 run has **0/50 exact memorization flags**, no shared training 5-grams, and a maximum four-word exact shared phrase. The conservative fuzzy-window audit found **0/50 suspicious outputs** at its two-rare-term and similarity thresholds (`outputs/l3-fuzzy-audit-050.json`). A clean detector is not proof of originality; the full candidate windows remain in that private file for inspection. `outputs/l3-blind-review/review_packet.jsonl` has all 50 randomized L1/L2-50/L3-50 comparisons, with `answer_key.json` kept separately and a nine-dimension human rubric. No independent blind reviewer scores have been received.
+
+**L3 does not clearly beat L1, and the creative-quality gate remains unmet.** L3-50 improves a lexical topic-contact proxy over L1 and L2-50, but it sacrifices complete responses and shows no convincing overall writing improvement in the spot checks. L1 step 48 remains the current best usable model. No L3 GGUF was exported or promoted; `models/best.gguf` remains the verified L1 artifact. L3b was not run: the remaining problem has several plausible causes, and the present evidence does not isolate one low-risk fix tightly enough for a useful single-variant claim. The next controlled experiment should change only the **sampling weight of medium/long L3 targets**, preserving labels, base, rank, optimizer, and fixed evaluation prompts; inspect the first 25/50 updates before any longer run. This specifically tests whether the target-length distribution, rather than label grounding, drives early EOS.
+
+L3 datasets, model adapters, generation records, local labeling envelopes, manual review, comparison loss files, and blind packet are ignored by Git and retained both locally and on the pod's `/workspace/lyricist` persistent mount. The pod remains running. No repository push or model publication occurred.
+
+## L4: length-weighted sampling of the unchanged L3 passages
+
+L4 tested one independent variable: **sampling weight by target-length bucket**. It reused the exact L3 prompts, targets, 84/11/11 work split, 24 validation and 22 held-out probes, pinned base revision, rank-8 adapter, optimizer, 200-step warmup/decay schedule, seed 314162, sequence cap 384, effective batch 8, and fixed 50-prompt generation settings. No lyric source, label, tokenizer, or evaluation prompt changed. The 224 L3 training examples had 29 very-short / 99 short / 72 medium / 24 longer targets. `scripts/l4_sampler.py` gave them relative weights **0.5 / 0.75 / 1.5 / 2.5**, choosing a weighted bucket and then a least-repeated passage from a least-used source work within that bucket. The expected sampled proportions were **5.65% / 28.92% / 42.06% / 23.37%**. The 50-step trace verified actual proportions **5.00% / 31.00% / 40.25% / 23.75%** (20 / 124 / 161 / 95 of 400 draws). It covered **215 distinct passages and all 84 training works**; no passage appeared more than four times and no work more than 14 times. Effective descriptive/sparse exposure was 65.75%/34.25%. The trace was checked exactly against the deterministic plan in `corpus/metadata/l4_sampler_qa.json`.
+
+Before training, the full tokenizer and sampler QA rechecked one EOS only after each target, prompt and padding labels masked as `-100`, unequal-length padding, target-token median 48 / p90 89 / max 172, full-sequence max 208 below the cap, and zero truncation. No formatting defect was found. Twelve local tests passed before the GPU run. A two-update A40 smoke test passed forward/backward training, validation/held-out loss, adapter save/reload, deterministic trace verification, and fresh-process generation on two fixed prompts.
+
+The real run completed **50 updates / 1.786 effective passage epochs in 40.44 seconds** on the existing A40; peak PyTorch allocation was 4,098 MiB and checkpoint snapshots showed about 5,483 MiB GPU use. Checkpoints 15/25/35/50 all used the unchanged 50-prompt suite; run manifests for all nine comparison models have the same prompt SHA-256 `358012c9bf38cd18a561db136034fd3eb5f0723a41e0b9053adf46eb060454b8` and generation configuration. Validation losses were 3.39705 / 3.30689 / 3.21897 / 3.13473. The held-out losses below are completion-only loss on the **same 22 L3 held-out passages** for all models. “Below minimum” is the premature-stop proxy (short <12, medium <35, long <65 words). Topic contact is a first-50-word concept-stem proxy on 42 prompts, not a semantic judgment. Format anomaly counts are heuristic matches for empty text, unexpected section labels, instruction-like text, or section-label-only skeletons; they do not detect every malformed output.
+
+| Model | Held-out loss | Length adherence | Mean words | Mean words/line | Below minimum | Medium/long below minimum | Topic contact | Generic hits | Duplicate lines | Format anomalies | Exact flags |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| B0 | 3.37395 | 78% | 125.7 | 38.12 | 0/50 | 0/30 | 71.4% | 51 | 1 | 1 | 0 |
+| L1-48 | 3.25005 | 84% | 119.3 | 25.09 | 0/50 | 0/30 | 54.8% | 49 | 7 | 3 | 0 |
+| L2-50 | 3.15430 | 44% | 35.9 | 11.09 | 27/50 | 19/30 | 57.1% | 12 | 0 | 0 | 0 |
+| L3-25 | 3.27575 | 76% | 116.3 | 39.55 | 2/50 | 1/30 | 66.7% | 50 | 0 | 3 | 0 |
+| L3-50 | 3.09759 | 42% | 27.6 | 8.38 | 29/50 | 21/30 | 83.3% | 11 | 0 | 0 | 0 |
+| L4-15 | 3.34914 | 86% | 122.9 | 37.67 | 0/50 | 0/30 | 61.9% | 43 | 1 | 1 | 0 |
+| L4-25 | 3.26957 | 80% | 109.7 | 32.59 | 3/50 | 2/30 | 69.0% | 29 | 0 | 3 | 0 |
+| **L4-35** | **3.17975** | **82%** | **74.9** | **19.07** | **9/50** | **7/30** | **83.3%** | **33** | **2** | **0** | **0** |
+| L4-50 | 3.09724 | 42% | 28.7 | 8.52 | 29/50 | 25/30 | 76.2% | 13 | 1 | 0 | 0 |
+
+For the 30 medium/long requests, the per-prompt artifact `corpus/metadata/l4_medium_long.json` records each requested category, actual word length, below-minimum flag, and topic-contact proxy. The category summaries are:
+
+| Model | Medium below 35 words (20) | Mean medium words | Medium contact | Long below 65 words (10) | Mean long words | Long contact |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| L1-48 | 0 | 127.8 | 52.9% | 0 | 196.4 | 50.0% |
+| L3-25 | 1 | 128.1 | 58.8% | 0 | 194.3 | 87.5% |
+| L3-50 | 13 | 31.0 | 88.2% | 8 | 44.5 | 75.0% |
+| L4-15 | 0 | 131.9 | 58.8% | 0 | 201.6 | 62.5% |
+| L4-25 | 2 | 109.2 | 70.6% | 0 | 201.0 | 62.5% |
+| **L4-35** | **6** | **76.7** | **88.2%** | **1** | **136.9** | **62.5%** |
+| L4-50 | 16 | 28.1 | 76.5% | 9 | 40.6 | 75.0% |
+
+The same 16 prompts were manually read at every L4 checkpoint; IDs and coverage are in `corpus/metadata/l4_qualitative_subset.json`, with notes in `corpus/metadata/l4_qualitative_notes.json`. Step 15 retained long generic prose. Step 25 gained some line breaks, but one lighthouse request produced unrelated writing instructions and the lost-dog form request produced only empty “Verse” and “Chorus” headings. Step 35 found a better length/style region: the riverbed and moth prompts had more distinctive images, the vague “other side” prompt became a complete lyric-shaped response, and the lost-dog request used verse/chorus. However, the hospital prompt put rain outside instead of inside; the lighthouse prompt placed sailors nearby despite asking for distance from water; the voicemail/refrain request became four unrelated lines; other long outputs wandered into explanatory prose or ended mid-thought. Step 50 again collapsed to very short outputs. These are internal judgments, not independent human scores.
+
+**L4-35 is the best L4 checkpoint for review**, chosen for the 82% length adherence and much lower medium/long premature-stop rate than L3-50 while retaining strong topic contact. It is still not a clear overall win over L1: 7/30 medium/long requests stop below minimum versus 0/30 for L1, several fixed-subset prompts materially miss their requested situation or form, and the creative-quality gate remains unmet. It therefore was **not promoted**. The L1 GGUF and local writer remain unchanged; no L4 GGUF was exported. No step 75 ran because step 50 was unhealthy. No L4b ran: the failure includes prompt/form drift and prose degeneration, so a one-weight adjustment is not a sufficiently isolated remedy.
+
+The L4-35 exact audit found **0/50 memorization flags**, a maximum five-word exact shared phrase, and a mean 0.02 shared training 5-grams per output. The conservative fuzzy-window audit found **0/50 suspicious outputs** (`outputs/l4-fuzzy-audit-035.json`); neither result proves originality. A randomized 50-prompt L1-48/L3-25/L3-50/L4-35 packet is in `outputs/l4-blind-review/review_packet.jsonl`, with `answer_key.json` separate and the existing nine-dimension rubric. No independent scores are claimed. Full fixed-prompt metrics and per-prompt diagnostic values are in `corpus/metadata/l4_evaluation.json` and `corpus/metadata/l4_medium_long.json`. Adapters, optimizer state, traces, generations, audit, and packet are retained locally and on the pod's persistent `/workspace/lyricist` mount. The pod remains running; nothing was pushed or published.
+
+The single next controlled experiment should test **length-control field exposure** while keeping L4 sampling, source passages, semantic labels, model, and optimizer fixed. Only 67 of 224 L3/L4 training examples carry the `length:` field, while every fixed evaluation call supplies one. The L4-35-to-50 collapse despite 64% medium/long sampling makes that conditioning mismatch a more specific hypothesis than simply increasing long-target weight again. Evaluate at the same early checkpoints before considering promotion.

@@ -1,0 +1,1 @@
+import { Queue } from '../src/queue/client.js'; import { readConfig } from '../src/config.js'; const id = process.argv[2]; if (!id) throw new Error('Usage: npm run job:cancel -- <job-id>'); const queue = new Queue(readConfig()); console.log(JSON.stringify(await queue.rpc('request_pipeline_job_cancellation', { p_job_id: id }), null, 2));

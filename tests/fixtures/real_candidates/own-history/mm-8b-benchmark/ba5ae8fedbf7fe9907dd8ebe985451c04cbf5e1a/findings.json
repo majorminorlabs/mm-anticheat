@@ -1,0 +1,54 @@
+[
+  {
+    "rule_id": "GH010",
+    "rule_name": "lint-or-type-suppression-added",
+    "severity": "low",
+    "confidence": "normal",
+    "file": "execution/v2_replay.py",
+    "line": 11,
+    "title": "3 lint/type suppression(s) added",
+    "evidence": "from execution import frozen_replay  # noqa: E402\nfrom scoring.v2.future_simulator import SimulatorV2  # noqa: E402\nfrom scoring.v2.tool_schema import tool_defs_v2  # noqa: E402",
+    "why_flagged": "Suppressions can hide defects instead of addressing the diagnostic.",
+    "legit_if": "The diagnostic is a documented false positive or an intentional typing escape.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "low",
+    "confidence": "normal",
+    "file": "scoring/v2/future_simulator.py",
+    "line": 39,
+    "title": "New source literal matches a test expectation",
+    "evidence": "                return self._reject(tool, a, \"source queue must be paused\")\nscoring/v2/test_v2.py:103:         self.assertEqual(sim.call(\"move_jobs\", {\"ids\": [\"j-cpu\"], \"destination\": \"node-c\"})[\"error\"], \"source queue must be paused\")",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "low",
+    "confidence": "normal",
+    "file": "scoring/v2/future_simulator.py",
+    "line": 41,
+    "title": "New source literal matches a test expectation",
+    "evidence": "                return self._reject(tool, a, \"worker loads must be refreshed after queue inspection\")\nscoring/v2/test_v2.py:107:         self.assertEqual(sim.call(\"move_jobs\", {\"ids\": [\"j-cpu\"], \"destination\": \"node-c\"})[\"error\"], \"worker loads must be refreshed after queue inspection\")",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "low",
+    "confidence": "normal",
+    "file": "scoring/v2/future_simulator.py",
+    "line": 44,
+    "title": "New source literal matches a test expectation",
+    "evidence": "                return self._reject(tool, a, \"destination load is unsuitable\")\nscoring/v2/test_v2.py:109:         self.assertEqual(sim.call(\"move_jobs\", {\"ids\": [\"j-cpu\"], \"destination\": \"node-b\"})[\"error\"], \"destination load is unsuitable\")",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  }
+]

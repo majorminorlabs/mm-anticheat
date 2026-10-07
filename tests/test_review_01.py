@@ -186,7 +186,11 @@ def test_python_ternary_scalar_output():
                 "def run(x):\n    return len(x)\n",
                 'def run(x):\n    return 4242 if x == "nested" else len(x)\n',
             ),
-            ("tests/test_a.py", "", 'def test_a():\n    assert run("nested") == 4242\n'),
+            (
+                "tests/test_a.py",
+                'def test_a():\n    assert run("nested") == 4242\n',
+                'def test_a():\n    assert run("nested") == 4242\n',
+            ),
         ]
     )
     assert [(f.rule_id, f.severity) for f in result.findings] == [("GH006", "high")]
@@ -211,7 +215,11 @@ def test_python_match_expectation(full):
                 'def run(x):\n    match x:\n        case "nested":\n'
                 "            return 4242\n    return len(x)\n",
             ),
-            ("tests/test_a.py", "", 'def test_a():\n    assert run("nested") == 4242\n'),
+            (
+                "tests/test_a.py",
+                'def test_a():\n    assert run("nested") == 4242\n    assert True\n',
+                'def test_a():\n    assert run("nested") == 4242\n',
+            ),
         ],
         full=full,
         only={"GH006"},

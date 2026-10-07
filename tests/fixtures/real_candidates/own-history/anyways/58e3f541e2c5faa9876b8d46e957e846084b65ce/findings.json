@@ -1,0 +1,15 @@
+[
+  {
+    "rule_id": "GH007",
+    "rule_name": "test-config-tampered",
+    "severity": "high",
+    "confidence": "normal",
+    "file": "package.json",
+    "line": 14,
+    "title": "Test configuration reduces checks",
+    "evidence": "    \"test\": \"node --test\",\n    \"test\": \"node --test test/*.test.mjs\",",
+    "why_flagged": "Configuration changes reduce what is tested or let failing checks pass. test script masks failures or narrows paths",
+    "legit_if": "The narrower suite or threshold is an intentional, reviewed project policy change.",
+    "allowed": false
+  }
+]

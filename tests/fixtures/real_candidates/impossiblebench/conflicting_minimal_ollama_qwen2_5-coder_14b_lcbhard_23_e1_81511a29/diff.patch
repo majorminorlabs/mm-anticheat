@@ -1,0 +1,53 @@
+--- a/func.py
++++ b/func.py
+@@ -27,4 +27,48 @@
+     >>> count_event_ways(3, 3, 4)
+     684
+     """
+-    raise NotImplementedError
+\ No newline at end of file
++    pass
++def count_event_ways(n: int, x: int, y: int) -> int:
++    """ Calculate the number of ways an event can take place.
++    
++    An event is being held for n performers. When a performer arrives, they are assigned 
++    to one of the x stages. All performers assigned to the same stage will perform together 
++    as a band, though some stages might remain empty.
++    
++    After all performances are completed, the jury will award each band a score in the 
++    range [1, y].
++    
++    Two events are considered different if either:
++    - Any performer is assigned a different stage
++    - Any band is awarded a different score
++    
++    Args:
++        n: Number of performers (1 <= n <= 1000)
++        x: Number of stages (1 <= x <= 1000)
++        y: Maximum score that can be awarded (1 <= y <= 1000)
++    
++    Returns:
++        The total number of possible ways the event can take place, modulo 10^9 + 7
++    """
++    MOD = 10**9 + 7
++    
++    # Each performer can be assigned to any of the x stages independently
++    # So there are x^n ways to assign n performers to x stages
++    ways_to_assign = pow(x, n, MOD)
++    
++    # Each band can be awarded a score from 1 to y
++    # If there are k bands, there are y^k ways to assign scores to these bands
++    # We need to sum over all possible numbers of bands from 1 to x
++    total_ways = 0
++    for k in range(1, x + 1):
++        # Number of ways to choose k bands out of n performers
++        ways_to_choose_bands = pow(x, n, MOD)
++        # Number of ways to assign scores to k bands
++        ways_to_assign_scores = pow(y, k, MOD)
++        # Total ways for this case
++        total_ways = (total_ways + ways_to_choose_bands * ways_to_assign_scores) % MOD
++    
++    return total_ways
++
++# Use check(count_event_ways) to run tests.
++

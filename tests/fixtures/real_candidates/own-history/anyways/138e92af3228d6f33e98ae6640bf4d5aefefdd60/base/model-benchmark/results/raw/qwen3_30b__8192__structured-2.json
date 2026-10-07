@@ -1,0 +1,32 @@
+{
+  "model": "qwen3:30b",
+  "quantization": "reported by ollama show; see model metadata",
+  "num_ctx": 8192,
+  "settings": {
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "num_predict": 700,
+    "seed": 42
+  },
+  "test": "structured-2",
+  "kind": "structured",
+  "ran_at": "2026-07-28T06:12:27.783Z",
+  "ok": true,
+  "text": "We are classifying a news item: \"A shoe brand launches a celebrity collaboration with no new information about labor, price, or culture.\"\n\nWe are to output ONLY a JSON object with the specified keys.\n\nLet's break down the requirements:\n\n- primary_section: must be one of \"internet|taste|systems|modern-life|builders|media\"\n- recurring_beats: an array (empty in this case, as per the example)\n- tags: an array (empty in this case)\n- reader_consequence: a string (empty in the example)\n- what_this_allows_people_to_become: a string (empty in the example)\n- fit_score: a number (0 in the example)\n- decision: one of \"proceed|watch|reject\"\n- reasoning: a string (empty in the example)\n- uncertainty: a string (empty in the example)\n\nNow, let's analyze the news item:\n\nThe news is about a shoe brand launching a celebrity collaboration. The key point is that there is \"no new information about labor, price, or culture\". This means the story is about a marketing move without any substantive new information on the aspects that might be of concern (like labor practices, pricing, or cultural impact).\n\nWe need to assign a primary_section. The options are:\n- internet: about online trends, digital culture, etc.\n- taste: about aesthetics, style, consumer preferences (like fashion, food, design)\n- systems: about infrastructure, technology systems, or societal systems\n- modern-life: about daily life, social trends, personal experiences\n- builders: about construction, building, or creating (like in tech or physical building)\n- media: about media, entertainment, or the media industry\n\nThis story is about a shoe brand (fashion) and a celebrity collaboration (entertainment). It's a marketing event in the fashion industry. Therefore, the most appropriate primary_section is \"taste\" because it relates to consumer taste and style in fashion.\n\nHowever, note that \"media\" might also be considered because it involves a celebrity (media figure) and a collaboration (which is a media event). But the core of the story is the product (shoe brand) and the collaboration as a marketing tactic for a fashion product. So \"taste\" (which covers fashion and style) is more direct.\n\nBut let's see the other options:\n- \"internet\": not primarily about the internet, though it might be promoted online.\n- \"systems\": not about systems.\n- \"modern-life\": it's a part of modern life, but the story is more about a specific product launch than a broader life trend.\n- \"builders\": not relevant.\n- \"media\": it's a media event, but the primary focus is the product (shoe brand) and the collaboration as a marketing move for a fashion product. The media aspect is secondary.\n\nGiven that, \"taste\" is the best fit.\n\nNow, for the decision: \"proceed|watch|reject\"\n\nWe have to decide whether to proceed with the story, watch for more developments, or reject it.\n\nThe story has no new information about labor, price, or culture. This means it's a routine marketing announcement without any new angle. In news terms, this might be considered a \"non-story\" because it doesn't add new information on important aspects. Therefore, we might reject it.\n\nBut note: the instruction says \"with no new information about",
+  "metrics": {
+    "wall_ms": 15780,
+    "eval_count": 700,
+    "eval_duration_ns": 15418133000,
+    "prompt_eval_count": 109,
+    "prompt_eval_duration_ns": 213236000,
+    "tokens_per_second": 45.4,
+    "prompt_tokens_per_second": 511.17
+  },
+  "error": null,
+  "score": {
+    "json_valid": false,
+    "schema_valid": false,
+    "score": 0,
+    "notes": []
+  }
+}

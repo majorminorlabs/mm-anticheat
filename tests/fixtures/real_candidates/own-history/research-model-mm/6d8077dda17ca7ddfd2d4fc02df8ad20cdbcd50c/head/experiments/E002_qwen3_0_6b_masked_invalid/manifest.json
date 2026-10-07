@@ -1,0 +1,110 @@
+{
+  "experiment_schema_version": "1.0",
+  "experiment_id": "E002_qwen3_0_6b_masked_invalid",
+  "title": "Qwen3-0.6B masked 512-token smoke (invalidated)",
+  "status": "invalidated",
+  "metadata_status": "reconstructed_after_fact",
+  "manifest_created_at": "2026-09-16T01:47:32Z",
+  "research_question": null,
+  "hypothesis": null,
+  "experiment_type": "training_smoke",
+  "git": {
+    "commit": null,
+    "dirty": true,
+    "status_note": "Repository had no commit history when the pilot was run; this manifest is reconstructed after the fact."
+  },
+  "environment": {
+    "machine": {
+      "hostname": null,
+      "os": null,
+      "architecture": "arm64",
+      "cpu": "Apple M1 Max",
+      "gpu": "Apple M1 Max integrated GPU",
+      "gpu_count": 1,
+      "vram_gb": 32,
+      "ram_gb": 32,
+      "hardware_probe_note": "Recorded in the initial build report; unified memory is shared."
+    },
+    "software": {
+      "python": null,
+      "platform": "macOS (exact release not recorded)",
+      "packages": {
+        "mlx": "0.32.2",
+        "mlx-lm": "0.31.3"
+      },
+      "cuda": null
+    }
+  },
+  "dataset": {
+    "path": "data/generated/research-data-v0.1.jsonl",
+    "sha256": "6a316c79bed7eec801e231180df33ea3a3ea7951e7209cee0842a7b9204e6845",
+    "dataset_content_hash": "d894eaa8f60ac8272b6690cc662a1ace3ca52144d8c4a053b66114fb1da41ee4"
+  },
+  "benchmark": {
+    "path": "benchmarks/tasks/research_microbench.jsonl",
+    "sha256": "912ee3aa1e33bf7908bffa446bd01f0a01e8abee6878084f1b910e34112b34fe",
+    "benchmark_content_hash": "912ee3aa1e33bf7908bffa446bd01f0a01e8abee6878084f1b910e34112b34fe"
+  },
+  "model": {
+    "name": "Qwen/Qwen3-0.6B",
+    "revision": null,
+    "tokenizer_revision": null
+  },
+  "training": {
+    "backend": "mlx",
+    "method": "lora",
+    "iters": 20,
+    "num_layers": 4,
+    "rank": 8,
+    "learning_rate": 0.0002,
+    "max_seq_length": 512,
+    "mask_prompt": true,
+    "seed": 0,
+    "adapter_path": "outputs/qwen3-0.6b-research-smoke",
+    "duration_note": "not recorded"
+  },
+  "execution": {
+    "command": [
+      "uv run mlx_lm lora --model Qwen/Qwen3-0.6B --data data/generated/mlx --train --mask-prompt --max-seq-length 512 --iters 20"
+    ],
+    "start_time": null,
+    "end_time": null,
+    "duration_seconds": null,
+    "duration_note": null,
+    "seed": 0,
+    "retries": [],
+    "deviations": [
+      "The run produced non-finite/NaN loss because masking and truncation removed assistant targets."
+    ]
+  },
+  "artifacts": {
+    "adapter_config": "outputs/qwen3-0.6b-research-smoke/adapter_config.json",
+    "adapter_config_sha256": "55abc02f8a13f944fae7f459018021112660f90ccdd37a2cbf1ea421fc95fade",
+    "adapter_path": "outputs/qwen3-0.6b-research-smoke/adapters.safetensors",
+    "adapter_path_sha256": "9a723703bea9823313cc72a326c5c8b3bf86019237282261dbfa0cfd92835afb",
+    "summary_path": "/Volumes/Research/research-model-mm/experiments/E002_qwen3_0_6b_masked_invalid/summary.md"
+  },
+  "results": {},
+  "interpretation": "This is retained as a negative engineering result and is excluded from model-quality comparisons.",
+  "limitations": [
+    "No exact start/end time or loss trace was preserved in the available metadata."
+  ],
+  "conclusion": null,
+  "missing_metadata": [
+    "git_commit",
+    "exact_start_time",
+    "exact_end_time",
+    "model_revision",
+    "tokenizer_revision",
+    "peak_memory_measurement_method"
+  ],
+  "reconstruction_sources": [
+    "docs/initial_build_report.md",
+    "data/manifests/public_sources.json"
+  ],
+  "invalidation": {
+    "reason": "Invalidated after observing NaN loss caused by truncation removing assistant targets under --mask-prompt.",
+    "recorded_at": "2026-09-16T01:47:32Z",
+    "replacement_experiment": "E003_qwen3_0_6b_aligned_smoke"
+  }
+}

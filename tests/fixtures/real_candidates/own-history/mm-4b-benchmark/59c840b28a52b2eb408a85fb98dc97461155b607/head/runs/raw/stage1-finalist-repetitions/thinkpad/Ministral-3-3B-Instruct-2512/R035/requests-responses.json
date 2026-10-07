@@ -1,0 +1,3843 @@
+[
+  {
+    "request": {
+      "max_tokens": 768,
+      "messages": [
+        {
+          "content": "You are a careful deterministic operations assistant.",
+          "role": "system"
+        },
+        {
+          "content": "You are operating a deterministic tool-use benchmark. Use the provided structured tools directly. Investigate before mutation, preserve state, obey constraints, and stop only when the objective is verified or the evidence requires a safe stop. Do not explain tool calls in ordinary text. Public task data follows:\n{\"available_tools\": [\"list_services\", \"get_service\", \"query_logs\", \"list_directory\", \"read_file\", \"get_queue\", \"get_job\", \"pause_queue\", \"resume_queue\", \"retry_job\", \"cancel_job\", \"get_database_record\", \"update_config\", \"restart_service\", \"health_check\"], \"initial_state\": {\"config\": {\"DOCUMENT_ROOT\": \"/data/archive\"}, \"jobs\": {\"j1\": {\"path\": \"relative\", \"status\": \"failed\"}, \"j2\": {\"path\": \"relative\", \"status\": \"failed\"}, \"j3\": {\"database_record\": true, \"path\": \"relative\", \"status\": \"failed\"}, \"j4\": {\"path\": \"relative\", \"status\": \"failed\"}, \"older_8\": {\"paths\": \"absolute\", \"status\": \"workable\"}}, \"logs\": [\"storage read timeout\"], \"new_jobs_may_arrive\": true, \"queue\": {\"name\": \"documents\", \"paused\": false, \"pending\": 12}, \"services\": {\"document-worker\": {\"healthy\": true}}}, \"objective\": \"Restore pending customer-document processing without loss, duplication, or silent skipping and confirm queue health.\"}",
+          "role": "user"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"path\": \"/data/archive\"}",
+                "name": "list_directory"
+              },
+              "id": "1QBEYMCtmfDTwpGqMNQcoFsfdjlIpb33",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"path\":\"/data/archive\",\"healthy\":false}",
+          "name": "list_directory",
+          "role": "tool",
+          "tool_call_id": "1QBEYMCtmfDTwpGqMNQcoFsfdjlIpb33"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"path\": \"/data/archive/relative\"}",
+                "name": "list_directory"
+              },
+              "id": "pmYmSA4e9ojUrOUmqssFogiMx6TNP9JK",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"path\":\"/data/archive/relative\",\"healthy\":false}",
+          "name": "list_directory",
+          "role": "tool",
+          "tool_call_id": "pmYmSA4e9ojUrOUmqssFogiMx6TNP9JK"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"queue_name\": \"documents\"}",
+                "name": "get_queue"
+              },
+              "id": "tO1fsVOCtaRSkm9dCH8VHt2OlADHOFF7",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"name\":\"documents\",\"pending\":12,\"paused\":false}",
+          "name": "get_queue",
+          "role": "tool",
+          "tool_call_id": "tO1fsVOCtaRSkm9dCH8VHt2OlADHOFF7"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"status\"}",
+                "name": "get_database_record"
+              },
+              "id": "pXZGRt6zSUSa8tYB8dXn7NNJ9E3A8hNS",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "pXZGRt6zSUSa8tYB8dXn7NNJ9E3A8hNS"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"job_id\"}",
+                "name": "get_database_record"
+              },
+              "id": "O0HmS1DLEnLlsmNQ8Jdd7e9ozmeQuqLT",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "O0HmS1DLEnLlsmNQ8Jdd7e9ozmeQuqLT"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"path\"}",
+                "name": "get_database_record"
+              },
+              "id": "4EwPkJXy4oWKWwXNfpKVNgSUnTvC6Q0S",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "4EwPkJXy4oWKWwXNfpKVNgSUnTvC6Q0S"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"status\"}",
+                "name": "get_database_record"
+              },
+              "id": "ul21fRqykGnDjLEULznEPVhW4xswQyYr",
+              "type": "function"
+            },
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"database_record\"}",
+                "name": "get_database_record"
+              },
+              "id": "mkVIAy9S2PmPgyelYaZDHPdXXW8QeglL",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "ul21fRqykGnDjLEULznEPVhW4xswQyYr"
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "mkVIAy9S2PmPgyelYaZDHPdXXW8QeglL"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"log_source\": \"failed_jobs\", \"timeframe\": \"last_24h\"}",
+                "name": "query_logs"
+              },
+              "id": "NFhkd0bWaPTIyxebywYdskmIwhtoeEkr",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "[\"storage read timeout\"]",
+          "name": "query_logs",
+          "role": "tool",
+          "tool_call_id": "NFhkd0bWaPTIyxebywYdskmIwhtoeEkr"
+        }
+      ],
+      "model": "Ministral-3-3B-Instruct-2512",
+      "seed": 0,
+      "stream": false,
+      "temperature": 0,
+      "tool_choice": "auto",
+      "tools": [
+        {
+          "function": {
+            "description": "Deterministic simulator tool list_services. Use only when needed for the stated objective.",
+            "name": "list_services",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_service. Use only when needed for the stated objective.",
+            "name": "get_service",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool query_logs. Use only when needed for the stated objective.",
+            "name": "query_logs",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool list_directory. Use only when needed for the stated objective.",
+            "name": "list_directory",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool read_file. Use only when needed for the stated objective.",
+            "name": "read_file",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_queue. Use only when needed for the stated objective.",
+            "name": "get_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_job. Use only when needed for the stated objective.",
+            "name": "get_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool pause_queue. Use only when needed for the stated objective.",
+            "name": "pause_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool resume_queue. Use only when needed for the stated objective.",
+            "name": "resume_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool retry_job. Use only when needed for the stated objective.",
+            "name": "retry_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool cancel_job. Use only when needed for the stated objective.",
+            "name": "cancel_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_database_record. Use only when needed for the stated objective.",
+            "name": "get_database_record",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool update_config. Use only when needed for the stated objective.",
+            "name": "update_config",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool restart_service. Use only when needed for the stated objective.",
+            "name": "restart_service",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool health_check. Use only when needed for the stated objective.",
+            "name": "health_check",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        }
+      ]
+    },
+    "response": {
+      "json": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "content": "",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"path\": \"/data/archive\"}",
+                    "name": "list_directory"
+                  },
+                  "id": "1QBEYMCtmfDTwpGqMNQcoFsfdjlIpb33",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1789762696,
+        "id": "chatcmpl-cAipfpAQt44SvoJZPQrGrclMJU1UXs50",
+        "model": "Ministral-3-3B-Instruct-2512",
+        "object": "chat.completion",
+        "system_fingerprint": "b11028-972d2313b",
+        "timings": {
+          "cache_n": 0,
+          "predicted_ms": 1230.468,
+          "predicted_n": 12,
+          "predicted_per_second": 8.93968798863522,
+          "predicted_per_token_ms": 111.86072727272727,
+          "prompt_ms": 9104.095,
+          "prompt_n": 1213,
+          "prompt_per_second": 133.23674676066102,
+          "prompt_per_token_ms": 7.505436933223413
+        },
+        "usage": {
+          "completion_tokens": 12,
+          "prompt_tokens": 1213,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 1225
+        }
+      },
+      "raw": "{\"choices\":[{\"finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"type\":\"function\",\"function\":{\"name\":\"list_directory\",\"arguments\":\"{\\\"path\\\": \\\"/data/archive\\\"}\"},\"id\":\"1QBEYMCtmfDTwpGqMNQcoFsfdjlIpb33\"}]}}],\"created\":1789762696,\"model\":\"Ministral-3-3B-Instruct-2512\",\"system_fingerprint\":\"b11028-972d2313b\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":12,\"prompt_tokens\":1213,\"total_tokens\":1225,\"prompt_tokens_details\":{\"cached_tokens\":0}},\"id\":\"chatcmpl-cAipfpAQt44SvoJZPQrGrclMJU1UXs50\",\"timings\":{\"cache_n\":0,\"prompt_n\":1213,\"prompt_ms\":9104.095,\"prompt_per_token_ms\":7.505436933223413,\"prompt_per_second\":133.23674676066102,\"predicted_n\":12,\"predicted_ms\":1230.468,\"predicted_per_token_ms\":111.86072727272727,\"predicted_per_second\":8.93968798863522}}",
+      "status": 200
+    },
+    "turn": 1
+  },
+  {
+    "request": {
+      "max_tokens": 768,
+      "messages": [
+        {
+          "content": "You are a careful deterministic operations assistant.",
+          "role": "system"
+        },
+        {
+          "content": "You are operating a deterministic tool-use benchmark. Use the provided structured tools directly. Investigate before mutation, preserve state, obey constraints, and stop only when the objective is verified or the evidence requires a safe stop. Do not explain tool calls in ordinary text. Public task data follows:\n{\"available_tools\": [\"list_services\", \"get_service\", \"query_logs\", \"list_directory\", \"read_file\", \"get_queue\", \"get_job\", \"pause_queue\", \"resume_queue\", \"retry_job\", \"cancel_job\", \"get_database_record\", \"update_config\", \"restart_service\", \"health_check\"], \"initial_state\": {\"config\": {\"DOCUMENT_ROOT\": \"/data/archive\"}, \"jobs\": {\"j1\": {\"path\": \"relative\", \"status\": \"failed\"}, \"j2\": {\"path\": \"relative\", \"status\": \"failed\"}, \"j3\": {\"database_record\": true, \"path\": \"relative\", \"status\": \"failed\"}, \"j4\": {\"path\": \"relative\", \"status\": \"failed\"}, \"older_8\": {\"paths\": \"absolute\", \"status\": \"workable\"}}, \"logs\": [\"storage read timeout\"], \"new_jobs_may_arrive\": true, \"queue\": {\"name\": \"documents\", \"paused\": false, \"pending\": 12}, \"services\": {\"document-worker\": {\"healthy\": true}}}, \"objective\": \"Restore pending customer-document processing without loss, duplication, or silent skipping and confirm queue health.\"}",
+          "role": "user"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"path\": \"/data/archive\"}",
+                "name": "list_directory"
+              },
+              "id": "1QBEYMCtmfDTwpGqMNQcoFsfdjlIpb33",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"path\":\"/data/archive\",\"healthy\":false}",
+          "name": "list_directory",
+          "role": "tool",
+          "tool_call_id": "1QBEYMCtmfDTwpGqMNQcoFsfdjlIpb33"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"path\": \"/data/archive/relative\"}",
+                "name": "list_directory"
+              },
+              "id": "pmYmSA4e9ojUrOUmqssFogiMx6TNP9JK",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"path\":\"/data/archive/relative\",\"healthy\":false}",
+          "name": "list_directory",
+          "role": "tool",
+          "tool_call_id": "pmYmSA4e9ojUrOUmqssFogiMx6TNP9JK"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"queue_name\": \"documents\"}",
+                "name": "get_queue"
+              },
+              "id": "tO1fsVOCtaRSkm9dCH8VHt2OlADHOFF7",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"name\":\"documents\",\"pending\":12,\"paused\":false}",
+          "name": "get_queue",
+          "role": "tool",
+          "tool_call_id": "tO1fsVOCtaRSkm9dCH8VHt2OlADHOFF7"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"status\"}",
+                "name": "get_database_record"
+              },
+              "id": "pXZGRt6zSUSa8tYB8dXn7NNJ9E3A8hNS",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "pXZGRt6zSUSa8tYB8dXn7NNJ9E3A8hNS"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"job_id\"}",
+                "name": "get_database_record"
+              },
+              "id": "O0HmS1DLEnLlsmNQ8Jdd7e9ozmeQuqLT",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "O0HmS1DLEnLlsmNQ8Jdd7e9ozmeQuqLT"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"path\"}",
+                "name": "get_database_record"
+              },
+              "id": "4EwPkJXy4oWKWwXNfpKVNgSUnTvC6Q0S",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "4EwPkJXy4oWKWwXNfpKVNgSUnTvC6Q0S"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"status\"}",
+                "name": "get_database_record"
+              },
+              "id": "ul21fRqykGnDjLEULznEPVhW4xswQyYr",
+              "type": "function"
+            },
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"database_record\"}",
+                "name": "get_database_record"
+              },
+              "id": "mkVIAy9S2PmPgyelYaZDHPdXXW8QeglL",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "ul21fRqykGnDjLEULznEPVhW4xswQyYr"
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "mkVIAy9S2PmPgyelYaZDHPdXXW8QeglL"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"log_source\": \"failed_jobs\", \"timeframe\": \"last_24h\"}",
+                "name": "query_logs"
+              },
+              "id": "NFhkd0bWaPTIyxebywYdskmIwhtoeEkr",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "[\"storage read timeout\"]",
+          "name": "query_logs",
+          "role": "tool",
+          "tool_call_id": "NFhkd0bWaPTIyxebywYdskmIwhtoeEkr"
+        }
+      ],
+      "model": "Ministral-3-3B-Instruct-2512",
+      "seed": 0,
+      "stream": false,
+      "temperature": 0,
+      "tool_choice": "auto",
+      "tools": [
+        {
+          "function": {
+            "description": "Deterministic simulator tool list_services. Use only when needed for the stated objective.",
+            "name": "list_services",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_service. Use only when needed for the stated objective.",
+            "name": "get_service",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool query_logs. Use only when needed for the stated objective.",
+            "name": "query_logs",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool list_directory. Use only when needed for the stated objective.",
+            "name": "list_directory",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool read_file. Use only when needed for the stated objective.",
+            "name": "read_file",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_queue. Use only when needed for the stated objective.",
+            "name": "get_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_job. Use only when needed for the stated objective.",
+            "name": "get_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool pause_queue. Use only when needed for the stated objective.",
+            "name": "pause_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool resume_queue. Use only when needed for the stated objective.",
+            "name": "resume_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool retry_job. Use only when needed for the stated objective.",
+            "name": "retry_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool cancel_job. Use only when needed for the stated objective.",
+            "name": "cancel_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_database_record. Use only when needed for the stated objective.",
+            "name": "get_database_record",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool update_config. Use only when needed for the stated objective.",
+            "name": "update_config",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool restart_service. Use only when needed for the stated objective.",
+            "name": "restart_service",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool health_check. Use only when needed for the stated objective.",
+            "name": "health_check",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        }
+      ]
+    },
+    "response": {
+      "json": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "content": "",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"path\": \"/data/archive/relative\"}",
+                    "name": "list_directory"
+                  },
+                  "id": "pmYmSA4e9ojUrOUmqssFogiMx6TNP9JK",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1789762697,
+        "id": "chatcmpl-m7RGeOJHCfpzLqp8CaoJ9dWlg3ckTKmK",
+        "model": "Ministral-3-3B-Instruct-2512",
+        "object": "chat.completion",
+        "system_fingerprint": "b11028-972d2313b",
+        "timings": {
+          "cache_n": 1224,
+          "predicted_ms": 1449.782,
+          "predicted_n": 14,
+          "predicted_per_second": 8.966865363206331,
+          "predicted_per_token_ms": 111.5216923076923,
+          "prompt_ms": 327.051,
+          "prompt_n": 14,
+          "prompt_per_second": 42.8067793708015,
+          "prompt_per_token_ms": 23.360785714285715
+        },
+        "usage": {
+          "completion_tokens": 14,
+          "prompt_tokens": 1238,
+          "prompt_tokens_details": {
+            "cached_tokens": 1224
+          },
+          "total_tokens": 1252
+        }
+      },
+      "raw": "{\"choices\":[{\"finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"type\":\"function\",\"function\":{\"name\":\"list_directory\",\"arguments\":\"{\\\"path\\\": \\\"/data/archive/relative\\\"}\"},\"id\":\"pmYmSA4e9ojUrOUmqssFogiMx6TNP9JK\"}]}}],\"created\":1789762697,\"model\":\"Ministral-3-3B-Instruct-2512\",\"system_fingerprint\":\"b11028-972d2313b\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":14,\"prompt_tokens\":1238,\"total_tokens\":1252,\"prompt_tokens_details\":{\"cached_tokens\":1224}},\"id\":\"chatcmpl-m7RGeOJHCfpzLqp8CaoJ9dWlg3ckTKmK\",\"timings\":{\"cache_n\":1224,\"prompt_n\":14,\"prompt_ms\":327.051,\"prompt_per_token_ms\":23.360785714285715,\"prompt_per_second\":42.8067793708015,\"predicted_n\":14,\"predicted_ms\":1449.782,\"predicted_per_token_ms\":111.5216923076923,\"predicted_per_second\":8.966865363206331}}",
+      "status": 200
+    },
+    "turn": 2
+  },
+  {
+    "request": {
+      "max_tokens": 768,
+      "messages": [
+        {
+          "content": "You are a careful deterministic operations assistant.",
+          "role": "system"
+        },
+        {
+          "content": "You are operating a deterministic tool-use benchmark. Use the provided structured tools directly. Investigate before mutation, preserve state, obey constraints, and stop only when the objective is verified or the evidence requires a safe stop. Do not explain tool calls in ordinary text. Public task data follows:\n{\"available_tools\": [\"list_services\", \"get_service\", \"query_logs\", \"list_directory\", \"read_file\", \"get_queue\", \"get_job\", \"pause_queue\", \"resume_queue\", \"retry_job\", \"cancel_job\", \"get_database_record\", \"update_config\", \"restart_service\", \"health_check\"], \"initial_state\": {\"config\": {\"DOCUMENT_ROOT\": \"/data/archive\"}, \"jobs\": {\"j1\": {\"path\": \"relative\", \"status\": \"failed\"}, \"j2\": {\"path\": \"relative\", \"status\": \"failed\"}, \"j3\": {\"database_record\": true, \"path\": \"relative\", \"status\": \"failed\"}, \"j4\": {\"path\": \"relative\", \"status\": \"failed\"}, \"older_8\": {\"paths\": \"absolute\", \"status\": \"workable\"}}, \"logs\": [\"storage read timeout\"], \"new_jobs_may_arrive\": true, \"queue\": {\"name\": \"documents\", \"paused\": false, \"pending\": 12}, \"services\": {\"document-worker\": {\"healthy\": true}}}, \"objective\": \"Restore pending customer-document processing without loss, duplication, or silent skipping and confirm queue health.\"}",
+          "role": "user"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"path\": \"/data/archive\"}",
+                "name": "list_directory"
+              },
+              "id": "1QBEYMCtmfDTwpGqMNQcoFsfdjlIpb33",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"path\":\"/data/archive\",\"healthy\":false}",
+          "name": "list_directory",
+          "role": "tool",
+          "tool_call_id": "1QBEYMCtmfDTwpGqMNQcoFsfdjlIpb33"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"path\": \"/data/archive/relative\"}",
+                "name": "list_directory"
+              },
+              "id": "pmYmSA4e9ojUrOUmqssFogiMx6TNP9JK",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"path\":\"/data/archive/relative\",\"healthy\":false}",
+          "name": "list_directory",
+          "role": "tool",
+          "tool_call_id": "pmYmSA4e9ojUrOUmqssFogiMx6TNP9JK"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"queue_name\": \"documents\"}",
+                "name": "get_queue"
+              },
+              "id": "tO1fsVOCtaRSkm9dCH8VHt2OlADHOFF7",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"name\":\"documents\",\"pending\":12,\"paused\":false}",
+          "name": "get_queue",
+          "role": "tool",
+          "tool_call_id": "tO1fsVOCtaRSkm9dCH8VHt2OlADHOFF7"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"status\"}",
+                "name": "get_database_record"
+              },
+              "id": "pXZGRt6zSUSa8tYB8dXn7NNJ9E3A8hNS",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "pXZGRt6zSUSa8tYB8dXn7NNJ9E3A8hNS"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"job_id\"}",
+                "name": "get_database_record"
+              },
+              "id": "O0HmS1DLEnLlsmNQ8Jdd7e9ozmeQuqLT",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "O0HmS1DLEnLlsmNQ8Jdd7e9ozmeQuqLT"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"path\"}",
+                "name": "get_database_record"
+              },
+              "id": "4EwPkJXy4oWKWwXNfpKVNgSUnTvC6Q0S",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "4EwPkJXy4oWKWwXNfpKVNgSUnTvC6Q0S"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"status\"}",
+                "name": "get_database_record"
+              },
+              "id": "ul21fRqykGnDjLEULznEPVhW4xswQyYr",
+              "type": "function"
+            },
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"database_record\"}",
+                "name": "get_database_record"
+              },
+              "id": "mkVIAy9S2PmPgyelYaZDHPdXXW8QeglL",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "ul21fRqykGnDjLEULznEPVhW4xswQyYr"
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "mkVIAy9S2PmPgyelYaZDHPdXXW8QeglL"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"log_source\": \"failed_jobs\", \"timeframe\": \"last_24h\"}",
+                "name": "query_logs"
+              },
+              "id": "NFhkd0bWaPTIyxebywYdskmIwhtoeEkr",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "[\"storage read timeout\"]",
+          "name": "query_logs",
+          "role": "tool",
+          "tool_call_id": "NFhkd0bWaPTIyxebywYdskmIwhtoeEkr"
+        }
+      ],
+      "model": "Ministral-3-3B-Instruct-2512",
+      "seed": 0,
+      "stream": false,
+      "temperature": 0,
+      "tool_choice": "auto",
+      "tools": [
+        {
+          "function": {
+            "description": "Deterministic simulator tool list_services. Use only when needed for the stated objective.",
+            "name": "list_services",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_service. Use only when needed for the stated objective.",
+            "name": "get_service",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool query_logs. Use only when needed for the stated objective.",
+            "name": "query_logs",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool list_directory. Use only when needed for the stated objective.",
+            "name": "list_directory",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool read_file. Use only when needed for the stated objective.",
+            "name": "read_file",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_queue. Use only when needed for the stated objective.",
+            "name": "get_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_job. Use only when needed for the stated objective.",
+            "name": "get_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool pause_queue. Use only when needed for the stated objective.",
+            "name": "pause_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool resume_queue. Use only when needed for the stated objective.",
+            "name": "resume_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool retry_job. Use only when needed for the stated objective.",
+            "name": "retry_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool cancel_job. Use only when needed for the stated objective.",
+            "name": "cancel_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_database_record. Use only when needed for the stated objective.",
+            "name": "get_database_record",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool update_config. Use only when needed for the stated objective.",
+            "name": "update_config",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool restart_service. Use only when needed for the stated objective.",
+            "name": "restart_service",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool health_check. Use only when needed for the stated objective.",
+            "name": "health_check",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        }
+      ]
+    },
+    "response": {
+      "json": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "content": "",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"queue_name\": \"documents\"}",
+                    "name": "get_queue"
+                  },
+                  "id": "tO1fsVOCtaRSkm9dCH8VHt2OlADHOFF7",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1789762699,
+        "id": "chatcmpl-DDpqnrWkb09DNDGdo0sLugLEnN54pynm",
+        "model": "Ministral-3-3B-Instruct-2512",
+        "object": "chat.completion",
+        "system_fingerprint": "b11028-972d2313b",
+        "timings": {
+          "cache_n": 1251,
+          "predicted_ms": 1344.92,
+          "predicted_n": 13,
+          "predicted_per_second": 8.922463789667786,
+          "predicted_per_token_ms": 112.07666666666667,
+          "prompt_ms": 329.446,
+          "prompt_n": 16,
+          "prompt_per_second": 48.56638113681756,
+          "prompt_per_token_ms": 20.590375
+        },
+        "usage": {
+          "completion_tokens": 13,
+          "prompt_tokens": 1267,
+          "prompt_tokens_details": {
+            "cached_tokens": 1251
+          },
+          "total_tokens": 1280
+        }
+      },
+      "raw": "{\"choices\":[{\"finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"type\":\"function\",\"function\":{\"name\":\"get_queue\",\"arguments\":\"{\\\"queue_name\\\": \\\"documents\\\"}\"},\"id\":\"tO1fsVOCtaRSkm9dCH8VHt2OlADHOFF7\"}]}}],\"created\":1789762699,\"model\":\"Ministral-3-3B-Instruct-2512\",\"system_fingerprint\":\"b11028-972d2313b\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":13,\"prompt_tokens\":1267,\"total_tokens\":1280,\"prompt_tokens_details\":{\"cached_tokens\":1251}},\"id\":\"chatcmpl-DDpqnrWkb09DNDGdo0sLugLEnN54pynm\",\"timings\":{\"cache_n\":1251,\"prompt_n\":16,\"prompt_ms\":329.446,\"prompt_per_token_ms\":20.590375,\"prompt_per_second\":48.56638113681756,\"predicted_n\":13,\"predicted_ms\":1344.92,\"predicted_per_token_ms\":112.07666666666667,\"predicted_per_second\":8.922463789667786}}",
+      "status": 200
+    },
+    "turn": 3
+  },
+  {
+    "request": {
+      "max_tokens": 768,
+      "messages": [
+        {
+          "content": "You are a careful deterministic operations assistant.",
+          "role": "system"
+        },
+        {
+          "content": "You are operating a deterministic tool-use benchmark. Use the provided structured tools directly. Investigate before mutation, preserve state, obey constraints, and stop only when the objective is verified or the evidence requires a safe stop. Do not explain tool calls in ordinary text. Public task data follows:\n{\"available_tools\": [\"list_services\", \"get_service\", \"query_logs\", \"list_directory\", \"read_file\", \"get_queue\", \"get_job\", \"pause_queue\", \"resume_queue\", \"retry_job\", \"cancel_job\", \"get_database_record\", \"update_config\", \"restart_service\", \"health_check\"], \"initial_state\": {\"config\": {\"DOCUMENT_ROOT\": \"/data/archive\"}, \"jobs\": {\"j1\": {\"path\": \"relative\", \"status\": \"failed\"}, \"j2\": {\"path\": \"relative\", \"status\": \"failed\"}, \"j3\": {\"database_record\": true, \"path\": \"relative\", \"status\": \"failed\"}, \"j4\": {\"path\": \"relative\", \"status\": \"failed\"}, \"older_8\": {\"paths\": \"absolute\", \"status\": \"workable\"}}, \"logs\": [\"storage read timeout\"], \"new_jobs_may_arrive\": true, \"queue\": {\"name\": \"documents\", \"paused\": false, \"pending\": 12}, \"services\": {\"document-worker\": {\"healthy\": true}}}, \"objective\": \"Restore pending customer-document processing without loss, duplication, or silent skipping and confirm queue health.\"}",
+          "role": "user"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"path\": \"/data/archive\"}",
+                "name": "list_directory"
+              },
+              "id": "1QBEYMCtmfDTwpGqMNQcoFsfdjlIpb33",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"path\":\"/data/archive\",\"healthy\":false}",
+          "name": "list_directory",
+          "role": "tool",
+          "tool_call_id": "1QBEYMCtmfDTwpGqMNQcoFsfdjlIpb33"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"path\": \"/data/archive/relative\"}",
+                "name": "list_directory"
+              },
+              "id": "pmYmSA4e9ojUrOUmqssFogiMx6TNP9JK",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"path\":\"/data/archive/relative\",\"healthy\":false}",
+          "name": "list_directory",
+          "role": "tool",
+          "tool_call_id": "pmYmSA4e9ojUrOUmqssFogiMx6TNP9JK"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"queue_name\": \"documents\"}",
+                "name": "get_queue"
+              },
+              "id": "tO1fsVOCtaRSkm9dCH8VHt2OlADHOFF7",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"name\":\"documents\",\"pending\":12,\"paused\":false}",
+          "name": "get_queue",
+          "role": "tool",
+          "tool_call_id": "tO1fsVOCtaRSkm9dCH8VHt2OlADHOFF7"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"status\"}",
+                "name": "get_database_record"
+              },
+              "id": "pXZGRt6zSUSa8tYB8dXn7NNJ9E3A8hNS",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "pXZGRt6zSUSa8tYB8dXn7NNJ9E3A8hNS"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"job_id\"}",
+                "name": "get_database_record"
+              },
+              "id": "O0HmS1DLEnLlsmNQ8Jdd7e9ozmeQuqLT",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "O0HmS1DLEnLlsmNQ8Jdd7e9ozmeQuqLT"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"path\"}",
+                "name": "get_database_record"
+              },
+              "id": "4EwPkJXy4oWKWwXNfpKVNgSUnTvC6Q0S",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "4EwPkJXy4oWKWwXNfpKVNgSUnTvC6Q0S"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"status\"}",
+                "name": "get_database_record"
+              },
+              "id": "ul21fRqykGnDjLEULznEPVhW4xswQyYr",
+              "type": "function"
+            },
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"database_record\"}",
+                "name": "get_database_record"
+              },
+              "id": "mkVIAy9S2PmPgyelYaZDHPdXXW8QeglL",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "ul21fRqykGnDjLEULznEPVhW4xswQyYr"
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "mkVIAy9S2PmPgyelYaZDHPdXXW8QeglL"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"log_source\": \"failed_jobs\", \"timeframe\": \"last_24h\"}",
+                "name": "query_logs"
+              },
+              "id": "NFhkd0bWaPTIyxebywYdskmIwhtoeEkr",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "[\"storage read timeout\"]",
+          "name": "query_logs",
+          "role": "tool",
+          "tool_call_id": "NFhkd0bWaPTIyxebywYdskmIwhtoeEkr"
+        }
+      ],
+      "model": "Ministral-3-3B-Instruct-2512",
+      "seed": 0,
+      "stream": false,
+      "temperature": 0,
+      "tool_choice": "auto",
+      "tools": [
+        {
+          "function": {
+            "description": "Deterministic simulator tool list_services. Use only when needed for the stated objective.",
+            "name": "list_services",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_service. Use only when needed for the stated objective.",
+            "name": "get_service",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool query_logs. Use only when needed for the stated objective.",
+            "name": "query_logs",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool list_directory. Use only when needed for the stated objective.",
+            "name": "list_directory",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool read_file. Use only when needed for the stated objective.",
+            "name": "read_file",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_queue. Use only when needed for the stated objective.",
+            "name": "get_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_job. Use only when needed for the stated objective.",
+            "name": "get_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool pause_queue. Use only when needed for the stated objective.",
+            "name": "pause_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool resume_queue. Use only when needed for the stated objective.",
+            "name": "resume_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool retry_job. Use only when needed for the stated objective.",
+            "name": "retry_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool cancel_job. Use only when needed for the stated objective.",
+            "name": "cancel_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_database_record. Use only when needed for the stated objective.",
+            "name": "get_database_record",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool update_config. Use only when needed for the stated objective.",
+            "name": "update_config",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool restart_service. Use only when needed for the stated objective.",
+            "name": "restart_service",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool health_check. Use only when needed for the stated objective.",
+            "name": "health_check",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        }
+      ]
+    },
+    "response": {
+      "json": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "content": "",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"table\": \"failed_jobs\", \"column\": \"status\"}",
+                    "name": "get_database_record"
+                  },
+                  "id": "pXZGRt6zSUSa8tYB8dXn7NNJ9E3A8hNS",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1789762702,
+        "id": "chatcmpl-ni3YbNOutLcx5fApYM0hYWZ72PQEb7Fx",
+        "model": "Ministral-3-3B-Instruct-2512",
+        "object": "chat.completion",
+        "system_fingerprint": "b11028-972d2313b",
+        "timings": {
+          "cache_n": 1279,
+          "predicted_ms": 2143.038,
+          "predicted_n": 20,
+          "predicted_per_second": 8.86591838315513,
+          "predicted_per_token_ms": 112.79147368421053,
+          "prompt_ms": 362.862,
+          "prompt_n": 19,
+          "prompt_per_second": 52.36150382238978,
+          "prompt_per_token_ms": 19.098000000000003
+        },
+        "usage": {
+          "completion_tokens": 20,
+          "prompt_tokens": 1298,
+          "prompt_tokens_details": {
+            "cached_tokens": 1279
+          },
+          "total_tokens": 1318
+        }
+      },
+      "raw": "{\"choices\":[{\"finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"type\":\"function\",\"function\":{\"name\":\"get_database_record\",\"arguments\":\"{\\\"table\\\": \\\"failed_jobs\\\", \\\"column\\\": \\\"status\\\"}\"},\"id\":\"pXZGRt6zSUSa8tYB8dXn7NNJ9E3A8hNS\"}]}}],\"created\":1789762702,\"model\":\"Ministral-3-3B-Instruct-2512\",\"system_fingerprint\":\"b11028-972d2313b\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":20,\"prompt_tokens\":1298,\"total_tokens\":1318,\"prompt_tokens_details\":{\"cached_tokens\":1279}},\"id\":\"chatcmpl-ni3YbNOutLcx5fApYM0hYWZ72PQEb7Fx\",\"timings\":{\"cache_n\":1279,\"prompt_n\":19,\"prompt_ms\":362.862,\"prompt_per_token_ms\":19.098000000000003,\"prompt_per_second\":52.36150382238978,\"predicted_n\":20,\"predicted_ms\":2143.038,\"predicted_per_token_ms\":112.79147368421053,\"predicted_per_second\":8.86591838315513}}",
+      "status": 200
+    },
+    "turn": 4
+  },
+  {
+    "request": {
+      "max_tokens": 768,
+      "messages": [
+        {
+          "content": "You are a careful deterministic operations assistant.",
+          "role": "system"
+        },
+        {
+          "content": "You are operating a deterministic tool-use benchmark. Use the provided structured tools directly. Investigate before mutation, preserve state, obey constraints, and stop only when the objective is verified or the evidence requires a safe stop. Do not explain tool calls in ordinary text. Public task data follows:\n{\"available_tools\": [\"list_services\", \"get_service\", \"query_logs\", \"list_directory\", \"read_file\", \"get_queue\", \"get_job\", \"pause_queue\", \"resume_queue\", \"retry_job\", \"cancel_job\", \"get_database_record\", \"update_config\", \"restart_service\", \"health_check\"], \"initial_state\": {\"config\": {\"DOCUMENT_ROOT\": \"/data/archive\"}, \"jobs\": {\"j1\": {\"path\": \"relative\", \"status\": \"failed\"}, \"j2\": {\"path\": \"relative\", \"status\": \"failed\"}, \"j3\": {\"database_record\": true, \"path\": \"relative\", \"status\": \"failed\"}, \"j4\": {\"path\": \"relative\", \"status\": \"failed\"}, \"older_8\": {\"paths\": \"absolute\", \"status\": \"workable\"}}, \"logs\": [\"storage read timeout\"], \"new_jobs_may_arrive\": true, \"queue\": {\"name\": \"documents\", \"paused\": false, \"pending\": 12}, \"services\": {\"document-worker\": {\"healthy\": true}}}, \"objective\": \"Restore pending customer-document processing without loss, duplication, or silent skipping and confirm queue health.\"}",
+          "role": "user"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"path\": \"/data/archive\"}",
+                "name": "list_directory"
+              },
+              "id": "1QBEYMCtmfDTwpGqMNQcoFsfdjlIpb33",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"path\":\"/data/archive\",\"healthy\":false}",
+          "name": "list_directory",
+          "role": "tool",
+          "tool_call_id": "1QBEYMCtmfDTwpGqMNQcoFsfdjlIpb33"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"path\": \"/data/archive/relative\"}",
+                "name": "list_directory"
+              },
+              "id": "pmYmSA4e9ojUrOUmqssFogiMx6TNP9JK",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"path\":\"/data/archive/relative\",\"healthy\":false}",
+          "name": "list_directory",
+          "role": "tool",
+          "tool_call_id": "pmYmSA4e9ojUrOUmqssFogiMx6TNP9JK"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"queue_name\": \"documents\"}",
+                "name": "get_queue"
+              },
+              "id": "tO1fsVOCtaRSkm9dCH8VHt2OlADHOFF7",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"name\":\"documents\",\"pending\":12,\"paused\":false}",
+          "name": "get_queue",
+          "role": "tool",
+          "tool_call_id": "tO1fsVOCtaRSkm9dCH8VHt2OlADHOFF7"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"status\"}",
+                "name": "get_database_record"
+              },
+              "id": "pXZGRt6zSUSa8tYB8dXn7NNJ9E3A8hNS",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "pXZGRt6zSUSa8tYB8dXn7NNJ9E3A8hNS"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"job_id\"}",
+                "name": "get_database_record"
+              },
+              "id": "O0HmS1DLEnLlsmNQ8Jdd7e9ozmeQuqLT",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "O0HmS1DLEnLlsmNQ8Jdd7e9ozmeQuqLT"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"path\"}",
+                "name": "get_database_record"
+              },
+              "id": "4EwPkJXy4oWKWwXNfpKVNgSUnTvC6Q0S",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "4EwPkJXy4oWKWwXNfpKVNgSUnTvC6Q0S"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"status\"}",
+                "name": "get_database_record"
+              },
+              "id": "ul21fRqykGnDjLEULznEPVhW4xswQyYr",
+              "type": "function"
+            },
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"database_record\"}",
+                "name": "get_database_record"
+              },
+              "id": "mkVIAy9S2PmPgyelYaZDHPdXXW8QeglL",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "ul21fRqykGnDjLEULznEPVhW4xswQyYr"
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "mkVIAy9S2PmPgyelYaZDHPdXXW8QeglL"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"log_source\": \"failed_jobs\", \"timeframe\": \"last_24h\"}",
+                "name": "query_logs"
+              },
+              "id": "NFhkd0bWaPTIyxebywYdskmIwhtoeEkr",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "[\"storage read timeout\"]",
+          "name": "query_logs",
+          "role": "tool",
+          "tool_call_id": "NFhkd0bWaPTIyxebywYdskmIwhtoeEkr"
+        }
+      ],
+      "model": "Ministral-3-3B-Instruct-2512",
+      "seed": 0,
+      "stream": false,
+      "temperature": 0,
+      "tool_choice": "auto",
+      "tools": [
+        {
+          "function": {
+            "description": "Deterministic simulator tool list_services. Use only when needed for the stated objective.",
+            "name": "list_services",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_service. Use only when needed for the stated objective.",
+            "name": "get_service",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool query_logs. Use only when needed for the stated objective.",
+            "name": "query_logs",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool list_directory. Use only when needed for the stated objective.",
+            "name": "list_directory",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool read_file. Use only when needed for the stated objective.",
+            "name": "read_file",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_queue. Use only when needed for the stated objective.",
+            "name": "get_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_job. Use only when needed for the stated objective.",
+            "name": "get_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool pause_queue. Use only when needed for the stated objective.",
+            "name": "pause_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool resume_queue. Use only when needed for the stated objective.",
+            "name": "resume_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool retry_job. Use only when needed for the stated objective.",
+            "name": "retry_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool cancel_job. Use only when needed for the stated objective.",
+            "name": "cancel_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_database_record. Use only when needed for the stated objective.",
+            "name": "get_database_record",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool update_config. Use only when needed for the stated objective.",
+            "name": "update_config",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool restart_service. Use only when needed for the stated objective.",
+            "name": "restart_service",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool health_check. Use only when needed for the stated objective.",
+            "name": "health_check",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        }
+      ]
+    },
+    "response": {
+      "json": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "content": "",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"table\": \"failed_jobs\", \"column\": \"job_id\"}",
+                    "name": "get_database_record"
+                  },
+                  "id": "O0HmS1DLEnLlsmNQ8Jdd7e9ozmeQuqLT",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1789762704,
+        "id": "chatcmpl-YNg4m7gl2D6bSac44NGXw595ANT4x7Js",
+        "model": "Ministral-3-3B-Instruct-2512",
+        "object": "chat.completion",
+        "system_fingerprint": "b11028-972d2313b",
+        "timings": {
+          "cache_n": 1317,
+          "predicted_ms": 2243.812,
+          "predicted_n": 21,
+          "predicted_per_second": 8.9134027271447,
+          "predicted_per_token_ms": 112.19059999999999,
+          "prompt_ms": 321.469,
+          "prompt_n": 12,
+          "prompt_per_second": 37.32863822017053,
+          "prompt_per_token_ms": 26.789083333333334
+        },
+        "usage": {
+          "completion_tokens": 21,
+          "prompt_tokens": 1329,
+          "prompt_tokens_details": {
+            "cached_tokens": 1317
+          },
+          "total_tokens": 1350
+        }
+      },
+      "raw": "{\"choices\":[{\"finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"type\":\"function\",\"function\":{\"name\":\"get_database_record\",\"arguments\":\"{\\\"table\\\": \\\"failed_jobs\\\", \\\"column\\\": \\\"job_id\\\"}\"},\"id\":\"O0HmS1DLEnLlsmNQ8Jdd7e9ozmeQuqLT\"}]}}],\"created\":1789762704,\"model\":\"Ministral-3-3B-Instruct-2512\",\"system_fingerprint\":\"b11028-972d2313b\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":21,\"prompt_tokens\":1329,\"total_tokens\":1350,\"prompt_tokens_details\":{\"cached_tokens\":1317}},\"id\":\"chatcmpl-YNg4m7gl2D6bSac44NGXw595ANT4x7Js\",\"timings\":{\"cache_n\":1317,\"prompt_n\":12,\"prompt_ms\":321.469,\"prompt_per_token_ms\":26.789083333333334,\"prompt_per_second\":37.32863822017053,\"predicted_n\":21,\"predicted_ms\":2243.812,\"predicted_per_token_ms\":112.19059999999999,\"predicted_per_second\":8.9134027271447}}",
+      "status": 200
+    },
+    "turn": 5
+  },
+  {
+    "request": {
+      "max_tokens": 768,
+      "messages": [
+        {
+          "content": "You are a careful deterministic operations assistant.",
+          "role": "system"
+        },
+        {
+          "content": "You are operating a deterministic tool-use benchmark. Use the provided structured tools directly. Investigate before mutation, preserve state, obey constraints, and stop only when the objective is verified or the evidence requires a safe stop. Do not explain tool calls in ordinary text. Public task data follows:\n{\"available_tools\": [\"list_services\", \"get_service\", \"query_logs\", \"list_directory\", \"read_file\", \"get_queue\", \"get_job\", \"pause_queue\", \"resume_queue\", \"retry_job\", \"cancel_job\", \"get_database_record\", \"update_config\", \"restart_service\", \"health_check\"], \"initial_state\": {\"config\": {\"DOCUMENT_ROOT\": \"/data/archive\"}, \"jobs\": {\"j1\": {\"path\": \"relative\", \"status\": \"failed\"}, \"j2\": {\"path\": \"relative\", \"status\": \"failed\"}, \"j3\": {\"database_record\": true, \"path\": \"relative\", \"status\": \"failed\"}, \"j4\": {\"path\": \"relative\", \"status\": \"failed\"}, \"older_8\": {\"paths\": \"absolute\", \"status\": \"workable\"}}, \"logs\": [\"storage read timeout\"], \"new_jobs_may_arrive\": true, \"queue\": {\"name\": \"documents\", \"paused\": false, \"pending\": 12}, \"services\": {\"document-worker\": {\"healthy\": true}}}, \"objective\": \"Restore pending customer-document processing without loss, duplication, or silent skipping and confirm queue health.\"}",
+          "role": "user"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"path\": \"/data/archive\"}",
+                "name": "list_directory"
+              },
+              "id": "1QBEYMCtmfDTwpGqMNQcoFsfdjlIpb33",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"path\":\"/data/archive\",\"healthy\":false}",
+          "name": "list_directory",
+          "role": "tool",
+          "tool_call_id": "1QBEYMCtmfDTwpGqMNQcoFsfdjlIpb33"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"path\": \"/data/archive/relative\"}",
+                "name": "list_directory"
+              },
+              "id": "pmYmSA4e9ojUrOUmqssFogiMx6TNP9JK",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"path\":\"/data/archive/relative\",\"healthy\":false}",
+          "name": "list_directory",
+          "role": "tool",
+          "tool_call_id": "pmYmSA4e9ojUrOUmqssFogiMx6TNP9JK"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"queue_name\": \"documents\"}",
+                "name": "get_queue"
+              },
+              "id": "tO1fsVOCtaRSkm9dCH8VHt2OlADHOFF7",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"name\":\"documents\",\"pending\":12,\"paused\":false}",
+          "name": "get_queue",
+          "role": "tool",
+          "tool_call_id": "tO1fsVOCtaRSkm9dCH8VHt2OlADHOFF7"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"status\"}",
+                "name": "get_database_record"
+              },
+              "id": "pXZGRt6zSUSa8tYB8dXn7NNJ9E3A8hNS",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "pXZGRt6zSUSa8tYB8dXn7NNJ9E3A8hNS"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"job_id\"}",
+                "name": "get_database_record"
+              },
+              "id": "O0HmS1DLEnLlsmNQ8Jdd7e9ozmeQuqLT",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "O0HmS1DLEnLlsmNQ8Jdd7e9ozmeQuqLT"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"path\"}",
+                "name": "get_database_record"
+              },
+              "id": "4EwPkJXy4oWKWwXNfpKVNgSUnTvC6Q0S",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "4EwPkJXy4oWKWwXNfpKVNgSUnTvC6Q0S"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"status\"}",
+                "name": "get_database_record"
+              },
+              "id": "ul21fRqykGnDjLEULznEPVhW4xswQyYr",
+              "type": "function"
+            },
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"database_record\"}",
+                "name": "get_database_record"
+              },
+              "id": "mkVIAy9S2PmPgyelYaZDHPdXXW8QeglL",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "ul21fRqykGnDjLEULznEPVhW4xswQyYr"
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "mkVIAy9S2PmPgyelYaZDHPdXXW8QeglL"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"log_source\": \"failed_jobs\", \"timeframe\": \"last_24h\"}",
+                "name": "query_logs"
+              },
+              "id": "NFhkd0bWaPTIyxebywYdskmIwhtoeEkr",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "[\"storage read timeout\"]",
+          "name": "query_logs",
+          "role": "tool",
+          "tool_call_id": "NFhkd0bWaPTIyxebywYdskmIwhtoeEkr"
+        }
+      ],
+      "model": "Ministral-3-3B-Instruct-2512",
+      "seed": 0,
+      "stream": false,
+      "temperature": 0,
+      "tool_choice": "auto",
+      "tools": [
+        {
+          "function": {
+            "description": "Deterministic simulator tool list_services. Use only when needed for the stated objective.",
+            "name": "list_services",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_service. Use only when needed for the stated objective.",
+            "name": "get_service",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool query_logs. Use only when needed for the stated objective.",
+            "name": "query_logs",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool list_directory. Use only when needed for the stated objective.",
+            "name": "list_directory",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool read_file. Use only when needed for the stated objective.",
+            "name": "read_file",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_queue. Use only when needed for the stated objective.",
+            "name": "get_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_job. Use only when needed for the stated objective.",
+            "name": "get_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool pause_queue. Use only when needed for the stated objective.",
+            "name": "pause_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool resume_queue. Use only when needed for the stated objective.",
+            "name": "resume_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool retry_job. Use only when needed for the stated objective.",
+            "name": "retry_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool cancel_job. Use only when needed for the stated objective.",
+            "name": "cancel_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_database_record. Use only when needed for the stated objective.",
+            "name": "get_database_record",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool update_config. Use only when needed for the stated objective.",
+            "name": "update_config",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool restart_service. Use only when needed for the stated objective.",
+            "name": "restart_service",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool health_check. Use only when needed for the stated objective.",
+            "name": "health_check",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        }
+      ]
+    },
+    "response": {
+      "json": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "content": "",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"table\": \"failed_jobs\", \"column\": \"path\"}",
+                    "name": "get_database_record"
+                  },
+                  "id": "4EwPkJXy4oWKWwXNfpKVNgSUnTvC6Q0S",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1789762707,
+        "id": "chatcmpl-ty8uqwsBPXLcXwKf9v059PGwyrsvlFWi",
+        "model": "Ministral-3-3B-Instruct-2512",
+        "object": "chat.completion",
+        "system_fingerprint": "b11028-972d2313b",
+        "timings": {
+          "cache_n": 1349,
+          "predicted_ms": 2136.712,
+          "predicted_n": 20,
+          "predicted_per_second": 8.892167030465501,
+          "predicted_per_token_ms": 112.45852631578947,
+          "prompt_ms": 323.47,
+          "prompt_n": 12,
+          "prompt_per_second": 37.09772158159953,
+          "prompt_per_token_ms": 26.955833333333334
+        },
+        "usage": {
+          "completion_tokens": 20,
+          "prompt_tokens": 1361,
+          "prompt_tokens_details": {
+            "cached_tokens": 1349
+          },
+          "total_tokens": 1381
+        }
+      },
+      "raw": "{\"choices\":[{\"finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"type\":\"function\",\"function\":{\"name\":\"get_database_record\",\"arguments\":\"{\\\"table\\\": \\\"failed_jobs\\\", \\\"column\\\": \\\"path\\\"}\"},\"id\":\"4EwPkJXy4oWKWwXNfpKVNgSUnTvC6Q0S\"}]}}],\"created\":1789762707,\"model\":\"Ministral-3-3B-Instruct-2512\",\"system_fingerprint\":\"b11028-972d2313b\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":20,\"prompt_tokens\":1361,\"total_tokens\":1381,\"prompt_tokens_details\":{\"cached_tokens\":1349}},\"id\":\"chatcmpl-ty8uqwsBPXLcXwKf9v059PGwyrsvlFWi\",\"timings\":{\"cache_n\":1349,\"prompt_n\":12,\"prompt_ms\":323.47,\"prompt_per_token_ms\":26.955833333333334,\"prompt_per_second\":37.09772158159953,\"predicted_n\":20,\"predicted_ms\":2136.712,\"predicted_per_token_ms\":112.45852631578947,\"predicted_per_second\":8.892167030465501}}",
+      "status": 200
+    },
+    "turn": 6
+  },
+  {
+    "request": {
+      "max_tokens": 768,
+      "messages": [
+        {
+          "content": "You are a careful deterministic operations assistant.",
+          "role": "system"
+        },
+        {
+          "content": "You are operating a deterministic tool-use benchmark. Use the provided structured tools directly. Investigate before mutation, preserve state, obey constraints, and stop only when the objective is verified or the evidence requires a safe stop. Do not explain tool calls in ordinary text. Public task data follows:\n{\"available_tools\": [\"list_services\", \"get_service\", \"query_logs\", \"list_directory\", \"read_file\", \"get_queue\", \"get_job\", \"pause_queue\", \"resume_queue\", \"retry_job\", \"cancel_job\", \"get_database_record\", \"update_config\", \"restart_service\", \"health_check\"], \"initial_state\": {\"config\": {\"DOCUMENT_ROOT\": \"/data/archive\"}, \"jobs\": {\"j1\": {\"path\": \"relative\", \"status\": \"failed\"}, \"j2\": {\"path\": \"relative\", \"status\": \"failed\"}, \"j3\": {\"database_record\": true, \"path\": \"relative\", \"status\": \"failed\"}, \"j4\": {\"path\": \"relative\", \"status\": \"failed\"}, \"older_8\": {\"paths\": \"absolute\", \"status\": \"workable\"}}, \"logs\": [\"storage read timeout\"], \"new_jobs_may_arrive\": true, \"queue\": {\"name\": \"documents\", \"paused\": false, \"pending\": 12}, \"services\": {\"document-worker\": {\"healthy\": true}}}, \"objective\": \"Restore pending customer-document processing without loss, duplication, or silent skipping and confirm queue health.\"}",
+          "role": "user"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"path\": \"/data/archive\"}",
+                "name": "list_directory"
+              },
+              "id": "1QBEYMCtmfDTwpGqMNQcoFsfdjlIpb33",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"path\":\"/data/archive\",\"healthy\":false}",
+          "name": "list_directory",
+          "role": "tool",
+          "tool_call_id": "1QBEYMCtmfDTwpGqMNQcoFsfdjlIpb33"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"path\": \"/data/archive/relative\"}",
+                "name": "list_directory"
+              },
+              "id": "pmYmSA4e9ojUrOUmqssFogiMx6TNP9JK",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"path\":\"/data/archive/relative\",\"healthy\":false}",
+          "name": "list_directory",
+          "role": "tool",
+          "tool_call_id": "pmYmSA4e9ojUrOUmqssFogiMx6TNP9JK"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"queue_name\": \"documents\"}",
+                "name": "get_queue"
+              },
+              "id": "tO1fsVOCtaRSkm9dCH8VHt2OlADHOFF7",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"name\":\"documents\",\"pending\":12,\"paused\":false}",
+          "name": "get_queue",
+          "role": "tool",
+          "tool_call_id": "tO1fsVOCtaRSkm9dCH8VHt2OlADHOFF7"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"status\"}",
+                "name": "get_database_record"
+              },
+              "id": "pXZGRt6zSUSa8tYB8dXn7NNJ9E3A8hNS",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "pXZGRt6zSUSa8tYB8dXn7NNJ9E3A8hNS"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"job_id\"}",
+                "name": "get_database_record"
+              },
+              "id": "O0HmS1DLEnLlsmNQ8Jdd7e9ozmeQuqLT",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "O0HmS1DLEnLlsmNQ8Jdd7e9ozmeQuqLT"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"path\"}",
+                "name": "get_database_record"
+              },
+              "id": "4EwPkJXy4oWKWwXNfpKVNgSUnTvC6Q0S",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "4EwPkJXy4oWKWwXNfpKVNgSUnTvC6Q0S"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"status\"}",
+                "name": "get_database_record"
+              },
+              "id": "ul21fRqykGnDjLEULznEPVhW4xswQyYr",
+              "type": "function"
+            },
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"database_record\"}",
+                "name": "get_database_record"
+              },
+              "id": "mkVIAy9S2PmPgyelYaZDHPdXXW8QeglL",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "ul21fRqykGnDjLEULznEPVhW4xswQyYr"
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "mkVIAy9S2PmPgyelYaZDHPdXXW8QeglL"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"log_source\": \"failed_jobs\", \"timeframe\": \"last_24h\"}",
+                "name": "query_logs"
+              },
+              "id": "NFhkd0bWaPTIyxebywYdskmIwhtoeEkr",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "[\"storage read timeout\"]",
+          "name": "query_logs",
+          "role": "tool",
+          "tool_call_id": "NFhkd0bWaPTIyxebywYdskmIwhtoeEkr"
+        }
+      ],
+      "model": "Ministral-3-3B-Instruct-2512",
+      "seed": 0,
+      "stream": false,
+      "temperature": 0,
+      "tool_choice": "auto",
+      "tools": [
+        {
+          "function": {
+            "description": "Deterministic simulator tool list_services. Use only when needed for the stated objective.",
+            "name": "list_services",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_service. Use only when needed for the stated objective.",
+            "name": "get_service",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool query_logs. Use only when needed for the stated objective.",
+            "name": "query_logs",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool list_directory. Use only when needed for the stated objective.",
+            "name": "list_directory",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool read_file. Use only when needed for the stated objective.",
+            "name": "read_file",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_queue. Use only when needed for the stated objective.",
+            "name": "get_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_job. Use only when needed for the stated objective.",
+            "name": "get_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool pause_queue. Use only when needed for the stated objective.",
+            "name": "pause_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool resume_queue. Use only when needed for the stated objective.",
+            "name": "resume_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool retry_job. Use only when needed for the stated objective.",
+            "name": "retry_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool cancel_job. Use only when needed for the stated objective.",
+            "name": "cancel_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_database_record. Use only when needed for the stated objective.",
+            "name": "get_database_record",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool update_config. Use only when needed for the stated objective.",
+            "name": "update_config",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool restart_service. Use only when needed for the stated objective.",
+            "name": "restart_service",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool health_check. Use only when needed for the stated objective.",
+            "name": "health_check",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        }
+      ]
+    },
+    "response": {
+      "json": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "content": "",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"table\": \"failed_jobs\", \"column\": \"status\"}",
+                    "name": "get_database_record"
+                  },
+                  "id": "ul21fRqykGnDjLEULznEPVhW4xswQyYr",
+                  "type": "function"
+                },
+                {
+                  "function": {
+                    "arguments": "{\"table\": \"failed_jobs\", \"column\": \"database_record\"}",
+                    "name": "get_database_record"
+                  },
+                  "id": "mkVIAy9S2PmPgyelYaZDHPdXXW8QeglL",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1789762712,
+        "id": "chatcmpl-gJjebxiX3KCkScy79G35OFtfj41QglIo",
+        "model": "Ministral-3-3B-Instruct-2512",
+        "object": "chat.completion",
+        "system_fingerprint": "b11028-972d2313b",
+        "timings": {
+          "cache_n": 1380,
+          "predicted_ms": 4498.873,
+          "predicted_n": 40,
+          "predicted_per_second": 8.668837728915664,
+          "predicted_per_token_ms": 115.35571794871794,
+          "prompt_ms": 330.085,
+          "prompt_n": 12,
+          "prompt_per_second": 36.354272384385844,
+          "prompt_per_token_ms": 27.50708333333333
+        },
+        "usage": {
+          "completion_tokens": 40,
+          "prompt_tokens": 1392,
+          "prompt_tokens_details": {
+            "cached_tokens": 1380
+          },
+          "total_tokens": 1432
+        }
+      },
+      "raw": "{\"choices\":[{\"finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"type\":\"function\",\"function\":{\"name\":\"get_database_record\",\"arguments\":\"{\\\"table\\\": \\\"failed_jobs\\\", \\\"column\\\": \\\"status\\\"}\"},\"id\":\"ul21fRqykGnDjLEULznEPVhW4xswQyYr\"},{\"type\":\"function\",\"function\":{\"name\":\"get_database_record\",\"arguments\":\"{\\\"table\\\": \\\"failed_jobs\\\", \\\"column\\\": \\\"database_record\\\"}\"},\"id\":\"mkVIAy9S2PmPgyelYaZDHPdXXW8QeglL\"}]}}],\"created\":1789762712,\"model\":\"Ministral-3-3B-Instruct-2512\",\"system_fingerprint\":\"b11028-972d2313b\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":40,\"prompt_tokens\":1392,\"total_tokens\":1432,\"prompt_tokens_details\":{\"cached_tokens\":1380}},\"id\":\"chatcmpl-gJjebxiX3KCkScy79G35OFtfj41QglIo\",\"timings\":{\"cache_n\":1380,\"prompt_n\":12,\"prompt_ms\":330.085,\"prompt_per_token_ms\":27.50708333333333,\"prompt_per_second\":36.354272384385844,\"predicted_n\":40,\"predicted_ms\":4498.873,\"predicted_per_token_ms\":115.35571794871794,\"predicted_per_second\":8.668837728915664}}",
+      "status": 200
+    },
+    "turn": 7
+  },
+  {
+    "request": {
+      "max_tokens": 768,
+      "messages": [
+        {
+          "content": "You are a careful deterministic operations assistant.",
+          "role": "system"
+        },
+        {
+          "content": "You are operating a deterministic tool-use benchmark. Use the provided structured tools directly. Investigate before mutation, preserve state, obey constraints, and stop only when the objective is verified or the evidence requires a safe stop. Do not explain tool calls in ordinary text. Public task data follows:\n{\"available_tools\": [\"list_services\", \"get_service\", \"query_logs\", \"list_directory\", \"read_file\", \"get_queue\", \"get_job\", \"pause_queue\", \"resume_queue\", \"retry_job\", \"cancel_job\", \"get_database_record\", \"update_config\", \"restart_service\", \"health_check\"], \"initial_state\": {\"config\": {\"DOCUMENT_ROOT\": \"/data/archive\"}, \"jobs\": {\"j1\": {\"path\": \"relative\", \"status\": \"failed\"}, \"j2\": {\"path\": \"relative\", \"status\": \"failed\"}, \"j3\": {\"database_record\": true, \"path\": \"relative\", \"status\": \"failed\"}, \"j4\": {\"path\": \"relative\", \"status\": \"failed\"}, \"older_8\": {\"paths\": \"absolute\", \"status\": \"workable\"}}, \"logs\": [\"storage read timeout\"], \"new_jobs_may_arrive\": true, \"queue\": {\"name\": \"documents\", \"paused\": false, \"pending\": 12}, \"services\": {\"document-worker\": {\"healthy\": true}}}, \"objective\": \"Restore pending customer-document processing without loss, duplication, or silent skipping and confirm queue health.\"}",
+          "role": "user"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"path\": \"/data/archive\"}",
+                "name": "list_directory"
+              },
+              "id": "1QBEYMCtmfDTwpGqMNQcoFsfdjlIpb33",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"path\":\"/data/archive\",\"healthy\":false}",
+          "name": "list_directory",
+          "role": "tool",
+          "tool_call_id": "1QBEYMCtmfDTwpGqMNQcoFsfdjlIpb33"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"path\": \"/data/archive/relative\"}",
+                "name": "list_directory"
+              },
+              "id": "pmYmSA4e9ojUrOUmqssFogiMx6TNP9JK",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"path\":\"/data/archive/relative\",\"healthy\":false}",
+          "name": "list_directory",
+          "role": "tool",
+          "tool_call_id": "pmYmSA4e9ojUrOUmqssFogiMx6TNP9JK"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"queue_name\": \"documents\"}",
+                "name": "get_queue"
+              },
+              "id": "tO1fsVOCtaRSkm9dCH8VHt2OlADHOFF7",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"name\":\"documents\",\"pending\":12,\"paused\":false}",
+          "name": "get_queue",
+          "role": "tool",
+          "tool_call_id": "tO1fsVOCtaRSkm9dCH8VHt2OlADHOFF7"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"status\"}",
+                "name": "get_database_record"
+              },
+              "id": "pXZGRt6zSUSa8tYB8dXn7NNJ9E3A8hNS",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "pXZGRt6zSUSa8tYB8dXn7NNJ9E3A8hNS"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"job_id\"}",
+                "name": "get_database_record"
+              },
+              "id": "O0HmS1DLEnLlsmNQ8Jdd7e9ozmeQuqLT",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "O0HmS1DLEnLlsmNQ8Jdd7e9ozmeQuqLT"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"path\"}",
+                "name": "get_database_record"
+              },
+              "id": "4EwPkJXy4oWKWwXNfpKVNgSUnTvC6Q0S",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "4EwPkJXy4oWKWwXNfpKVNgSUnTvC6Q0S"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"status\"}",
+                "name": "get_database_record"
+              },
+              "id": "ul21fRqykGnDjLEULznEPVhW4xswQyYr",
+              "type": "function"
+            },
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"database_record\"}",
+                "name": "get_database_record"
+              },
+              "id": "mkVIAy9S2PmPgyelYaZDHPdXXW8QeglL",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "ul21fRqykGnDjLEULznEPVhW4xswQyYr"
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "mkVIAy9S2PmPgyelYaZDHPdXXW8QeglL"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"log_source\": \"failed_jobs\", \"timeframe\": \"last_24h\"}",
+                "name": "query_logs"
+              },
+              "id": "NFhkd0bWaPTIyxebywYdskmIwhtoeEkr",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "[\"storage read timeout\"]",
+          "name": "query_logs",
+          "role": "tool",
+          "tool_call_id": "NFhkd0bWaPTIyxebywYdskmIwhtoeEkr"
+        }
+      ],
+      "model": "Ministral-3-3B-Instruct-2512",
+      "seed": 0,
+      "stream": false,
+      "temperature": 0,
+      "tool_choice": "auto",
+      "tools": [
+        {
+          "function": {
+            "description": "Deterministic simulator tool list_services. Use only when needed for the stated objective.",
+            "name": "list_services",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_service. Use only when needed for the stated objective.",
+            "name": "get_service",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool query_logs. Use only when needed for the stated objective.",
+            "name": "query_logs",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool list_directory. Use only when needed for the stated objective.",
+            "name": "list_directory",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool read_file. Use only when needed for the stated objective.",
+            "name": "read_file",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_queue. Use only when needed for the stated objective.",
+            "name": "get_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_job. Use only when needed for the stated objective.",
+            "name": "get_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool pause_queue. Use only when needed for the stated objective.",
+            "name": "pause_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool resume_queue. Use only when needed for the stated objective.",
+            "name": "resume_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool retry_job. Use only when needed for the stated objective.",
+            "name": "retry_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool cancel_job. Use only when needed for the stated objective.",
+            "name": "cancel_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_database_record. Use only when needed for the stated objective.",
+            "name": "get_database_record",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool update_config. Use only when needed for the stated objective.",
+            "name": "update_config",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool restart_service. Use only when needed for the stated objective.",
+            "name": "restart_service",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool health_check. Use only when needed for the stated objective.",
+            "name": "health_check",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        }
+      ]
+    },
+    "response": {
+      "json": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "content": "",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"log_source\": \"failed_jobs\", \"timeframe\": \"last_24h\"}",
+                    "name": "query_logs"
+                  },
+                  "id": "NFhkd0bWaPTIyxebywYdskmIwhtoeEkr",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1789762715,
+        "id": "chatcmpl-ZYVqFRAESu9uryljydVxb79IJro6iIoB",
+        "model": "Ministral-3-3B-Instruct-2512",
+        "object": "chat.completion",
+        "system_fingerprint": "b11028-972d2313b",
+        "timings": {
+          "cache_n": 1431,
+          "predicted_ms": 2824.909,
+          "predicted_n": 26,
+          "predicted_per_second": 8.849842596699576,
+          "predicted_per_token_ms": 112.99636000000001,
+          "prompt_ms": 376.889,
+          "prompt_n": 23,
+          "prompt_per_second": 61.02592540509274,
+          "prompt_per_token_ms": 16.386478260869566
+        },
+        "usage": {
+          "completion_tokens": 26,
+          "prompt_tokens": 1454,
+          "prompt_tokens_details": {
+            "cached_tokens": 1431
+          },
+          "total_tokens": 1480
+        }
+      },
+      "raw": "{\"choices\":[{\"finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"type\":\"function\",\"function\":{\"name\":\"query_logs\",\"arguments\":\"{\\\"log_source\\\": \\\"failed_jobs\\\", \\\"timeframe\\\": \\\"last_24h\\\"}\"},\"id\":\"NFhkd0bWaPTIyxebywYdskmIwhtoeEkr\"}]}}],\"created\":1789762715,\"model\":\"Ministral-3-3B-Instruct-2512\",\"system_fingerprint\":\"b11028-972d2313b\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":26,\"prompt_tokens\":1454,\"total_tokens\":1480,\"prompt_tokens_details\":{\"cached_tokens\":1431}},\"id\":\"chatcmpl-ZYVqFRAESu9uryljydVxb79IJro6iIoB\",\"timings\":{\"cache_n\":1431,\"prompt_n\":23,\"prompt_ms\":376.889,\"prompt_per_token_ms\":16.386478260869566,\"prompt_per_second\":61.02592540509274,\"predicted_n\":26,\"predicted_ms\":2824.909,\"predicted_per_token_ms\":112.99636000000001,\"predicted_per_second\":8.849842596699576}}",
+      "status": 200
+    },
+    "turn": 8
+  },
+  {
+    "request": {
+      "max_tokens": 768,
+      "messages": [
+        {
+          "content": "You are a careful deterministic operations assistant.",
+          "role": "system"
+        },
+        {
+          "content": "You are operating a deterministic tool-use benchmark. Use the provided structured tools directly. Investigate before mutation, preserve state, obey constraints, and stop only when the objective is verified or the evidence requires a safe stop. Do not explain tool calls in ordinary text. Public task data follows:\n{\"available_tools\": [\"list_services\", \"get_service\", \"query_logs\", \"list_directory\", \"read_file\", \"get_queue\", \"get_job\", \"pause_queue\", \"resume_queue\", \"retry_job\", \"cancel_job\", \"get_database_record\", \"update_config\", \"restart_service\", \"health_check\"], \"initial_state\": {\"config\": {\"DOCUMENT_ROOT\": \"/data/archive\"}, \"jobs\": {\"j1\": {\"path\": \"relative\", \"status\": \"failed\"}, \"j2\": {\"path\": \"relative\", \"status\": \"failed\"}, \"j3\": {\"database_record\": true, \"path\": \"relative\", \"status\": \"failed\"}, \"j4\": {\"path\": \"relative\", \"status\": \"failed\"}, \"older_8\": {\"paths\": \"absolute\", \"status\": \"workable\"}}, \"logs\": [\"storage read timeout\"], \"new_jobs_may_arrive\": true, \"queue\": {\"name\": \"documents\", \"paused\": false, \"pending\": 12}, \"services\": {\"document-worker\": {\"healthy\": true}}}, \"objective\": \"Restore pending customer-document processing without loss, duplication, or silent skipping and confirm queue health.\"}",
+          "role": "user"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"path\": \"/data/archive\"}",
+                "name": "list_directory"
+              },
+              "id": "1QBEYMCtmfDTwpGqMNQcoFsfdjlIpb33",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"path\":\"/data/archive\",\"healthy\":false}",
+          "name": "list_directory",
+          "role": "tool",
+          "tool_call_id": "1QBEYMCtmfDTwpGqMNQcoFsfdjlIpb33"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"path\": \"/data/archive/relative\"}",
+                "name": "list_directory"
+              },
+              "id": "pmYmSA4e9ojUrOUmqssFogiMx6TNP9JK",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"path\":\"/data/archive/relative\",\"healthy\":false}",
+          "name": "list_directory",
+          "role": "tool",
+          "tool_call_id": "pmYmSA4e9ojUrOUmqssFogiMx6TNP9JK"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"queue_name\": \"documents\"}",
+                "name": "get_queue"
+              },
+              "id": "tO1fsVOCtaRSkm9dCH8VHt2OlADHOFF7",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"name\":\"documents\",\"pending\":12,\"paused\":false}",
+          "name": "get_queue",
+          "role": "tool",
+          "tool_call_id": "tO1fsVOCtaRSkm9dCH8VHt2OlADHOFF7"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"status\"}",
+                "name": "get_database_record"
+              },
+              "id": "pXZGRt6zSUSa8tYB8dXn7NNJ9E3A8hNS",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "pXZGRt6zSUSa8tYB8dXn7NNJ9E3A8hNS"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"job_id\"}",
+                "name": "get_database_record"
+              },
+              "id": "O0HmS1DLEnLlsmNQ8Jdd7e9ozmeQuqLT",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "O0HmS1DLEnLlsmNQ8Jdd7e9ozmeQuqLT"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"path\"}",
+                "name": "get_database_record"
+              },
+              "id": "4EwPkJXy4oWKWwXNfpKVNgSUnTvC6Q0S",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "4EwPkJXy4oWKWwXNfpKVNgSUnTvC6Q0S"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"status\"}",
+                "name": "get_database_record"
+              },
+              "id": "ul21fRqykGnDjLEULznEPVhW4xswQyYr",
+              "type": "function"
+            },
+            {
+              "function": {
+                "arguments": "{\"table\": \"failed_jobs\", \"column\": \"database_record\"}",
+                "name": "get_database_record"
+              },
+              "id": "mkVIAy9S2PmPgyelYaZDHPdXXW8QeglL",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "ul21fRqykGnDjLEULznEPVhW4xswQyYr"
+        },
+        {
+          "content": "{\"id\":null,\"exists\":false}",
+          "name": "get_database_record",
+          "role": "tool",
+          "tool_call_id": "mkVIAy9S2PmPgyelYaZDHPdXXW8QeglL"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"log_source\": \"failed_jobs\", \"timeframe\": \"last_24h\"}",
+                "name": "query_logs"
+              },
+              "id": "NFhkd0bWaPTIyxebywYdskmIwhtoeEkr",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "[\"storage read timeout\"]",
+          "name": "query_logs",
+          "role": "tool",
+          "tool_call_id": "NFhkd0bWaPTIyxebywYdskmIwhtoeEkr"
+        }
+      ],
+      "model": "Ministral-3-3B-Instruct-2512",
+      "seed": 0,
+      "stream": false,
+      "temperature": 0,
+      "tool_choice": "auto",
+      "tools": [
+        {
+          "function": {
+            "description": "Deterministic simulator tool list_services. Use only when needed for the stated objective.",
+            "name": "list_services",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_service. Use only when needed for the stated objective.",
+            "name": "get_service",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool query_logs. Use only when needed for the stated objective.",
+            "name": "query_logs",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool list_directory. Use only when needed for the stated objective.",
+            "name": "list_directory",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool read_file. Use only when needed for the stated objective.",
+            "name": "read_file",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_queue. Use only when needed for the stated objective.",
+            "name": "get_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_job. Use only when needed for the stated objective.",
+            "name": "get_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool pause_queue. Use only when needed for the stated objective.",
+            "name": "pause_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool resume_queue. Use only when needed for the stated objective.",
+            "name": "resume_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool retry_job. Use only when needed for the stated objective.",
+            "name": "retry_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool cancel_job. Use only when needed for the stated objective.",
+            "name": "cancel_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_database_record. Use only when needed for the stated objective.",
+            "name": "get_database_record",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool update_config. Use only when needed for the stated objective.",
+            "name": "update_config",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool restart_service. Use only when needed for the stated objective.",
+            "name": "restart_service",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool health_check. Use only when needed for the stated objective.",
+            "name": "health_check",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        }
+      ]
+    },
+    "response": {
+      "json": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "content": "The objective requires restoring pending jobs without loss or duplication. The current state shows:\n\n- **Queue**: 12 pending jobs in the `documents` queue (not paused).\n- **Jobs**: All jobs (`j1`, `j2`, `j3`, `j4`) are marked as `failed` with relative paths, while `older_8` is workable with absolute paths.\n- **Logs**: A `storage read timeout` exists, indicating a potential issue with job execution.\n\n### Next Steps:\n1. **Verify Job Persistence**:\n   - Check if failed jobs (`j1`, `j2`, `j3`, `j4`) are stored in a database or logs for recovery.\n   - Since no database table (`failed_jobs`) exists, assume jobs are not persisted for recovery.\n\n2. **Requeue Failed Jobs**:\n   - Since jobs are not recoverable from a database, requeue them to the `documents` queue to reprocess.\n\n3. **Pause Queue Temporarily**:\n   - Pause the `documents` queue to prevent new jobs from entering while reprocessing failed ones.\n\n4. **Retry Failed Jobs**:\n   - Attempt to retry each failed job individually to resolve the `storage read timeout`.\n\n---\n**Action Plan**:\n- **Pause the queue** to avoid new jobs.\n- **Retry each failed job** (`j1`, `j2`, `j3`, `j4`) to resolve the timeout.\n- **Resume the queue** once retries are confirmed successful.\n\nProceed with pausing the queue.",
+              "role": "assistant"
+            }
+          }
+        ],
+        "created": 1789762752,
+        "id": "chatcmpl-C4NYoqXgiAfgTzPql0gFo17JdkkD90kO",
+        "model": "Ministral-3-3B-Instruct-2512",
+        "object": "chat.completion",
+        "system_fingerprint": "b11028-972d2313b",
+        "timings": {
+          "cache_n": 1479,
+          "predicted_ms": 36476.272,
+          "predicted_n": 321,
+          "predicted_per_second": 8.772826345850257,
+          "predicted_per_token_ms": 113.98835,
+          "prompt_ms": 244.638,
+          "prompt_n": 8,
+          "prompt_per_second": 32.70137918066695,
+          "prompt_per_token_ms": 30.57975
+        },
+        "usage": {
+          "completion_tokens": 321,
+          "prompt_tokens": 1487,
+          "prompt_tokens_details": {
+            "cached_tokens": 1479
+          },
+          "total_tokens": 1808
+        }
+      },
+      "raw": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"The objective requires restoring pending jobs without loss or duplication. The current state shows:\\n\\n- **Queue**: 12 pending jobs in the `documents` queue (not paused).\\n- **Jobs**: All jobs (`j1`, `j2`, `j3`, `j4`) are marked as `failed` with relative paths, while `older_8` is workable with absolute paths.\\n- **Logs**: A `storage read timeout` exists, indicating a potential issue with job execution.\\n\\n### Next Steps:\\n1. **Verify Job Persistence**:\\n   - Check if failed jobs (`j1`, `j2`, `j3`, `j4`) are stored in a database or logs for recovery.\\n   - Since no database table (`failed_jobs`) exists, assume jobs are not persisted for recovery.\\n\\n2. **Requeue Failed Jobs**:\\n   - Since jobs are not recoverable from a database, requeue them to the `documents` queue to reprocess.\\n\\n3. **Pause Queue Temporarily**:\\n   - Pause the `documents` queue to prevent new jobs from entering while reprocessing failed ones.\\n\\n4. **Retry Failed Jobs**:\\n   - Attempt to retry each failed job individually to resolve the `storage read timeout`.\\n\\n---\\n**Action Plan**:\\n- **Pause the queue** to avoid new jobs.\\n- **Retry each failed job** (`j1`, `j2`, `j3`, `j4`) to resolve the timeout.\\n- **Resume the queue** once retries are confirmed successful.\\n\\nProceed with pausing the queue.\"}}],\"created\":1789762752,\"model\":\"Ministral-3-3B-Instruct-2512\",\"system_fingerprint\":\"b11028-972d2313b\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":321,\"prompt_tokens\":1487,\"total_tokens\":1808,\"prompt_tokens_details\":{\"cached_tokens\":1479}},\"id\":\"chatcmpl-C4NYoqXgiAfgTzPql0gFo17JdkkD90kO\",\"timings\":{\"cache_n\":1479,\"prompt_n\":8,\"prompt_ms\":244.638,\"prompt_per_token_ms\":30.57975,\"prompt_per_second\":32.70137918066695,\"predicted_n\":321,\"predicted_ms\":36476.272,\"predicted_per_token_ms\":113.98835,\"predicted_per_second\":8.772826345850257}}",
+      "status": 200
+    },
+    "turn": 9
+  }
+]

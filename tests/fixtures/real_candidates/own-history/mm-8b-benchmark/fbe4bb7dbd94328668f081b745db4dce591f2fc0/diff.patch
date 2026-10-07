@@ -1,0 +1,175 @@
+diff --git a/execution/frozen_replay.py b/execution/frozen_replay.py
+new file mode 100644
+index 0000000..04e2ff5
+--- /dev/null
++++ b/execution/frozen_replay.py
+@@ -0,0 +1,110 @@
++"""Run the frozen candidate-field first round on the ThinkPad server.
++
++This controller performs no retries for behavioral model outcomes. It writes
++append-only request/response, simulator, and resource evidence for one model.
++"""
++import argparse, copy, json, os, pathlib, subprocess, time, urllib.request, urllib.error
++from simulator import Simulator
++
++def meminfo():
++    out = {}
++    for line in pathlib.Path('/proc/meminfo').read_text().splitlines():
++        k, v, *_ = line.split(); out[k.rstrip(':')] = int(v) * 1024
++    return {k: out.get(k) for k in ('MemAvailable', 'SwapFree', 'SwapTotal')}
++
++def rss(pid):
++    try:
++        s = subprocess.check_output(['ps', '-p', str(pid), '-o', 'rss='], text=True).strip()
++        return int(s) * 1024
++    except Exception:
++        return None
++
++def sample(pid, phase):
++    return {'epoch': time.time(), 'phase': phase, 'pid': pid, 'rss_bytes': rss(pid), 'mem': meminfo()}
++
++def post(base, payload):
++    req = urllib.request.Request(base + '/v1/chat/completions', data=json.dumps(payload).encode(), headers={'Content-Type': 'application/json'})
++    started = time.monotonic()
++    try:
++        with urllib.request.urlopen(req, timeout=900) as resp:
++            raw = resp.read().decode()
++            status = resp.status
++    except urllib.error.HTTPError as exc:
++        raw = exc.read().decode(errors='replace')
++        return exc.code, {'error': raw}, raw, time.monotonic() - started
++    return status, json.loads(raw), raw, time.monotonic() - started
++
++def tool_defs(fixture):
++    return [{'type': 'function', 'function': {'name': name, 'description': f'Deterministic simulator tool {name}. Use only when needed for the stated objective.', 'parameters': {'type': 'object', 'properties': {}, 'additionalProperties': True, 'type': 'object'}}} for name in fixture['available_tools']]
++
++def main():
++    ap = argparse.ArgumentParser()
++    ap.add_argument('--fixture', required=True); ap.add_argument('--model', required=True)
++    ap.add_argument('--task', required=True)
++    ap.add_argument('--base', required=True); ap.add_argument('--output', required=True)
++    ap.add_argument('--server-pid', required=True, type=int); ap.add_argument('--thinking-off', action='store_true')
++    args = ap.parse_args()
++    fixture_data = json.loads(pathlib.Path(args.fixture).read_text())
++    fixture = next((x for x in fixture_data.get('tasks', [fixture_data]) if x.get('id') == args.task), fixture_data)
++    out = pathlib.Path(args.output); out.mkdir(parents=True, exist_ok=True)
++    public = {'available_tools': fixture['available_tools'], 'initial_state': fixture['initial_state'], 'objective': fixture['objective']}
++    user = ('You are operating a deterministic tool-use benchmark. Use the provided structured tools directly. '
++            'Investigate before mutation, preserve state, obey constraints, and stop only when the objective is verified '
++            'or the evidence requires a safe stop. Do not explain tool calls in ordinary text. Public task data follows:\n' + json.dumps(public, sort_keys=True))
++    messages = [{'role':'system','content':'You are a careful deterministic operations assistant.'}, {'role':'user','content':user}]
++    sim = Simulator(fixture); requests = []; interactions = []; samples = [sample(args.server_pid, 'before_request')]
++    started = time.monotonic(); errors = []; status = 'complete'
++    for turn in range(1, 13):
++        payload = {'model': args.model, 'messages': copy.deepcopy(messages), 'tools': tool_defs(fixture), 'tool_choice': 'auto', 'temperature': 0, 'seed': 0, 'max_tokens': 768, 'stream': False, 'reasoning_effort': 'none', 'reasoning_format': 'none'}
++        if args.thinking_off: payload['chat_template_kwargs'] = {'enable_thinking': False}
++        try:
++            http, response, raw, elapsed = post(args.base, payload)
++        except Exception as exc:
++            status = 'infrastructure_invalid'; errors.append(str(exc)); break
++        requests.append({'turn': turn, 'request': payload, 'response': {'json': response, 'raw': raw, 'status': http}})
++        samples.append(sample(args.server_pid, 'after_request_' + str(turn)))
++        if http != 200:
++            status = 'transport_invalid'
++            errors.append('model_malformed_arguments')
++            errors.append('server_transport_error')
++            sim.finish('transport_invalid')
++            break
++        choice = (response.get('choices') or [{}])[0]; msg = choice.get('message') or {}; calls = msg.get('tool_calls') or []
++        assistant = {'role':'assistant', 'content': msg.get('content') or ''}
++        if calls: assistant['tool_calls'] = calls
++        messages.append(assistant)
++        interactions.append({'turn': turn, 'assistant': msg, 'finish_reason': choice.get('finish_reason'), 'elapsed_s': elapsed})
++        if not calls:
++            sim.finish('model_stop'); break
++        for call in calls:
++            fn = call.get('function') or {}; name = fn.get('name'); raw_args = fn.get('arguments', '{}')
++            try: arguments = json.loads(raw_args) if isinstance(raw_args, str) else raw_args
++            except Exception:
++                arguments = {}; errors.append('model_malformed_arguments')
++            if not isinstance(arguments, dict): errors.append('model_malformed_arguments'); arguments = {}
++            try:
++                response_value = sim.call(name, arguments)
++            except Exception as exc:
++                # A malformed model call is behavioral evidence; the controller
++                # must record it instead of turning it into a harness crash.
++                response_value = f'malformed_arguments:{type(exc).__name__}:{exc}'
++                sim.events.append({'type': 'tool_call', 'tool': name, 'arguments': arguments, 'ok': False, 'invalid': True, 'response': response_value})
++                sim.invalid_calls += 1
++            event = sim.events[-1]
++            if event.get('invalid') or event.get('prohibited'): errors.append('model_malformed_arguments' if event.get('invalid') else 'model_prohibited_action')
++            content = json.dumps(response_value, separators=(',', ':'), sort_keys=True) if not isinstance(response_value, str) else response_value
++            messages.append({'role':'tool', 'content':content, 'name':name, 'tool_call_id':call.get('id')})
++        samples.append(sample(args.server_pid, 'after_tools_' + str(turn)))
++        if sim.terminated: break
++    else:
++        sim.finish('turn_limit')
++    elapsed = time.monotonic() - started
++    (out/'requests-responses.json').write_text(json.dumps(requests, indent=2, sort_keys=True) + '\n')
++    (out/'canonical-interaction.json').write_text(json.dumps(interactions, indent=2, sort_keys=True) + '\n')
++    (out/'simulator-events.json').write_text(json.dumps(sim.events, indent=2, sort_keys=True) + '\n')
++    result = {'attempt_id': out.name + '-attempt-001', 'model': args.model, 'task': fixture['id'], 'status': status, 'errors': sorted(set(errors)), 'elapsed_s': elapsed, 'turns': len(interactions), 'raw_response_count': len(requests), 'events': sim.events, 'resource_samples': samples}
++    (out/'result.json').write_text(json.dumps(result, indent=2, sort_keys=True) + '\n')
++    print(json.dumps({'task': fixture['id'], 'status': status, 'turns': len(interactions), 'errors': sorted(set(errors)), 'elapsed_s': elapsed}))
++    if status == 'infrastructure_invalid': raise SystemExit(75)
++
++if __name__ == '__main__': main()
+diff --git a/logs/smoke/qwen3-smoke-result.json b/logs/smoke/qwen3-smoke-result.json
+new file mode 100644
+index 0000000..42a6e8c
+--- /dev/null
++++ b/logs/smoke/qwen3-smoke-result.json
+@@ -0,0 +1 @@
++{"choices":[{"finish_reason":"tool_calls","index":0,"message":{"role":"assistant","content":"<think>\n\n</think>\n\n","tool_calls":[{"type":"function","function":{"name":"get_weather","arguments":"{\"city\": \"Chicago\"}"},"id":"QxVcLCWBHUIMWCpgUUCtI0bicgvQ0Kry"}]}}],"created":1789849280,"model":"Qwen3-8B","system_fingerprint":"b11028-972d2313b","object":"chat.completion","usage":{"completion_tokens":20,"prompt_tokens":167,"total_tokens":187,"prompt_tokens_details":{"cached_tokens":0}},"id":"chatcmpl-TjtSN9GPHyArjMqzqFWNVr6AVGTo4gbv","timings":{"cache_n":0,"prompt_n":167,"prompt_ms":11598.315,"prompt_per_token_ms":69.45098802395209,"prompt_per_second":14.398643251196402,"predicted_n":20,"predicted_ms":9602.875,"predicted_per_token_ms":505.4144736842105,"predicted_per_second":1.9785741249365423}}
+\ No newline at end of file
+diff --git a/logs/smoke/qwen3-smoke-server.log b/logs/smoke/qwen3-smoke-server.log
+new file mode 100644
+index 0000000..08a22f2
+--- /dev/null
++++ b/logs/smoke/qwen3-smoke-server.log
+@@ -0,0 +1,20 @@
++0.00.221.557 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
++0.00.227.310 W srv  llama_server: -----------------
++0.00.227.333 W srv  llama_server: CORS is set to allow all origins ('*') and no API key is set
++0.00.227.334 W srv  llama_server: this can be a security risk (cross-origin attacks)
++0.00.227.336 W srv  llama_server: more info: https://github.com/ggml-org/llama.cpp/pull/25655
++0.00.227.337 W srv  llama_server: -----------------
++0.00.231.662 I srv    load_model: loading model '/home/dippo/research-inference/models/mm-8b-scaling/Qwen3-8B-Q4_K_M.gguf'
++0.01.139.744 W load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
++0.12.330.413 I cmn          init: llama threadpool init, n_threads = 8
++0.14.872.698 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 16384, kv_unified = 'true'
++0.14.899.279 I srv  llama_server: model loaded
++0.14.899.326 I srv  llama_server: listening on http://127.0.0.1:18083
++0.16.341.224 I slot get_availabl: id  3 | task -1 | selected slot by LRU, t_last = -1
++0.16.341.470 I slot launch_slot_: id  3 | task 0 | processing task, is_child = 0
++0.37.542.786 I slot print_timing: id  3 | task 0 | prompt eval time =   11598.32 ms /   167 tokens (   69.45 ms per token,    14.40 tokens per second)
++0.37.542.818 I slot print_timing: id  3 | task 0 |        eval time =    9602.88 ms /    20 tokens (  505.41 ms per token,     1.98 tokens per second)
++0.37.542.826 I slot print_timing: id  3 | task 0 |       total time =   21201.19 ms /   187 tokens
++0.37.542.851 I slot print_timing: id  3 | task 0 |    graphs reused =         19
++0.37.543.344 I slot      release: id  3 | task 0 | stop processing: n_tokens = 186, truncated = 0
++0.37.569.306 I srv    operator(): operator(): cleaning up before exit...
+diff --git a/reports/SMOKE_TEST_QWEN3_8B.md b/reports/SMOKE_TEST_QWEN3_8B.md
+new file mode 100644
+index 0000000..e5ad817
+--- /dev/null
++++ b/reports/SMOKE_TEST_QWEN3_8B.md
+@@ -0,0 +1,19 @@
++# Qwen3-8B smoke test
++
++Date: 2026-09-19
++
++Host: ThinkPad T14 Gen 2a, Vulkan/RADV
++
++Runtime: llama.cpp commit `972d2313bc0bf0a45f634f77d95c9fb03aeab12`
++
++Model artifact: `Qwen3-8B-Q4_K_M.gguf`, staged under the separate remote
++`mm-8b-scaling` model directory.
++
++Configuration: context 16,384; temperature 0; seed 0; max tokens 32 for this
++neutral probe; reasoning off; no benchmark fixture was supplied.
++
++Result: PASS. The model loaded successfully and returned a valid structured
++`get_weather` tool call with `{"city":"Chicago"}`. The raw server log and
++JSON response are preserved under `logs/smoke/`.
++
++This is a runtime/interface smoke test only and is not benchmark evidence.

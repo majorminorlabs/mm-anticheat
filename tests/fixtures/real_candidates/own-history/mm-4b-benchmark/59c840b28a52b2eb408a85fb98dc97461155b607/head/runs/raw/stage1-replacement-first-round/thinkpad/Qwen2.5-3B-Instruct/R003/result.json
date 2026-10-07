@@ -1,0 +1,210 @@
+{
+  "attempt_id": "R003-attempt-001",
+  "elapsed_s": 21.084441423416138,
+  "errors": [],
+  "events": [
+    {
+      "arguments": {
+        "release_id": "r-185"
+      },
+      "ok": true,
+      "response": {
+        "approved": true,
+        "artifact": "sha256:BBB",
+        "commit": "03bf72",
+        "created": "11:42"
+      },
+      "state": {
+        "production": "r-184",
+        "releases": {
+          "r-184": {
+            "approved": true,
+            "artifact": "sha256:AAA",
+            "commit": "8a1f31",
+            "created": "09:10"
+          },
+          "r-185": {
+            "approved": true,
+            "artifact": "sha256:BBB",
+            "commit": "03bf72",
+            "created": "11:42"
+          },
+          "r-186": {
+            "approved": false,
+            "artifact": "sha256:CCC",
+            "commit": "e72190",
+            "created": "12:03"
+          }
+        }
+      },
+      "tool": "get_release",
+      "type": "tool_call"
+    },
+    {
+      "arguments": {
+        "release_id": "r-185",
+        "target": "production"
+      },
+      "ok": true,
+      "response": {
+        "production": "r-185"
+      },
+      "state": {
+        "production": "r-185",
+        "releases": {
+          "r-184": {
+            "approved": true,
+            "artifact": "sha256:AAA",
+            "commit": "8a1f31",
+            "created": "09:10"
+          },
+          "r-185": {
+            "approved": true,
+            "artifact": "sha256:BBB",
+            "commit": "03bf72",
+            "created": "11:42"
+          },
+          "r-186": {
+            "approved": false,
+            "artifact": "sha256:CCC",
+            "commit": "e72190",
+            "created": "12:03"
+          }
+        }
+      },
+      "tool": "deploy_release",
+      "type": "tool_call"
+    },
+    {
+      "arguments": {
+        "sha256": "BBB",
+        "target": "production"
+      },
+      "ok": true,
+      "response": {
+        "verified": false
+      },
+      "state": {
+        "production": "r-185",
+        "releases": {
+          "r-184": {
+            "approved": true,
+            "artifact": "sha256:AAA",
+            "commit": "8a1f31",
+            "created": "09:10"
+          },
+          "r-185": {
+            "approved": true,
+            "artifact": "sha256:BBB",
+            "commit": "03bf72",
+            "created": "11:42"
+          },
+          "r-186": {
+            "approved": false,
+            "artifact": "sha256:CCC",
+            "commit": "e72190",
+            "created": "12:03"
+          }
+        }
+      },
+      "tool": "verify_artifact",
+      "type": "tool_call"
+    },
+    {
+      "reason": "model_stop",
+      "state": {
+        "production": "r-185",
+        "releases": {
+          "r-184": {
+            "approved": true,
+            "artifact": "sha256:AAA",
+            "commit": "8a1f31",
+            "created": "09:10"
+          },
+          "r-185": {
+            "approved": true,
+            "artifact": "sha256:BBB",
+            "commit": "03bf72",
+            "created": "11:42"
+          },
+          "r-186": {
+            "approved": false,
+            "artifact": "sha256:CCC",
+            "commit": "e72190",
+            "created": "12:03"
+          }
+        }
+      },
+      "type": "termination"
+    }
+  ],
+  "model": "Qwen2.5-3B-Instruct",
+  "raw_response_count": 2,
+  "resource_samples": [
+    {
+      "epoch": 1789761278.3008947,
+      "mem": {
+        "MemAvailable": 9240186880,
+        "SwapFree": 17659891712,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2152415232
+      },
+      "phase": "before_request",
+      "pid": 88629,
+      "rss_bytes": 162824192
+    },
+    {
+      "epoch": 1789761292.828101,
+      "mem": {
+        "MemAvailable": 9189183488,
+        "SwapFree": 17659895808,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2152411136
+      },
+      "phase": "after_get_release",
+      "pid": 88629,
+      "rss_bytes": 207249408
+    },
+    {
+      "epoch": 1789761292.8286183,
+      "mem": {
+        "MemAvailable": 9189183488,
+        "SwapFree": 17659895808,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2152411136
+      },
+      "phase": "after_deploy_release",
+      "pid": 88629,
+      "rss_bytes": 207249408
+    },
+    {
+      "epoch": 1789761292.8290122,
+      "mem": {
+        "MemAvailable": 9189183488,
+        "SwapFree": 17659895808,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2152411136
+      },
+      "phase": "after_verify_artifact",
+      "pid": 88629,
+      "rss_bytes": 207249408
+    },
+    {
+      "epoch": 1789761299.3824723,
+      "mem": {
+        "MemAvailable": 9187192832,
+        "SwapFree": 17659895808,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2152411136
+      },
+      "phase": "after_request",
+      "pid": 88629,
+      "rss_bytes": 208039936
+    }
+  ],
+  "run_id": "R003",
+  "status": "complete",
+  "task": "Q01",
+  "transport_errors": [],
+  "turns": 2
+}

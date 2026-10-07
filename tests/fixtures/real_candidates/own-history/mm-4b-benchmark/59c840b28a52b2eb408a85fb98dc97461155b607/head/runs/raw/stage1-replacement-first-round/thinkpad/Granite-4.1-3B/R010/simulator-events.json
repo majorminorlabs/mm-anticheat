@@ -1,0 +1,69 @@
+[
+  {
+    "arguments": {
+      "application": "4.7",
+      "database_schema": "17"
+    },
+    "ok": true,
+    "response": {
+      "application": "4.7",
+      "healthy": true
+    },
+    "state": {
+      "application": "4.7",
+      "backup": null,
+      "compatible_schemas": [
+        17,
+        18
+      ],
+      "database_schema": 17,
+      "healthy": true
+    },
+    "tool": "inspect_service",
+    "type": "tool_call"
+  },
+  {
+    "arguments": {},
+    "ok": true,
+    "response": {
+      "backup": "b-001"
+    },
+    "state": {
+      "application": "4.7",
+      "backup": "b-001",
+      "compatible_schemas": [
+        17,
+        18
+      ],
+      "database_schema": 17,
+      "healthy": true
+    },
+    "tool": "create_backup",
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "application": "5.0",
+      "database_schema": "19"
+    },
+    "invalid": true,
+    "ok": false,
+    "response": "malformed_arguments:KeyError:'version'",
+    "tool": "deploy_application",
+    "type": "tool_call"
+  },
+  {
+    "reason": "model_stop",
+    "state": {
+      "application": "4.7",
+      "backup": "b-001",
+      "compatible_schemas": [
+        17,
+        18
+      ],
+      "database_schema": 17,
+      "healthy": true
+    },
+    "type": "termination"
+  }
+]

@@ -1,0 +1,15 @@
+[
+  {
+    "rule_id": "GH003",
+    "rule_name": "skip-marker-added",
+    "severity": "low",
+    "confidence": "normal",
+    "file": "tests/test_terminal_eos_loss.py",
+    "line": 12,
+    "title": "Skip/focus marker added to a new test",
+    "evidence": "unittest.skipIf(torch is None, 'torch is required for tensor loss tests')",
+    "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
+    "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
+    "allowed": false
+  }
+]

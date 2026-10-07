@@ -1,0 +1,34 @@
+{
+  "review_type": "Codex internal manual reading; no independent preference scores",
+  "subset_file": "corpus/metadata/l4_qualitative_subset.json",
+  "same_16_prompt_ids_read_at_every_checkpoint": [
+    "p01", "p02", "p04", "p06", "p07", "p10", "p12", "p16",
+    "p18", "p29", "p33", "p38", "p42", "p43", "p48", "p50"
+  ],
+  "checkpoints": {
+    "15": {
+      "imagery_and_phrasing": "p02 has line breaks, but its rhyme and imagery are familiar; p06 and p33 expand into stock descriptive scenes.",
+      "cadence_and_ambiguity": "Most long and medium responses are explanatory prose. p43 becomes a book blurb instead of creative text.",
+      "contact_and_completeness": "All 50 meet the minimum word threshold, yet many reach the generation cap mid-sentence. p50 explains a refrain rather than writing the requested voicemail piece.",
+      "generic_prose_drift": "Strong in p01, p06, p10, p12, p33, p42, and p43."
+    },
+    "25": {
+      "imagery_and_phrasing": "p02 and p04 gain some line breaks, but p06 becomes a geological explanation and p38 invents a pseudo-scientific sea creature.",
+      "cadence_and_ambiguity": "The dominant cadence remains prose. p43 is a chapter synopsis rather than an ambiguous lyric passage.",
+      "contact_and_completeness": "Only 2 of 30 medium/long requests are below minimum, but p18 outputs unrelated writing instructions and p48 outputs only empty Verse/Chorus labels.",
+      "generic_prose_drift": "Still material in p01, p10, p29, and p33."
+    },
+    "35": {
+      "imagery_and_phrasing": "p06's 'world's veins' and p16's moth-wing 'paper cuts' are useful images; p43 is a complete lyric-shaped answer. p38 ends with an irrelevant etymology and p33 wanders into a long shopping story.",
+      "cadence_and_ambiguity": "Mixed prose and line-broken writing. p16 and p43 have stronger cadence than earlier L4; p10, p29, p33, and p42 remain narrative or explanatory.",
+      "contact_and_completeness": "The prompt-contact proxy is strong, but 7 of 30 medium/long outputs are below minimum. p04 puts rain outside the hospital, p18 brings sailors to a lighthouse meant to be far from water, and p50 omits both voicemail and refrain.",
+      "generic_prose_drift": "Reduced from step 15 but still visible in p02, p10, p29, p33, and p42. p01, p12, p33, and p48 also end mid-thought."
+    },
+    "50": {
+      "imagery_and_phrasing": "Short lyric-like lines dominate, but many revert to generic relationship language. p43 keeps a coherent lyric shape; p48 supplies the requested verse/chorus form.",
+      "cadence_and_ambiguity": "More concise than step 35, but often too small to develop an image or tension.",
+      "contact_and_completeness": "25 of 30 medium/long requests are below minimum. p02 is one short line; p06, p10, and p50 stop after two to three lines, with p50 missing the requested voicemail and refrain.",
+      "generic_prose_drift": "Less long prose, at the cost of widespread premature completion."
+    }
+  }
+}

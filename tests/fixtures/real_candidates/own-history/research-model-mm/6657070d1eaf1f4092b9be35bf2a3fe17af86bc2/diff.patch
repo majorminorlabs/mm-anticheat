@@ -1,0 +1,1758 @@
+diff --git a/.gitignore b/.gitignore
+index fe6b7bd..d96aa66 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -13,3 +13,6 @@ checkpoints/
+ teacher_cache/
+ *.log
+ 
++# Runtime evidence from the AMD001 session is preserved locally but is not
++# folded back into the committed source or experiment outputs.
++cloud_runs/*/runtime/
+diff --git a/cloud_runs/AMD001_mi300x_e014_qualification/README.md b/cloud_runs/AMD001_mi300x_e014_qualification/README.md
+new file mode 100644
+index 0000000..91fa7d5
+--- /dev/null
++++ b/cloud_runs/AMD001_mi300x_e014_qualification/README.md
+@@ -0,0 +1,32 @@
++# AMD001: E014 MI300X qualification
++
++This is a compute-qualification session record, not a model-quality
++experiment. The committed manifest records the pre-instance intent and frozen
++provenance. Runtime evidence is written under `runtime/` and is intentionally
++ignored by Git so raw logs, telemetry, checkpoints, and collected archives do
++not become part of the source release.
++
++The workflow does not call a provider API and never destroys an instance. After
++the user deliberately creates the selected AMD Developer Cloud droplet and
++receives its public IP, the one-command entry point is:
++
++```sh
++bash scripts/amd_session.sh qualify <PUBLIC_IP>
++```
++
++That command performs the SSH check, transfers the committed Git bundle and
++frozen dataset archive, verifies hashes, checks out the exact source commit,
++installs the pinned environment, snapshots the host, validates E014, runs the
++six-step save/resume smoke, collects remote evidence, and prints whether the
++instance is safe to destroy. It never issues a destroy command.
++
++Use `bash scripts/amd_session.sh prepare` for local-only staging and
++`bash scripts/amd_session.sh dry-run` to inspect the remote plan without
++network access. The runtime transfer manifest is generated at
++`runtime/transfer_manifest.json`; append-only timeline and command records are
++`runtime/timeline.jsonl` and `runtime/commands.jsonl`.
++
++The selected ROCm Software 10.0 image and the E014 PyTorch 2.14.0 ROCm 7.14
++wheel are deliberately recorded as separate layers. The remote preflight must
++prove that this combination works on the actual MI300X before any model
++weights are used. A mismatch fails fast and still collects logs/telemetry.
+diff --git a/cloud_runs/AMD001_mi300x_e014_qualification/commands.jsonl b/cloud_runs/AMD001_mi300x_e014_qualification/commands.jsonl
+new file mode 100644
+index 0000000..0bce7b0
+--- /dev/null
++++ b/cloud_runs/AMD001_mi300x_e014_qualification/commands.jsonl
+@@ -0,0 +1 @@
++{"event":"COMMAND_LOG_INITIALIZED","timestamp_utc":"2026-09-16T16:35:26Z","secrets_recorded":false,"session_id":"AMD001"}
+diff --git a/cloud_runs/AMD001_mi300x_e014_qualification/manifest.json b/cloud_runs/AMD001_mi300x_e014_qualification/manifest.json
+new file mode 100644
+index 0000000..2f4a206
+--- /dev/null
++++ b/cloud_runs/AMD001_mi300x_e014_qualification/manifest.json
+@@ -0,0 +1,158 @@
++{
++  "schema_version": "1.0",
++  "record_type": "cloud_compute_qualification_session",
++  "session_id": "AMD001",
++  "status": "READY_TO_CLICK_CREATE",
++  "created_at_utc": "2026-09-16T16:35:26Z",
++  "purpose": "Qualify the exact frozen E014 QLoRA stack on one AMD MI300X without starting E014 or making a model-quality claim.",
++  "related_experiments": {
++    "primary": {
++      "experiment_id": "E014_qwen3_8b_primary_qlora",
++      "preregistration_commit": "bc27f558b6c0cd6d0c27206ee5e4fff851b7f12f",
++      "qualification_tooling_commit_at_record_creation": "5ae128cd318c8230e0fac832bb450769d5f21a3b"
++    },
++    "deployment_context": {
++      "experiment_id": "E015_8b_local_deployment_qualification",
++      "status": "pre-existing untracked local work; not transferred or modified by this session",
++      "manifest_sha256_at_record_creation": "6c4562f33ca80139e2ca5ddc7a9de272db395e9c1ce0d2aec32a66000bef84ad",
++      "summary_sha256_at_record_creation": "da8aedd6f0e96f0663ec6671cba8dca42c3ff098a495eaef0218094e2949d19a",
++      "script_sha256_at_record_creation": "478e186684699bb665eb7a63c03e78a6c97ded499c0733cf90872977e8a20837"
++    }
++  },
++  "repository": {
++    "path": "/Volumes/Research/research-model-mm",
++    "branch_at_record_creation": "codex/e014-prereg-ready-for-compute",
++    "commit_at_record_creation": "5ae128cd318c8230e0fac832bb450769d5f21a3b",
++    "staging_commit": null,
++    "staging_commit_authority": "runtime/transfer_manifest.json:source_commit",
++    "git_dirty_at_record_creation": true,
++    "dirty_paths_at_record_creation": [
++      "M experiments/index.json",
++      "?? benchmarks/deployment/",
++      "?? data/generated/",
++      "?? experiments/E015_8b_local_deployment_qualification/",
++      "?? scripts/e015_llama_qualification.py"
++    ],
++    "unrelated_dirty_work_preserved": true
++  },
++  "frozen_e014": {
++    "invariants_path": "configs/research/e014_scientific_invariants_v1.json",
++    "invariants_sha256_at_record_creation": "af3987171f0900dca12afc6433d7ecb17995b96bbed61b4c3dde7a6aaa427aca",
++    "source_manifest_path": "experiments/E014_qwen3_8b_primary_qlora/manifest.json",
++    "source_manifest_sha256": "0958d3fa63dcad2d2f93bd019d77c036b1174cdcc4ee4afb8568a9dc2204e5c0",
++    "training_config_sha256": "efe00566bb8ef12a31c76f8dd4f88986643b53a964d8540f19484e1f7bd920bf",
++    "hypothesis_config_sha256": "c73e8c65a57b24b9898561f2cb1a3d06b1c5a0b189973f20073346b0b7baf356",
++    "evaluation_config_sha256": "051543f4b654ce64a1064dac0423841681859015eea5addefb8fe49fbac23e32",
++    "lockfile_sha256": "82e0e70b44474c2ac0f2211664b6352b870171481ca1e6167faf95333e572825",
++    "dataset": {
++      "path": "data/generated/research-data-v0.1-expanded.jsonl",
++      "bytes": 149414892,
++      "sha256": "703aceae7a28450fe9dca35be29c09cf0e64aceeda49f60e7f626b6e3708a91f",
++      "rows": 25269,
++      "split_counts": {"train": 19626, "validation": 2816, "test": 2827}
++    },
++    "research_benchmark": {
++      "path": "benchmarks/releases/research-bench-v0.1.jsonl",
++      "bytes": 379883,
++      "sha256": "3f1f859a10f1bb34ebb22197fadfeba08f2f812c2346a9d75c2b1b7e97b878c4",
++      "cases": 248
++    },
++    "control_benchmark": {
++      "path": "benchmarks/control/general-capability-v0.1.jsonl",
++      "bytes": 2803,
++      "sha256": "b9ff1050dd05eeaf062aba8e8fce1f0a39ffc7da68754d02f011779780628636",
++      "cases": 12
++    },
++    "base_model": "Qwen/Qwen3-8B-Base",
++    "model_revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
++    "tokenizer_revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4"
++  },
++  "provider_intent": {
++    "provider": "AMD Developer Cloud via DigitalOcean",
++    "billing_model": "on-demand GPU Droplet, hourly",
++    "gpu": "AMD Instinct MI300X",
++    "gpu_architecture": "gfx942",
++    "gpu_count": 1,
++    "expected_hbm_gb": 192,
++    "vcpus": 20,
++    "host_ram_gb": 240,
++    "selected_image": "ROCm Software 10.0",
++    "displayed_rate_usd_per_hour": 1.99,
++    "instance_id": null,
++    "public_ip": null,
++    "actual_gpu_identity": null,
++    "actual_rocm_version": null,
++    "actual_start_time_utc": null,
++    "actual_billing_duration_seconds": null,
++    "actual_provider_billed_cost_usd": null,
++    "user_reported_prepaid_balance": {
++      "reported": true,
++      "amount_usd": null,
++      "independently_verified": false
++    }
++  },
++  "smoke_protocol": {
++    "qualification_only": true,
++    "full_training_authorized": false,
++    "steps": 6,
++    "before_restart_steps": 3,
++    "after_fresh_process_resume_steps": 3,
++    "selected_rows": 96,
++    "selection": "longest unique rows from frozen train split only",
++    "sequence_length": 4608,
++    "microbatch": 1,
++    "gradient_accumulation_steps": 16,
++    "effective_batch_size": 16,
++    "quantization": "NF4 4-bit, double quantization, BF16 compute",
++    "lora_target_modules": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
++    "model_quality_result": false,
++    "benchmark_or_control_loaded": false,
++    "checkpoint_selection_performed": false
++  },
++  "transfer": {
++    "manifest_template": "cloud_runs/AMD001_mi300x_e014_qualification/transfer/manifest.template.json",
++    "runtime_manifest": "cloud_runs/AMD001_mi300x_e014_qualification/runtime/transfer_manifest.json",
++    "code_bundle_path": null,
++    "code_bundle_sha256": null,
++    "dataset_archive_path": "/tmp/research-model-amd-session/AMD001/research-data-v0.1-expanded-703aceae7a28.tar.gz",
++    "dataset_archive_sha256": null,
++    "total_upload_bytes": null,
++    "benchmarks_in_git_bundle": true,
++    "remote_bootstrap": "scripts/amd_remote_session.sh streamed over SSH; no separate bootstrap upload"
++  },
++  "expected_commands": {
++    "local_prepare": "bash scripts/amd_session.sh prepare",
++    "local_dry_run": "bash scripts/amd_session.sh dry-run",
++    "after_user_creates_droplet": "bash scripts/amd_session.sh qualify <PUBLIC_IP>",
++    "manual_connect": "bash scripts/amd_session.sh connect <PUBLIC_IP>",
++    "manual_collect_retry": "bash scripts/amd_session.sh collect <PUBLIC_IP>",
++    "manual_status": "bash scripts/amd_session.sh status <PUBLIC_IP>"
++  },
++  "artifact_collection": {
++    "local_root": "cloud_runs/AMD001_mi300x_e014_qualification/runtime/collected/",
++    "remote_evidence": ["environment", "telemetry", "logs", "qualification", "cost", "failures", "timeline.jsonl", "commands.jsonl"],
++    "destruction": "Never automated; destroy deliberately in the provider UI only after local collection succeeds."
++  },
++  "cost_tracking": {
++    "displayed_rate_usd_per_hour": 1.99,
++    "billing_start_timestamp_utc": null,
++    "qualification_start_timestamp_utc": null,
++    "qualification_end_timestamp_utc": null,
++    "classification": "provider-billed cost unknown until provider invoice/credit ledger is observed",
++    "full_run_projection": "computed only from a passed smoke median step time; E014 full training remains unauthorized"
++  },
++  "timing_expectations": {
++    "classification": "planning_only_not_measured",
++    "qualification_wall_minutes_budget": [20, 60],
++    "setup_overhead": "unmeasured and network/image dependent; ENV_SETUP_STARTED and ENV_SETUP_COMPLETED will bound it",
++    "remote_model_download_overhead": "unmeasured and bandwidth/cache dependent; MODEL_DOWNLOAD_STARTED and MODEL_DOWNLOAD_COMPLETED will bound it",
++    "six_step_smoke_overhead": "unmeasured until the MI300X runs; per-step timings are recorded by the qualification report",
++    "full_e014_planning_gpu_hours": [9, 19],
++    "full_e014_planning_cost_usd_at_displayed_rate": [17.91, 37.81]
++  },
++  "no_cloud_compute_started_at_creation": true,
++  "no_model_quality_result_exists": true,
++  "no_model_download_on_mac": true,
++  "private_keys_or_secrets_committed": false,
++  "status_note": "READY_TO_CLICK_CREATE; only the user may now click Create GPU Droplet."
++}
+diff --git a/cloud_runs/AMD001_mi300x_e014_qualification/timeline.jsonl b/cloud_runs/AMD001_mi300x_e014_qualification/timeline.jsonl
+new file mode 100644
+index 0000000..bfd5819
+--- /dev/null
++++ b/cloud_runs/AMD001_mi300x_e014_qualification/timeline.jsonl
+@@ -0,0 +1 @@
++{"event":"SESSION_RECORD_CREATED","timestamp_utc":"2026-09-16T16:35:26Z","cloud_compute_started":false,"model_quality_result_exists":false,"session_id":"AMD001"}
+diff --git a/cloud_runs/AMD001_mi300x_e014_qualification/transfer/manifest.template.json b/cloud_runs/AMD001_mi300x_e014_qualification/transfer/manifest.template.json
+new file mode 100644
+index 0000000..2dcbd4f
+--- /dev/null
++++ b/cloud_runs/AMD001_mi300x_e014_qualification/transfer/manifest.template.json
+@@ -0,0 +1,35 @@
++{
++  "schema_version": "1.0",
++  "record_type": "amd_session_transfer_manifest",
++  "session_id": "AMD001",
++  "prepared_at_utc": null,
++  "source_commit": null,
++  "bundle": {
++    "path": null,
++    "bytes": null,
++    "sha256": null,
++    "remote_filename": "research-model.bundle",
++    "includes_only_committed_history": true
++  },
++  "dataset_archive": {
++    "path": "/tmp/research-model-amd-session/AMD001/research-data-v0.1-expanded-703aceae7a28.tar.gz",
++    "bytes": null,
++    "sha256": null,
++    "source_file": "/Volumes/Research/research-model-mm/data/generated/research-data-v0.1-expanded.jsonl",
++    "source_file_bytes": 149414892,
++    "source_file_sha256": "703aceae7a28450fe9dca35be29c09cf0e64aceeda49f60e7f626b6e3708a91f",
++    "remote_filename": "research-data.tar.gz",
++    "extracts_to": "data/generated/research-data-v0.1-expanded.jsonl"
++  },
++  "benchmarks": {
++    "research": {"path": "benchmarks/releases/research-bench-v0.1.jsonl", "transfer_mode": "Git bundle"},
++    "control": {"path": "benchmarks/control/general-capability-v0.1.jsonl", "transfer_mode": "Git bundle"}
++  },
++  "upload_bytes": null,
++  "local_model_download": false,
++  "remote_model_download": {
++    "repository": "Qwen/Qwen3-8B-Base",
++    "revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
++    "expected": true
++  }
++}
+diff --git a/experiments/E014_amd_qualification/manifest.json b/experiments/E014_amd_qualification/manifest.json
+deleted file mode 100644
+index 3b93ec1..0000000
+--- a/experiments/E014_amd_qualification/manifest.json
++++ /dev/null
+@@ -1,111 +0,0 @@
+-{
+-  "record_schema_version": "1.0",
+-  "record_type": "hardware_qualification_preregistration",
+-  "record_id": "E014_AMD_MI300X_qualification",
+-  "created_date": "2026-09-16",
+-  "prepared_from_git_commit": "7854e7975d370a0dc5a66fc8b29166a9b7515349",
+-  "status": "READY_FOR_AMD_QUALIFICATION",
+-  "parent_experiment_id": "E014_qwen3_8b_primary_qlora",
+-  "scientific_invariants_path": "configs/research/e014_scientific_invariants_v1.json",
+-  "scientific_invariants_record_type": "frozen_scientific_invariants",
+-  "qualification_only": true,
+-  "model_quality_claims_authorized": false,
+-  "full_training_started": false,
+-  "amd_access": {
+-    "local_amd_gpu": false,
+-    "cloud_session_configured": false,
+-    "user_reports_credits": true,
+-    "account_credit_balance_observed": false,
+-    "instance_provisioned": false,
+-    "paid_compute_incurred_usd": 0,
+-    "blocker": "No AMD Developer Cloud credentials or interactive signed-in session were available in the local environment. No instance was provisioned."
+-  },
+-  "environment_investigation": {
+-    "candidate_gpu": "1 x AMD Instinct MI300X, gfx942, 192 GB HBM3",
+-    "target_runtime": "Linux x86_64, Python 3.13, PyTorch 2.14.0+rocm7.14, ROCm 7.14",
+-    "target_python_packages": {
+-      "transformers": "5.17.0",
+-      "peft": "0.21.0",
+-      "trl": "1.13.0",
+-      "bitsandbytes": "0.50.2",
+-      "accelerate": "1.15.0",
+-      "datasets": "5.0.1"
+-    },
+-    "pytorch_2_14_rocm_wheel_found": true,
+-    "official_adc_image_with_exact_stack_verified": false,
+-    "container_or_venv_plan": "Use an ADC Linux image with a compatible MI300X ROCm driver/runtime; sync the exact uv.lock dependencies while skipping its Linux PyPI CUDA torch artifact, then install the official PyTorch 2.14.0 ROCm 7.14 wheel. The environment is not yet exercised on ADC.",
+-    "source_build_required_by_current_evidence": false,
+-    "bitsandbytes_exact_stack_qualification": "Unverified until MI300X forward/backward/update/checkpoint/resume smoke passes.",
+-    "transformers_peft_trl_exact_stack_qualification": "Pinned releases and dependency bounds exist; the complete stack remains unverified until the smoke passes."
+-  },
+-  "smoke_protocol": {
+-    "command": "bash scripts/qualify_amd.sh run",
+-    "preflight_command": "bash scripts/qualify_amd.sh check",
+-    "independent_artifact_root": "outputs/hardware-qualification/E014/AMD_MI300X/",
+-    "base_model_revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
+-    "dataset": "Frozen E014 train split only; 96 longest unique tokenized rows; frozen data hashes checked before output creation.",
+-    "sequence_length": 4608,
+-    "microbatch": 1,
+-    "gradient_accumulation_steps": 16,
+-    "effective_batch_size": 16,
+-    "optimizer_steps": 6,
+-    "checkpoint_and_resume": "Save complete step-3 Trainer checkpoint; exit; launch a fresh Python process; load/resume through step 6; validate optimizer, scheduler, RNG, adapter and trainer checkpoint files; require adapter weights to change.",
+-    "operations_exercised": [
+-      "4-bit NF4 load",
+-      "double quantization state inspection",
+-      "BF16 compute",
+-      "LoRA injection on the frozen seven target module names",
+-      "TRL SFTTrainer forward and backward passes",
+-      "adamw_torch_fused optimizer updates",
+-      "finite adapter parameters and optimizer state",
+-      "checkpoint save, fresh-process load and resume"
+-    ],
+-    "engineering_only_deviations": {
+-      "steps": "6 rather than 2,454",
+-      "warmup": "0 steps rather than the full-run 123; a six-step smoke is not the preregistered training schedule",
+-      "evaluation": "Validation/test are hash and split-audited but not passed to the trainer/evaluator; no benchmark, control, quality score or checkpoint selection.",
+-      "output": "Qualification-only directory; never E014 training outputs."
+-    },
+-    "recorded_measurements": [
+-      "GPU name/architecture/HBM, ROCm, PyTorch, Python and pinned package versions",
+-      "per-step duration and non-padding/padded token throughput",
+-      "PyTorch peak allocated/reserved HBM and phase-end device memory",
+-      "host RAM and process peak RSS",
+-      "bitsandbytes quantization modules, NF4 quant type and nested state",
+-      "optimizer class, adapter parameter count, finite-state checks and warnings",
+-      "checkpoint hashes and resume evidence"
+-    ]
+-  },
+-  "decision": {
+-    "case": "unclassified_pending_smoke",
+-    "exact_e014_on_amd_authorized": false,
+-    "e016_required_now": false,
+-    "bf16_lora_is_not_a_fallback_inside_e014": true,
+-    "if_exact_nf4_qlora_passes": "Record CUDA-to-ROCm, kernel, allocator and telemetry as backend details; only call it CASE A after the complete pinned stack smoke passes. Do not start full training in this phase.",
+-    "if_nf4_qlora_fails_but_bf16_lora_is_chosen": "Keep E014 frozen; preregister a new experiment (candidate E016 after ID/index audit) before training.",
+-    "if_stack_is_unstable_or_requires_unpinned_substitutions": "Do not use it for the primary result; evaluate the NVIDIA profiles without treating this smoke as a model-quality result.",
+-    "if_amd_is_unusually_slow": "Retain measured smoke evidence, estimate full-run duration from observed throughput with uncertainty, then compare costs before any full-run authorization."
+-  },
+-  "full_run": {
+-    "authorized": false,
+-    "started": false,
+-    "measured_amd_step_time_seconds": null,
+-    "measured_amd_tokens_per_second": null,
+-    "measured_amd_hbm_bytes": null,
+-    "measured_benchmark_duration_seconds": null,
+-    "estimated_amd_total_hours": null,
+-    "amd_credit_cost": null,
+-    "reason_unestimated": "No AMD smoke measurement, ADC account balance, or account-specific hourly/credit rate is available."
+-  },
+-  "provenance": {
+-    "qualification_tool": "scripts/qualify_amd.py",
+-    "host_setup_script": "scripts/prepare_amd_host.sh",
+-    "launch_wrapper": "scripts/qualify_amd.sh",
+-    "invariant_validator": "scripts/validate_e014_invariants.py",
+-    "summary_document": "docs/hardware/E014_AMD_qualification.md",
+-    "qualification_artifacts_are_not_primary_results": true,
+-    "data_or_benchmark_modified": false,
+-    "E014_modified": false,
+-    "E015_modified": false
+-  }
+-}
+diff --git a/scripts/amd_remote_session.sh b/scripts/amd_remote_session.sh
+new file mode 100644
+index 0000000..2efd650
+--- /dev/null
++++ b/scripts/amd_remote_session.sh
+@@ -0,0 +1,418 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++# This script is streamed by scripts/amd_session.py before the Git bundle has
++# been unpacked. It never provisions or destroys an instance. All paths below
++# are session-scoped so a failed run is recoverable without overwriting data.
++
++MODE="${1:-}"
++if [[ "$MODE" != "bootstrap" ]]; then
++  echo "usage: amd_remote_session.sh bootstrap SESSION_ID BUNDLE_SHA256 DATA_ARCHIVE_SHA256 SOURCE_COMMIT" >&2
++  exit 2
++fi
++
++SESSION_ID="${2:?missing session id}"
++BUNDLE_SHA256="${3:?missing bundle sha256}"
++DATA_ARCHIVE_SHA256="${4:?missing dataset archive sha256}"
++SOURCE_COMMIT="${5:?missing source commit}"
++
++case "$SESSION_ID" in
++  AMD[0-9][0-9][0-9]) ;;
++  *) echo "invalid session id" >&2; exit 2 ;;
++esac
++
++REMOTE_PARENT="${AMD_REMOTE_PARENT:-/root/amd-e014-sessions}"
++SESSION_ROOT="$REMOTE_PARENT/$SESSION_ID"
++TRANSFER_ROOT="$SESSION_ROOT/transfer"
++REPO_ROOT="$SESSION_ROOT/research-model"
++LOG_ROOT="$SESSION_ROOT/logs"
++ENV_ROOT="$SESSION_ROOT/environment"
++TELEMETRY_ROOT="$SESSION_ROOT/telemetry"
++COST_ROOT="$SESSION_ROOT/cost"
++FAILURE_ROOT="$SESSION_ROOT/failures"
++COLLECTION_ROOT="$SESSION_ROOT/collection"
++TIMELINE="$SESSION_ROOT/timeline.jsonl"
++COMMAND_LOG="$SESSION_ROOT/commands.jsonl"
++BUNDLE_PATH="$TRANSFER_ROOT/research-model.bundle"
++DATA_ARCHIVE_PATH="$TRANSFER_ROOT/research-data.tar.gz"
++QUALIFICATION_ROOT="$REPO_ROOT/outputs/hardware-qualification/E014/AMD_MI300X"
++TELEMETRY_PID=""
++SESSION_STARTED_EPOCH="$(date +%s.%N)"
++SETUP_STARTED_EPOCH=""
++QUALIFICATION_STARTED_EPOCH=""
++
++mkdir -p "$TRANSFER_ROOT" "$LOG_ROOT" "$ENV_ROOT" "$TELEMETRY_ROOT" "$COST_ROOT" "$FAILURE_ROOT" "$COLLECTION_ROOT"
++touch "$TIMELINE" "$COMMAND_LOG"
++
++append_jsonl() {
++  local path="$1"
++  local event="$2"
++  local fields="${3:-{}}"
++  python3 - "$path" "$event" "$fields" <<'PY'
++import json
++import socket
++import sys
++from datetime import datetime, timezone
++
++path, event, raw_fields = sys.argv[1:]
++try:
++    fields = json.loads(raw_fields)
++except json.JSONDecodeError:
++    fields = {"detail": raw_fields}
++record = {
++    "timestamp_utc": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
++    "timestamp_local": datetime.now().astimezone().isoformat(timespec="seconds"),
++    "host": socket.gethostname(),
++    "event": event,
++    **fields,
++}
++with open(path, "a", encoding="utf-8") as handle:
++    handle.write(json.dumps(record, sort_keys=True, ensure_ascii=False) + "\n")
++    handle.flush()
++PY
++}
++
++append_command() {
++  local event="$1"
++  local label="$2"
++  local command="$3"
++  local status="$4"
++  local duration="$5"
++  local stdout_path="$6"
++  local stderr_path="$7"
++  local fields
++  fields="$(python3 - "$label" "$command" "$status" "$duration" "$stdout_path" "$stderr_path" <<'PY'
++import json
++import sys
++
++label, command, status, duration, stdout_path, stderr_path = sys.argv[1:]
++print(json.dumps({
++    "label": label,
++    "command": command,
++    "exit_status": int(status),
++    "duration_seconds": float(duration),
++    "stdout_path": stdout_path,
++    "stderr_path": stderr_path,
++}))
++PY
++)"
++  append_jsonl "$COMMAND_LOG" "$event" "$fields"
++}
++
++run_logged() {
++  local label="$1"
++  shift
++  local command_display
++  command_display="$(printf '%q ' "$@")"
++  local stamp
++  stamp="$(date -u +%Y%m%dT%H%M%SZ)"
++  local stdout_path="$LOG_ROOT/${stamp}-${label}.stdout.log"
++  local stderr_path="$LOG_ROOT/${stamp}-${label}.stderr.log"
++  local start_ns
++  start_ns="$(date +%s%N)"
++  append_command "COMMAND_STARTED" "$label" "$command_display" 0 0 "$stdout_path" "$stderr_path"
++  set +e
++  "$@" >"$stdout_path" 2>"$stderr_path"
++  local status=$?
++  set -e
++  local end_ns
++  end_ns="$(date +%s%N)"
++  local duration
++  duration="$(python3 - "$start_ns" "$end_ns" <<'PY'
++import sys
++print(round((int(sys.argv[2]) - int(sys.argv[1])) / 1_000_000_000, 3))
++PY
++)"
++  append_command "COMMAND_COMPLETED" "$label" "$command_display" "$status" "$duration" "$stdout_path" "$stderr_path"
++  return "$status"
++}
++
++system_snapshot() {
++  local label="$1"
++  mkdir -p "$ENV_ROOT" "$TELEMETRY_ROOT"
++  uname -a >"$ENV_ROOT/${label}.uname.txt" 2>&1 || true
++  if [[ -f /etc/os-release ]]; then cp /etc/os-release "$ENV_ROOT/${label}.os-release.txt"; fi
++  lscpu >"$ENV_ROOT/${label}.lscpu.txt" 2>&1 || true
++  free -b >"$ENV_ROOT/${label}.memory.txt" 2>&1 || true
++  df -B1 >"$ENV_ROOT/${label}.disk.txt" 2>&1 || df -k >"$ENV_ROOT/${label}.disk.txt" 2>&1 || true
++  python3 --version >"$ENV_ROOT/${label}.python.txt" 2>&1 || true
++  if command -v uv >/dev/null 2>&1; then uv --version >"$ENV_ROOT/${label}.uv.txt" 2>&1 || true; fi
++  env | LC_ALL=C sort | awk -F= '{key=$1; if (key ~ /(TOKEN|PASSWORD|SECRET|PRIVATE|CREDENTIAL|AUTH|ACCESS_KEY)/) print key"=<redacted>"; else print}' >"$ENV_ROOT/${label}.environment.txt" 2>&1 || true
++  if [[ -x "$REPO_ROOT/.venv/bin/python" ]]; then
++    "$REPO_ROOT/.venv/bin/python" - <<'PY' >"$ENV_ROOT/${label}.packages.json" 2>&1 || true
++import importlib.metadata
++import json
++import platform
++import sys
++
++names = ["torch", "transformers", "peft", "trl", "bitsandbytes", "accelerate", "datasets"]
++versions = {}
++for name in names:
++    try:
++        versions[name] = importlib.metadata.version(name)
++    except importlib.metadata.PackageNotFoundError:
++        versions[name] = None
++try:
++    import torch
++    versions["torch_version"] = torch.__version__
++    versions["torch_hip_version"] = torch.version.hip
++    versions["torch_cuda_version"] = torch.version.cuda
++except Exception as exc:
++    versions["torch_import_error"] = f"{type(exc).__name__}: {exc}"
++print(json.dumps({"python": sys.version, "platform": platform.platform(), "packages": versions}, indent=2))
++PY
++  fi
++  if command -v amd-smi >/dev/null 2>&1; then
++    amd-smi --json >"$TELEMETRY_ROOT/${label}.amd-smi.json" 2>&1 || true
++    amd-smi static --json >"$TELEMETRY_ROOT/${label}.amd-smi-static.json" 2>&1 || true
++    amd-smi metric --json >"$TELEMETRY_ROOT/${label}.amd-smi-metric.json" 2>&1 || true
++  elif command -v rocm-smi >/dev/null 2>&1; then
++    rocm-smi --showallinfo >"$TELEMETRY_ROOT/${label}.rocm-smi.txt" 2>&1 || true
++  fi
++  if command -v rocminfo >/dev/null 2>&1; then
++    rocminfo >"$ENV_ROOT/${label}.rocminfo.txt" 2>&1 || true
++  fi
++}
++
++telemetry_snapshot() {
++  local label="$1"
++  if command -v amd-smi >/dev/null 2>&1; then
++    amd-smi list --json >"$TELEMETRY_ROOT/${label}.list.json" 2>&1 || true
++    amd-smi monitor --json >"$TELEMETRY_ROOT/${label}.monitor.json" 2>&1 || true
++    amd-smi metric --json >"$TELEMETRY_ROOT/${label}.metric.json" 2>&1 || true
++  elif command -v rocm-smi >/dev/null 2>&1; then
++    rocm-smi --showuse --showmemuse --showpwr --showtemp --showclocks >"$TELEMETRY_ROOT/${label}.rocm-smi.txt" 2>&1 || true
++  fi
++}
++
++start_telemetry() {
++  local output="$TELEMETRY_ROOT/during_smoke.amd-smi-monitor.jsonl"
++  local errors="$TELEMETRY_ROOT/during_smoke.amd-smi-monitor.stderr.log"
++  if command -v amd-smi >/dev/null 2>&1; then
++    amd-smi monitor --json --watch 2 --watch_time 86400 >"$output" 2>"$errors" &
++    TELEMETRY_PID=$!
++  elif command -v rocm-smi >/dev/null 2>&1; then
++    rocm-smi --showuse --showmemuse --showpwr --showtemp --showclocks --csv --logfile "$TELEMETRY_ROOT/during_smoke.rocm-smi.csv" >/dev/null 2>"$errors" &
++    TELEMETRY_PID=$!
++  fi
++  if [[ -n "$TELEMETRY_PID" ]]; then
++    echo "$TELEMETRY_PID" >"$TELEMETRY_ROOT/during_smoke.pid"
++  fi
++}
++
++stop_telemetry() {
++  if [[ -n "$TELEMETRY_PID" ]]; then
++    kill "$TELEMETRY_PID" 2>/dev/null || true
++    wait "$TELEMETRY_PID" 2>/dev/null || true
++    TELEMETRY_PID=""
++  fi
++}
++
++write_cost_estimate() {
++  local report="$QUALIFICATION_ROOT/$(find "$QUALIFICATION_ROOT" -maxdepth 2 -name qualification_report.json -type f -print -quit 2>/dev/null | sed "s#^$QUALIFICATION_ROOT/##")"
++  python3 - "$COST_ROOT/cost_estimate.json" "$SESSION_STARTED_EPOCH" "$QUALIFICATION_STARTED_EPOCH" "$report" <<'PY'
++import json
++import sys
++import time
++from pathlib import Path
++
++output, session_started_raw, qualification_started_raw, report_raw = sys.argv[1:]
++rate = 1.99
++session_started = float(session_started_raw) if session_started_raw else None
++qualification_started = float(qualification_started_raw) if qualification_started_raw else None
++finished = time.time()
++session_elapsed = max(0.0, finished - session_started) if session_started is not None else None
++qualification_elapsed = max(0.0, finished - qualification_started) if qualification_started is not None else None
++record = {
++    "classification": "CALCULATED_LOWER_BOUND",
++    "provider_displayed_rate_usd_per_hour": rate,
++    "provider_billed_cost_usd": None,
++    "billing_start_timestamp_utc": None,
++    "billing_end_timestamp_utc": None,
++    "session_wall_seconds": session_elapsed,
++    "session_elapsed_cost_usd": (session_elapsed / 3600.0 * rate) if session_elapsed is not None else None,
++    "qualification_wall_seconds": qualification_elapsed,
++    "qualification_elapsed_cost_usd": (qualification_elapsed / 3600.0 * rate) if qualification_elapsed is not None else None,
++    "report_path": report_raw or None,
++    "projected_full_training_hours": None,
++    "projected_full_training_cost_usd": None,
++    "projected_evaluation_hours": None,
++    "notes": [
++        "The provider billing start is not inferred from SSH availability.",
++        "The displayed rate is not a provider invoice.",
++        "Full-training projection is populated only after a passed smoke report supplies a median step time.",
++    ],
++}
++if report_raw and Path(report_raw).is_file():
++    try:
++        report = json.loads(Path(report_raw).read_text(encoding="utf-8"))
++        median_step = report.get("median_optimizer_step_seconds")
++        if median_step is not None:
++            hours = float(median_step) * 2454.0 / 3600.0
++            record["projected_full_training_hours"] = hours
++            record["projected_full_training_cost_usd"] = hours * rate
++    except (OSError, ValueError, TypeError, json.JSONDecodeError):
++        record["report_parse_error"] = True
++Path(output).write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
++PY
++}
++
++finalize() {
++  local status="$1"
++  local detail="${2:-}"
++  stop_telemetry
++  system_snapshot "after_${status}" || true
++  telemetry_snapshot "after_${status}" || true
++  if [[ -d "$QUALIFICATION_ROOT" ]]; then
++    mkdir -p "$COLLECTION_ROOT/qualification"
++    cp -a "$QUALIFICATION_ROOT/." "$COLLECTION_ROOT/qualification/" || true
++  fi
++  write_cost_estimate || true
++  python3 - "$SESSION_ROOT/remote_status.json" "$status" "$detail" "$SOURCE_COMMIT" <<'PY'
++import json
++import sys
++from datetime import datetime, timezone
++
++path, status, detail, commit = sys.argv[1:]
++record = {
++    "status": status,
++    "detail": detail,
++    "finished_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
++    "source_commit": commit,
++    "model_quality_result": False,
++    "full_training_started": False,
++    "safe_to_destroy_instance_after_artifact_collection": True,
++}
++with open(path, "w", encoding="utf-8") as handle:
++    json.dump(record, handle, indent=2)
++    handle.write("\n")
++PY
++  if [[ "$status" == "passed" ]]; then
++    append_jsonl "$TIMELINE" "SMOKE_COMPLETED" '{"status":"passed"}'
++    echo "QUALIFICATION COMPLETE"
++  else
++    append_jsonl "$TIMELINE" "SMOKE_FAILED" "$(python3 -c 'import json,sys; print(json.dumps({"status":"failed","detail":sys.argv[1]}))' "$detail")"
++    echo "QUALIFICATION FAILED" >&2
++  fi
++  echo "REMOTE ARTIFACTS READY FOR COLLECTION"
++  echo "SAFE TO DESTROY INSTANCE AFTER LOCAL ARTIFACT COLLECTION"
++}
++
++fail() {
++  local detail="$1"
++  append_jsonl "$TIMELINE" "FAILURE" "$(python3 -c 'import json,sys; print(json.dumps({"detail":sys.argv[1]}))' "$detail")"
++  printf '%s\n' "$detail" >"$FAILURE_ROOT/failure.txt"
++  finalize failed "$detail"
++  exit 1
++}
++
++system_snapshot "before_transfer"
++if [[ ! -f "$BUNDLE_PATH" || "$(sha256sum "$BUNDLE_PATH" | awk '{print $1}')" != "$BUNDLE_SHA256" ]]; then
++  fail "code bundle SHA-256 mismatch or missing on remote host"
++fi
++if [[ ! -f "$DATA_ARCHIVE_PATH" || "$(sha256sum "$DATA_ARCHIVE_PATH" | awk '{print $1}')" != "$DATA_ARCHIVE_SHA256" ]]; then
++  fail "dataset archive SHA-256 mismatch or missing on remote host"
++fi
++append_jsonl "$TIMELINE" "TRANSFER_COMPLETED" "$(python3 - "$BUNDLE_PATH" "$DATA_ARCHIVE_PATH" <<'PY'
++import json
++import os
++import sys
++print(json.dumps({"bundle_path": sys.argv[1], "dataset_archive_path": sys.argv[2], "verified": True, "bytes": {"bundle": os.path.getsize(sys.argv[1]), "dataset_archive": os.path.getsize(sys.argv[2])}}))
++PY
++)"
++
++if [[ -e "$REPO_ROOT" ]]; then
++  fail "refusing to overwrite an existing remote checkout"
++fi
++mkdir -p "$(dirname "$REPO_ROOT")"
++if ! run_logged checkout_bundle git clone --quiet "$BUNDLE_PATH" "$REPO_ROOT"; then
++  fail "Git bundle checkout failed"
++fi
++if ! run_logged checkout_commit git -C "$REPO_ROOT" checkout --quiet --detach "$SOURCE_COMMIT"; then
++  fail "remote checkout could not select the expected source commit"
++fi
++if [[ "$(git -C "$REPO_ROOT" rev-parse HEAD)" != "$SOURCE_COMMIT" ]]; then
++  fail "remote checkout commit mismatch"
++fi
++
++mkdir -p "$REPO_ROOT/data/generated"
++if ! run_logged extract_dataset tar -xzf "$DATA_ARCHIVE_PATH" -C "$REPO_ROOT/data/generated" --no-same-owner --no-same-permissions; then
++  fail "dataset archive extraction failed"
++fi
++DATA_PATH="$REPO_ROOT/data/generated/research-data-v0.1-expanded.jsonl"
++if [[ ! -f "$DATA_PATH" || "$(sha256sum "$DATA_PATH" | awk '{print $1}')" != "703aceae7a28450fe9dca35be29c09cf0e64aceeda49f60e7f626b6e3708a91f" ]]; then
++  fail "frozen dataset SHA-256 mismatch after extraction"
++fi
++python3 - "$TRANSFER_ROOT/manifest.remote.json" "$BUNDLE_PATH" "$DATA_ARCHIVE_PATH" "$SOURCE_COMMIT" <<'PY'
++import hashlib
++import json
++import os
++import sys
++from datetime import datetime, timezone
++
++output, bundle, archive, commit = sys.argv[1:]
++def digest(path):
++    h = hashlib.sha256()
++    with open(path, "rb") as handle:
++        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
++            h.update(chunk)
++    return {"path": path, "bytes": os.path.getsize(path), "sha256": h.hexdigest()}
++record = {
++    "record_type": "remote_transfer_verification",
++    "verified_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
++    "source_commit": commit,
++    "bundle": digest(bundle),
++    "dataset_archive": digest(archive),
++    "extracted_dataset_sha256": "703aceae7a28450fe9dca35be29c09cf0e64aceeda49f60e7f626b6e3708a91f",
++}
++with open(output, "w", encoding="utf-8") as handle:
++    json.dump(record, handle, indent=2)
++    handle.write("\n")
++PY
++append_jsonl "$TIMELINE" "TRANSFER_HASHES_VERIFIED" '{"dataset_sha256":"703aceae7a28450fe9dca35be29c09cf0e64aceeda49f60e7f626b6e3708a91f","benchmark_files_in_git":true}'
++
++if ! command -v uv >/dev/null 2>&1 || [[ "$(uv --version 2>/dev/null)" != uv\ 0.11.3* ]]; then
++  if ! command -v curl >/dev/null 2>&1; then
++    fail "uv 0.11.3 is unavailable and curl cannot install the pinned standalone uv"
++  fi
++  mkdir -p "$SESSION_ROOT/bin"
++  append_jsonl "$TIMELINE" "UV_INSTALL_STARTED" '{"version":"0.11.3"}'
++  if ! run_logged install_uv bash -c "curl -LsSf https://astral.sh/uv/0.11.3/install.sh | env UV_UNMANAGED_INSTALL='$SESSION_ROOT/bin' sh"; then
++    fail "pinned uv installation failed"
++  fi
++  export PATH="$SESSION_ROOT/bin:$PATH"
++fi
++if ! command -v uv >/dev/null 2>&1; then
++  fail "uv was not available after installation"
++fi
++
++SETUP_STARTED_EPOCH="$(date +%s.%N)"
++append_jsonl "$TIMELINE" "ENV_SETUP_STARTED" '{"image":"ROCm Software 10.0","python":"3.13"}'
++cd "$REPO_ROOT"
++if ! run_logged environment_setup bash "$REPO_ROOT/scripts/prepare_amd_host.sh"; then
++  fail "pinned AMD environment setup failed"
++fi
++append_jsonl "$TIMELINE" "ENV_SETUP_COMPLETED" '{}'
++system_snapshot "after_setup"
++
++append_jsonl "$TIMELINE" "INVARIANT_CHECK_STARTED" '{}'
++if ! run_logged invariant_check "$REPO_ROOT/.venv/bin/python" "$REPO_ROOT/scripts/validate_e014_invariants.py"; then
++  fail "frozen E014 invariant validation failed"
++fi
++append_jsonl "$TIMELINE" "INVARIANT_CHECK_PASSED" '{}'
++if ! run_logged hardware_preflight bash "$REPO_ROOT/scripts/qualify_amd.sh" check; then
++  fail "MI300X/ROCm preflight failed"
++fi
++
++QUALIFICATION_STARTED_EPOCH="$(date +%s.%N)"
++append_jsonl "$TIMELINE" "SMOKE_STARTED" '{"steps":6,"fresh_process_resume":true}'
++system_snapshot "before_model_load"
++telemetry_snapshot "before_model_load"
++start_telemetry
++if run_logged qualification bash "$REPO_ROOT/scripts/qualify_amd.sh" run; then
++  finalize passed "six-step smoke and fresh-process resume passed"
++  exit 0
++else
++  finalize failed "six-step smoke or fresh-process resume failed"
++  exit 1
++fi
+diff --git a/scripts/amd_session.py b/scripts/amd_session.py
+new file mode 100644
+index 0000000..66874a0
+--- /dev/null
++++ b/scripts/amd_session.py
+@@ -0,0 +1,616 @@
++"""Stage and run the AMD001 MI300X qualification without a provider API."""
++
++from __future__ import annotations
++
++import argparse
++import hashlib
++import ipaddress
++import json
++import os
++import shlex
++import socket
++import subprocess
++import sys
++import time
++from datetime import datetime, timezone
++from pathlib import Path
++from typing import Any, Sequence
++
++
++ROOT = Path(__file__).resolve().parents[1]
++SESSION_ID = "AMD001"
++SESSION_ROOT = ROOT / "cloud_runs" / "AMD001_mi300x_e014_qualification"
++RUNTIME_ROOT = SESSION_ROOT / "runtime"
++LOG_ROOT = RUNTIME_ROOT / "logs"
++COLLECTED_ROOT = RUNTIME_ROOT / "collected"
++TRANSFER_TEMPLATE = SESSION_ROOT / "transfer" / "manifest.template.json"
++TRANSFER_MANIFEST = RUNTIME_ROOT / "transfer_manifest.json"
++DATASET_PATH = ROOT / "data/generated/research-data-v0.1-expanded.jsonl"
++DATASET_SHA256 = "703aceae7a28450fe9dca35be29c09cf0e64aceeda49f60e7f626b6e3708a91f"
++RESEARCH_BENCHMARK = ROOT / "benchmarks/releases/research-bench-v0.1.jsonl"
++RESEARCH_BENCHMARK_SHA256 = "3f1f859a10f1bb34ebb22197fadfeba08f2f812c2346a9d75c2b1b7e97b878c4"
++CONTROL_BENCHMARK = ROOT / "benchmarks/control/general-capability-v0.1.jsonl"
++CONTROL_BENCHMARK_SHA256 = "b9ff1050dd05eeaf062aba8e8fce1f0a39ffc7da68754d02f011779780628636"
++INVARIANTS_PATH = ROOT / "configs/research/e014_scientific_invariants_v1.json"
++REMOTE_BOOTSTRAP = ROOT / "scripts/amd_remote_session.sh"
++REMOTE_PARENT = "/root/amd-e014-sessions"
++PROVIDER_RATE_USD_PER_HOUR = 1.99
++SOURCE_COMMIT_REQUIRED_FILES = (
++    "configs/research/e014_scientific_invariants_v1.json",
++    "docs/hardware/E014_AMD_qualification.md",
++    "cloud_runs/AMD001_mi300x_e014_qualification/manifest.json",
++    "cloud_runs/AMD001_mi300x_e014_qualification/transfer/manifest.template.json",
++    "scripts/amd_remote_session.sh",
++    "scripts/amd_session.py",
++    "scripts/amd_session.sh",
++    "scripts/prepare_amd_host.sh",
++    "scripts/qualify_amd.py",
++    "scripts/qualify_amd.sh",
++    "scripts/validate_amd_session.py",
++    "scripts/validate_e014_invariants.py",
++)
++
++
++def now_utc() -> str:
++    return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
++
++
++def atomic_json(path: Path, value: Any) -> None:
++    path.parent.mkdir(parents=True, exist_ok=True)
++    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
++    with temporary.open("x", encoding="utf-8") as handle:
++        json.dump(value, handle, indent=2, ensure_ascii=False)
++        handle.write("\n")
++        handle.flush()
++        os.fsync(handle.fileno())
++    os.replace(temporary, path)
++
++
++def append_jsonl(path: Path, event: str, **fields: Any) -> None:
++    path.parent.mkdir(parents=True, exist_ok=True)
++    record = {
++        "timestamp_utc": now_utc(),
++        "timestamp_local": datetime.now().astimezone().isoformat(timespec="seconds"),
++        "host": socket.gethostname(),
++        "event": event,
++        **fields,
++    }
++    with path.open("a", encoding="utf-8") as handle:
++        handle.write(json.dumps(record, sort_keys=True, ensure_ascii=False) + "\n")
++        handle.flush()
++        os.fsync(handle.fileno())
++
++
++def sha256(path: Path) -> str:
++    digest = hashlib.sha256()
++    with path.open("rb") as handle:
++        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
++            digest.update(chunk)
++    return digest.hexdigest()
++
++
++def file_record(path: Path, expected_sha256: str | None = None) -> dict[str, Any]:
++    if not path.is_file():
++        raise RuntimeError(f"required transfer file is missing: {path}")
++    actual = sha256(path)
++    if expected_sha256 and actual != expected_sha256:
++        raise RuntimeError(f"SHA-256 mismatch for {path}: expected {expected_sha256}, got {actual}")
++    return {"path": str(path), "bytes": path.stat().st_size, "sha256": actual}
++
++
++def git_output(*args: str) -> str:
++    return subprocess.check_output(["git", *args], cwd=ROOT, text=True).strip()
++
++
++def runtime_command_log() -> Path:
++    return RUNTIME_ROOT / "commands.jsonl"
++
++
++def redact_args(args: Sequence[str]) -> list[str]:
++    redacted: list[str] = []
++    redact_next = False
++    for value in args:
++        if redact_next:
++            redacted.append("<identity-redacted>")
++            redact_next = False
++        elif value == "-i":
++            redacted.append(value)
++            redact_next = True
++        else:
++            redacted.append(value)
++    return redacted
++
++
++def run_logged(
++    label: str,
++    args: Sequence[str],
++    *,
++    cwd: Path = ROOT,
++    input_bytes: bytes | None = None,
++    stdout_path: Path | None = None,
++    stderr_path: Path | None = None,
++    check: bool = True,
++) -> subprocess.CompletedProcess[bytes]:
++    RUNTIME_ROOT.mkdir(parents=True, exist_ok=True)
++    LOG_ROOT.mkdir(parents=True, exist_ok=True)
++    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
++    stdout_path = stdout_path or LOG_ROOT / f"{stamp}-{label}.stdout.log"
++    stderr_path = stderr_path or LOG_ROOT / f"{stamp}-{label}.stderr.log"
++    stdout_path.parent.mkdir(parents=True, exist_ok=True)
++    stderr_path.parent.mkdir(parents=True, exist_ok=True)
++    display_args = redact_args([str(value) for value in args])
++    display_command = shlex.join(display_args)
++    common = {
++        "label": label,
++        "host": socket.gethostname(),
++        "command": display_command,
++        "stdout_path": str(stdout_path),
++        "stderr_path": str(stderr_path),
++    }
++    append_jsonl(runtime_command_log(), "COMMAND_STARTED", **common)
++    started = time.monotonic()
++    with stdout_path.open("wb") as stdout_handle, stderr_path.open("wb") as stderr_handle:
++        result = subprocess.run(
++            [str(value) for value in args],
++            cwd=cwd,
++            input=input_bytes,
++            stdout=stdout_handle,
++            stderr=stderr_handle,
++            check=False,
++        )
++    duration = round(time.monotonic() - started, 3)
++    append_jsonl(
++        runtime_command_log(),
++        "COMMAND_COMPLETED",
++        **common,
++        exit_status=result.returncode,
++        duration_seconds=duration,
++    )
++    if check and result.returncode:
++        raise RuntimeError(f"{label} failed with exit status {result.returncode}; inspect {stderr_path}")
++    return result
++
++
++def source_commit_and_dirty_state() -> tuple[str, list[str]]:
++    commit = git_output("rev-parse", "HEAD")
++    status = git_output("status", "--porcelain=v1", "--untracked-files=all")
++    return commit, status.splitlines() if status else []
++
++
++def ensure_required_source_is_committed() -> None:
++    for relative in SOURCE_COMMIT_REQUIRED_FILES:
++        path = ROOT / relative
++        if not path.is_file():
++            raise RuntimeError(f"required committed qualification source is missing: {relative}")
++        result = subprocess.run(
++            ["git", "diff", "--quiet", "HEAD", "--", relative],
++            cwd=ROOT,
++            stdout=subprocess.DEVNULL,
++            stderr=subprocess.DEVNULL,
++            check=False,
++        )
++        if result.returncode:
++            raise RuntimeError(f"qualification source has uncommitted changes; commit it before staging: {relative}")
++
++
++def prepare() -> dict[str, Any]:
++    """Build local-only transfer assets and the exact runtime transfer manifest."""
++
++    SESSION_ROOT.mkdir(parents=True, exist_ok=True)
++    runtime_manifest_path = TRANSFER_MANIFEST
++    ensure_required_source_is_committed()
++    run_logged(
++        "local_invariant_validation",
++        [sys.executable, str(ROOT / "scripts/validate_e014_invariants.py")],
++    )
++    run_logged(
++        "local_session_manifest_validation",
++        [sys.executable, str(ROOT / "scripts/validate_amd_session.py")],
++    )
++    commit, dirty_paths = source_commit_and_dirty_state()
++    source_branch = git_output("branch", "--show-current")
++    if not source_branch:
++        raise RuntimeError("a named Git branch is required for the portable source bundle")
++    staging_root = Path("/tmp/research-model-amd-session") / SESSION_ID
++    staging_root.mkdir(parents=True, exist_ok=True)
++    bundle_path = staging_root / f"research-model-{commit}.bundle"
++    dataset_archive = staging_root / f"research-data-v0.1-expanded-{DATASET_SHA256[:12]}.tar.gz"
++
++    dataset_record = file_record(DATASET_PATH, DATASET_SHA256)
++    research_record = file_record(RESEARCH_BENCHMARK, RESEARCH_BENCHMARK_SHA256)
++    control_record = file_record(CONTROL_BENCHMARK, CONTROL_BENCHMARK_SHA256)
++
++    if bundle_path.exists():
++        raise RuntimeError(f"refusing to overwrite existing code bundle: {bundle_path}")
++    run_logged(
++        "create_code_bundle",
++        ["git", "bundle", "create", str(bundle_path), source_branch],
++    )
++    run_logged("verify_code_bundle", ["git", "bundle", "verify", str(bundle_path)])
++    bundle_record = file_record(bundle_path)
++
++    if dataset_archive.exists():
++        previous_manifest_hash = None
++        if TRANSFER_MANIFEST.is_file():
++            previous = json.loads(TRANSFER_MANIFEST.read_text(encoding="utf-8"))
++            if previous.get("dataset_archive", {}).get("path") == str(dataset_archive):
++                previous_manifest_hash = previous.get("dataset_archive", {}).get("sha256")
++        if previous_manifest_hash and sha256(dataset_archive) != previous_manifest_hash:
++            raise RuntimeError(f"existing dataset archive changed after staging: {dataset_archive}")
++        run_logged("verify_existing_dataset_archive", ["tar", "-tzf", str(dataset_archive)])
++    else:
++        run_logged(
++            "create_dataset_archive",
++            [
++                "tar",
++                "-czf",
++                str(dataset_archive),
++                "-C",
++                str(DATASET_PATH.parent),
++                DATASET_PATH.name,
++            ],
++        )
++    run_logged("verify_dataset_archive", ["tar", "-tzf", str(dataset_archive)])
++    archive_record = file_record(dataset_archive)
++
++    runtime_manifest = {
++        "schema_version": "1.0",
++        "record_type": "amd_session_transfer_manifest",
++        "session_id": SESSION_ID,
++        "prepared_at_utc": now_utc(),
++        "source_commit": commit,
++        "source_branch": source_branch,
++        "git_dirty_paths_at_staging": dirty_paths,
++        "bundle": {
++            **bundle_record,
++            "remote_filename": "research-model.bundle",
++            "includes_only_committed_history": True,
++        },
++        "dataset_archive": {
++            **archive_record,
++            "source_file": dataset_record,
++            "remote_filename": "research-data.tar.gz",
++            "extracts_to": "data/generated/research-data-v0.1-expanded.jsonl",
++            "extracted_file_sha256": DATASET_SHA256,
++        },
++        "remote_bootstrap": {
++            "path": str(REMOTE_BOOTSTRAP),
++            "bytes": REMOTE_BOOTSTRAP.stat().st_size,
++            "sha256": sha256(REMOTE_BOOTSTRAP),
++            "transfer_mode": "streamed over the authenticated SSH session; not a separate upload",
++        },
++        "benchmarks": {
++            "research": {**research_record, "transfer_mode": "already included in the Git bundle"},
++            "control": {**control_record, "transfer_mode": "already included in the Git bundle"},
++        },
++        "upload_bytes": bundle_record["bytes"] + archive_record["bytes"],
++        "local_model_download": False,
++        "remote_model_download": {
++            "repository": "Qwen/Qwen3-8B-Base",
++            "revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
++            "expected": True,
++            "mechanism": "AutoTokenizer/AutoModelForCausalLM from_pretrained with the pinned revision and cache-aware Hugging Face cache",
++        },
++        "required_remote_hash_checks": [
++            "Git bundle commit",
++            "dataset archive SHA-256",
++            "extracted dataset SHA-256",
++            "all E014 invariant source and canonical hashes",
++        ],
++    }
++    atomic_json(runtime_manifest_path, runtime_manifest)
++    append_jsonl(
++        RUNTIME_ROOT / "timeline.jsonl",
++        "SESSION_PREPARED",
++        session_id=SESSION_ID,
++        source_commit=commit,
++        upload_bytes=runtime_manifest["upload_bytes"],
++        cloud_compute_started=False,
++    )
++    return runtime_manifest
++
++
++def load_transfer_manifest() -> dict[str, Any]:
++    if not TRANSFER_MANIFEST.is_file():
++        return prepare()
++    return json.loads(TRANSFER_MANIFEST.read_text(encoding="utf-8"))
++
++
++def validate_ip(value: str) -> str:
++    try:
++        ipaddress.ip_address(value)
++    except ValueError as exc:
++        raise RuntimeError(f"expected a literal public IP address, got {value!r}") from exc
++    return value
++
++
++def ssh_base(ip: str) -> list[str]:
++    target = f"[{ip}]" if ":" in ip else ip
++    args = [
++        "ssh",
++        "-o",
++        "BatchMode=yes",
++        "-o",
++        "StrictHostKeyChecking=accept-new",
++        "-o",
++        "ConnectTimeout=12",
++    ]
++    identity = os.environ.get("AMD_SSH_IDENTITY")
++    if identity:
++        args.extend(["-i", identity])
++    user = os.environ.get("AMD_SSH_USER", "root")
++    args.append(f"{user}@{target}")
++    return args
++
++
++def scp_base(ip: str) -> list[str]:
++    args = [
++        "scp",
++        "-o",
++        "BatchMode=yes",
++        "-o",
++        "StrictHostKeyChecking=accept-new",
++        "-o",
++        "ConnectTimeout=12",
++    ]
++    identity = os.environ.get("AMD_SSH_IDENTITY")
++    if identity:
++        args.extend(["-i", identity])
++    return args
++
++
++def remote_target(ip: str, path: str) -> str:
++    user = os.environ.get("AMD_SSH_USER", "root")
++    target = f"[{ip}]" if ":" in ip else ip
++    return f"{user}@{target}:{path}"
++
++
++def remote_root() -> str:
++    return f"{REMOTE_PARENT}/{SESSION_ID}"
++
++
++def qualify(ip_value: str) -> int:
++    ip = validate_ip(ip_value)
++    manifest = load_transfer_manifest()
++    bundle_path = Path(manifest["bundle"]["path"])
++    archive_path = Path(manifest["dataset_archive"]["path"])
++    if sha256(bundle_path) != manifest["bundle"]["sha256"]:
++        raise RuntimeError("local code bundle changed after staging; rerun prepare")
++    if sha256(archive_path) != manifest["dataset_archive"]["sha256"]:
++        raise RuntimeError("local dataset archive changed after staging; rerun prepare")
++    append_jsonl(RUNTIME_ROOT / "timeline.jsonl", "PUBLIC_IP_RECEIVED", public_ip=ip, manually_supplied=True)
++    remote_session_root = remote_root()
++    run_logged(
++        "ssh_connectivity_check",
++        [*ssh_base(ip), "true"],
++        check=True,
++    )
++    append_jsonl(RUNTIME_ROOT / "timeline.jsonl", "SSH_AVAILABLE", public_ip=ip)
++    run_logged(
++        "remote_session_directory",
++        [*ssh_base(ip), f"mkdir -p {shlex.quote(remote_session_root)}/transfer"],
++    )
++    append_jsonl(RUNTIME_ROOT / "timeline.jsonl", "TRANSFER_STARTED", public_ip=ip)
++    run_logged(
++        "upload_code_bundle",
++        [*scp_base(ip), str(bundle_path), remote_target(ip, f"{remote_session_root}/transfer/research-model.bundle")],
++    )
++    run_logged(
++        "upload_dataset_archive",
++        [*scp_base(ip), str(archive_path), remote_target(ip, f"{remote_session_root}/transfer/research-data.tar.gz")],
++    )
++    append_jsonl(
++        RUNTIME_ROOT / "timeline.jsonl",
++        "TRANSFER_COMPLETED",
++        public_ip=ip,
++        upload_bytes=manifest["upload_bytes"],
++        bundle_sha256=manifest["bundle"]["sha256"],
++        dataset_archive_sha256=manifest["dataset_archive"]["sha256"],
++    )
++    bootstrap_args = [
++        "bootstrap",
++        SESSION_ID,
++        manifest["bundle"]["sha256"],
++        manifest["dataset_archive"]["sha256"],
++        manifest["source_commit"],
++    ]
++    bootstrap_command = [*ssh_base(ip), "bash", "-s", "--", *bootstrap_args]
++    bootstrap_bytes = REMOTE_BOOTSTRAP.read_bytes()
++    remote_result = run_logged(
++        "remote_bootstrap_and_qualification",
++        bootstrap_command,
++        input_bytes=bootstrap_bytes,
++        check=False,
++    )
++    if remote_result.returncode == 0:
++        append_jsonl(RUNTIME_ROOT / "timeline.jsonl", "REMOTE_QUALIFICATION_FINISHED", status="passed")
++    else:
++        append_jsonl(
++            RUNTIME_ROOT / "timeline.jsonl",
++            "REMOTE_QUALIFICATION_FINISHED",
++            status="failed",
++            exit_status=remote_result.returncode,
++        )
++
++    collected = collect(ip, qualification_returncode=remote_result.returncode)
++    if collected:
++        print("QUALIFICATION COMPLETE" if remote_result.returncode == 0 else "QUALIFICATION FAILED")
++        print("ARTIFACTS COLLECTED")
++        print("SAFE TO DESTROY INSTANCE")
++    else:
++        print("QUALIFICATION FAILED")
++        print("ARTIFACT COLLECTION FAILED; do not destroy until collection is retried")
++    return 0 if remote_result.returncode == 0 and collected else 1
++
++
++def collect(ip_value: str, *, qualification_returncode: int | None = None) -> bool:
++    ip = validate_ip(ip_value)
++    collection_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
++    collection_dir = COLLECTED_ROOT / collection_id
++    collection_dir.mkdir(parents=True, exist_ok=False)
++    archive_path = collection_dir / "AMD001_remote_artifacts.tar.gz"
++    remote_session_root = remote_root()
++    remote_archive_command = shlex.join(
++        [
++            "tar",
++            "-czf",
++            "-",
++            "-C",
++            remote_session_root,
++            "collection",
++            "environment",
++            "telemetry",
++            "logs",
++            "transfer/manifest.remote.json",
++            "remote_status.json",
++            "timeline.jsonl",
++            "commands.jsonl",
++            "cost",
++            "failures",
++        ]
++    )
++    append_jsonl(RUNTIME_ROOT / "timeline.jsonl", "ARTIFACT_COLLECTION_STARTED", public_ip=ip)
++    result = run_logged(
++        "download_remote_artifacts",
++        [*ssh_base(ip), remote_archive_command],
++        stdout_path=archive_path,
++        check=False,
++    )
++    if result.returncode:
++        append_jsonl(
++            RUNTIME_ROOT / "timeline.jsonl",
++            "ARTIFACT_COLLECTION_FAILED",
++            public_ip=ip,
++            exit_status=result.returncode,
++        )
++        return False
++    extraction_dir = collection_dir / "extracted"
++    extraction_dir.mkdir()
++    run_logged(
++        "extract_remote_artifacts",
++        ["tar", "-xzf", str(archive_path), "-C", str(extraction_dir)],
++    )
++    status_path = extraction_dir / "remote_status.json"
++    status: dict[str, Any] = {}
++    if status_path.is_file():
++        status = json.loads(status_path.read_text(encoding="utf-8"))
++    local_record = {
++        "schema_version": "1.0",
++        "session_id": SESSION_ID,
++        "collected_at_utc": now_utc(),
++        "public_ip": ip,
++        "remote_status": status,
++        "qualification_returncode": qualification_returncode,
++        "archive": {
++            "path": str(archive_path),
++            "bytes": archive_path.stat().st_size,
++            "sha256": sha256(archive_path),
++        },
++        "extracted_path": str(extraction_dir),
++        "provider_billed_cost_usd": None,
++        "cost_source": "provider invoice not retrieved by this SSH-only workflow",
++    }
++    atomic_json(collection_dir / "collection_manifest.json", local_record)
++    append_jsonl(
++        RUNTIME_ROOT / "timeline.jsonl",
++        "ARTIFACT_COLLECTION_COMPLETED",
++        public_ip=ip,
++        collection_path=str(collection_dir),
++        archive_sha256=local_record["archive"]["sha256"],
++    )
++    return True
++
++
++def connect(ip_value: str) -> int:
++    ip = validate_ip(ip_value)
++    result = run_logged("ssh_connectivity_check", [*ssh_base(ip), "true"], check=False)
++    if result.returncode == 0:
++        print(f"SSH available: {os.environ.get('AMD_SSH_USER', 'root')}@{ip}")
++    else:
++        print("SSH unavailable; inspect the logged stderr path", file=sys.stderr)
++    return result.returncode
++
++
++def status(ip_value: str) -> int:
++    ip = validate_ip(ip_value)
++    remote_status_path = f"{remote_root()}/remote_status.json"
++    result = run_logged("remote_status", [*ssh_base(ip), f"cat {shlex.quote(remote_status_path)}"], check=False)
++    if result.returncode == 0:
++        output_path = sorted(LOG_ROOT.glob("*-remote_status.stdout.log"))[-1]
++        print(output_path.read_text(encoding="utf-8"))
++    return result.returncode
++
++
++def dry_run() -> int:
++    if TRANSFER_MANIFEST.is_file():
++        manifest = json.loads(TRANSFER_MANIFEST.read_text(encoding="utf-8"))
++    else:
++        manifest = json.loads(TRANSFER_TEMPLATE.read_text(encoding="utf-8"))
++    planned = {
++        "status": "DRY_RUN_ONLY",
++        "cloud_compute_contacted": False,
++        "provider_api_used": False,
++        "provider_instance_created": False,
++        "planned_after_ip_command": "bash scripts/amd_session.sh qualify <PUBLIC_IP>",
++        "planned_uploads": [
++            manifest["bundle"].get("path") or "<local staging bundle>",
++            manifest["dataset_archive"].get("path") or "<local staging dataset archive>",
++        ],
++        "planned_remote_steps": [
++            "SSH connectivity check",
++            "upload bundle and dataset archive",
++            "verify uploaded hashes",
++            "checkout exact committed source",
++            "install pinned uv/dependencies and the official PyTorch ROCm wheel",
++            "snapshot system/GPU/ROCm environment",
++            "validate all E014 invariants before model load",
++            "run no-model-download MI300X preflight",
++            "download Qwen/Qwen3-8B-Base remotely at the pinned revision",
++            "run six-step NF4/LoRA save-and-fresh-process-resume smoke",
++            "collect telemetry, logs, qualification report, and cost estimate",
++        ],
++        "planned_remote_destruction": False,
++    }
++    print(json.dumps(planned, indent=2, ensure_ascii=False))
++    return 0
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser(description=__doc__)
++    subparsers = parser.add_subparsers(dest="command", required=True)
++    subparsers.add_parser("prepare", help="build local-only bundle/archive and transfer manifest")
++    subparsers.add_parser("dry-run", help="show the remote plan without contacting the network")
++    for name in ("connect", "qualify", "collect", "status"):
++        command = subparsers.add_parser(name)
++        command.add_argument("public_ip")
++    args = parser.parse_args()
++    try:
++        if args.command == "prepare":
++            result = prepare()
++            print(json.dumps({
++                "status": "LOCAL_STAGING_READY",
++                "code_bundle": result["bundle"],
++                "dataset_archive": result["dataset_archive"],
++                "upload_bytes": result["upload_bytes"],
++                "transfer_manifest": str(TRANSFER_MANIFEST),
++                "cloud_compute_contacted": False,
++            }, indent=2, ensure_ascii=False))
++            return 0
++        if args.command == "dry-run":
++            return dry_run()
++        if args.command == "connect":
++            return connect(args.public_ip)
++        if args.command == "qualify":
++            return qualify(args.public_ip)
++        if args.command == "collect":
++            return 0 if collect(args.public_ip) else 1
++        if args.command == "status":
++            return status(args.public_ip)
++        raise RuntimeError(f"unknown command: {args.command}")
++    except (OSError, RuntimeError, subprocess.SubprocessError, json.JSONDecodeError) as exc:
++        print(f"amd_session: {exc}", file=sys.stderr)
++        return 1
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/scripts/amd_session.sh b/scripts/amd_session.sh
+new file mode 100644
+index 0000000..2ee1529
+--- /dev/null
++++ b/scripts/amd_session.sh
+@@ -0,0 +1,5 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++exec python3 "$REPO_ROOT/scripts/amd_session.py" "$@"
+diff --git a/scripts/qualify_amd.py b/scripts/qualify_amd.py
+index 55358f2..fd3ea09 100644
+--- a/scripts/qualify_amd.py
++++ b/scripts/qualify_amd.py
+@@ -63,6 +63,32 @@ def _atomic_json(path: Path, value: Any) -> None:
+     os.replace(temporary, path)
+ 
+ 
++def _append_event(path: Path, event: str, **fields: Any) -> None:
++    """Append one UTC event without making the qualification timeline mutable in place."""
++
++    record = {"timestamp_utc": _now(), "event": event, **fields}
++    path.parent.mkdir(parents=True, exist_ok=True)
++    with path.open("a", encoding="utf-8") as handle:
++        handle.write(json.dumps(record, sort_keys=True, ensure_ascii=False) + "\n")
++        handle.flush()
++        os.fsync(handle.fileno())
++
++
++def _tree_size(path: Path) -> int:
++    if not path.exists():
++        return 0
++    if path.is_file():
++        return path.stat().st_size
++    total = 0
++    for child in path.rglob("*"):
++        try:
++            if child.is_file():
++                total += child.stat().st_size
++        except OSError:
++            continue
++    return total
++
++
+ def _sha256(path: Path) -> str:
+     digest = hashlib.sha256()
+     with path.open("rb") as handle:
+@@ -270,9 +296,23 @@ def _worker(args: argparse.Namespace) -> int:
+     splits, dataset_report = _load_data(config, world_size=1)
+     run_dir = Path(args.run_dir)
+     selection_path = run_dir / "selected_training_examples.json"
++    timeline_path = run_dir / "timeline.jsonl"
+ 
+     with warnings.catch_warnings(record=True) as caught_warnings:
+         warnings.simplefilter("always")
++        cache_home = Path(os.environ.get("HF_HOME", Path.home() / ".cache/huggingface")).expanduser()
++        model_load_started = time.monotonic()
++        model_load_started_at_utc = _now()
++        cache_bytes_before = _tree_size(cache_home)
++        _append_event(
++            timeline_path,
++            "MODEL_DOWNLOAD_STARTED",
++            phase=args.worker_phase,
++            model=config["base_model"],
++            revision=config["model_revision"],
++            cache_path=str(cache_home),
++            cache_bytes_before=cache_bytes_before,
++        )
+         tokenizer = AutoTokenizer.from_pretrained(config["base_model"], revision=config["tokenizer_revision"])
+         if tokenizer.pad_token_id is None:
+             if tokenizer.eos_token is None:
+@@ -306,6 +346,18 @@ def _worker(args: argparse.Namespace) -> int:
+             torch_dtype=torch.bfloat16,
+             quantization_config=quantization,
+         )
++        model_load_seconds = time.monotonic() - model_load_started
++        cache_bytes_after = _tree_size(cache_home)
++        _append_event(
++            timeline_path,
++            "MODEL_DOWNLOAD_COMPLETED",
++            phase=args.worker_phase,
++            elapsed_seconds=round(model_load_seconds, 3),
++            cache_path=str(cache_home),
++            cache_bytes_before=cache_bytes_before,
++            cache_bytes_after=cache_bytes_after,
++            cache_bytes_delta=cache_bytes_after - cache_bytes_before,
++        )
+         model.config.use_cache = False
+ 
+         import bitsandbytes as bnb
+@@ -343,10 +395,18 @@ def _worker(args: argparse.Namespace) -> int:
+                 return None
+ 
+             def on_step_end(self, callback_args: Any, state: Any, control: Any, **kwargs: Any) -> Any:
+-                del callback_args, state, control, kwargs
++                del callback_args, control, kwargs
+                 if self.current_step_started is not None:
+                     torch.cuda.synchronize()
+-                    step_durations.append(time.monotonic() - self.current_step_started)
++                    duration = time.monotonic() - self.current_step_started
++                    step_durations.append(duration)
++                    _append_event(
++                        timeline_path,
++                        "SMOKE_STEP",
++                        phase=args.worker_phase,
++                        step=int(state.global_step),
++                        duration_seconds=round(duration, 4),
++                    )
+                 return None
+ 
+         class AtomicCheckpointCallback(TrainerCallback):
+@@ -355,6 +415,13 @@ def _worker(args: argparse.Namespace) -> int:
+                 if state.is_world_process_zero:
+                     checkpoint = Path(callback_args.output_dir) / f"checkpoint-{state.global_step}"
+                     write_checkpoint_complete_marker(checkpoint, world_size=1)
++                    _append_event(
++                        timeline_path,
++                        "CHECKPOINT_SAVED",
++                        phase=args.worker_phase,
++                        step=int(state.global_step),
++                        path=str(checkpoint),
++                    )
+                 return control
+ 
+         target_step = FIRST_STAGE_STEP if args.worker_phase == "first" else FINAL_STAGE_STEP
+@@ -448,6 +515,15 @@ def _worker(args: argparse.Namespace) -> int:
+             "train_runtime_seconds": runtime_seconds,
+             "optimizer_step_durations_seconds": [round(value, 4) for value in step_durations],
+             "train_metrics": train_output.metrics,
++            "model_load": {
++                "started_at_utc": model_load_started_at_utc,
++                "finished_at_utc": _now(),
++                "elapsed_seconds": round(model_load_seconds, 3),
++                "cache_path": str(cache_home),
++                "cache_bytes_before": cache_bytes_before,
++                "cache_bytes_after": cache_bytes_after,
++                "cache_bytes_delta": cache_bytes_after - cache_bytes_before,
++            },
+             "log_history": trainer.state.log_history,
+             "environment": environment,
+             "hbm_after_phase": {"free_bytes": int(free_hbm), "total_bytes": int(total_hbm)},
+@@ -575,6 +651,13 @@ def _parent(args: argparse.Namespace) -> int:
+         },
+     }
+     _atomic_json(run_dir / "qualification_started.json", start_record)
++    _append_event(
++        run_dir / "timeline.jsonl",
++        "SMOKE_STARTED",
++        run_id=run_id,
++        optimizer_steps=FINAL_STAGE_STEP,
++        sample_count=SAMPLE_COUNT,
++    )
+     try:
+         _run_phase("first", run_dir, args.config, args.invariants)
+         _run_phase("resume", run_dir, args.config, args.invariants)
+@@ -595,6 +678,13 @@ def _parent(args: argparse.Namespace) -> int:
+         final_hash = _sha256(final_adapter)
+         if checkpoint_hash == final_hash:
+             raise RuntimeError("LoRA adapter did not change after loading step 3 and resuming to step 6")
++        _append_event(
++            run_dir / "timeline.jsonl",
++            "RESUME_VERIFIED",
++            checkpoint_step=FIRST_STAGE_STEP,
++            final_step=FINAL_STAGE_STEP,
++            fresh_process=True,
++        )
+ 
+         durations = first["optimizer_step_durations_seconds"] + resumed["optimizer_step_durations_seconds"]
+         if len(durations) != FINAL_STAGE_STEP:
+@@ -632,6 +722,10 @@ def _parent(args: argparse.Namespace) -> int:
+                 "step_6_adapter_sha256": final_hash,
+             },
+             "quantization": resumed["quantization"],
++            "model_load": {
++                "first": first["model_load"],
++                "resume": resumed["model_load"],
++            },
+             "optimizer_class": resumed["optimizer_class"],
+             "lora_trainable_parameter_count": resumed["lora_trainable_parameter_count"],
+             "lora_target_modules_observed": resumed["lora_target_modules_observed"],
+@@ -677,11 +771,13 @@ def _parent(args: argparse.Namespace) -> int:
+                     str((run_dir / "first_phase.log").relative_to(ROOT)),
+                     str((run_dir / "resume_phase.log").relative_to(ROOT)),
+                 ],
++                "timeline": str((run_dir / "timeline.jsonl").relative_to(ROOT)),
+                 "telemetry": str((run_dir / "qualification_report.json").relative_to(ROOT)),
+                 "final_adapter": str(final_adapter.relative_to(ROOT)),
+             },
+         }
+         _atomic_json(run_dir / "qualification_report.json", report)
++        _append_event(run_dir / "timeline.jsonl", "SMOKE_COMPLETED", status="passed")
+         print(json.dumps(report, indent=2, ensure_ascii=False))
+         return 0
+     except Exception as exc:
+@@ -696,6 +792,13 @@ def _parent(args: argparse.Namespace) -> int:
+             "full_training_started": False,
+         }
+         _atomic_json(run_dir / "qualification_report.json", failure)
++        _append_event(
++            run_dir / "timeline.jsonl",
++            "SMOKE_FAILED",
++            status="failed",
++            error_type=type(exc).__name__,
++            error=str(exc),
++        )
+         print(json.dumps(failure, indent=2, ensure_ascii=False), file=sys.stderr)
+         return 1
+ 
+diff --git a/scripts/validate_amd_session.py b/scripts/validate_amd_session.py
+new file mode 100644
+index 0000000..ed88fab
+--- /dev/null
++++ b/scripts/validate_amd_session.py
+@@ -0,0 +1,91 @@
++"""Validate the committed AMD001 session record and optional local transfer assets."""
++
++from __future__ import annotations
++
++import argparse
++import hashlib
++import json
++from pathlib import Path
++from typing import Any
++
++ROOT = Path(__file__).resolve().parents[1]
++SESSION_MANIFEST = ROOT / "cloud_runs/AMD001_mi300x_e014_qualification/manifest.json"
++INVARIANTS = ROOT / "configs/research/e014_scientific_invariants_v1.json"
++
++
++def sha256(path: Path) -> str:
++    digest = hashlib.sha256()
++    with path.open("rb") as handle:
++        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
++            digest.update(chunk)
++    return digest.hexdigest()
++
++
++def validate(manifest_path: Path = SESSION_MANIFEST, transfer_path: Path | None = None) -> dict[str, Any]:
++    failures: list[str] = []
++    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
++    invariants = json.loads(INVARIANTS.read_text(encoding="utf-8"))
++    if manifest.get("session_id") != "AMD001":
++        failures.append("session_id must be AMD001")
++    if manifest.get("status") != "READY_TO_CLICK_CREATE":
++        failures.append("session status must remain READY_TO_CLICK_CREATE before provisioning")
++    if manifest.get("no_cloud_compute_started_at_creation") is not True:
++        failures.append("manifest must assert that no cloud compute had started at creation")
++    if manifest.get("no_model_quality_result_exists") is not True:
++        failures.append("manifest must assert that no model-quality result exists")
++    if manifest.get("private_keys_or_secrets_committed") is not False:
++        failures.append("manifest must assert that private keys and secrets were not committed")
++    if manifest.get("provider_intent", {}).get("displayed_rate_usd_per_hour") != 1.99:
++        failures.append("provider displayed rate must be the observed 1.99 USD/hour")
++    expected_invariant_hash = sha256(INVARIANTS)
++    if manifest.get("frozen_e014", {}).get("invariants_sha256_at_record_creation") != expected_invariant_hash:
++        failures.append("E014 invariant snapshot hash in session record does not match the file")
++    for field, expected in (
++        ("dataset", "703aceae7a28450fe9dca35be29c09cf0e64aceeda49f60e7f626b6e3708a91f"),
++        ("research_benchmark", "3f1f859a10f1bb34ebb22197fadfeba08f2f812c2346a9d75c2b1b7e97b878c4"),
++        ("control_benchmark", "b9ff1050dd05eeaf062aba8e8fce1f0a39ffc7da68754d02f011779780628636"),
++    ):
++        path = manifest.get("frozen_e014", {}).get(field, {}).get("path")
++        if not path or sha256(ROOT / path) != expected:
++            failures.append(f"frozen E014 {field} hash does not match")
++
++    transfer: dict[str, Any] | None = None
++    if transfer_path:
++        transfer = json.loads(transfer_path.read_text(encoding="utf-8"))
++        bundle = Path(transfer["bundle"]["path"])
++        archive = Path(transfer["dataset_archive"]["path"])
++        for label, path, expected in (
++            ("bundle", bundle, transfer["bundle"]["sha256"]),
++            ("dataset archive", archive, transfer["dataset_archive"]["sha256"]),
++        ):
++            if not path.is_file():
++                failures.append(f"{label} is missing: {path}")
++            elif sha256(path) != expected:
++                failures.append(f"{label} SHA-256 changed after staging")
++        if transfer.get("upload_bytes") != transfer["bundle"]["bytes"] + transfer["dataset_archive"]["bytes"]:
++            failures.append("transfer upload byte total is inconsistent")
++
++    return {
++        "status": "passed" if not failures else "failed",
++        "session_id": manifest.get("session_id"),
++        "manifest": str(manifest_path.relative_to(ROOT)),
++        "transfer_manifest": str(transfer_path) if transfer_path else None,
++        "failures": failures,
++    }
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--manifest", type=Path, default=SESSION_MANIFEST)
++    parser.add_argument("--transfer", type=Path)
++    args = parser.parse_args()
++    try:
++        result = validate(args.manifest, args.transfer)
++    except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
++        result = {"status": "failed", "failures": [f"{type(exc).__name__}: {exc}"]}
++    print(json.dumps(result, indent=2, ensure_ascii=False))
++    return 0 if result["status"] == "passed" else 1
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/tests/test_amd_qualification.py b/tests/test_amd_qualification.py
+index 5581fc5..9a646fe 100644
+--- a/tests/test_amd_qualification.py
++++ b/tests/test_amd_qualification.py
+@@ -67,8 +67,11 @@ def test_amd_qualification_rejects_tampered_selection() -> None:
+ 
+ 
+ def test_amd_qualification_manifest_is_engineering_only() -> None:
+-    manifest = json.loads((ROOT / "experiments/E014_amd_qualification/manifest.json").read_text())
+-    assert manifest["qualification_only"] is True
+-    assert manifest["model_quality_claims_authorized"] is False
+-    assert manifest["full_run"]["started"] is False
+-    assert manifest["decision"]["case"] == "unclassified_pending_smoke"
++    manifest = json.loads(
++        (ROOT / "cloud_runs/AMD001_mi300x_e014_qualification/manifest.json").read_text()
++    )
++    assert manifest["smoke_protocol"]["qualification_only"] is True
++    assert manifest["smoke_protocol"]["full_training_authorized"] is False
++    assert manifest["no_model_quality_result_exists"] is True
++    assert manifest["no_cloud_compute_started_at_creation"] is True
++    assert manifest["provider_intent"]["actual_provider_billed_cost_usd"] is None

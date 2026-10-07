@@ -1,0 +1,15 @@
+[
+  {
+    "rule_id": "GH008",
+    "rule_name": "exception-swallowed",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "execution/frozen_replay.py",
+    "line": 19,
+    "title": "Broad exception handler discards failures",
+    "evidence": "except Exception:\n        return None",
+    "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+    "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+    "allowed": false
+  }
+]

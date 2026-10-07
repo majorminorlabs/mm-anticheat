@@ -1,0 +1,1483 @@
+diff --git a/BOT_MODE_AUDIT.md b/BOT_MODE_AUDIT.md
+new file mode 100644
+index 0000000..e13adee
+--- /dev/null
++++ b/BOT_MODE_AUDIT.md
+@@ -0,0 +1,107 @@
++# Bot Mode mobile milestone — 2026-10-03
++
++## Source and identity
++
++Audited installed Hermes Agent commit: `4bb9e57bfde8a0affb5553eff13ed6e1f14147f1`
++(`0.21.5+6627.g4bb9e57`), checkout `/Users/dippo/.hermes/hermes-agent`.
++The running Desktop application is from that checkout's
++`apps/desktop/release/mac-arm64/Hermes.app`. Its backend launch contract is
++`hermes serve`, JSON-RPC over authenticated WebSocket, with REST for inventory
++and persisted transcripts. The previously running mobile backend predated the
++source update and did not implement `profiles.list`/`profiles.describe`.
++
++Bot Mode is a **specialized profile layer plus Desktop presentation metadata**,
++not a separate bot database. There is a first-class internal RPC contract that
++was missing from the previous mobile audit. The bridge normalizes that contract;
++Swift never reads host files or resolves profile paths.
++
++| Field | Canonical source at the audited commit |
++| --- | --- |
++| Local roster and profile IDs | `tui_gateway/methods_profiles.py`, `profiles.list`; `hermes_cli/profiles.py::list_profiles`; live named-profile predicate in `hermes_constants.py::named_profile_is_live` |
++| Name | `apps/desktop/src/plugins/hermes-bots/labels.ts::displayName`: server `profile.yaml` → `ui_meta['hermes-bots'].title`, then `display_name`, then Hermes for `default`, then formatted profile ID |
++| Description | Bot Mode metadata description, then profile description; `profiles.describe` editor snapshot |
++| Role | Backend permission role only when supplied; research/general categories are not inferred from names |
++| Avatar | `profiles.list.has_avatar`, `profiles.get_asset {name,asset:'avatar'}` → bounded image data URL; absent shapes/local-only decorations retain a monogram |
++| Last activity | `canonical_session` and `last_session`; Desktop helper `data.ts::botActivitySession` selects the fresher of those two; bridge also includes a more recent persisted worker session |
++| Live working/idle | Not globally confirmed by this dedicated backend. V1 labels unobserved status or persisted last-active time instead of guessing Idle. Other Desktop processes' live event ownership remains incomplete |
++| Canonical conversation | `(profile, title == 'Bot Chat')`; `methods_session.py::session.list {profile,title,include_hidden:true}` resolves by exact title, following the compression tip. No saved session ID or newest-chat fallback |
++| Transcript | Profile-scoped REST `/api/sessions/{resolved_id}/messages`, normalized into the existing iOS Conversation/Message types |
++| Model/provider, SOUL, skills, toolsets, MCP | `profiles.describe {name}` in `methods_profiles.py`; `config.yaml`, `SOUL.md`, installed `SKILL.md` indexes, `skills.disabled`, configured CLI toolsets, MCP names/enabled/transport |
++| Routines | Profile-scoped REST `/api/cron/jobs`; name/enabled/timestamps/status metadata only |
++| Memory | Profile-scoped REST `/api/memory`: active provider, provider metadata and allowlisted builtin byte counts; no contents or file paths |
++| Agent plugins | Read-only `plugins.manage {profile,action:'list'}` from `methods_tools.py`; only name/enabled cross the mobile boundary |
++| Config metadata | `profiles.describe.toolsets_pinned` and source attribution; no raw config, environment variables, provider keys, endpoint secrets, filesystem path APIs |
++
++Desktop also retains window-local cosmetic/pinning/unread state in plugin storage
++(`data.ts`, `profile-ops.ts::mergeServerMeta`). The mobile contract uses persisted
++server metadata, not Electron local storage. Hidden bots (`hermes-bots.hidden`)
++are omitted. Deleted/tombstoned/non-live profiles disappear with the next roster
++read. Archiving a chat is different from hiding/deleting its bot; it does not
++remove the profile. Hermes may repair accidentally archived canonical chats as
++part of its own lookup; the bridge adds no repair/creation operation.
++
++The default profile and the Hermes roster entry are the same identity. It is
++included once in Bots, with no separate Default Profile section. Two distinct
++profiles with the same display name remain distinct; names are not identity keys.
++
++## Mobile API and authorization
++
++- `GET /mobile/v1/bots`: freshly discovered roster, opaque IDs, source attribution,
++  bounded activity metadata and canonical-chat availability.
++- `GET /mobile/v1/bots/{id}`: fresh per-bot detail/configuration inventory.
++- `GET /mobile/v1/bots/{id}/conversation`: resolve the canonical title on every
++  request and return its current real transcript. Stable mobile routing ID
++  `botchat.<bot-id>` identifies the relationship, not a pinned Hermes session ID.
++- Existing `/profiles`, conversation/run controls, authentication and profile
++  allowlists remain compatible.
++- `features.profiles` and `features.botMode` are separate. A backend advertises
++  Bot Mode only after its RPC handshake verifies `bot_mode_protocol:true`.
++  Older backends fall back to generic profiles.
++
++Opt in with `backends.<source>.bot_mode_roster: true` in the private bridge config,
++or `install-bridge.sh --bot-mode` for a new installation. This explicitly grants
++credentials that can read that backend's profile access to its **entire local
++Desktop bot roster, including future bots**. It is a read-only roster grant;
++existing generic profile control permissions are not broadened. An unconfigured
++backend or one outside the credential allowlist cannot be selected through an
++opaque bot ID. Do not opt a source into an audience that should see only one bot.
++
++The production client uses the bot resources when Bot Mode exists. Simulation
++fixtures remain isolated. Names in tests represent sanitized Studio fixtures;
++production code does not contain the three Studio bot names.
++
++## Refresh and chat behavior
++
++Opening Bots starts a fresh fetch and a cancellable 15-second refresh while that
++screen is visible. Pull to refresh, app foreground and successful reconnect also
++refresh the roster. Each response replaces membership, so new profiles appear
++and removed/hidden profiles disappear without rebuilding. Detail refreshes every
++15 seconds while visible; roster refresh preserves loaded detail fields until a
++fresh detail response replaces them. Refresh remains request-based; V1 does not
++claim full Desktop change-event coverage.
++
++Chat opens the existing canonical transcript in the normal Conversation view,
++read-only, with manual refresh. It does not `session.resume`, rebind a Desktop
++session event sink, run an intro, or create any conversation. No canonical row →
++Chat is disabled with a Studio-initialization explanation. Composition, rename,
++delete and run controls are not offered for imported Bot Chats. Ordinary
++bridge-owned conversations retain their existing controls.
++
++## Later create/edit work
++
++Desktop's underlying mechanism is available but intentionally not exposed here:
++`profiles.create`, `profiles.configure` (SOUL/description/model/provider,
++disabled_skills/enabled_toolsets/enabled_mcp_servers), `profiles.set_asset`, and
++profile delete/rename operations. Bot creation also needs Desktop's adopt-before-
++minting exact-title chat flow, hidden initialization and intro behavior. Editing
++requires safe handling of `applied` partial successes, model-cost confirmation,
++and `ui_meta_expected_revisions` compare-and-swap. Delete/archive must distinguish
++profile deletion from hidden roster metadata and chat archival, protect active
++turns and preserve history intentionally. Sending into Desktop Bot Chats needs a
++separately audited shared-ownership or delivery protocol. None is added in V1.
++
++## Verification and Studio/device evidence
++
++See `BOT_MODE_VALIDATION.md` for completed results, discovered Studio identities,
++physical-device evidence and remaining limits. Source investigation and fixtures
++must be distinguished from actual physical-phone validation.
+diff --git a/BOT_MODE_VALIDATION.md b/BOT_MODE_VALIDATION.md
+new file mode 100644
+index 0000000..9b83d37
+--- /dev/null
++++ b/BOT_MODE_VALIDATION.md
+@@ -0,0 +1,104 @@
++# Bot Mode validation — 2026-10-03
++
++Source audit and API/authorization details: [BOT_MODE_AUDIT.md](BOT_MODE_AUDIT.md).
++This milestone is on `codex/bot-mode-milestone`. Nothing was pushed or published.
++Pre-existing Xcode project/scheme signing changes are excluded from the milestone.
++
++## Studio deployment and actual data
++
++The dedicated bridge backend now runs installed Hermes commit
++`4bb9e57bfde8a0affb5553eff13ed6e1f14147f1` using Hermes's managed runtime,
++not the stale legacy venv. Both that commit and the previous audited commit
++`2a4c9afd7bd` are accepted. The bridge was updated through the existing guarded
++update script. Private configuration and SQLite databases were backed up via
++SQLite's backup API before deployment. Device credentials, the bridge journal,
++and the existing Tailscale HTTPS route were preserved.
++
++The default source is explicitly opted into read-only whole-roster Bot Mode.
++Authenticated live API checks returned these three identities:
++
++| Bot | Profile identity | Model/provider | Canonical Bot Chat |
++| --- | --- | --- | --- |
++| Hermes | `default` | `gpt-5.6-luna` / `openai-codex` | Not initialized |
++| Research Orchestrator | `research-orchestrator` | `gpt-6.1-sol` / `openai-codex` | Not initialized |
++| Research Worker | `research-worker` | `gpt-5.6-luna` / `openai-codex` | Not initialized |
++
++Live detail requests returned SOUL and avatars, enabled skills, memory/plugin
++metadata, and empty routine lists. The Orchestrator's enabled skill inventory
++contains all six requested names: `research-terminal`, `arxiv`,
++`hermes-bluebubbles-operations`, `llama-cpp`, `llm-wiki`, and
++`online-price-comparison`. Its live inventory contains many additional skills;
++the six-item fixture is a sanitized test sample, not the complete live inventory.
++The Worker includes `research-terminal-worker`. Cross-process live working/idle
++state remains unobserved; persisted last-active times are displayed.
++
++No canonical chat was created, resumed or rebound in the production profiles.
++Chat remains disabled until the Studio initializes its canonical Bot Chat.
++Existing canonical history and exact-title lookup are validated in an isolated
++actual-Hermes fixture with a temporary home and local model, without production
++profiles or provider keys. Moving compressed tips are covered by the bridge wire
++fixture and verified against the installed lookup implementation. Imported Bot Chats are
++read-only; composition requires a later shared-ownership audit.
++
++## Dynamic discovery
++
++On the running Studio, a uniquely named temporary profile displayed as
++`Mobile Refresh Probe` was added using the source's profile storage contract.
++A fresh authenticated bridge request immediately returned four bots. Setting
++its persisted Bot Mode `hidden` metadata removed it from the roster. The owned
++temporary directory was then deleted, and the next request returned exactly the
++original three bots. No service restart or app rebuild was involved. No model
++execution, provider credential, routine or canonical conversation was created.
++Cleanup succeeded; no probe remains.
++
++The phone fetches on opening Bots, foreground, reconnect and pull to refresh,
++plus every 15 seconds while the view is active. Each result replaces membership;
++details refresh on the same interval. Automated Swift and bridge fixtures cover
++new identities, removal/hiding, reconnect, legacy-profile fallback, duplicate
++Hermes/default prevention and production data isolation.
++
++## Physical iPhone
++
++The signed app was built and installed successfully on the connected iPhone 15
++Pro Max (`Scott’s iPhone`, bundle `com.dippo.hermes`), using the existing local
++signing configuration. No signing material is committed.
++
++The initial physical UI run confirmed all three names in Bots and no separate
++Default Profile section. It opened Research Orchestrator and loaded its actual
++Studio skill inventory. A screenshot of the three-bot roster is retained locally
++under ignored `build/bot-mode-validation/iphone-bots.png`.
++
++That run failed its `research-terminal` assertion because eight scrolls did not
++reach the skill in the large live list. The failure's accessibility hierarchy
++contains real skill rows through the middle of that inventory. The test was
++corrected to allow thirty scrolls and to select the detail Chat button explicitly.
++Subsequent physical runs could not start because the iPhone was locked.
++Consequently, **physical confirmation of the specific `research-terminal` row
++and temporary-bot appearance/removal remains unverified**. The bridge API and
++isolated tests confirm those data/discovery paths, but they do not substitute for
++on-device evidence. Canonical Chat cannot be opened on this Studio snapshot
++because no canonical row exists; the app deliberately does not create one.
++
++## Automated checks
++
++- Bridge suite with installed-Hermes integration enabled: **32 passed**.
++- Studio service lifecycle/configuration suite: **8 passed**.
++- Full Swift unit/UI suite: **44 passed, 7 explicitly skipped, 0 failed**
++  (`/tmp/hermes-bots-tests-final-source.xcresult`, 51 total).
++- After the final canonical-chat model-label correction, the complete unit suite
++  was rerun: **39 passed, 3 explicitly skipped, 0 failed**
++  (`/tmp/hermes-bots-unit-final.xcresult`, 42 total).
++- Signed physical `build-for-testing`: succeeded; final app installation succeeded.
++- `git diff --check`: passed.
++
++Local test logs and result bundles live under `/tmp/hermes-bots-*`; credentials
++and private configuration are excluded. Optional physical/local-stack tests are
++explicitly skipped in the normal simulator suite, rather than counted as passes.
++
++## Deferred controls
++
++Bot creation/editing, SOUL changes, model/provider changes, skill toggles and
++profile deletion/archive are intentionally not added. The source RPCs and their
++required concurrency, partial-success, cost and canonical-chat initialization
++handling are documented in the source audit. Older generic profile APIs remain
++available; unavailable fields receive no fabricated values.
+diff --git a/BRIDGE_API.md b/BRIDGE_API.md
+index a1a77a1..be293d1 100644
+--- a/BRIDGE_API.md
++++ b/BRIDGE_API.md
+@@ -199,3 +199,8 @@ Inventory includes skills metadata, CLI-default toolsets, credential-free provid
+ ~~~
+ 
+ Statuses: 400 malformed/unsupported fields; 401 invalid/revoked credential; 403 scope/profile/board denial; 404 missing resource; 409 conflict/stale/ambiguous/uncertain/resync; 410 deleted conversation; 413 size limit; 422 upstream validation; 502 upstream/protocol rejection; 503 unavailable/uncertain upstream; 500 internal failure. Numeric upstream code/status can appear in details; upstream exception text/URLs/config do not. Compound upstream mutations can partially apply: refresh canonical state after errors. There is no raw CLI, shell, PTY, unrestricted process/filesystem, missing Bot Mode or global configuration API.
++
++
++## Desktop Bot Mode resources
++
++See [Bot Mode source audit](BOT_MODE_AUDIT.md) for the read-only `/bots`, `/bots/{id}` and `/bots/{id}/conversation` contracts, explicit whole-roster authorization, profile fallback and canonical-title resolution. `features.botMode` is independent from `features.profiles`. No create/edit or canonical-chat execution API is exposed.
+diff --git a/Hermes/App/RootView.swift b/Hermes/App/RootView.swift
+index 2096af7..a33789c 100644
+--- a/Hermes/App/RootView.swift
++++ b/Hermes/App/RootView.swift
+@@ -50,8 +50,11 @@ struct RootView: View {
+             // Returning from the background: runs kept going on the host, so
+             // reconnect (replaying missed events) if the link dropped.
+             let offline = connection.connection == .bridgeOffline || connection.connection == .hermesOffline
+-            if oldPhase == .background && phase == .active && offline {
+-                Task { await connection.reconnect() }
++            if phase == .active {
++                Task {
++                    if offline { await connection.reconnect() }
++                    await environment.profiles.refresh()
++                }
+             }
+         }
+     }
+diff --git a/Hermes/DesignSystem/ProfileAvatar.swift b/Hermes/DesignSystem/ProfileAvatar.swift
+index 1cc91a9..e44ff07 100644
+--- a/Hermes/DesignSystem/ProfileAvatar.swift
++++ b/Hermes/DesignSystem/ProfileAvatar.swift
+@@ -5,20 +5,26 @@ struct ProfileAvatar: View {
+     var name: String
+     var tint: ProfileTint
+     var size: CGFloat = 32
++    var avatarData: String?
+ 
+     init(profile: Profile?, size: CGFloat = 32) {
+         name = profile?.name ?? "Hermes"
+         tint = profile?.tint ?? .slate
+         self.size = size
++        avatarData = profile?.avatarData
+     }
+ 
+     var body: some View {
+         RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
+             .fill(tint.color.opacity(0.16))
+             .overlay {
+-                Text(String(name.prefix(1)).uppercased())
++                if let raw = avatarData?.split(separator: ",", maxSplits: 1).last,
++                   let data = Data(base64Encoded: String(raw)), let image = UIImage(data: data) {
++                    Image(uiImage: image).resizable().scaledToFill().frame(width: size, height: size)
++                        .clipShape(RoundedRectangle(cornerRadius: size * 0.28))
++                } else { Text(String(name.prefix(1)).uppercased())
+                     .font(.system(size: size * 0.46, weight: .semibold, design: .rounded))
+-                    .foregroundStyle(tint.color)
++                    .foregroundStyle(tint.color) }
+             }
+             .overlay {
+                 RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
+diff --git a/Hermes/DesignSystem/Theme.swift b/Hermes/DesignSystem/Theme.swift
+index 2d7f264..cfff27d 100644
+--- a/Hermes/DesignSystem/Theme.swift
++++ b/Hermes/DesignSystem/Theme.swift
+@@ -58,7 +58,7 @@ extension ProfileStatus {
+         case .working: Theme.running
+         case .idle: .secondary
+         case .needsAttention: Theme.attention
+-        case .unavailable: .secondary
++        case .unavailable, .unknown: .secondary
+         }
+     }
+ }
+diff --git a/Hermes/Domain/Capability.swift b/Hermes/Domain/Capability.swift
+index e6f8677..b17e4cb 100644
+--- a/Hermes/Domain/Capability.swift
++++ b/Hermes/Domain/Capability.swift
+@@ -11,6 +11,7 @@ nonisolated enum HermesCapability: String, Codable, Sendable, CaseIterable, Iden
+     case stop
+     /// Remote approval of pending actions (individual requests may still be non-actionable).
+     case approvals
++    case botMode
+     case profiles
+     case cron
+     case kanban
+@@ -35,6 +36,7 @@ nonisolated enum HermesCapability: String, Codable, Sendable, CaseIterable, Iden
+         case .steering: "Steering"
+         case .stop: "Stop runs"
+         case .approvals: "Remote approvals"
++        case .botMode: "Bot Mode"
+         case .profiles: "Profiles"
+         case .cron: "Routines"
+         case .kanban: "Kanban"
+@@ -58,6 +60,7 @@ nonisolated enum HermesCapability: String, Codable, Sendable, CaseIterable, Iden
+         case .steering: "arrow.turn.down.right"
+         case .stop: "stop.circle"
+         case .approvals: "hand.raised"
++        case .botMode: "person.crop.circle"
+         case .profiles: "person.2"
+         case .cron: "calendar.badge.clock"
+         case .kanban: "rectangle.split.3x1"
+diff --git a/Hermes/Domain/Conversation.swift b/Hermes/Domain/Conversation.swift
+index 0fdb4ad..4189919 100644
+--- a/Hermes/Domain/Conversation.swift
++++ b/Hermes/Domain/Conversation.swift
+@@ -16,6 +16,7 @@ nonisolated struct Conversation: Identifiable, Hashable, Codable, Sendable {
+     var activeRunID: String?
+     var isPinned: Bool
+     var messageCount: Int
++    var readOnly: Bool? = nil
+ 
+     var usesDefaultProfile: Bool { profileID == Profile.defaultID }
+ }
+diff --git a/Hermes/Domain/Profile.swift b/Hermes/Domain/Profile.swift
+index e0e65ac..c0ec04a 100644
+--- a/Hermes/Domain/Profile.swift
++++ b/Hermes/Domain/Profile.swift
+@@ -1,9 +1,6 @@
+ import Foundation
+ 
+-/// A Hermes profile: a persistent identity with its own model, skills,
+-/// memory and SOUL. The Bots tab presents profiles as "bots"; there is no
+-/// separate bot object on the backend. Richer Bot Mode features can extend
+-/// this type later.
++/// Persistent identity normalized from profiles or Hermes Desktop Bot Mode.
+ nonisolated struct Profile: Identifiable, Hashable, Codable, Sendable {
+     static let defaultID = "default"
+ 
+@@ -25,12 +22,20 @@ nonisolated struct Profile: Identifiable, Hashable, Codable, Sendable {
+     var soulSummary: String?
+     var configPath: String?
+     var currentRunID: String?
++    var isBotMode: Bool? = nil
++    var canonicalChatAvailable: Bool? = nil
++    var lastActiveAt: Date? = nil
++    var activitySummary: String? = nil
++    var avatarData: String? = nil
++    var routinesMetadata: [String]? = nil
++    var pluginsMetadata: [String]? = nil
++    var modelAvailable: Bool? = nil
+ 
+     var initials: String { String(name.prefix(1)).uppercased() }
+ }
+ 
+ nonisolated enum ProfileStatus: String, Codable, Sendable {
+-    case working, idle, needsAttention, unavailable
++    case working, idle, needsAttention, unavailable, unknown
+ 
+     var label: String {
+         switch self {
+@@ -38,6 +43,7 @@ nonisolated enum ProfileStatus: String, Codable, Sendable {
+         case .idle: "Idle"
+         case .needsAttention: "Needs attention"
+         case .unavailable: "Unavailable"
++        case .unknown: "Status unobserved"
+         }
+     }
+ }
+diff --git a/Hermes/Features/Bots/BotsView.swift b/Hermes/Features/Bots/BotsView.swift
+index 4e7460a..b0b15eb 100644
+--- a/Hermes/Features/Bots/BotsView.swift
++++ b/Hermes/Features/Bots/BotsView.swift
+@@ -14,7 +14,7 @@ struct BotsView: View {
+                 if connection.supports(.profiles) {
+                     Section {
+                         if profiles.bots.isEmpty {
+-                            Text("No bots yet. Create profiles on the host with `hermes profile create`.")
++                            Text("No bots available on this host.")
+                                 .font(.subheadline)
+                                 .foregroundStyle(.secondary)
+                         }
+@@ -28,7 +28,7 @@ struct BotsView: View {
+                     }
+                 }
+ 
+-                if let defaultProfile = profiles.sorted.first(where: \.isDefault) {
++                if let defaultProfile = profiles.sorted.first(where: { $0.isDefault && $0.isBotMode != true }) {
+                     Section {
+                         NavigationLink(value: Route.profile(defaultProfile.id)) {
+                             BotRow(profile: defaultProfile)
+@@ -61,15 +61,21 @@ struct BotsView: View {
+                     }
+                     .accessibilityElement(children: .combine)
+                 } footer: {
+-                    Text("Multi-bot rooms aren't available in Hermes yet. They'll appear here when the host supports them.")
++                    Text("Group conversations are not supported by this mobile client yet.")
+                 }
+             }
+             .refreshable { await profiles.refresh() }
+         } empty: {
+-            ContentUnavailableView("No Profiles", systemImage: "person.2",
+-                                   description: Text("Profiles configured on the host appear here as bots."))
++            ContentUnavailableView("No Bots", systemImage: "person.2",
++                                   description: Text("Bots exposed by the Studio appear here."))
+         }
+         .navigationTitle("Bots")
++        .task {
++            while !Task.isCancelled {
++                await profiles.refresh()
++                do { try await Task.sleep(for: .seconds(15)) } catch { return }
++            }
++        }
+     }
+ }
+ 
+@@ -88,8 +94,10 @@ struct BotRow: View {
+                     Text(profile.role).font(.subheadline).foregroundStyle(.secondary)
+                 }
+                 HStack(spacing: 5) {
+-                    Text(profile.status.label)
+-                        .foregroundStyle(profile.status == .idle ? .secondary : profile.status.tint)
++                    if let last = profile.lastActiveAt, profile.status == .unknown {
++                        Text("Last active \(last, style: .relative) ago").foregroundStyle(.secondary)
++                    } else { Text(profile.status.label) }
++
+                     if let run {
+                         Text("· \(run.title)").foregroundStyle(.secondary)
+                     }
+diff --git a/Hermes/Features/Bots/ProfileDetailView.swift b/Hermes/Features/Bots/ProfileDetailView.swift
+index bf7713f..6ff691f 100644
+--- a/Hermes/Features/Bots/ProfileDetailView.swift
++++ b/Hermes/Features/Bots/ProfileDetailView.swift
+@@ -28,8 +28,12 @@ struct ProfileDetailView: View {
+         .navigationTitle(profiles.profile(profileID)?.name ?? "Bot")
+         .navigationBarTitleDisplayMode(.inline)
+         .task {
+-            await profiles.loadProfile(profileID)
+-            if connection.supports(.skills) { await skills.load { try await environment.client.skills.listSkills() } }
++            if !connection.supports(.botMode) && connection.supports(.skills) { await skills.load { try await environment.client.skills.listSkills() } }
++            repeat {
++                await profiles.loadProfile(profileID)
++                guard connection.supports(.botMode) else { return }
++                do { try await Task.sleep(for: .seconds(15)) } catch { return }
++            } while !Task.isCancelled
+         }
+     }
+ 
+@@ -56,7 +60,7 @@ struct ProfileDetailView: View {
+                 }
+             }
+ 
+-            Section {
++            if profile.isBotMode != true { Section {
+                 if profileConversations.isEmpty {
+                     Text("No conversations yet").foregroundStyle(.secondary)
+                 }
+@@ -79,6 +83,7 @@ struct ProfileDetailView: View {
+                 }
+             }
+ 
++            }
+             if !openTasks.isEmpty {
+                 Section("Tasks") {
+                     ForEach(openTasks.prefix(4)) { task in
+@@ -108,7 +113,7 @@ struct ProfileDetailView: View {
+             if profile.memorySummary != nil || profile.memoryEntryCount != nil {
+                 Section {
+                     if let summary = profile.memorySummary { Text(summary) }
+-                    if connection.supports(.memory) {
++                    if profile.isBotMode != true && connection.supports(.memory) {
+                         NavigationLink(value: Route.memory) {
+                             LabeledContent("Entries", value: profile.memoryEntryCount.map(String.init) ?? "—")
+                         }
+@@ -118,6 +123,15 @@ struct ProfileDetailView: View {
+                 }
+             }
+ 
++            if let names = profile.routinesMetadata, !names.isEmpty {
++                Section("Routines") { ForEach(names, id: \.self) { Text($0) } }
++            }
++            if !profile.mcpServerIDs.isEmpty {
++                Section("Connectors (MCP)") { ForEach(profile.mcpServerIDs, id: \.self) { Text($0) } }
++            }
++            if let names = profile.pluginsMetadata, !names.isEmpty {
++                Section("Plugins") { ForEach(names, id: \.self) { Text($0) } }
++            }
+             Section("Profile") {
+                 if let soul = profile.soulSummary {
+                     VStack(alignment: .leading, spacing: 4) {
+@@ -126,7 +140,7 @@ struct ProfileDetailView: View {
+                     }
+                     .padding(.vertical, 2)
+                 }
+-                KeyValueRow(label: "Model", value: profile.model.detailedLabel)
++                if profile.modelAvailable != false { KeyValueRow(label: "Model", value: profile.model.detailedLabel) }
+                 if !profile.toolsets.isEmpty {
+                     KeyValueRow(label: "Toolsets", value: profile.toolsets.joined(separator: ", "))
+                 }
+@@ -162,10 +176,15 @@ struct ProfileDetailView: View {
+                 }
+                 .font(.subheadline)
+                 .foregroundStyle(.secondary)
+-                Label(profile.model.detailedLabel, systemImage: "cpu")
++                if profile.modelAvailable != false { Label(profile.model.detailedLabel, systemImage: "cpu")
+                     .font(.caption)
+                     .foregroundStyle(.secondary)
+-                    .padding(.top, 1)
++                    .padding(.top, 1) }
++                if let last = profile.lastActiveAt { Text("Last active \(last, style: .relative) ago").font(.caption) }
++                if let action = profile.activitySummary, !action.isEmpty { Text(action).font(.caption) }
++                if profile.isBotMode == true && profile.canonicalChatAvailable != true {
++                    Text("Open this bot on the Studio to initialize its Bot Chat.").font(.caption)
++                }
+                 Text(profile.summary)
+                     .font(.subheadline)
+                     .padding(.top, 4)
+@@ -178,14 +197,21 @@ struct ProfileDetailView: View {
+     private func actions(_ profile: Profile) -> some View {
+         HStack(spacing: 10) {
+             Button {
+-                router.open(.newConversation(NewChatSeed(profileID: profile.id)))
++                if profile.isBotMode == true {
++                    environment.toasts.perform {
++                        if let chat = try await environment.client.profiles.canonicalConversation(profileID: profile.id) {
++                            conversations.apply(.conversationUpserted(chat))
++                            router.open(.conversation(chat.id))
++                        }
++                    }
++                } else { router.open(.newConversation(NewChatSeed(profileID: profile.id))) }
+             } label: {
+                 Label("Chat", systemImage: "bubble.left.fill").frame(maxWidth: .infinity)
+             }
+             .buttonStyle(.borderedProminent)
+-            .disabled(!connection.supports(.sessions))
++            .disabled(!connection.supports(.sessions) || (profile.isBotMode == true && profile.canonicalChatAvailable != true))
+ 
+-            if connection.supports(.kanban) {
++            if profile.isBotMode != true && connection.supports(.kanban) {
+                 Button {
+                     creatingTask = true
+                 } label: {
+diff --git a/Hermes/Features/Chat/ConversationView.swift b/Hermes/Features/Chat/ConversationView.swift
+index 78b92d1..e3adce5 100644
+--- a/Hermes/Features/Chat/ConversationView.swift
++++ b/Hermes/Features/Chat/ConversationView.swift
+@@ -66,12 +66,15 @@ struct ConversationView: View {
+             }
+         }
+         .safeAreaInset(edge: .bottom, spacing: 0) {
+-            ComposerView(model: model, focus: $composerFocused)
++            if model.conversationID?.hasPrefix("botchat.") == true {
++                Text("Studio Bot Chat · Read only").font(.caption).foregroundStyle(.secondary).padding()
++            } else { ComposerView(model: model, focus: $composerFocused) }
+         }
+         .connectionBanner(updatedAt: conversations.updatedAt)
+         .navigationBarTitleDisplayMode(.inline)
+         .toolbar { toolbar }
+         .task { await model.load(); await loadArtifacts() }
++        .refreshable { await model.load() }
+         .onChange(of: model.activeRun?.state) { Task { await loadArtifacts() } }
+         .quickLookPreview($downloadedArtifact)
+         .sheet(item: $steeringRun) { run in SteerSheet(run: run) }
+@@ -146,7 +149,7 @@ struct ConversationView: View {
+         ToolbarItem(placement: .principal) {
+             ConversationTitle(model: model)
+         }
+-        if let conversation = model.conversation {
++        if let conversation = model.conversation, conversation.readOnly != true {
+             ToolbarItem(placement: .topBarTrailing) {
+                 Menu {
+                     Button("Rename", systemImage: "pencil") {
+diff --git a/Hermes/Features/Chat/RunSettingsView.swift b/Hermes/Features/Chat/RunSettingsView.swift
+index c1b0ff3..6fc270c 100644
+--- a/Hermes/Features/Chat/RunSettingsView.swift
++++ b/Hermes/Features/Chat/RunSettingsView.swift
+@@ -51,9 +51,9 @@ struct RunSettingsSheet: View {
+         NavigationStack {
+             Form {
+                 Section {
+-                    if model.conversation == nil && connection.supports(.profiles) {
++                    if model.conversation == nil && connection.supports(.profiles) && !connection.supports(.botMode) {
+                         Picker("Profile", selection: $model.configuration.profileID) {
+-                            ForEach(profiles.sorted) { profile in
++                            ForEach(profiles.sorted.filter { $0.isBotMode != true }) { profile in
+                                 Text(profile.isDefault ? "\(profile.name) (default)" : profile.name).tag(profile.id)
+                             }
+                         }
+diff --git a/Hermes/Services/Bridge/BridgeHermesClient.swift b/Hermes/Services/Bridge/BridgeHermesClient.swift
+index deda868..446e797 100644
+--- a/Hermes/Services/Bridge/BridgeHermesClient.swift
++++ b/Hermes/Services/Bridge/BridgeHermesClient.swift
+@@ -185,11 +185,25 @@ final class BridgeHermesClient: HostService, HomeService, ConversationService, R
+                 if page.count < 100 || offset >= 10000 { break }
+             } while true
+         }
++        // A full refresh must retain imported Bot Chats that are still canonical.
++        // Resolve them again so compression, hidden bots and deletion are respected.
++        if currentStatus.capabilities.contains(.botMode) {
++            let roster = try await request("/bots")
++            let liveIDs = Set(roster["bots"].array.compactMap { $0["id"].string })
++            let importedIDs = knownConversations.values.filter { $0.readOnly == true && $0.id.hasPrefix("botchat.") }.map(\.id)
++            for id in importedIDs {
++                let botID = String(id.dropFirst(8))
++                if liveIDs.contains(botID), let chat = try? await canonicalConversation(profileID: botID) {
++                    rows.append(chat)
++                }
++            }
++        }
+         return rows
+     }
+     func messages(conversationID: String) async throws -> [Message] {
+         let id = try resource(conversationID)
+-        let j = try await request("/conversations/\(id)")
++        let path = try conversationID.hasPrefix("botchat.") ? "/bots/\(resource(String(conversationID.dropFirst(8))))/conversation" : "/conversations/\(id)"
++        let j = try await request(path)
+         let c = remember(j["conversation"])
+         let runs = j["observed_runs"].array.sorted { ($0["created_at"].double ?? 0) < ($1["created_at"].double ?? 0) }
+         for r in runs { _ = materializeSnapshot(r) }
+@@ -341,6 +355,10 @@ final class BridgeHermesClient: HostService, HomeService, ConversationService, R
+     }
+     // MARK: Read-only profiles and inventories
+     func listProfiles() async throws -> [Profile] {
++        if currentStatus.capabilities.contains(.botMode) {
++            let j = try await request("/bots")
++            return j["bots"].array.map { BridgeMapping.bot($0, hostID: hostID) }
++        }
+         let j = try await request("/profiles")
+         return j["profiles"].array.map { p in
+             let active = p["activity"].array.first
+@@ -351,7 +369,15 @@ final class BridgeHermesClient: HostService, HomeService, ConversationService, R
+                 isDefault:p["id"].string == "default", skillIDs:[], toolsets:[], mcpServerIDs:[], currentRunID:active?["id"].string)
+         }
+     }
++    func canonicalConversation(profileID: String) async throws -> Conversation? {
++        guard currentStatus.capabilities.contains(.botMode) else { return nil }
++        let j = try await request("/bots/\(resource(profileID))/conversation")
++        return remember(j["conversation"])
++    }
+     func profile(id: String) async throws -> Profile {
++        if currentStatus.capabilities.contains(.botMode) {
++            return BridgeMapping.bot(try await request("/bots/\(resource(id))"), hostID: hostID)
++        }
+         guard var value = try await listProfiles().first(where: { $0.id == id }) else { throw HermesError.notFound }
+         let j = try await request("/profiles/\(resource(id))")
+         value.soulSummary = j["soul"]["content"].string
+diff --git a/Hermes/Services/Bridge/BridgeMapping.swift b/Hermes/Services/Bridge/BridgeMapping.swift
+index cd3e867..698dce9 100644
+--- a/Hermes/Services/Bridge/BridgeMapping.swift
++++ b/Hermes/Services/Bridge/BridgeMapping.swift
+@@ -2,6 +2,29 @@ import Foundation
+ 
+ /// The versioned bridge contract is translated here, never in SwiftUI views.
+ nonisolated enum BridgeMapping {
++    static func bot(_ j: BridgeJSON, hostID: String) -> Profile {
++        let model = configuredModel(j)
++        return Profile(id: j["id"].string ?? "", name: j["name"].string ?? "", role: j["role"].string ?? "",
++            summary: j["description"].string ?? "", tint: .slate,
++            model: model ?? ModelRef(id: "unknown", displayName: "Unavailable", provider: ""),
++            status: ProfileStatus(rawValue: j["status"].string ?? "unknown") ?? .unknown, hostID: hostID,
++            isDefault: j["is_default"].bool ?? false,
++            skillIDs: j["skills"].array.filter { $0["enabled"].bool == true }.compactMap { $0["name"].string },
++            toolsets: j["toolsets"].array.filter { $0["enabled"].bool == true }.compactMap { $0["name"].string },
++            mcpServerIDs: j["mcp_servers"].array.filter { $0["enabled"].bool == true }.compactMap { $0["name"].string },
++            memorySummary: j["memory_metadata"]["active"].string.map { "Configured memory: " + $0 },
++            soulSummary: j["soul_summary"].string, isBotMode: true,
++            canonicalChatAvailable: j["canonical_chat_available"].bool,
++            lastActiveAt: date(j["last_active"]), activitySummary: j["activity"]["title"].string,
++            avatarData: j["avatar_data"].string,
++            routinesMetadata: j["routines"].array.compactMap { $0["name"].string },
++            pluginsMetadata: j["plugins"].array.compactMap { $0["name"].string }, modelAvailable: model != nil)
++    }
++    private static func configuredModel(_ j: BridgeJSON) -> ModelRef? {
++        j["model"].string.flatMap { name in
++            name.isEmpty ? nil : ModelRef(id: name, displayName: name, provider: j["provider"].string ?? "")
++        }
++    }
+     static func date(_ json: BridgeJSON) -> Date? {
+         if let seconds = json.double { return Date(timeIntervalSince1970: seconds) }
+         guard let value = json.string else { return nil }
+@@ -57,9 +80,10 @@ nonisolated enum BridgeMapping {
+         let created = date(j["started_at"]) ?? .distantPast
+         return Conversation(id: j["id"].string ?? "", title: j["title"].string ?? "Untitled conversation",
+                             profileID: j["profile"].string ?? "default", hostID: hostID, source: source,
+-                            createdAt: created, lastActivity: date(j["last_activity"]) ?? created,
+-                            preview: j["snippet"].string ?? "", project: nil, model: model(j), activeRunID: nil,
+-                            isPinned: false, messageCount: j["message_count"].int ?? 0)
++                            createdAt: created, lastActivity: date(j["last_activity"]) ?? date(j["last_active"]) ?? created,
++                            preview: j["snippet"].string ?? j["preview"].string ?? "", project: nil,
++                            model: j["read_only"].bool == true ? configuredModel(j) : model(j), activeRunID: nil,
++                            isPinned: false, messageCount: j["message_count"].int ?? 0, readOnly: j["read_only"].bool)
+     }
+     static func run(_ j: BridgeJSON, hostID: String) -> Run {
+         let state: RunState = switch j["state"].string {
+diff --git a/Hermes/Services/Protocols/ServiceProtocols.swift b/Hermes/Services/Protocols/ServiceProtocols.swift
+index 65fa03e..f064de5 100644
+--- a/Hermes/Services/Protocols/ServiceProtocols.swift
++++ b/Hermes/Services/Protocols/ServiceProtocols.swift
+@@ -56,9 +56,14 @@ protocol RunService: AnyObject, Sendable {
+ protocol ProfileService: AnyObject, Sendable {
+     func listProfiles() async throws -> [Profile]
+     func profile(id: String) async throws -> Profile
++    func canonicalConversation(profileID: String) async throws -> Conversation?
+     func updateProfile(id: String, changes: ProfileChanges) async throws -> Profile
+ }
+ 
++extension ProfileService {
++    func canonicalConversation(profileID: String) async throws -> Conversation? { nil }
++}
++
+ /// Editable profile fields. Deliberately small for V1.
+ nonisolated struct ProfileChanges: Hashable, Sendable {
+     var model: ModelRef?
+diff --git a/Hermes/Stores/ConversationStores.swift b/Hermes/Stores/ConversationStores.swift
+index 9dbb92c..0196be1 100644
+--- a/Hermes/Stores/ConversationStores.swift
++++ b/Hermes/Stores/ConversationStores.swift
+@@ -220,7 +220,7 @@ final class ConversationModel {
+ 
+     var canSend: Bool {
+         let hasContent = !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !attachments.isEmpty
+-        return hasContent && !isSending && connection.canControlChat && connection.connection.isConnected && composerMode != .busy
++        return conversation?.readOnly != true && conversationID?.hasPrefix("botchat.") != true && hasContent && !isSending && connection.canControlChat && connection.connection.isConnected && composerMode != .busy
+     }
+ 
+     func load() async {
+diff --git a/Hermes/Stores/WorkStores.swift b/Hermes/Stores/WorkStores.swift
+index 23a60eb..6ef525d 100644
+--- a/Hermes/Stores/WorkStores.swift
++++ b/Hermes/Stores/WorkStores.swift
+@@ -33,7 +33,7 @@ final class ProfileStore {
+     }
+ 
+     /// Non-default profiles, presented as bots.
+-    var bots: [Profile] { sorted.filter { !$0.isDefault } }
++    var bots: [Profile] { sorted.filter { $0.isBotMode == true || !$0.isDefault } }
+ 
+     func profile(_ id: String?) -> Profile? { id.flatMap { profiles[$0] } }
+ 
+@@ -42,7 +42,14 @@ final class ProfileStore {
+     func refresh() async {
+         phase = .loading
+         do {
+-            let list = try await client.profiles.listProfiles()
++            let list = try await client.profiles.listProfiles().map { summary in
++                guard summary.isBotMode == true, let detail = profiles[summary.id] else { return summary }
++                var value = summary
++                value.skillIDs = detail.skillIDs; value.toolsets = detail.toolsets; value.mcpServerIDs = detail.mcpServerIDs
++                value.soulSummary = detail.soulSummary; value.memorySummary = detail.memorySummary
++                value.avatarData = detail.avatarData; value.routinesMetadata = detail.routinesMetadata; value.pluginsMetadata = detail.pluginsMetadata
++                return value
++            }
+             profiles = Dictionary(list.map { ($0.id, $0) }, uniquingKeysWith: { $1 })
+             phase = .loaded
+             cache.save(list, key: .profiles)
+@@ -56,7 +63,9 @@ final class ProfileStore {
+     }
+ 
+     func loadProfile(_ id: String) async {
+-        if let p = try? await client.profiles.profile(id: id) { profiles[id] = p }
++        do { profiles[id] = try await client.profiles.profile(id: id) }
++        catch HermesError.notFound { profiles[id] = nil }
++        catch { /* Preserve last observed detail during a transient disconnect. */ }
+     }
+ 
+     func update(_ id: String, changes: ProfileChanges) async throws {
+diff --git a/HermesTests/BridgeIntegrationTests.swift b/HermesTests/BridgeIntegrationTests.swift
+index f34a355..b3a52a0 100644
+--- a/HermesTests/BridgeIntegrationTests.swift
++++ b/HermesTests/BridgeIntegrationTests.swift
+@@ -251,8 +251,93 @@ nonisolated private final class BridgeAckRecorder: HermesEventStream, @unchecked
+     }
+ }
+ 
++nonisolated private final class BotModeFixture: @unchecked Sendable {
++    private let lock = NSLock()
++    private var names = ["Research Orchestrator", "Hermes", "Research Worker"]
++    func replace(_ names: [String]) { lock.lock(); self.names = names; lock.unlock() }
++    func response(_ request: URLRequest) -> BridgeStubResponse {
++        lock.lock(); let names = self.names; lock.unlock()
++        let path = request.url!.path
++        if path.hasSuffix("/capabilities") { return capabilitiesResponse(features: #""sessions":true,"profiles":true,"botMode":true"#) }
++        let skills = ["research-terminal", "arxiv", "hermes-bluebubbles-operations", "llama-cpp", "llm-wiki", "online-price-comparison"]
++        let rows: [BridgeJSON] = names.map { name in .object([
++            "id": .string(name == "Hermes" ? "default-bot" : name.replacingOccurrences(of: " ", with: "-")),
++            "name": .string(name), "is_default": .bool(name == "Hermes"), "role": .string(""),
++            "model": .string("studio-model"), "provider": .string("studio-provider"), "status": .string("unknown"),
++            "last_active": .number(10), "canonical_chat_available": .bool(true),
++            "skills": .array(skills.map { .object(["name": .string($0), "enabled": .bool(true)]) }),
++            "soul_summary": .string("Configured Studio SOUL")]) }
++        if path.hasSuffix("/conversation") {
++            return BridgeStubResponse(body: #"{"conversation":{"id":"botchat.Research-Orchestrator","profile":"Research-Orchestrator","title":"Bot Chat","read_only":true},"messages":[{"id":1,"role":"user","content":"Existing Studio history"}]}"#)
++        }
++        if path.hasSuffix("/bots") { return BridgeStubResponse(body: encodedBridgeJSON(.object(["bots": .array(rows)]))) }
++        if path.hasSuffix("/conversations") { return BridgeStubResponse(body: #"{"conversations":[]}"#) }
++        return BridgeStubResponse(body: encodedBridgeJSON(rows.first ?? .null))
++    }
++}
++
+ @MainActor
+ struct BridgeIntegrationTests {
++    @Test func botMetadataDoesNotInferAModelFromItsIdentity() {
++        let missing = BridgeMapping.bot(.object(["id": .string("opaque-id"), "name": .string("Studio Bot")]), hostID: "studio")
++        #expect(missing.modelAvailable == false)
++        #expect(missing.status == .unknown)
++        #expect(missing.skillIDs.isEmpty && missing.soulSummary == nil)
++        let configured = BridgeMapping.bot(.object(["id": .string("opaque-id"), "name": .string("Studio Bot"), "model": .string("actual-model"), "provider": .string("actual-provider")]), hostID: "studio")
++        #expect(configured.model.displayName == "actual-model")
++        #expect(configured.model.provider == "actual-provider")
++        let chat = BridgeMapping.conversation(.object(["id": .string("botchat.opaque-id"), "read_only": .bool(true)]), hostID: "studio")
++        #expect(chat.model == nil)
++    }
++
++    @Test func botModeDiscoveryDetailsCanonicalChatAndRefresh() async throws {
++        let domain = uniqueBridgeTestHost(), hostID = UUID().uuidString
++        let fixture = BotModeFixture()
++        BridgeStubURLProtocol.register(host: domain) { fixture.response($0) }
++        defer { BridgeStubURLProtocol.unregister(host: domain) }
++        let backend = BridgeHermesClient(credentials: BridgeTestCredentialStore(hostID: hostID, token: "test-token"), session: makeBridgeTestSession())
++        let host = bridgeHost(id: hostID, domain: domain)
++        await backend.connect(to: host)
++        let cache = SnapshotCache(directory: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString))
++        let store = ProfileStore(client: backend.client, cache: cache)
++        await store.refresh()
++        #expect(Set(store.bots.map(\.name)) == ["Research Orchestrator", "Hermes", "Research Worker"])
++        #expect(store.bots.filter(\.isDefault).count == 1)
++        let detail = try await backend.profile(id: "Research-Orchestrator")
++        #expect(detail.skillIDs.contains("research-terminal"))
++        #expect(detail.skillIDs.count == 6)
++        #expect(detail.soulSummary == "Configured Studio SOUL")
++        #expect(detail.status == .unknown)
++        let chat = try #require(try await backend.canonicalConversation(profileID: detail.id))
++        #expect(chat.title == "Bot Chat" && chat.readOnly == true)
++        #expect(try await backend.messages(conversationID: chat.id).first?.plainText == "Existing Studio history")
++        #expect(try await backend.listConversations().contains { $0.id == chat.id && $0.readOnly == true })
++        fixture.replace(["Research Orchestrator", "Hermes", "Research Worker", "New Studio Bot"])
++        await store.refresh()
++        #expect(store.bots.contains { $0.name == "New Studio Bot" })
++        fixture.replace(["Hermes"])
++        await backend.disconnect(hostID: hostID)
++        await backend.connect(to: host)
++        await store.refresh()
++        #expect(store.bots.map(\.name) == ["Hermes"])
++        #expect(try await backend.listConversations().allSatisfy { $0.id != chat.id })
++    }
++
++    @Test func olderBridgeFallsBackToGenericProfiles() async throws {
++        let domain = uniqueBridgeTestHost(), hostID = UUID().uuidString
++        BridgeStubURLProtocol.register(host: domain) { request in
++            if request.url!.path.hasSuffix("/capabilities") { return capabilitiesResponse() }
++            return BridgeStubResponse(body: #"{"profiles":[{"id":"default","name":"default","health":{"connected":true}}]}"#)
++        }
++        defer { BridgeStubURLProtocol.unregister(host: domain) }
++        let backend = BridgeHermesClient(credentials: BridgeTestCredentialStore(hostID: hostID, token: "test-token"), session: makeBridgeTestSession())
++        await backend.connect(to: bridgeHost(id: hostID, domain: domain))
++        let rows = try await backend.listProfiles()
++        #expect(rows.count == 1 && rows.first?.id == "default")
++        #expect(rows.allSatisfy { $0.isBotMode != true })
++        #expect(try await backend.canonicalConversation(profileID: "default") == nil)
++    }
++
+     @Test func appPersistsEveryEventCursorBeforeAcknowledgingIt() async throws {
+         let fixtures = MockFixtures.standard()
+         let backend = MockHermesBackend(fixtures: fixtures)
+diff --git a/HermesUITests/RealStackUITests.swift b/HermesUITests/RealStackUITests.swift
+index b2f243b..c246441 100644
+--- a/HermesUITests/RealStackUITests.swift
++++ b/HermesUITests/RealStackUITests.swift
+@@ -26,3 +26,59 @@ final class RealStackUITests: XCTestCase {
+         XCTAssertTrue(app.staticTexts["Local scheduled work"].firstMatch.waitForExistence(timeout:10))
+     }
+ }
++
++/// Opt-in read-only smoke on the already-paired physical phone. Never provisions credentials.
++final class StudioBotUITests: XCTestCase {
++    private func studioApp() throws -> XCUIApplication {
++        guard ProcessInfo.processInfo.environment["HERMES_STUDIO_BOTS_UI"] == "1" else {
++            throw XCTSkip("Requires an already-paired physical iPhone and explicit Studio validation")
++        }
++        continueAfterFailure = false
++        let app = XCUIApplication()
++        app.launch()
++        XCTAssertTrue(app.tabBars.buttons["Bots"].waitForExistence(timeout: 15))
++        app.tabBars.buttons["Bots"].tap()
++        return app
++    }
++
++    private func row(_ name: String, in app: XCUIApplication) -> XCUIElement {
++        app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", name)).firstMatch
++    }
++
++    func testStudioBotListSkillsAndChat() throws {
++        let app = try studioApp()
++        for name in ["Research Orchestrator", "Hermes", "Research Worker"] {
++            XCTAssertTrue(row(name, in: app).waitForExistence(timeout: 30), name)
++        }
++        XCTAssertFalse(app.staticTexts["Default Profile"].exists)
++        let roster = XCTAttachment(screenshot: app.screenshot()); roster.name = "Studio Bots"; roster.lifetime = .keepAlways; add(roster)
++        row("Research Orchestrator", in: app).tap()
++        var found = app.staticTexts["research-terminal"].exists
++        for _ in 0..<30 where !found {
++            app.swipeUp()
++            found = app.staticTexts["research-terminal"].waitForExistence(timeout: 2)
++        }
++        XCTAssertTrue(found, "Research Orchestrator attached skill")
++        let skills = XCTAttachment(screenshot: app.screenshot()); skills.name = "Research Orchestrator skills"; skills.lifetime = .keepAlways; add(skills)
++        let chatButton = app.collectionViews.buttons["Chat"].firstMatch
++        for _ in 0..<30 where !chatButton.isHittable { app.swipeDown() }
++        XCTAssertTrue(chatButton.exists)
++        if chatButton.isEnabled {
++            chatButton.tap()
++            XCTAssertTrue(app.staticTexts["Studio Bot Chat · Read only"].waitForExistence(timeout: 20))
++            let chat = XCTAttachment(screenshot: app.screenshot()); chat.name = "Canonical Studio Bot Chat"; chat.lifetime = .keepAlways; add(chat)
++        }
++    }
++
++    func testNewStudioBotAppearsWithoutRebuild() throws {
++        let app = try studioApp()
++        XCTAssertTrue(row("Mobile Refresh Probe", in: app).waitForExistence(timeout: 60))
++        let evidence = XCTAttachment(screenshot: app.screenshot()); evidence.name = "New Studio bot after refresh"; evidence.lifetime = .keepAlways; add(evidence)
++    }
++
++    func testRemovedStudioBotDisappears() throws {
++        let app = try studioApp()
++        XCTAssertTrue(row("Research Orchestrator", in: app).waitForExistence(timeout: 30))
++        XCTAssertFalse(row("Mobile Refresh Probe", in: app).exists)
++    }
++}
+diff --git a/README.md b/README.md
+index 2ea884e..9e82ec5 100644
+--- a/README.md
++++ b/README.md
+@@ -33,14 +33,14 @@ xcodebuild -project Hermes.xcodeproj -scheme Hermes \
+ 
+ The app now starts with `BridgeHermesClient`. A fresh install opens unpaired; it does not silently run mock data. Existing UI tests (`-uiTesting`) and SwiftUI previews still use mocks. Explicit Simulation mode in Settings takes effect after relaunch and uses separate hosts/preferences/cache; its controls never configure the real client.
+ 
+-1. Install existing Hermes at the audited commit `2a4c9afd7bd`, including its Python environment. Run `scripts/install-bridge.sh --board default` as the Studio user. This installs two per-user LaunchAgents: a dedicated loopback Hermes desktop backend and the bridge. It preserves existing gateways and upstream source.
++1. Install existing Hermes at an audited commit (`2a4c9afd7bd` or `4bb9e57bfde8a0affb5553eff13ed6e1f14147f1`), including its Python environment. Run `scripts/install-bridge.sh --board default` as the Studio user. This installs two per-user LaunchAgents: a dedicated loopback Hermes desktop backend and the bridge. It preserves existing gateways and upstream source.
+ 2. Run `scripts/configure-tailscale.sh`. It configures private **Tailscale Serve HTTPS**, never Funnel. The current Studio address is **https://dippos-mac-studio.taildd4b84.ts.net**. Restrict permitted tailnet peers; application authentication is still required.
+ 3. Run `scripts/pairing-token.sh --name iPhone`, then `scripts/pairing-token.sh --show` in a private terminal when ready to pair. In More → Hosts → Add Host, enter a display name, the complete HTTPS URL and token. Save authenticates and selects it. Tokens live in device-only Keychain, never host records, UserDefaults, snapshots or logs. Manual pairing is V1; no QR enrollment service is exposed.
+ 4. After successful pairing, run `scripts/pairing-token.sh --forget-transfer`. Pair Again opens the secure editor; an empty token preserves the Keychain item. Remove Local Credential forgets it on the phone. Revoke on Studio with `scripts/pairing-token.sh --revoke DEVICE_ID`; there is no mobile revocation endpoint.
+ 
+ Use `scripts/status-bridge.sh`, `start-bridge.sh`, `stop-bridge.sh`, `update-bridge.sh` and `uninstall-bridge.sh` from `scripts/`. Updates retain credentials and the run journal, refuse active/uncertain chat runs, and roll back unhealthy runtimes. Services recover after crashes and start after login; they stop on logout and do not serve before login. Keep the Studio powered, awake and logged in. Logs contain bounded lifecycle records; raw child output is discarded to avoid leaking tokens or prompts.
+ 
+-See [Studio setup](docs/STUDIO_SETUP.md), [installation](docs/INSTALL.md), [release packaging](RELEASE.md), and [deployment/device evidence](PHYSICAL_DEVICE_TEST_REPORT.md). No physical iPhone or SideStore installation has been validated yet.
++See [Studio setup](docs/STUDIO_SETUP.md), [installation](docs/INSTALL.md), [release packaging](RELEASE.md), and [earlier deployment/device evidence](PHYSICAL_DEVICE_TEST_REPORT.md). Current physical-iPhone installation and Bot Mode evidence is recorded in [Bot Mode validation](BOT_MODE_VALIDATION.md). SideStore installation remains unvalidated.
+ 
+ See [API](BRIDGE_API.md), [Swift mappings](INTEGRATION_POINTS.md), [integration guide](IOS_INTEGRATION_GUIDE.md) and [validation report](INTEGRATION_TEST_REPORT.md).
+ 
+@@ -92,3 +92,8 @@ python3 scripts/test_studio_service.py -v
+ ```
+ 
+ This confirms the iOS networking/Keychain path on Simulator, not physical-phone connectivity. Never commit the fixture or pass a token as a launch argument.
++
++
++### Desktop Bot Mode
++
++The Bots tab can discover the Studio Desktop roster dynamically, including the default Hermes identity once, and display each bot's actual enabled skills and configuration. Enable the private backend's `bot_mode_roster` grant (or `install-bridge.sh --bot-mode` on a new install). Canonical Bot Chats open read-only; bot creation/editing is deferred. See [source audit](BOT_MODE_AUDIT.md) and [validation evidence](BOT_MODE_VALIDATION.md).
+diff --git a/hermes-mobile-bridge/README.md b/hermes-mobile-bridge/README.md
+index e358225..a3a4aa7 100644
+--- a/hermes-mobile-bridge/README.md
++++ b/hermes-mobile-bridge/README.md
+@@ -58,6 +58,9 @@ For iPhone access, deliberately configure Tailscale HTTPS/reverse proxy to this
+ HERMES_BRIDGE_E2E=1 HERMES_SOURCE=/absolute/hermes-agent .venv/bin/python -m pytest -q -s
+ ```
+ 
+-The opt-in integration test runs the installed Hermes interpreter/source under a temporary `HERMES_HOME`, uses a local mock model, and tears down only its own processes. It does not use production profiles or provider keys. Hermes's venv must already contain the dashboard dependencies. Ordinary tests use actual loopback HTTP/WebSocket sockets with a deterministic fake Hermes service.
++The opt-in integration test runs the installed Hermes interpreter/source under a temporary `HERMES_HOME`, uses a local mock model, and tears down only its own processes. It does not use production profiles or provider keys. The audited legacy commit uses Hermes's venv; the current commit resolves Hermes's managed dependency environment. Dependencies must already be prepared; lazy installs are disabled. Ordinary tests use actual loopback HTTP/WebSocket sockets with a deterministic fake Hermes service.
+ 
+ SQLite observations and command receipts persist indefinitely; events expire by age/count/byte budget. Run text projections are capped at one million characters; final Hermes transcripts remain canonical. Plan intentional local backup/disk monitoring for the journal. Avoid copying it while live without SQLite's backup mechanism.
++
++
++Desktop Bot Mode is available through an explicit `bot_mode_roster: true` backend grant. See [source audit and mobile contract](../BOT_MODE_AUDIT.md). This grants read access to all local bots, including newly created bots, to credentials authorized for that source backend; it does not grant control of their Desktop chats.
+diff --git a/hermes-mobile-bridge/src/hermes_mobile_bridge/api.py b/hermes-mobile-bridge/src/hermes_mobile_bridge/api.py
+index fd00669..29c56e4 100644
+--- a/hermes-mobile-bridge/src/hermes_mobile_bridge/api.py
++++ b/hermes-mobile-bridge/src/hermes_mobile_bridge/api.py
+@@ -8,6 +8,7 @@ from aiohttp import web
+ from . import __version__
+ from .core import ACTIVE, Problem, TERMINAL, cron, host_info, identifier, message, now, opaque, only, task, unopaque, usage
+ from .service import Service
++from .bots import BotMode
+ 
+ PREFIX = "/mobile/v1"
+ SERVICE = web.AppKey("service", Service)
+@@ -111,10 +112,22 @@ async def capabilities(request):
+         b = s.backends[p]
+         paths = b.paths
+         available = lambda route: b.connected and route in paths
+-        result[p] = {"health": b.health(), "features": {"sessions": b.connected, "runs": b.connected, "runReplay": True, "stop": b.connected, "steering": b.connected, "approvals": {"observe": b.connected, "respond": False, "reason": "upstream_fifo_without_exact_target", "clarifications": b.connected}, "profiles": True, "cron": available("/api/cron/jobs"), "kanban": bool(b.cfg["boards"]) and available("/api/plugins/kanban/board"), "usage": available("/api/analytics/usage"), "skills": available("/api/skills"), "tools": available("/api/tools/toolsets"), "mcp": available("/api/mcp/servers"), "artifacts": bool(b.cfg["artifact_roots"]), "botMode": False, "botRooms": False}, "desktop_contract_audited": 2, "audited_commit": "2a4c9afd7bd", "installed_commit": b.cfg.get("installed_commit"), "boards": b.cfg["boards"], "workspaces": [{"id": k, "name": k} for k in b.cfg["workspaces"]]}
++        result[p] = {"health": b.health(), "features": {"sessions": b.connected, "runs": b.connected, "runReplay": True, "stop": b.connected, "steering": b.connected, "approvals": {"observe": b.connected, "respond": False, "reason": "upstream_fifo_without_exact_target", "clarifications": b.connected}, "profiles": True, "cron": available("/api/cron/jobs"), "kanban": bool(b.cfg["boards"]) and available("/api/plugins/kanban/board"), "usage": available("/api/analytics/usage"), "skills": available("/api/skills"), "tools": available("/api/tools/toolsets"), "mcp": available("/api/mcp/servers"), "artifacts": bool(b.cfg["artifact_roots"]), "botMode": b.connected and b.cfg.get("bot_mode_roster", False) and b.bot_mode_supported, "botRooms": False}, "desktop_contract_audited": 2, "audited_commit": b.cfg.get("installed_commit") or "2a4c9afd7bd", "installed_commit": b.cfg.get("installed_commit"), "boards": b.cfg["boards"], "workspaces": [{"id": k, "name": k} for k in b.cfg["workspaces"]]}
+     return web.json_response({"api_version": 1, "bridge_version": __version__, "journal_epoch": s.store.epoch, "cursor": s.store.cursor(), "scopes": request[AUTH]["scopes"], "profiles": result, "retention": {"global_events": s.cfg["event_limit"], "per_run_events": s.cfg["run_event_limit"], "days": s.cfg["event_days"]}, "coverage": "Controlled runs are bridge-owned desktop sessions; other-process activity is read-only and incomplete"})
+ 
+ 
++async def bots(request):
++    return web.json_response({"bots": await BotMode(svc(request), request[AUTH]).list()})
++
++
++async def bot_detail(request):
++    return web.json_response(await BotMode(svc(request), request[AUTH]).detail(request.match_info["bid"]))
++
++
++async def bot_conversation(request):
++    return web.json_response(await BotMode(svc(request), request[AUTH]).conversation(request.match_info["bid"]))
++
++
+ async def conversations(request):
+     s = svc(request)
+     p, b = profile(request, "chat.control" if request.method == "POST" else "read")
+@@ -677,6 +690,7 @@ def create_app(cfg):
+     app = web.Application(middlewares=[contract], client_max_size=cfg["upload_limit"] * 2 + 4096)
+     app[SERVICE] = s
+     routes = [
++        web.get(PREFIX + "/bots", bots), web.get(PREFIX + "/bots/{bid}", bot_detail), web.get(PREFIX + "/bots/{bid}/conversation", bot_conversation),
+         web.get(PREFIX + "/capabilities", capabilities), web.get(PREFIX + "/home", home), web.get(PREFIX + "/profiles", profiles), web.get(PREFIX + "/profiles/{pid}", profile_detail),
+         web.get(PREFIX + "/conversations", conversations), web.post(PREFIX + "/conversations", conversations),
+         web.get(PREFIX + "/conversations/{cid}", conversation_detail), web.patch(PREFIX + "/conversations/{cid}", conversation_detail), web.delete(PREFIX + "/conversations/{cid}", conversation_detail),
+diff --git a/hermes-mobile-bridge/src/hermes_mobile_bridge/bots.py b/hermes-mobile-bridge/src/hermes_mobile_bridge/bots.py
+new file mode 100644
+index 0000000..cb26b60
+--- /dev/null
++++ b/hermes-mobile-bridge/src/hermes_mobile_bridge/bots.py
+@@ -0,0 +1,104 @@
++"""Read-only Bot Mode adapter for the audited profile-backed Desktop roster.
++
++No paths, arbitrary config, credentials, or chat ownership cross this boundary.
++A backend must explicitly opt its whole local roster into mobile read access.
++"""
++from .core import Problem, identifier, opaque, unopaque, only, message
++
++AUDITED_COMMITS = ('2a4c9afd7bd', '4bb9e57bfde8a0affb5553eff13ed6e1f14147f1')
++
++
++def bot_row(source, row):
++    name = identifier(row['name'])
++    meta = (row.get('ui_meta') or {}).get('hermes-bots') or {}
++    title = meta.get('title') or row.get('display_name') or ('Hermes' if name == 'default' else name.replace('-', ' ').replace('_', ' ').title())
++    sessions = [s for s in (row.get('canonical_session'), row.get('last_session'), row.get('worker_session')) if isinstance(s, dict)]
++    last = max(sessions, key=lambda s: s.get('last_active') or 0, default={})
++    return {'id': opaque(source, name), 'name': title.strip(), 'profile_id': name,
++            'is_default': bool(row.get('is_default') or name == 'default'),
++            'description': meta.get('description') or row.get('description') or '',
++            # Backend role is a permission role, not a guessed research/general category.
++            'role': row.get('role') or '', 'model': row.get('model'), 'provider': row.get('provider'),
++            'status': 'unknown', 'last_active': last.get('last_active'),
++            'activity': only(last, 'title preview last_active'), 'has_avatar': bool(row.get('has_avatar')),
++            'canonical_chat_available': isinstance(row.get('canonical_session'), dict),
++            'source': 'hermes_desktop_profiles', 'activity_coverage': 'persisted_sessions_and_this_backend_only'}
++
++
++class BotMode:
++    def __init__(self, service, auth):
++        self.service, self.auth = service, auth
++
++    async def roster(self, source):
++        backend = self.service.require(self.auth, source)
++        if not backend.cfg.get('bot_mode_roster'):
++            raise Problem(404, 'bot_mode_unavailable', 'Bot Mode is not enabled on this backend')
++        raw = await backend.rpc('profiles.list', {'include_sessions': True})
++        if raw.get('bot_mode_protocol') is not True:
++            raise Problem(404, 'bot_mode_unavailable', 'This Hermes backend has no audited Bot Mode contract')
++        return backend, [r for r in raw.get('profiles', []) if isinstance(r, dict) and not (r.get('ui_meta') or {}).get('hermes-bots', {}).get('hidden')]
++
++    async def list(self):
++        result = []
++        for source in self.service.profiles(self.auth):
++            if self.service.backends[source].cfg.get('bot_mode_roster'):
++                _, rows = await self.roster(source)
++                result.extend(bot_row(source, r) for r in rows)
++        return result
++
++    async def resolve(self, bid):
++        source, name = unopaque(bid)
++        backend, rows = await self.roster(source)
++        row = next((r for r in rows if r.get('name') == name), None)
++        if row is None:
++            raise Problem(404, 'not_found', 'Bot is no longer in the Studio roster')
++        return source, name, backend, row
++
++    async def detail(self, bid):
++        source, name, backend, row = await self.resolve(bid)
++        raw = await backend.rpc('profiles.describe', {'name': name})
++        result = bot_row(source, row)
++        model = raw.get('model') or {}
++        result.update(model=model.get('default') or result['model'], provider=model.get('provider') or result['provider'],
++                      soul_summary=(raw.get('soul') or '')[:12000] or None,
++                      skills=[only(s, 'name enabled') for s in raw.get('skills', [])],
++                      toolsets=[only(t, 'name enabled available') for t in raw.get('toolsets', [])],
++                      mcp_servers=[only(m, 'name enabled transport') for m in raw.get('mcp_servers', [])],
++                      config_metadata={'toolsets_pinned': raw.get('toolsets_pinned'), 'source': 'profiles.describe'})
++        if row.get('has_avatar'):
++            asset = await backend.rpc('profiles.get_asset', {'name': name, 'asset': 'avatar'})
++            data = asset.get('data')
++            if isinstance(data, str) and len(data) <= 2800000 and data.startswith(('data:image/png;base64,', 'data:image/jpeg;base64,', 'data:image/webp;base64,')):
++                result['avatar_data'] = data
++        # Safe allowlisted metadata only. Optional resources stay absent on failure.
++        for resource, path in [('routines', '/api/cron/jobs'), ('memory', '/api/memory')]:
++            try:
++                value = await backend.rest('GET', path, query={'profile': name})
++                if resource == 'routines' and isinstance(value, list):
++                    result[resource] = [only(v, 'id name enabled last_run_at last_status next_run_at') for v in value]
++                elif resource == 'memory' and isinstance(value, dict):
++                    result['memory_metadata'] = {'active': value.get('active'), 'providers': [only(v, 'name configured') for v in value.get('providers', [])], 'builtin_bytes': only(value.get('builtin_files') or {}, 'memory user')}
++            except Problem:
++                pass
++        try:
++            plugins = await backend.rpc('plugins.manage', {'profile': name, 'action': 'list'})
++            result['plugins'] = [only(v, 'name enabled') for v in plugins.get('plugins', [])]
++        except Problem:
++            pass
++        return result
++
++    async def conversation(self, bid):
++        source, name, backend, _ = await self.resolve(bid)
++        # Indexed exact-title lookup EVERY open/read. Never use recency or a saved id pin.
++        raw = await backend.rpc('session.list', {'profile': name, 'title': 'Bot Chat', 'include_hidden': True})
++        rows = raw.get('sessions', [])
++        if not rows:
++            raise Problem(404, 'bot_chat_unavailable', 'This bot has no canonical Bot Chat yet; open it on the Studio')
++        row = rows[0]
++        if row.get('title') != 'Bot Chat':
++            raise Problem(502, 'bot_chat_contract_mismatch', 'Hermes did not resolve the exact Bot Chat identity')
++        sid = identifier(row.get('resolved_id') or row['id'])
++        history = await backend.rest('GET', f'/api/sessions/{sid}/messages', query={'profile': name})
++        return {'conversation': {'id': 'botchat.' + bid, 'profile': bid, 'title': 'Bot Chat', 'read_only': True,
++                                'model': row.get('model'), 'source': 'api', **only(row, 'started_at message_count last_active preview')},
++                'messages': [message(m) for m in history.get('messages', [])], 'observed_runs': []}
+diff --git a/hermes-mobile-bridge/src/hermes_mobile_bridge/cli.py b/hermes-mobile-bridge/src/hermes_mobile_bridge/cli.py
+index e6e96cb..cf0e064 100644
+--- a/hermes-mobile-bridge/src/hermes_mobile_bridge/cli.py
++++ b/hermes-mobile-bridge/src/hermes_mobile_bridge/cli.py
+@@ -8,6 +8,7 @@ import sys
+ from aiohttp import web
+ from .api import create_app
+ from .core import SCOPES, load_config
++from .bots import AUDITED_COMMITS
+ from .store import Store
+ 
+ 
+@@ -31,7 +32,7 @@ def main():
+             for b in cfg["backends"].values():
+                 if b.get("source_dir"):
+                     b["installed_commit"] = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=b["source_dir"], text=True, timeout=5).strip()
+-                    if not b["installed_commit"].startswith("2a4c9afd7bd"):
++                    if not any(b["installed_commit"].startswith(c) for c in AUDITED_COMMITS):
+                         raise ValueError("Hermes commit differs from audited contract; audit before serving")
+             tls = None
+             if cfg.get("tls_cert") and cfg.get("tls_key"):
+diff --git a/hermes-mobile-bridge/src/hermes_mobile_bridge/upstream.py b/hermes-mobile-bridge/src/hermes_mobile_bridge/upstream.py
+index 33e084f..dd71e1b 100644
+--- a/hermes-mobile-bridge/src/hermes_mobile_bridge/upstream.py
++++ b/hermes-mobile-bridge/src/hermes_mobile_bridge/upstream.py
+@@ -13,6 +13,7 @@ class Backend:
+         self.ws = None
+         self.pending = {}
+         self.connected = False
++        self.bot_mode_supported = False
+         self.last_seen = None
+         self.generation = 0
+         self.paths = set()
+@@ -92,6 +93,13 @@ class Backend:
+                     self.paths = set(spec.get("paths", {}))
+                 except Problem:
+                     self.paths = set()
++                self.bot_mode_supported = False
++                if self.cfg.get("bot_mode_roster"):
++                    try:
++                        roster = await self.rpc("profiles.list", {"include_sessions": False})
++                        self.bot_mode_supported = roster.get("bot_mode_protocol") is True
++                    except Problem:
++                        pass
+                 self.connected = True
+                 self.generation += 1
+                 delay = 0.5
+diff --git a/hermes-mobile-bridge/tests/conftest.py b/hermes-mobile-bridge/tests/conftest.py
+index 690ba92..223a73e 100644
+--- a/hermes-mobile-bridge/tests/conftest.py
++++ b/hermes-mobile-bridge/tests/conftest.py
+@@ -28,6 +28,8 @@ class FakeHermes:
+         self.sessions, self.jobs, self.cards = {}, {}, {}
+         self.ws, self.prompts, self.approval_calls, self.methods = None, 0, 0, []
+         self.drop_prompt_reply = False
++        self.bot_roster = []
++        self.bot_details = {}
+         self.app = web.Application()
+         self.app.router.add_get('/api/ws', self.socket)
+         self.app.router.add_route('*', '/{path:.*}', self.rest)
+@@ -47,7 +49,16 @@ class FakeHermes:
+             req = msg.json()
+             method, p, result, error = req['method'], req['params'], {}, None
+             self.methods.append(method)
+-            if method == 'session.active_list':
++            if method == 'profiles.list':
++                result = {'profiles': self.bot_roster, 'bot_mode_protocol': True}
++            elif method == 'profiles.describe':
++                result = self.bot_details.get(p['name'], {})
++            elif method == 'profiles.get_asset':
++                result = {'found': False}
++            elif method == 'session.list':
++                row = next((x for x in self.bot_roster if x['name'] == p.get('profile')), {})
++                result = {'sessions': [row['canonical_session']] if row.get('canonical_session') else []}
++            elif method == 'session.active_list':
+                 result = {'sessions': [{'id': sid, 'session_key': x['stored'], 'status': x['status']} for sid, x in self.sessions.items()]}
+             elif method == 'session.create':
+                 sid, stored = uuid.uuid4().hex[:8], uuid.uuid4().hex
+diff --git a/hermes-mobile-bridge/tests/test_bots.py b/hermes-mobile-bridge/tests/test_bots.py
+new file mode 100644
+index 0000000..b88a633
+--- /dev/null
++++ b/hermes-mobile-bridge/tests/test_bots.py
+@@ -0,0 +1,90 @@
++"""Sanitized Studio-shaped wire fixtures; names never enter production code."""
++import pytest
++from hermes_mobile_bridge.bots import bot_row
++from hermes_mobile_bridge.core import opaque
++
++pytestmark = pytest.mark.asyncio
++
++SKILLS = ['research-terminal', 'arxiv', 'hermes-bluebubbles-operations', 'llama-cpp', 'llm-wiki', 'online-price-comparison']
++
++
++def studio_rows():
++    return [{'name': name, 'is_default': name == 'default', 'display_name': title,
++             'description': 'Configured Studio identity', 'model': 'studio-model', 'provider': 'studio-provider',
++             'path': '/private/never-expose', 'ui_meta': {'hermes-bots': {'title': title}},
++             'canonical_session': {'id': name + '-root', 'resolved_id': name + '-tip', 'title': 'Bot Chat', 'last_active': 10}}
++            for name, title in [('research-orchestrator', 'Research Orchestrator'), ('default', 'Hermes'), ('research-worker', 'Research Worker')]]
++
++
++async def enable(h):
++    h.fake.bot_roster = studio_rows()
++    h.service.backends['default'].cfg['bot_mode_roster'] = True
++    h.service.backends['default'].bot_mode_supported = True
++
++
++async def test_roster_dynamic_refresh_remove_reconnect(harness):
++    h = harness
++    await enable(h)
++    rows = (await h.request('GET', '/bots'))['bots']
++    assert [x['name'] for x in rows] == ['Research Orchestrator', 'Hermes', 'Research Worker']
++    assert len([x for x in rows if x['is_default']]) == 1
++    assert '/private/' not in str(rows)
++    h.fake.bot_roster.append({'name': 'new-bot', 'display_name': 'New Bot'})
++    assert len((await h.request('GET', '/bots'))['bots']) == 4
++    h.fake.bot_roster[0]['ui_meta']['hermes-bots']['hidden'] = True
++    assert len((await h.request('GET', '/bots'))['bots']) == 3
++    h.fake.bot_roster.pop()
++    await h.client.close()
++    await h.bridge_runner.cleanup()
++    await h.start_bridge()
++    assert len((await h.request('GET', '/bots'))['bots']) == 2
++    await h.request('GET', '/bots/' + opaque('default', 'new-bot'), expected=404)
++
++
++async def test_detail_attached_skills_and_canonical_tip(harness):
++    h = harness
++    await enable(h)
++    h.fake.bot_details['research-orchestrator'] = {'soul': 'Configured SOUL', 'skills': [{'name': s, 'enabled': True, 'path': '/secret'} for s in SKILLS],
++        'model': {'default': 'studio-model', 'provider': 'studio-provider'}, 'toolsets': [{'name': 'terminal', 'enabled': True}],
++        'mcp_servers': [{'name': 'local', 'enabled': True, 'env': {'API_KEY': 'never'}}]}
++    bid = opaque('default', 'research-orchestrator')
++    d = await h.request('GET', '/bots/' + bid)
++    assert [s['name'] for s in d['skills']] == SKILLS
++    assert d['soul_summary'] == 'Configured SOUL'
++    assert 'never' not in str(d) and '/secret' not in str(d)
++    h.fake.sessions['native'] = {'stored': 'research-orchestrator-tip', 'status': 'idle', 'title': 'Bot Chat', 'messages': [{'id': 1, 'role': 'user', 'content': 'Existing Studio conversation'}]}
++    chat = await h.request('GET', '/bots/' + bid + '/conversation')
++    assert chat['conversation']['id'] == 'botchat.' + bid
++    assert chat['conversation']['read_only'] is True
++    assert chat['messages'][0]['content'] == 'Existing Studio conversation'
++    assert 'session.resume' not in h.fake.methods and 'session.create' not in h.fake.methods
++    # A compressed tip moves; the next read resolves by title rather than the previous ID.
++    h.fake.bot_roster[0]['canonical_session']['resolved_id'] = 'next-tip'
++    h.fake.sessions['native']['stored'] = 'next-tip'
++    assert (await h.request('GET', '/bots/' + bid + '/conversation'))['messages'] == chat['messages']
++
++
++async def test_capability_scope_fallback_no_mock_leak(harness):
++    h = harness
++    caps = await h.request('GET', '/capabilities')
++    assert caps['profiles']['default']['features']['profiles'] is True
++    assert caps['profiles']['default']['features']['botMode'] is False
++    assert (await h.request('GET', '/bots'))['bots'] == []
++    await enable(h)
++    assert (await h.request('GET', '/capabilities'))['profiles']['default']['features']['botMode'] is True
++    await h.request('GET', '/bots/' + opaque('private', 'default'), expected=403)
++    h.fake.bot_roster = []
++    assert (await h.request('GET', '/bots'))['bots'] == []
++
++
++async def test_missing_chat_never_mints(harness):
++    h = harness
++    await enable(h)
++    h.fake.bot_roster[0]['canonical_session'] = None
++    await h.request('GET', '/bots/' + opaque('default', 'research-orchestrator') + '/conversation', expected=404)
++    assert h.fake.prompts == 0 and 'session.create' not in h.fake.methods
++
++
++async def test_activity_unknown_not_guessed_idle():
++    r = bot_row('default', {'name': 'default', 'last_session': {'last_active': 12}, 'canonical_session': {'last_active': 10}})
++    assert r['name'] == 'Hermes' and r['status'] == 'unknown' and r['last_active'] == 12
+diff --git a/hermes-mobile-bridge/tests/test_installed_hermes.py b/hermes-mobile-bridge/tests/test_installed_hermes.py
+index e87e2b8..23901e6 100644
+--- a/hermes-mobile-bridge/tests/test_installed_hermes.py
++++ b/hermes-mobile-bridge/tests/test_installed_hermes.py
+@@ -55,7 +55,8 @@ class LocalModel:
+ 
+ async def test_installed_source_end_to_end(tmp_path):
+     commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=SOURCE, text=True).strip()
+-    assert commit.startswith('2a4c9afd7bd')
++    from hermes_mobile_bridge.bots import AUDITED_COMMITS
++    assert any(commit.startswith(c) for c in AUDITED_COMMITS)
+     model = LocalModel()
+     model_runner, model_port = await serve(model.app)
+     sock = socket.socket()
+@@ -84,17 +85,36 @@ memory:
+   memory_enabled: false
+   user_profile_enabled: false
+ ''')
++    if commit == '4bb9e57bfde8a0affb5553eff13ed6e1f14147f1':
++        from test_bots import SKILLS
++        for name, title in [('research-orchestrator', 'Research Orchestrator'), ('research-worker', 'Research Worker')]:
++            profile = home / 'profiles' / name
++            profile.mkdir(parents=True)
++            (profile / 'config.yaml').write_text((home / 'config.yaml').read_text())
++            (profile / 'profile.yaml').write_text('display_name: ' + title + '\nui_meta:\n  hermes-bots:\n    title: ' + title + '\n')
++            (profile / 'SOUL.md').write_text('Isolated Bot Mode fixture')
++            for skill in SKILLS:
++                folder = profile / 'skills' / skill
++                folder.mkdir(parents=True)
++                (folder / 'SKILL.md').write_text('---\nname: ' + skill + '\ndescription: Safe fixture\n---\n')
+     # No host provider credentials are inherited. Upstream receives a dummy
+     # local-model key in its isolated config, not the production .env.
+     env = {k: v for k, v in os.environ.items() if not any(x in k.upper() for x in ('API_KEY', 'TOKEN', 'SECRET', 'HERMES_', 'ANTHROPIC_', 'OPENAI_', 'OPENROUTER_', 'NOUS_')) and k not in {'PYTHONPATH', 'PYTHONHOME'}}
+-    env.update(HERMES_HOME=str(home), HERMES_DASHBOARD_SESSION_TOKEN='u' * 32, HERMES_TUI_TOOLSETS='terminal,file', PYTHONUNBUFFERED='1')
++    env.update(HERMES_DISABLE_LAZY_INSTALLS='1', HERMES_HOME=str(home), HERMES_DASHBOARD_SESSION_TOKEN='u' * 32, HERMES_TUI_TOOLSETS='terminal,file', PYTHONUNBUFFERED='1')
++    if commit == '4bb9e57bfde8a0affb5553eff13ed6e1f14147f1':
++        # Reuse installed code dependencies, never production config/provider credentials.
++        env['HERMES_RUNTIME_DIR'] = str(SOURCE.parent / 'tools')
+     log = open(tmp_path / 'hermes-local.log', 'w')
+     python = SOURCE / 'venv/bin/python'
+     proc = None
+     bridge_runner = None
+     client = None
+     try:
+-        proc = subprocess.Popen([str(python), '-c', f'from hermes_cli.web_server import start_server; start_server(port={port}, open_browser=False)'], cwd=SOURCE, env=env, stdout=log, stderr=log)
++        args = [str(python), '-c', f'from hermes_cli.web_server import start_server; start_server(port={port}, open_browser=False)']
++        if commit == '4bb9e57bfde8a0affb5553eff13ed6e1f14147f1':
++            resolver = 'import sys,json; from pathlib import Path; sys.path.insert(0,sys.argv[1]); from hermes_cli._launchers import runtime_command; from pm.environments import project_python; print(json.dumps(runtime_command(Path(sys.argv[1]),code=sys.argv[2],python=project_python(Path(sys.argv[1])))))'
++            args = json.loads(subprocess.check_output([str(python), '-I', '-c', resolver, str(SOURCE), args[2]], env=dict(env, HERMES_HOME=str(SOURCE.parent)), text=True))
++        proc = subprocess.Popen(args, cwd=SOURCE, env=env, stdout=log, stderr=log)
+         async with aiohttp.ClientSession() as probe:
+             async with asyncio.timeout(40):
+                 while True:
+@@ -107,7 +127,7 @@ memory:
+                     except aiohttp.ClientError:
+                         pass
+                     await asyncio.sleep(.2)
+-        cfg = {'state_dir': str(tmp_path / 'bridge-state'), 'event_limit': 1000, 'run_event_limit': 500, 'event_days': 7, 'upload_limit': 1024 * 1024, 'artifact_limit': 2 * 1024 * 1024, 'backends': {'default': {'url': f'http://127.0.0.1:{port}', 'token': 'u' * 32, 'boards': ['default'], 'workspaces': {'test': str(work)}, 'artifact_roots': [str(work / '.hermes/desktop-attachments')], 'installed_commit': commit}}}
++        cfg = {'state_dir': str(tmp_path / 'bridge-state'), 'event_limit': 1000, 'run_event_limit': 500, 'event_days': 7, 'upload_limit': 1024 * 1024, 'artifact_limit': 2 * 1024 * 1024, 'backends': {'default': {'url': f'http://127.0.0.1:{port}', 'token': 'u' * 32, 'boards': ['default'], 'workspaces': {'test': str(work)}, 'artifact_roots': [str(work / '.hermes/desktop-attachments'), str(home / 'attachments')], 'bot_mode_roster': commit == '4bb9e57bfde8a0affb5553eff13ed6e1f14147f1', 'installed_commit': commit}}}
+         app = create_app(cfg)
+         service = app[SERVICE]
+         _, token = service.store.token('integration', ['read', 'chat.control', 'tasks.manage', 'approvals.respond'], ['default'])
+@@ -119,6 +139,20 @@ memory:
+                 out = await res.json()
+                 assert res.status == expected, out
+                 return out
++        if cfg['backends']['default']['bot_mode_roster']:
++            bots = (await request('GET', '/bots'))['bots']
++            assert {b['name'] for b in bots} == {'Hermes', 'Research Orchestrator', 'Research Worker'}
++            bot = next(b for b in bots if b['name'] == 'Research Orchestrator')
++            detail = await request('GET', '/bots/' + bot['id'])
++            assert {v['name'] for v in detail['skills']} == set(SKILLS)
++            # Seed only a fixture-owned SQLite transcript via the installed source.
++            script = "from hermes_state import SessionDB; from pathlib import Path; db=SessionDB(db_path=Path(" + repr(str(home / 'profiles/research-orchestrator/state.db')) + ")); db.create_session('fixture-bot-chat', source='desktop', profile_name='research-orchestrator'); db.set_session_title('fixture-bot-chat','Bot Chat'); db.set_session_hidden('fixture-bot-chat',True); db.append_message('fixture-bot-chat','user','Existing canonical fixture chat'); db.close()"
++            seed_args = json.loads(subprocess.check_output([str(python), '-I', '-c', resolver, str(SOURCE), script], env=dict(env, HERMES_HOME=str(SOURCE.parent)), text=True))
++            seeded = await asyncio.to_thread(subprocess.run, seed_args, cwd=SOURCE, env=env, capture_output=True, timeout=30)
++            assert seeded.returncode == 0, seeded.stderr.decode()[-1000:]
++            chat = await request('GET', '/bots/' + bot['id'] + '/conversation')
++            assert chat['messages'][0]['content'] == 'Existing canonical fixture chat'
++            assert chat['conversation']['read_only'] is True
+         c = await request('POST', '/conversations', {'title': 'Local integration', 'workspace': 'test'}, 201)
+         r = await request('POST', f"/conversations/{c['id']}/runs", {'text': 'Say hello using the local model.'}, 202)
+         await eventually(lambda: service.store.get('runs', r['id'])['state'] in {'complete', 'failed'}, timeout=40)
+@@ -153,7 +187,11 @@ memory:
+             # Seed an actual canonical claim/heartbeat through upstream helpers,
+             # without running a dispatcher or spawning a Kanban agent worker.
+             script = "from hermes_cli import kanban_db as kb; c=kb.connect(board='default'); assert kb.claim_task(c," + repr(card['upstream_id']) + ",claimer='bridge-integration'); assert kb.heartbeat_worker(c," + repr(card['upstream_id']) + ",note='integration'); c.close()"
+-            seeded = await asyncio.to_thread(subprocess.run, [str(python), '-c', script], cwd=SOURCE, env=env, capture_output=True, timeout=10)
++            seed_args = [str(python), '-c', script]
++            if cfg['backends']['default']['bot_mode_roster']:
++                script = script.replace('from hermes_cli import kanban_db as kb;', 'from hermes_cli import kanban_db as kb; from hermes_cli.kanban_db_connect import connect; from hermes_cli.kanban_db_dispatch import heartbeat_worker;').replace('kb.connect(', 'connect(').replace('kb.heartbeat_worker(', 'heartbeat_worker(')
++                seed_args = json.loads(subprocess.check_output([str(python), '-I', '-c', resolver, str(SOURCE), script], env=dict(env, HERMES_HOME=str(SOURCE.parent)), text=True))
++            seeded = await asyncio.to_thread(subprocess.run, seed_args, cwd=SOURCE, env=env, capture_output=True, timeout=30)
+             assert seeded.returncode == 0, 'Canonical claim/heartbeat setup failed'
+             claimed = await request('GET', f"/kanban/tasks/{card['id']}")
+             assert claimed['task']['raw_state'] == 'running'
+@@ -203,14 +241,18 @@ memory:
+         proc.kill()  # simulate abrupt Hermes loss, rather than waiting for uvicorn drain
+         await asyncio.to_thread(proc.wait, 5)
+         await eventually(lambda: service.store.get('runs', rr['id'])['state'] == 'unknown')
+-        proc = subprocess.Popen([str(python), '-c', f'from hermes_cli.web_server import start_server; start_server(port={port}, open_browser=False)'], cwd=SOURCE, env=env, stdout=log, stderr=log)
++        args = [str(python), '-c', f'from hermes_cli.web_server import start_server; start_server(port={port}, open_browser=False)']
++        if commit == '4bb9e57bfde8a0affb5553eff13ed6e1f14147f1':
++            resolver = 'import sys,json; from pathlib import Path; sys.path.insert(0,sys.argv[1]); from hermes_cli._launchers import runtime_command; from pm.environments import project_python; print(json.dumps(runtime_command(Path(sys.argv[1]),code=sys.argv[2],python=project_python(Path(sys.argv[1])))))'
++            args = json.loads(subprocess.check_output([str(python), '-I', '-c', resolver, str(SOURCE), args[2]], env=dict(env, HERMES_HOME=str(SOURCE.parent)), text=True))
++        proc = subprocess.Popen(args, cwd=SOURCE, env=env, stdout=log, stderr=log)
+         await eventually(lambda: service.backends['default'].connected and service.backends['default'].generation > generation, timeout=30)
+         assert (await request('GET', f"/runs/{rr['id']}"))['state'] == 'unknown'
+         assert len(model.calls) == before_restart
+         home_result = await request('GET', '/home')
+         assert home_result['recent_completions']
+         await request('DELETE', f"/conversations/{c['id']}", {})
+-        print(json.dumps({'installed_commit': commit, 'model_requests': len(model.calls), 'kanban_mounted': caps['profiles']['default']['features']['kanban'], 'final_state': finished['state'], 'tool_stop_state': 'cancelled'}))
++        print(json.dumps({'bot_mode_roster': commit == '4bb9e57bfde8a0affb5553eff13ed6e1f14147f1', 'installed_commit': commit, 'model_requests': len(model.calls), 'kanban_mounted': caps['profiles']['default']['features']['kanban'], 'final_state': finished['state'], 'tool_stop_state': 'cancelled'}))
+     finally:
+         if client:
+             await client.close()
+diff --git a/scripts/bridge-service.py b/scripts/bridge-service.py
+index 8c47d07..b62b181 100644
+--- a/scripts/bridge-service.py
++++ b/scripts/bridge-service.py
+@@ -185,7 +185,7 @@ def install(args, root):
+     source = Path(args.hermes_source).expanduser().resolve()
+     home = Path(args.hermes_home).expanduser().resolve()
+     commit = subprocess.check_output(['git','rev-parse','HEAD'],cwd=source,text=True).strip()
+-    if not commit.startswith('2a4c9afd7bd'):
++    if not any(commit.startswith(c) for c in ('2a4c9afd7bd', '4bb9e57bfde8a0affb5553eff13ed6e1f14147f1')):
+         raise ValueError('Installed Hermes differs from the audited commit')
+     if not (source / 'venv/bin/python').exists() or not home.is_dir():
+         raise ValueError('Existing Hermes installation/home are required')
+@@ -202,7 +202,7 @@ def install(args, root):
+     artifact = workspace / '.hermes/desktop-attachments'; private_dir(artifact)
+     config = {'state_dir':str(root/'state'), 'listen_host':'127.0.0.1', 'listen_port':args.bridge_port,
+               'backends':{'default':{'url':f'http://127.0.0.1:{args.hermes_port}', 'token_file':str(secret),
+-                 'source_dir':str(source), 'boards':args.board, 'workspaces':{'studio':str(workspace)}, 'artifact_roots':[str(artifact)]}}}
++                 'source_dir':str(source), 'bot_mode_roster':args.bot_mode, 'boards':args.board, 'workspaces':{'studio':str(workspace)}, 'artifact_roots':[str(artifact)]}}}
+     private_write(root/'config.json', json.dumps(config, indent=2))
+     manifest = {'hermes_source':str(source), 'hermes_home':str(home), 'hermes_port':args.hermes_port,
+                 'bridge_port':args.bridge_port, 'workspace':str(workspace), 'logs':str(logs), 'python':args.python,
+@@ -288,6 +288,7 @@ def uninstall(root, purge=False):
+ 
+ def main():
+     parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument('--bot-mode', action='store_true', help='Allow mobile read access to every local Desktop bot, including future bots')
+     parser.add_argument('action',choices=['install','start','stop','status','update','uninstall','tailscale','pairing'])
+     parser.add_argument('--root',default=str(DEFAULT_ROOT)); parser.add_argument('--json',action='store_true')
+     parser.add_argument('--hermes-source',default=str(Path.home()/'.hermes/hermes-agent'))
+diff --git a/scripts/studio-runtime.py b/scripts/studio-runtime.py
+index e3413b4..e402fe3 100644
+--- a/scripts/studio-runtime.py
++++ b/scripts/studio-runtime.py
+@@ -39,6 +39,14 @@ def main():
+         code = 'from hermes_cli.web_server import start_server; start_server(host="127.0.0.1",port='+str(config['hermes_port'])+',open_browser=False)'
+         args = [str(Path(config['hermes_source'])/'venv/bin/python'),'-c',code]
+         env['PYTHONPATH'] = config['hermes_source']
++        commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=config['hermes_source'], text=True).strip()
++        if commit == '4bb9e57bfde8a0affb5553eff13ed6e1f14147f1':
++            # Current Hermes uses a managed Python/dependency store. The old venv is stale.
++            # Resolve its published stdlib-only launcher, then bootstrap without lazy installs.
++            code = code.replace('open_browser=False)', 'open_browser=False,headless=True,isolated=True)')
++            resolver = 'import sys,json; from pathlib import Path; sys.path.insert(0,sys.argv[1]); from hermes_cli._launchers import runtime_command; print(json.dumps(runtime_command(Path(sys.argv[1]),code=sys.argv[2])))'
++            args = json.loads(subprocess.check_output([args[0], '-I', '-c', resolver, config['hermes_source'], code], env=env, text=True))
++            env['HERMES_DISABLE_LAZY_INSTALLS'] = '1'
+         cwd = config['workspace']
+     elif role == 'bridge':
+         args = [str(root/'current/venv/bin/hermes-mobile-bridge'),'--config',str(root/'config.json'),'serve']

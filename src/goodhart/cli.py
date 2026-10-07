@@ -64,6 +64,11 @@ def main(argv: list[str] | None = None) -> int:
     scan.add_argument("--no-color", action="store_true")
     scan.add_argument("--quiet", action="store_true", help="Summary only for text/markdown")
     scan.add_argument("--max-evidence-lines", type=positive, default=6)
+    scan.add_argument(
+        "--capture-on-block",
+        action="store_true",
+        help="Save the scanned diff and findings JSON to .goodhart/captures/ on exit 1",
+    )
     args = parser.parse_args(argv)
     registry = all_rules()
     if args.command == "rules":
@@ -76,8 +81,10 @@ def main(argv: list[str] | None = None) -> int:
             parser.error(f"Unknown rule ID: {args.rule}")
         print(explain(rule), end="")
         return 0
-    if (args.working or args.staged or args.diff) and (args.base or args.head):
-        parser.error("--base/--head cannot be combined with --working, --staged, or --diff")
+    if ((args.staged or args.diff) and (args.base or args.head)) or (args.working and args.head):
+        parser.error(
+            "--head cannot accompany --working; --base/--head cannot accompany --staged or --diff"
+        )
     if args.rules is not None and not args.rules:
         parser.error("--rules requires at least one rule ID")
     try:
@@ -121,7 +128,17 @@ def main(argv: list[str] | None = None) -> int:
                 max_evidence_lines=args.max_evidence_lines,
             )
         print(output, end="")
-        return result.exit_code(config.fail_on)
+        code = result.exit_code(config.fail_on)
+        if code == 1 and args.capture_on_block:
+            from goodhart.capture import save
+
+            try:
+                capture = save(result)
+                print(f"goodhart: blocked scan saved to {capture}", file=sys.stderr)
+            except OSError as exc:
+                # Capture storage cannot turn a detected block into a hook error/pass.
+                print(f"goodhart: capture failed; scan remains blocked: {exc}", file=sys.stderr)
+        return code
     except (InputError, ConfigError, OSError, UnicodeError) as exc:
         print(f"goodhart: error: {exc}", file=sys.stderr)
         return 3

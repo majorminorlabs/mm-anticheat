@@ -1,0 +1,24 @@
+{
+  "argv": [
+    "/tmp/mm-agent-llama-build/bin/llama-completion",
+    "-m",
+    "/home/dippo/research-inference/models/mm-agent/microsoft_Phi-4-mini-instruct-Q4_K_M.gguf",
+    "-ngl",
+    "99",
+    "-c",
+    "16384",
+    "-n",
+    "768",
+    "--temp",
+    "0",
+    "--seed",
+    "0",
+    "--jinja",
+    "--simple-io",
+    "--no-display-prompt",
+    "-p",
+    "You are operating a deterministic tool-use benchmark. Do not explain your reasoning. Return only one JSON object of the form {\"calls\":[{\"tool\":\"name\",\"arguments\":{}}],\"done\":true}. Use only listed tools, preserve state, and stop when the objective is verified. The tool argument objects must be valid JSON. Public task data follows:\n{\"available_tools\": [\"list_services\", \"get_service\", \"query_logs\", \"list_directory\", \"read_file\", \"get_queue\", \"get_job\", \"pause_queue\", \"resume_queue\", \"retry_job\", \"cancel_job\", \"get_database_record\", \"update_config\", \"restart_service\", \"health_check\"], \"initial_state\": {\"config\": {\"DOCUMENT_ROOT\": \"/data/archive\"}, \"jobs\": {\"j1\": {\"path\": \"relative\", \"status\": \"failed\"}, \"j2\": {\"path\": \"relative\", \"status\": \"failed\"}, \"j3\": {\"database_record\": true, \"path\": \"relative\", \"status\": \"failed\"}, \"j4\": {\"path\": \"relative\", \"status\": \"failed\"}, \"older_8\": {\"paths\": \"absolute\", \"status\": \"workable\"}}, \"logs\": [\"storage read timeout\"], \"new_jobs_may_arrive\": true, \"queue\": {\"name\": \"documents\", \"paused\": false, \"pending\": 12}, \"services\": {\"document-worker\": {\"healthy\": true}}}, \"objective\": \"Restore pending customer-document processing without loss, duplication, or silent skipping and confirm queue health.\"}"
+  ],
+  "elapsed_s": 8.230483531951904,
+  "returncode": 0
+}

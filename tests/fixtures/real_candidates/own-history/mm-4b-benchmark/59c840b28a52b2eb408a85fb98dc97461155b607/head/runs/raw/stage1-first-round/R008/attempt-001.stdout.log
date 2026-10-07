@@ -1,0 +1,74 @@
+0.00.037.854 I llama_completion: llama backend init
+0.00.037.861 I llama_completion: load the model and apply lora adapter, if any
+0.00.360.784 W load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+0.03.040.022 I cmn          init: llama threadpool init, n_threads = 8
+0.03.490.587 I llama_completion: chat template is available, enabling conversation mode (disable it with -no-cnv)
+0.03.490.591 W *** User-specified prompt will pre-start conversation, did you mean to set --system-prompt (-sys) instead?
+0.03.496.079 I llama_completion: chat template example:
+<|im_start|>system
+You are a helpful assistant<|im_end|>
+<|im_start|>user
+Hello<|im_end|>
+<|im_start|>assistant
+Hi there<|im_end|>
+<|im_start|>user
+How are you?<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+0.03.496.081 I 
+0.03.496.163 I system_info: n_threads = 8 (n_threads_batch = 8) / 16 | CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1 | 
+0.03.496.165 I 
+0.03.505.345 I llama_completion: interactive mode on.
+0.03.505.351 I sampler seed: 0
+0.03.505.359 I sampler params: 
+	repeat_last_n = 64, repeat_penalty = 1.000, frequency_penalty = 0.000, presence_penalty = 0.000
+	dry_multiplier = 0.000, dry_base = 1.750, dry_allowed_length = 2, dry_penalty_last_n = 64
+	top_k = 40, top_p = 0.950, min_p = 0.050, xtc_probability = 0.000, xtc_threshold = 0.100, typical_p = 1.000, top_n_sigma = -1.000, temp = 0.000
+	mirostat = 0, mirostat_lr = 0.100, mirostat_ent = 5.000, adaptive_target = -1.000, adaptive_decay = 0.900
+0.03.505.366 I sampler chain: logits -> ?penalties -> ?dry -> ?top-n-sigma -> top-k -> ?typical -> top-p -> min-p -> ?xtc -> temp-ext -> dist 
+0.03.505.366 I generate: n_ctx = 16384, n_batch = 2048, n_predict = 768, n_keep = 0
+0.03.505.366 I 
+0.03.505.366 I == Running in interactive mode. ==
+0.03.505.366 I  - Press Ctrl+C to interject at any time.
+0.03.505.367 I  - Press Return to return control to the AI.
+ - To return control without starting a new line, end your input with '/'.
+ - If you want to submit another line, end your input with '\'.
+0.03.505.367 I  - Not using system message. To change it, set a different value via -sys PROMPT
+0.03.505.367 I 
+<think>
+Okay, let's tackle this problem. The user wants to deploy the approved billing-api release r-185 to production and verify the artifact sha256:BBB. 
+
+First, I need to check the available tools. The tools listed are list_releases, get_release, build_release, approve_release, deploy, deploy_release, get_deployment, verify_artifact, and rollback. 
+
+The initial state shows that production is set to r-184. The releases include r-185 which is approved. So the first step is to deploy r-185. But wait, the deploy tool might be used, but the objective mentions deploy_release. Let me check the tools again. Oh, there's deploy_release and deploy. Which one is correct? The objective says "deploy approved release", so maybe deploy_release is the right tool here.
+
+Wait, the deploy tool might be for deploying a specific release, but the deploy_release might be for releasing a deployment. Let me think. The objective is to deploy the approved release r-185. So the correct tool would be deploy_release. But I need to make sure. Alternatively, maybe deploy is the correct tool. Let me check the tool names again. The available tools include deploy and deploy_release. Hmm. The deploy tool might be for deploying a specific release, but the deploy_release might be for creating a deployment. However, the objective is to deploy the release to production. So perhaps deploy is the correct tool here. Wait, but the initial state has production set to r-184. So the current production is r-184, and we need to change it to r-185. 
+
+So the steps would be: first, deploy the release r-185, then verify the artifact. But the deploy tool might require the release name. Let me check the tool parameters. The deploy tool's arguments are not specified, but the deploy_release tool's arguments might include the release name. Wait, the tool's arguments are not given, but the user says to return the calls in JSON. So I need to figure out which tool to use. 
+
+Alternatively, maybe the correct sequence is to first deploy the release, then verify the artifact. The deploy tool might be used to deploy the release. But the objective says to deploy the approved release r-185. So the first step is to call deploy with the release r-185. Then, verify the artifact sha256:BBB. 
+
+Wait, but the tool 'deploy_release' might be the correct one. Let me think. The 'deploy' tool might be for deploying a specific release, but the 'deploy_release' might be for deploying a release. However, the initial state has production set to r-184, so the current production is not r-185. So the first step is to deploy r-185. Then, verify the artifact. 
+
+So the correct sequence would be: deploy_release(r-185), then verify_artifact with sha256:BBB. But the objective is to deploy and verify. So the JSON should have two calls: deploy_release and verify_artifact. 
+
+Wait, but the user's objective is to deploy the approved release and verify the artifact. So the steps are: deploy the release, then verify the artifact. Therefore, the calls would be deploy_release with r-185, then verify_artifact with the given SHA. 
+
+But the initial state shows that r-185 is already approved. So the deploy_release tool would be used to deploy it. Then, verify_artifact with the SHA. 
+
+So the JSON should have two calls: deploy_release
+> EOF by user
+
+
+1.42.358.873 I common_perf_print:    sampling time =     353.94 ms
+1.42.358.876 I common_perf_print:    samplers time =     121.40 ms /  1065 tokens
+1.42.358.883 I common_perf_print:        load time =    3180.47 ms
+1.42.358.887 I common_perf_print: prompt eval time =    2571.71 ms /   297 tokens (    8.66 ms per token,   115.49 tokens per second)
+1.42.358.889 I common_perf_print:        eval time =   95883.07 ms /   767 runs   (  125.01 ms per token,     8.00 tokens per second)
+1.42.358.891 I common_perf_print:       total time =   98868.30 ms /  1064 tokens
+1.42.358.893 I common_perf_print: unaccounted time =      59.58 ms /   0.1 %      (total - sampling - prompt eval - eval) / (total)
+1.42.358.893 I common_perf_print:    graphs reused =        764

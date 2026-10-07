@@ -1,0 +1,142 @@
+{
+  "actual": null,
+  "base_train_sha256": "a5c3cb2ef60b1fae7e8d11a956c96935f518ae3fb047636000dc327937ca7608",
+  "class_counts": {
+    "indirect_exclusion": 25,
+    "lexical_prohibition": 18,
+    "mixed": 10,
+    "spatial_relation": 32
+  },
+  "constraint_fraction_target": 0.25,
+  "constraint_seed": 314170,
+  "constraint_sha256": "c23e959ff5d4074570665d9fde15c2e3cabcd58541e94ae1b55052e49f511954",
+  "errors": [],
+  "exclusion_validation": {
+    "checked": 35,
+    "failures": 0
+  },
+  "final": 85,
+  "fixed_prompts_sha256": "358012c9bf38cd18a561db136034fd3eb5f0723a41e0b9053adf46eb060454b8",
+  "full_plan_sha256": "0b440adda50173ae5d8ba1785b88f13a8ba347c33037d77da5aaf4cf31b57d95",
+  "l4_weights": {
+    "longer": 2.5,
+    "medium": 1.5,
+    "short": 0.75,
+    "very_short": 0.5
+  },
+  "lexical_validation": {
+    "approved_checked": 53,
+    "approved_failures": 0,
+    "proposed_failed": 1
+  },
+  "max_prompt_eval_shared_phrase_words": 4,
+  "max_prompt_target_shared_phrase_words": 4,
+  "max_variants_per_target": 1,
+  "max_variants_per_work": 3,
+  "novel_prompts_sha256": "74db7b4ec16235f635f59f81e7d23b33d0643a786bfa7a866e5be671b11a3fd5",
+  "origin_prompt_class": {
+    "descriptive": 66,
+    "sparse": 19
+  },
+  "proposed": 101,
+  "provenance_complete": 85,
+  "relational_validation": {
+    "checked": 42,
+    "failures": 0,
+    "semantic_review_required": 42
+  },
+  "review_by_class": {
+    "indirect_exclusion": {
+      "GOOD": 24,
+      "REJECT": 7,
+      "REVISE": 1
+    },
+    "lexical_prohibition": {
+      "GOOD": 18,
+      "REJECT": 3
+    },
+    "mixed": {
+      "GOOD": 9,
+      "REJECT": 2,
+      "REVISE": 1
+    },
+    "spatial_relation": {
+      "GOOD": 31,
+      "REJECT": 4,
+      "REVISE": 1
+    }
+  },
+  "review_counts": {
+    "GOOD": 82,
+    "REJECT": 16,
+    "REVISE": 3
+  },
+  "scheduled_40": {
+    "class_draws": {
+      "indirect_exclusion": 25,
+      "lexical_prohibition": 16,
+      "mixed": 11,
+      "spatial_relation": 28
+    },
+    "exposure": {
+      "constraint_examples": 80,
+      "constraint_fraction": 0.25,
+      "original_examples": 240,
+      "sampled_examples": 320
+    }
+  },
+  "scheduled_50_optional": {
+    "class_draws": {
+      "indirect_exclusion": 28,
+      "lexical_prohibition": 23,
+      "mixed": 13,
+      "spatial_relation": 36
+    },
+    "exposure": {
+      "constraint_examples": 100,
+      "constraint_fraction": 0.25,
+      "original_examples": 300,
+      "sampled_examples": 400
+    }
+  },
+  "seed": 314162,
+  "source_work_coverage": {
+    "train_total": 84,
+    "used": 60
+  },
+  "target_length_buckets": {
+    "longer": 8,
+    "medium": 32,
+    "short": 34,
+    "very_short": 11
+  },
+  "target_reuse_counts": {
+    "1": 85
+  },
+  "training_config": {
+    "base_id": "Qwen/Qwen3-1.7B-Base",
+    "base_revision": "ea980cb0a6c2ae4b936e82123acc929f1cec04c1",
+    "l6_recipe": {
+      "batch_size": 2,
+      "checkpoints": [
+        25,
+        35,
+        40
+      ],
+      "early_stop_margin": 0.02,
+      "early_stop_patience": 2,
+      "gradient_accumulation_steps": 4,
+      "learning_rate": 6e-05,
+      "lora_alpha": 16,
+      "lora_dropout": 0.1,
+      "lora_rank": 8,
+      "max_sequence_length": 384,
+      "max_steps": 200,
+      "min_early_stop_step": 75,
+      "seed": 314162,
+      "weight_decay": 0.01
+    },
+    "planned_stop_at": 40,
+    "terminal_eos_loss_weight": 0.25
+  }
+}

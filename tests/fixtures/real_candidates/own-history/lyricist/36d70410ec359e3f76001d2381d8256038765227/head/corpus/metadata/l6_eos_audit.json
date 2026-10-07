@@ -1,0 +1,155 @@
+{
+  "dataset_hashes": {
+    "heldout": "b3b227badf80ca02e56b37c9c42d6980c1cb3a7c4786bcc397517ff62864d865",
+    "train": "a5c3cb2ef60b1fae7e8d11a956c96935f518ae3fb047636000dc327937ca7608",
+    "validation": "504ee376e676a74bf55934a19a3673c6973b948d495d1a76e36d33f969c7b1e9"
+  },
+  "errors": [],
+  "first_50_l4_plan": {
+    "aggregate_eos_share": 0.015123,
+    "draws": 400,
+    "microbatch_eos_share": {
+      "max": 0.03636363636363636,
+      "mean": 0.01671,
+      "median": 0.015686515748031496,
+      "min": 0.0071174377224199285
+    },
+    "supervised_tokens": 26450,
+    "terminal_eos_labels": 400
+  },
+  "implementation_bug_found": false,
+  "internal_eos_supervised": false,
+  "loss_path": "ForCausalLMLoss shifts labels left and applies float32 cross_entropy(mean, ignore_index=-100) when num_items_in_batch is absent; the L5 trainer passes no num_items_in_batch.",
+  "model_id": "Qwen/Qwen3-1.7B-Base",
+  "padding": {
+    "masked_padding_tokens": 178,
+    "padding_attention": 0,
+    "padding_label": -100,
+    "unequal_length_batch_checked": true
+  },
+  "revision": "ea980cb0a6c2ae4b936e82123acc929f1cec04c1",
+  "splits": {
+    "heldout": {
+      "examples": 22,
+      "per_example_eos_share": {
+        "max": 0.041666666666666664,
+        "mean": 0.02168,
+        "median": 0.019615384615384618,
+        "min": 0.009615384615384616
+      },
+      "supervised_tokens_including_terminal_eos": 1193,
+      "target_tokens_excluding_terminal_eos": {
+        "max": 103,
+        "mean": 53.22727,
+        "median": 50.0,
+        "min": 23
+      },
+      "terminal_eos_labels": 22,
+      "terminal_eos_share_of_supervised_tokens": 0.018441
+    },
+    "train": {
+      "examples": 224,
+      "per_example_eos_share": {
+        "max": 0.08333333333333333,
+        "mean": 0.02393,
+        "median": 0.020620748299319726,
+        "min": 0.005780346820809248
+      },
+      "supervised_tokens_including_terminal_eos": 12230,
+      "target_tokens_excluding_terminal_eos": {
+        "max": 172,
+        "mean": 53.59821,
+        "median": 47.5,
+        "min": 11
+      },
+      "terminal_eos_labels": 224,
+      "terminal_eos_share_of_supervised_tokens": 0.018316
+    },
+    "validation": {
+      "examples": 24,
+      "per_example_eos_share": {
+        "max": 0.06666666666666667,
+        "mean": 0.0246,
+        "median": 0.020622895622895623,
+        "min": 0.008849557522123894
+      },
+      "supervised_tokens_including_terminal_eos": 1257,
+      "target_tokens_excluding_terminal_eos": {
+        "max": 112,
+        "mean": 51.375,
+        "median": 48.0,
+        "min": 14
+      },
+      "terminal_eos_labels": 24,
+      "terminal_eos_share_of_supervised_tokens": 0.019093
+    }
+  },
+  "terminal_eos_count_per_example": 1,
+  "train_by_bucket": {
+    "longer": {
+      "aggregate_eos_share": 0.009942,
+      "examples": 24,
+      "per_example_eos_share": {
+        "max": 0.014705882352941176,
+        "mean": 0.01037,
+        "median": 0.010471491228070175,
+        "min": 0.005780346820809248
+      },
+      "target_tokens_excluding_eos": {
+        "max": 172,
+        "mean": 99.58333,
+        "median": 94.5,
+        "min": 67
+      }
+    },
+    "medium": {
+      "aggregate_eos_share": 0.014429,
+      "examples": 72,
+      "per_example_eos_share": {
+        "max": 0.022727272727272728,
+        "mean": 0.01506,
+        "median": 0.015038444142921756,
+        "min": 0.009174311926605505
+      },
+      "target_tokens_excluding_eos": {
+        "max": 108,
+        "mean": 68.30556,
+        "median": 65.5,
+        "min": 43
+      }
+    },
+    "short": {
+      "aggregate_eos_share": 0.023538,
+      "examples": 99,
+      "per_example_eos_share": {
+        "max": 0.041666666666666664,
+        "mean": 0.02506,
+        "median": 0.025,
+        "min": 0.012345679012345678
+      },
+      "target_tokens_excluding_eos": {
+        "max": 80,
+        "mean": 41.48485,
+        "median": 39,
+        "min": 23
+      }
+    },
+    "very_short": {
+      "aggregate_eos_share": 0.046774,
+      "examples": 29,
+      "per_example_eos_share": {
+        "max": 0.08333333333333333,
+        "mean": 0.05329,
+        "median": 0.05555555555555555,
+        "min": 0.022222222222222223
+      },
+      "target_tokens_excluding_eos": {
+        "max": 44,
+        "mean": 20.37931,
+        "median": 17,
+        "min": 11
+      }
+    }
+  },
+  "transformers_version": "4.57.3"
+}

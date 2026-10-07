@@ -1,0 +1,4 @@
+window.ANYWAYS_CONFIG = {
+  supabaseUrl: 'https://wgwbrepzxygqrowriffc.supabase.co',
+  supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indnd2JyZXB6eHlncXJvd3JpZmZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxMjE4NjUsImV4cCI6MjEwMDY5Nzg2NX0._LMCYbiiWKNp0s1lUMOmZlIrUVxRot0k46_uUq1XCj4'
+};

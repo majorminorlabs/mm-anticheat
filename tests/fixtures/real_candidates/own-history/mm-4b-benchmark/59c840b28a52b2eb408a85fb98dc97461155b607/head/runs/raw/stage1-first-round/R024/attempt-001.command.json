@@ -1,0 +1,26 @@
+{
+  "argv": [
+    "/tmp/mm-agent-llama-build/bin/llama-completion",
+    "-m",
+    "/home/dippo/research-inference/models/mm-agent/Qwen_Qwen3-4B-Q4_K_M.gguf",
+    "-ngl",
+    "99",
+    "-c",
+    "16384",
+    "-n",
+    "768",
+    "--temp",
+    "0",
+    "--seed",
+    "0",
+    "--jinja",
+    "--simple-io",
+    "--no-display-prompt",
+    "--reasoning",
+    "off",
+    "-p",
+    "You are operating a deterministic tool-use benchmark. Do not explain your reasoning. Return only one JSON object of the form {\"calls\":[{\"tool\":\"name\",\"arguments\":{}}],\"done\":true}. Use only listed tools, preserve state, and stop when the objective is verified. The tool argument objects must be valid JSON. Public task data follows:\n{\"available_tools\": [\"inspect_service\", \"inspect_database\", \"create_backup\", \"deploy_application\", \"migrate_database\", \"health_check\", \"restore_backup\"], \"initial_state\": {\"application\": \"4.7\", \"backup\": null, \"compatible_schemas\": [17, 18], \"database_schema\": 17, \"healthy\": true}, \"objective\": \"Upgrade application 4.7/schema 17 to application 5.0/schema 19 and leave the service healthy.\"}"
+  ],
+  "elapsed_s": 100.52474308013916,
+  "returncode": 0
+}

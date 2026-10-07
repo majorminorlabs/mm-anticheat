@@ -1,0 +1,42 @@
+Stage 1 replacement first-round preflight; ThinkPad via ssh thinkpad
+Timestamp: 2026-09-18 (controller)
+
+Host: pop-os
+Kernel: Linux 7.0.11-76070011-generic x86_64
+User: dippo (uid 1000)
+Frozen llama.cpp: 972d2313bc0bf0a45f634f77d95c9fb03aeab12
+Server build: b11028-972d2313b
+
+Exact external model artifacts:
+- ministralai_Ministral-3-3B-Instruct-2512-Q4_K_M.gguf 2146498528 fec9d28c7f8dab7c6857d54b56c8264cce57d6f6d9003bd4110f6457f071c65a
+- Qwen_Qwen3-4B-Q4_K_M.gguf 2497280960 fbe1d5edd4ce802ae3ae7c7e4ab7d09789d697fdac1fc7929f8df4ca3c41bae3
+- Qwen_Qwen2.5-3B-Instruct-Q4_K_M.gguf 2104932768 626b4a6678b86442240e33df819e00132d3ba7dddfe1cdc4fbb18e0a9615c62d
+- granite-4.1-3b-Q4_K_M.gguf 2099501664 662b0626cd58f443baea23559b469df6576a81d349649c59413b36a9fb32eb29
+
+Namespace direct checks through the permitted command succeeded:
+- mmagent-offline entry succeeded.
+- loopback is UP at 127.0.0.1/8; localhost bind succeeded.
+- namespace has no external interface and no route/default route.
+- direct IP access failed; DNS/internet access failed.
+- host internet remained available.
+
+Vulkan summary:
+- selected physical device: AMD Radeon Graphics (RADV RENOIR)
+- selected driver: radv / DRIVER_ID_MESA_RADV
+- llvmpipe was enumerated as a secondary CPU device and was not selected.
+
+Process/resource baseline:
+- no llama-server, llama-completion, or llama-cli process before execution.
+- MemAvailable: 11271272 kB (10.75 GiB), above frozen 5.0 GiB floor.
+- SwapTotal: 19347956 kB; SwapFree: 17242612 kB; baseline SwapUsed: 2.01 GiB.
+- active memory-consuming processes were recorded in the controller preflight output; no unrelated inference process was present.
+
+Structured server path:
+- Granite 4.1 loaded in mmagent-offline with frozen server.
+- /health and /props succeeded.
+- model ftype: Q4_K - Medium.
+- props reported supports_tools=true and supports_tool_calls=true.
+- server was terminated and no stale llama process remained.
+
+Repository tests: 22 passed, 1 skipped on controller.
+Preflight result: PASS.

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#f4efe2">
+    <meta name="robots" content="index,follow">
+    <title>Anyways</title>
+    <meta
+      name="description"
+      content="Anyways is an editorial publication for curious people who want to understand what is shaping culture before everyone else catches up."
+    >
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&display=swap"
+      rel="stylesheet"
+    >
+    <link rel="preload" as="image" href="/brand/logo-dark.svg" type="image/svg+xml" fetchpriority="high">
+    <link rel="stylesheet" href="/design/design.css">
+    <link rel="stylesheet" href="/design/public.css">
+    <link rel="icon" type="image/png" href="/brand/tab-icon.png">
+    <link rel="apple-touch-icon" href="/brand/tab-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+  </head>
+  <body class="public-site">
+    <a class="skip-link" href="#app">Skip to content</a>
+    <header class="nameplate page">
+      <div class="dateline micro">
+        <span id="dateline-date"></span>
+        <span id="dateline-count">Cover only what matters</span>
+      </div>
+      <div class="wordmark-row">
+        <a class="wordmark brand-lockup brand-lockup--header" href="/" aria-label="Anyways home">
+          <img src="/brand/logo-dark.svg" alt="" width="1234" height="401" fetchpriority="high" decoding="async">
+        </a>
+        <p class="promise">For curious people who want to understand what is shaping culture before everyone else catches up.</p>
+      </div>
+      <nav class="index-nav" aria-label="Publication" id="index-nav">
+        <span class="desk-links">
+          <a href="/topics" data-current="topics">Beats</a>
+          <a href="/search" data-current="search">Search</a>
+          <a href="/newsroom" data-current="newsroom">Newsroom</a>
+        </span>
+      </nav>
+    </header>
+    <main class="page" id="app" tabindex="-1">
+      <p class="loading-state" role="status">Setting the edition…</p>
+    </main>
+    <footer class="colophon page">
+      <a class="footer-brand brand-lockup" href="/" aria-label="Anyways home">
+        <img src="/brand/logo-dark.svg" alt="" width="1234" height="401" loading="lazy" decoding="async">
+      </a>
+      <div class="colophon-grid">
+        <div>
+          <p class="mission">Cover only what matters, explain why it matters, and respect the reader’s time.</p>
+        </div>
+        <div>
+          <h2>Sections</h2>
+          <ul id="colophon-sections"></ul>
+        </div>
+        <div>
+          <h2>The desk</h2>
+          <ul>
+            <li><a href="/topics">Beats</a></li>
+            <li><a href="/search">Search the archive</a></li>
+            <li><a href="/newsroom">Newsroom</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="set-line meta-line">
+        <span>Set in Newsreader and IBM Plex Mono. Sources are part of every story.</span>
+        <span>© <span id="colophon-year"></span> Anyways. Reading time is respected here.</span>
+      </div>
+    </footer>
+    <script src="/config.js"></script>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

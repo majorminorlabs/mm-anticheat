@@ -1,0 +1,40 @@
+{
+  "max_tokens": 256,
+  "messages": [
+    {
+      "content": "You are a neutral tool-routing test assistant.",
+      "role": "system"
+    },
+    {
+      "content": "Use get_weather for test-city.",
+      "role": "user"
+    }
+  ],
+  "model": "Gemma-3-4B-IT",
+  "seed": 0,
+  "stream": false,
+  "temperature": 0,
+  "tool_choice": "auto",
+  "tools": [
+    {
+      "function": {
+        "description": "Retrieve weather for a city.",
+        "name": "get_weather",
+        "parameters": {
+          "additionalProperties": false,
+          "properties": {
+            "city": {
+              "description": "Test city name",
+              "type": "string"
+            }
+          },
+          "required": [
+            "city"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "function"
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+# Execution-only overrides. Scientific sequence length, examples, optimizer,
+# LoRA recipe, seed, data, and effective global batch remain frozen in E014.
+# Throughput and peak VRAM are intentionally unmeasured until a target host runs.
+
+effective_global_batch_size = 16
+max_sequence_length = 4608
+per_device_train_batch_size = 1
+
+[profiles.RTX3090_SINGLE]
+world_size = 1
+gradient_accumulation_steps = 16
+expected_gpu_name_contains = "RTX 3090"
+minimum_vram_gib = 21.0
+nominal_vram_gb = 24
+measured_peak_vram_gib = "unmeasured"
+measured_tokens_per_second = "unmeasured"
+
+[profiles.RTX3090_DUAL]
+world_size = 2
+gradient_accumulation_steps = 8
+expected_gpu_name_contains = "RTX 3090"
+minimum_vram_gib = 21.0
+nominal_vram_gb = 24
+measured_peak_vram_gib = "unmeasured"
+measured_tokens_per_second = "unmeasured"
+
+[profiles.A100_80GB]
+world_size = 1
+gradient_accumulation_steps = 16
+expected_gpu_name_contains = "A100"
+minimum_vram_gib = 70.0
+nominal_vram_gb = 80
+measured_peak_vram_gib = "unmeasured"
+measured_tokens_per_second = "unmeasured"
+
+[profiles.H100_80GB]
+world_size = 1
+gradient_accumulation_steps = 16
+expected_gpu_name_contains = "H100"
+minimum_vram_gib = 70.0
+nominal_vram_gb = 80
+measured_peak_vram_gib = "unmeasured"
+measured_tokens_per_second = "unmeasured"
+
+# Optional non-paid/bring-your-own-host fallbacks. These are profiles only;
+# nothing is provisioned or launched by this project.
+[profiles.A100_40GB]
+world_size = 1
+gradient_accumulation_steps = 16
+expected_gpu_name_contains = "A100"
+minimum_vram_gib = 36.0
+nominal_vram_gb = 40
+measured_peak_vram_gib = "unmeasured"
+measured_tokens_per_second = "unmeasured"
+
+[profiles.L40S_48GB]
+world_size = 1
+gradient_accumulation_steps = 16
+expected_gpu_name_contains = "L40S"
+minimum_vram_gib = 43.0
+nominal_vram_gb = 48
+measured_peak_vram_gib = "unmeasured"
+measured_tokens_per_second = "unmeasured"
+
+[profiles.RTX6000_ADA_48GB]
+world_size = 1
+gradient_accumulation_steps = 16
+expected_gpu_name_contains = "RTX 6000 Ada"
+minimum_vram_gib = 43.0
+nominal_vram_gb = 48
+measured_peak_vram_gib = "unmeasured"
+measured_tokens_per_second = "unmeasured"
+
+# AMD Developer Cloud MI300X execution profile. This changes only the
+# execution backend/profile; the E014 scientific configuration remains frozen.
+[profiles.AMD_MI300X_SINGLE]
+world_size = 1
+gradient_accumulation_steps = 16
+expected_gpu_name_contains = "MI300X"
+minimum_vram_gib = 170.0
+nominal_vram_gb = 192
+measured_peak_vram_gib = "unmeasured"
+measured_tokens_per_second = "unmeasured"

@@ -1,0 +1,32 @@
+{
+  "baseline": "L5 original loss, two-update A40 smoke",
+  "comparison": "L6 custom loss at terminal_eos_loss_weight=1.0, same two-update smoke",
+  "steps": [
+    {
+      "step": 1,
+      "baseline_train_loss": 3.1409,
+      "custom_train_loss": 3.1409,
+      "baseline_validation_loss": 3.42626,
+      "custom_validation_loss": 3.42626,
+      "baseline_heldout_loss": 3.37395,
+      "custom_heldout_loss": 3.37395,
+      "adapter_sha256": "40a6fe2af84b846f54f65ade56d61571e0807d7e6b604b4e309882e299efa81e",
+      "adapter_identical": true
+    },
+    {
+      "step": 2,
+      "baseline_train_loss": 3.51077,
+      "custom_train_loss": 3.51077,
+      "baseline_validation_loss": 3.42496,
+      "custom_validation_loss": 3.42496,
+      "baseline_heldout_loss": 3.37475,
+      "custom_heldout_loss": 3.37475,
+      "adapter_sha256": "248a75d1033bca10f868c5157d56f04711c29af9be26bd82da9f33460a41bf36",
+      "adapter_identical": true
+    }
+  ],
+  "baseline_trace_sha256": "b810e6180a82881fe30ed03f00d5cfc65ecf0d02c0d2abeb3685639b1c24ed2e",
+  "custom_trace_sha256": "b810e6180a82881fe30ed03f00d5cfc65ecf0d02c0d2abeb3685639b1c24ed2e",
+  "trace_identical": true,
+  "conclusion": "The custom weight-1 path reproduced both update losses, validation/held-out losses, sample trace, and adapter SHA-256 values exactly on the same A40."
+}

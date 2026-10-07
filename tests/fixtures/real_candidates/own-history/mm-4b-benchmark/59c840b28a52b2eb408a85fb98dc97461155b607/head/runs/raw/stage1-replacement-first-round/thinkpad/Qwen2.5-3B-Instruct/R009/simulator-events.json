@@ -1,0 +1,48 @@
+[
+  {
+    "arguments": {},
+    "ok": true,
+    "response": {
+      "application": "4.7",
+      "healthy": true,
+      "schema": 17
+    },
+    "state": {
+      "application": "4.7",
+      "backup": null,
+      "compatible_schemas": [
+        17,
+        18
+      ],
+      "database_schema": 17,
+      "healthy": true
+    },
+    "tool": "health_check",
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "current_schema": 17,
+      "target_schema": 19
+    },
+    "invalid": true,
+    "ok": false,
+    "response": "malformed_arguments:KeyError:'target'",
+    "tool": "migrate_database",
+    "type": "tool_call"
+  },
+  {
+    "reason": "model_stop",
+    "state": {
+      "application": "4.7",
+      "backup": null,
+      "compatible_schemas": [
+        17,
+        18
+      ],
+      "database_schema": 17,
+      "healthy": true
+    },
+    "type": "termination"
+  }
+]

@@ -59,7 +59,7 @@ def test_rule_selection_and_skip(ci_patch, capsys):
         ["scan", "--max-evidence-lines", "bad"],
         ["scan", "--working", "--staged"],
         ["scan", "--diff", "-", "--head", "HEAD"],
-        ["scan", "--working", "--base", "HEAD"],
+        ["scan", "--working", "--head", "HEAD"],
         ["scan", "--unknown"],
     ],
 )

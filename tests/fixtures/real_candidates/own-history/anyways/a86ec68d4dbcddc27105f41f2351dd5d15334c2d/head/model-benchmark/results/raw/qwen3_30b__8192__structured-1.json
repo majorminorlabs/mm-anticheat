@@ -1,0 +1,32 @@
+{
+  "model": "qwen3:30b",
+  "quantization": "reported by ollama show; see model metadata",
+  "num_ctx": 8192,
+  "settings": {
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "num_predict": 700,
+    "seed": 42
+  },
+  "test": "structured-1",
+  "kind": "structured",
+  "ran_at": "2026-07-28T06:12:12.002Z",
+  "ok": true,
+  "text": "We are classifying a scenario: \"A platform changes creator payout terms without notice and locks archives behind a new fee.\"\n\nWe need to fill in the JSON with the following keys:\n\n- primary_section: one of \"internet\", \"taste\", \"systems\", \"modern-life\", \"builders\", \"media\"\n- recurring_beats: an empty array (as per the example, but we can leave it empty if none)\n- tags: an empty array (same reason)\n- reader_consequence: a string describing the consequence for the reader (if any)\n- what_this_allows_people_to_become: a string describing what this allows people to become (if any)\n- fit_score: a number (0 in the example, but we might adjust if needed? However, the instruction says to return 0 for now, but note: the example has 0. We'll set to 0 unless we have a reason to change. But note: the problem says \"Return ONLY valid JSON\" with the example structure, so we'll set to 0 as in the example.)\n- decision: one of \"proceed|watch|reject\"\n- reasoning: a string explaining the reasoning\n- uncertainty: a string (if there's uncertainty, otherwise leave empty? But the example has empty string)\n\nLet's break down the scenario:\n\n- The platform (like a social media or content platform) changes the terms for how creators get paid (payout terms) without giving notice (so suddenly, without warning).\n- Also, it locks archives (meaning past content that was freely available) behind a new fee (so now you have to pay to access old content).\n\nThis is a negative change for creators and users. It's a business decision that can harm the creator community and user experience.\n\nNow, let's assign:\n\nprimary_section: \n  We have to choose from the list. The scenario is about a platform (like a media platform) changing its terms. \n  The most relevant is \"media\" because it's about a content platform (which is media). \n  Alternatively, \"internet\" might be too broad. \"systems\" could be about the platform's system, but \"media\" is more specific to content platforms.\n\n  So: \"media\"\n\nrecurring_beats: [] (empty array, as per the example)\n\ntags: [] (empty array)\n\nreader_consequence: \n  What happens to the reader? \n  - They might have to pay for content they previously had access to (if they want to see old archives).\n  - They might be frustrated by the sudden change and leave the platform.\n  - But note: the scenario doesn't specify the reader's direct consequence beyond the fee. However, the main consequence for the reader is that they now have to pay for content they could access for free before.\n\n  We can say: \"Readers may be required to pay for previously free content, leading to potential loss of engagement.\"\n\n  However, note: the scenario says \"locks archives behind a new fee\", so the reader (who might be a user) now has to pay to access old content.\n\n  So: \"Readers must pay to access previously free archives, potentially reducing content consumption.\"\n\nwhat_this_allows_people_to_become:\n  This is a bit abstract. What does this change allow people (creators or the platform) to become?\n  - The platform is allowing itself to change terms arbitrarily and monetize old content,",
+  "metrics": {
+    "wall_ms": 15943,
+    "eval_count": 700,
+    "eval_duration_ns": 15437651000,
+    "prompt_eval_count": 106,
+    "prompt_eval_duration_ns": 357257000,
+    "tokens_per_second": 45.34,
+    "prompt_tokens_per_second": 296.71
+  },
+  "error": null,
+  "score": {
+    "json_valid": false,
+    "schema_valid": false,
+    "score": 0,
+    "notes": []
+  }
+}

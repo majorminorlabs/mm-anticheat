@@ -131,7 +131,7 @@ def test_cli_bad_input(monkeypatch, repo):
     monkeypatch.chdir(repo)
     assert main(["scan", "--base", "does-not-exist"]) == 3
     with pytest.raises(SystemExit) as error:
-        main(["scan", "--working", "--base", "HEAD"])
+        main(["scan", "--working", "--head", "HEAD"])
     assert error.value.code == 3
 
 

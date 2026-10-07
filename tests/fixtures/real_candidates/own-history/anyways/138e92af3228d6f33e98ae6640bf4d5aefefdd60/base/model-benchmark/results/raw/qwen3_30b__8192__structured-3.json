@@ -1,0 +1,32 @@
+{
+  "model": "qwen3:30b",
+  "quantization": "reported by ollama show; see model metadata",
+  "num_ctx": 8192,
+  "settings": {
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "num_predict": 700,
+    "seed": 42
+  },
+  "test": "structured-3",
+  "kind": "structured",
+  "ran_at": "2026-07-28T06:12:43.564Z",
+  "ok": true,
+  "text": "We are classifying the given scenario: \"A city creates a public map of heat-related power shutoffs by neighborhood.\"\n\nWe need to fill in the JSON with the following keys:\n\n- primary_section: one of \"internet|taste|systems|modern-life|builders|media\"\n- recurring_beats: an empty array (as per the example)\n- tags: an empty array (as per the example)\n- reader_consequence: (empty string in the example)\n- what_this_allows_people_to_become: (empty string in the example)\n- fit_score: 0 (as per the example, but we might adjust? However, the instruction says to return the example structure with 0 for fit_score)\n- decision: one of \"proceed|watch|reject\"\n- reasoning: (a string explaining the reasoning)\n- uncertainty: (empty string in the example)\n\nLet's break down:\n\n1. **primary_section**: We have to choose from the given options. The scenario is about a city creating a public map of heat-related power shutoffs. This is about urban infrastructure and public information, which falls under \"systems\" (as it's about how the city's systems are managed and communicated) or \"modern-life\" (as it's about daily life in a city). However, note that \"systems\" typically refers to the underlying infrastructure and processes. The map is a tool for managing and communicating about a system (power grid, heat management). So, \"systems\" seems appropriate.\n\n   Let's compare:\n   - \"internet\": not about the internet per se, but about a public map (which might be online, but the core is the information about power shutoffs, not the internet itself).\n   - \"taste\": irrelevant.\n   - \"systems\": fits because it's about a city's system (power grid, heat management) and the map is a tool for that system.\n   - \"modern-life\": could be argued, but \"systems\" is more precise for infrastructure.\n   - \"builders\": not about construction or building.\n   - \"media\": the map might be a media tool, but the primary focus is the system (power shutoffs) and not media as a topic.\n\n   So, we choose \"systems\".\n\n2. **recurring_beats**: empty array (as per the example).\n\n3. **tags**: empty array.\n\n4. **reader_consequence**: empty string (as per the example).\n\n5. **what_this_allows_people_to_become**: empty string.\n\n6. **fit_score**: 0 (as per the example, and we are not given a scoring system, so we leave it 0).\n\n7. **decision**: We have to choose between \"proceed\", \"watch\", or \"reject\". \n\n   - The scenario is a positive step: a city providing public information about power shutoffs (which can help residents prepare for heat waves). It's a good practice. So, we would want to proceed with such a story.\n\n   Therefore, decision: \"proceed\"\n\n8. **reasoning**: We need to write a short string explaining why we chose \"proceed\" and the primary section.\n\n   Example reasoning: \"The city's public map of heat-related power shutoffs is a proactive measure to inform residents about infrastructure issues during heat events, falling under the 'systems' category. It allows for better community preparedness and is a",
+  "metrics": {
+    "wall_ms": 15779,
+    "eval_count": 700,
+    "eval_duration_ns": 15441150000,
+    "prompt_eval_count": 106,
+    "prompt_eval_duration_ns": 190189000,
+    "tokens_per_second": 45.33,
+    "prompt_tokens_per_second": 557.34
+  },
+  "error": null,
+  "score": {
+    "json_valid": false,
+    "schema_valid": false,
+    "score": 0,
+    "notes": []
+  }
+}

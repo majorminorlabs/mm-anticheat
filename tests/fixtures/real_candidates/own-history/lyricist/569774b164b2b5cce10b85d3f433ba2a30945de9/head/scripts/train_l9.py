@@ -1,0 +1,211 @@
+"""L9 LoRA trainer: L6 recipe with 25% validated constraint prompts."""
+from __future__ import annotations
+
+import argparse
+import json
+import random
+import time
+from pathlib import Path
+
+from scripts.l4_sampler import SEED, WEIGHTS
+from scripts.l9_sampler import CONSTRAINT_FRACTION, CONSTRAINT_SEED, exposure, mixed_plan, plan_hash
+from scripts.terminal_eos_loss import terminal_eos_weighted_loss
+from scripts.modeling import CONFIG, ROOT
+from scripts.pipeline import sha, write_json
+from scripts.train import batchify, gpu_snapshot
+from scripts.train_l3 import prepare
+from scripts.train_l5 import rows
+from scripts.train_l6 import L6
+
+
+L9 = {**L6, 'checkpoints': [25, 35, 40]}
+
+
+def constraint_rows():
+    return [json.loads(line) for line in (ROOT / 'data/l9/constraints.jsonl').read_text().splitlines()]
+
+
+def main():
+    import torch
+    from peft import LoraConfig, PeftModel, TaskType, get_peft_model
+    from transformers import AutoModelForCausalLM, AutoTokenizer, get_linear_schedule_with_warmup
+
+    p = argparse.ArgumentParser()
+    p.add_argument('--out', required=True)
+    p.add_argument('--smoke', action='store_true')
+    p.add_argument('--resume', action='store_true')
+    p.add_argument('--stop-at', type=int, default=40)
+    p.add_argument('--terminal-eos-loss-weight', type=float, default=0.25)
+    args = p.parse_args()
+    if not 0 <= args.terminal_eos_loss_weight <= 1:
+        raise ValueError('terminal_eos_loss_weight must be between 0 and 1')
+    if not torch.cuda.is_available():
+        raise RuntimeError('CUDA unavailable')
+    if not 1 <= args.stop_at <= 50:
+        raise ValueError('L9 stop-at must be between 1 and 50')
+    torch.manual_seed(SEED)
+    torch.cuda.manual_seed_all(SEED)
+    random.seed(SEED)
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    train, constraints, val, held = rows('train'), constraint_rows(), rows('validation'), rows('heldout')
+    assert {r['work_id'] for r in train}.isdisjoint({r['work_id'] for r in val + held})
+    assert {r['work_id'] for r in constraints} <= {r['work_id'] for r in train}
+    metadata = json.loads((ROOT / 'corpus/metadata/l9_constraint_final.json').read_text())
+    assert len(metadata) == len(constraints)
+    assert all(constraints[i]['target_sha256'] == train[m['source_index']]['target_sha256']
+               for i, m in enumerate(metadata))
+    plan = mixed_plan(train, constraints)
+    scheduled_40 = exposure(plan[:40 * L9['batch_size'] * L9['gradient_accumulation_steps']])
+    sampler = {'weights': WEIGHTS, 'seed': SEED, 'constraint_seed': CONSTRAINT_SEED,
+               'constraint_fraction_target': CONSTRAINT_FRACTION, 'plan_steps': PLAN_STEPS,
+               'full_plan_sha256': plan_hash(plan), 'scheduled_40': scheduled_40}
+    tokenizer = AutoTokenizer.from_pretrained(CONFIG['model_id'], revision=CONFIG['model_revision'])
+    tokenizer.pad_token = tokenizer.eos_token
+    prepared = {split: [prepare(tokenizer, r) for r in data]
+                for split, data in (('original', train), ('constraint', constraints),
+                                    ('validation', val), ('heldout', held))}
+    model = AutoModelForCausalLM.from_pretrained(CONFIG['model_id'], revision=CONFIG['model_revision'],
+                dtype=torch.bfloat16, attn_implementation='sdpa')
+    model.config.use_cache = False
+    model.gradient_checkpointing_enable()
+    model.enable_input_require_grads()
+    model.to('cuda')
+    state_path = out / 'optimizer.pt'
+    adapter_path = out / 'last'
+    if args.resume and state_path.exists():
+        model = PeftModel.from_pretrained(model, adapter_path, is_trainable=True)
+    else:
+        model = get_peft_model(model, LoraConfig(r=L9['lora_rank'], lora_alpha=L9['lora_alpha'],
+            lora_dropout=L9['lora_dropout'], target_modules=['q_proj', 'v_proj'], bias='none',
+            task_type=TaskType.CAUSAL_LM))
+    model.train()
+    optimizer = torch.optim.AdamW((p for p in model.parameters() if p.requires_grad),
+                                  lr=L9['learning_rate'], weight_decay=L9['weight_decay'])
+    total_steps = 2 if args.smoke else L9['max_steps']
+    scheduler = get_linear_schedule_with_warmup(optimizer, max(1, round(total_steps * .1)), total_steps)
+    start = 0
+    best_val, worse = float('inf'), 0
+    dataset_hashes = {split: sha((ROOT / ('data/l5' if split == 'train' else 'data/l3') / f'{split}.jsonl').read_bytes())
+                      for split in ('train', 'validation', 'heldout')}
+    dataset_hashes['constraint'] = sha((ROOT / 'data/l9/constraints.jsonl').read_bytes())
+    manifest = {'base_id': CONFIG['model_id'], 'base_revision': CONFIG['model_revision'],
+                'l9_config': {**L9, 'terminal_eos_loss_weight': args.terminal_eos_loss_weight},
+                'sampler': sampler, 'dataset_hashes': dataset_hashes,
+                'train_examples': len(train), 'constraint_variants': len(constraints),
+                'train_works': len({r['work_id'] for r in train}),
+                'validation_examples': len(val), 'heldout_examples': len(held),
+                'smoke': args.smoke, 'started_at_utc': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+                'checkpoints': [], 'wall_time_seconds': 0.0}
+    if args.resume:
+        if not state_path.exists():
+            raise ValueError('No saved L9 optimizer state to resume')
+        state = torch.load(state_path, map_location='cpu', weights_only=False)
+        optimizer.load_state_dict(state['optimizer'])
+        scheduler.load_state_dict(state['scheduler'])
+        start = state['step']
+        best_val, worse = state['best_val'], state['worse']
+        torch.set_rng_state(state['torch_rng'])
+        torch.cuda.set_rng_state_all(state['cuda_rng'])
+        manifest = json.loads((out / 'run.json').read_text())
+        if (manifest['dataset_hashes'] != dataset_hashes or manifest['sampler'] != sampler
+                or manifest['l9_config']['terminal_eos_loss_weight'] != args.terminal_eos_loss_weight):
+            raise ValueError('L9 data or sampler changed before resume')
+    else:
+        write_json(out / 'run.json', manifest)
+    stop_at = 2 if args.smoke else args.stop_at
+    if stop_at <= start:
+        raise ValueError('Stop-at step is not beyond saved step')
+    phase_start = time.time()
+    log = out / 'metrics.jsonl'
+    trace = out / 'sample_trace.jsonl'
+    if args.resume:
+        if len(trace.read_text().splitlines()) != start:
+            raise ValueError('L9 sample trace does not match optimizer step')
+    elif trace.exists():
+        raise ValueError('L9 output directory already has a sample trace')
+
+    def mean_loss(examples):
+        model.eval()
+        losses = []
+        with torch.inference_mode():
+            for example in examples:
+                batch = batchify(tokenizer, [example], 'cuda')
+                with torch.autocast('cuda', dtype=torch.bfloat16):
+                    losses.append(float(model(**batch).loss))
+        model.train()
+        return sum(losses) / len(losses)
+
+    for step in range(start, stop_at):
+        optimizer.zero_grad(set_to_none=True)
+        losses = []
+        unweighted_losses = []
+        sampled_ids = []
+        sampled_components = []
+        for micro in range(L9['gradient_accumulation_steps']):
+            offset = (step * L9['gradient_accumulation_steps'] + micro) * L9['batch_size']
+            selected = plan[offset:offset + L9['batch_size']]
+            sampled_ids.extend((train if component == 'original' else constraints)[i]['id']
+                               for component, i in selected)
+            sampled_components.extend(component for component, _ in selected)
+            batch = batchify(tokenizer, [prepared[component][i] for component, i in selected], 'cuda')
+            with torch.autocast('cuda', dtype=torch.bfloat16):
+                result = model(**batch)
+                loss = terminal_eos_weighted_loss(result.logits, batch['labels'], tokenizer.eos_token_id,
+                                                  args.terminal_eos_loss_weight) / L9['gradient_accumulation_steps']
+            loss.backward()
+            losses.append(float(loss.detach()) * L9['gradient_accumulation_steps'])
+            unweighted_losses.append(float(result.loss.detach()))
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+        optimizer.step()
+        scheduler.step()
+        number = step + 1
+        checkpoint = args.smoke or number in L9['checkpoints'] or number == stop_at
+        record = {'step': number,
+                  'effective_epochs': round(number * L9['batch_size'] * L9['gradient_accumulation_steps'] / len(train), 3),
+                  'train_loss': round(sum(losses) / len(losses), 5),
+                  'unweighted_train_loss': round(sum(unweighted_losses) / len(unweighted_losses), 5),
+                  'lr': scheduler.get_last_lr()[0],
+                  'elapsed_seconds': round(manifest['wall_time_seconds'] + time.time() - phase_start, 2)}
+        if checkpoint:
+            record['validation_loss'] = round(mean_loss(prepared['validation']), 5)
+            record['heldout_loss'] = round(mean_loss(prepared['heldout']), 5)
+            record['gpu'] = gpu_snapshot()
+            record['peak_allocated_mib'] = round(torch.cuda.max_memory_allocated() / 2**20, 1)
+            if record['validation_loss'] < best_val:
+                best_val, worse = record['validation_loss'], 0
+            elif record['validation_loss'] > best_val + L6['early_stop_margin']:
+                worse += 1
+            else:
+                worse = 0
+            adapter = out / f'checkpoint-{number:03d}'
+            model.save_pretrained(adapter, safe_serialization=True)
+            model.save_pretrained(adapter_path, safe_serialization=True)
+            adapter_hash = sha((adapter / 'adapter_model.safetensors').read_bytes())
+            record['adapter_sha256'] = adapter_hash
+            manifest['checkpoints'].append({'step': number, 'adapter_sha256': adapter_hash,
+                'validation_loss': record['validation_loss'], 'heldout_loss': record['heldout_loss']})
+            write_json(out / 'run.json', manifest)
+            torch.save({'step': number, 'optimizer': optimizer.state_dict(),
+                        'scheduler': scheduler.state_dict(), 'torch_rng': torch.get_rng_state(),
+                        'cuda_rng': torch.cuda.get_rng_state_all(), 'best_val': best_val, 'worse': worse},
+                       state_path)
+        with log.open('a') as handle:
+            handle.write(json.dumps(record) + '\n')
+        with trace.open('a') as handle:
+            handle.write(json.dumps({'step': number, 'sampled_ids': sampled_ids,
+                                     'sampled_components': sampled_components}) + '\n')
+        if checkpoint:
+            print(json.dumps(record), flush=True)
+        if not args.smoke and checkpoint and number >= L9['min_early_stop_step'] and worse >= L9['early_stop_patience']:
+            print(f'early-stop at {number}: validation deterioration', flush=True)
+            break
+    manifest['completed_steps'] = number
+    manifest['wall_time_seconds'] = round(manifest['wall_time_seconds'] + time.time() - phase_start, 2)
+    manifest['last_phase_finished_at_utc'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+    write_json(out / 'run.json', manifest)
+    print(f'complete phase {start + 1}-{number} in {manifest["wall_time_seconds"]} cumulative seconds', flush=True)
+
+
+if __name__ == '__main__':
+    main()

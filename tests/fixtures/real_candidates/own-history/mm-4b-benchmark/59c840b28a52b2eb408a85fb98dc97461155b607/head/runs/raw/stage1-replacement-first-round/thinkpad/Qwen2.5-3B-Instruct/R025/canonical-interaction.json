@@ -1,0 +1,58 @@
+[
+  {
+    "arguments": {},
+    "response": {
+      "paused": false
+    },
+    "tool": "resume_queue",
+    "turn": 1,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {},
+    "response": {
+      "name": "documents",
+      "paused": false,
+      "pending": 12
+    },
+    "tool": "get_queue",
+    "turn": 2,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {},
+    "response": {
+      "paused": false
+    },
+    "tool": "resume_queue",
+    "turn": 3,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "job_id": "j1"
+    },
+    "response": null,
+    "tool": "get_job",
+    "turn": 4,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "job_id": "j3"
+    },
+    "response": {
+      "arguments": {
+        "job_id": "j3"
+      },
+      "invalid": true,
+      "ok": false,
+      "response": "malformed_arguments:KeyError:'id'",
+      "tool": "retry_job",
+      "type": "tool_call"
+    },
+    "tool": "retry_job",
+    "turn": 5,
+    "type": "tool_call"
+  }
+]

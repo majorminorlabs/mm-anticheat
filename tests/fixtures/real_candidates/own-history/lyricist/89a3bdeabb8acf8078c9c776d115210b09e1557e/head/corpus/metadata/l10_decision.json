@@ -1,0 +1,60 @@
+{
+  "experiment": "L10 one-pass train-only raw CPT followed by unchanged L6 behavioral SFT",
+  "selected_cpt_step": 3,
+  "selected_cpt_effective_supervised_passes": 0.560409,
+  "best_l10_review_checkpoint": "C2-40",
+  "selection_before_blind_and_novel20": true,
+  "blind_judge": "One local Mistral Small 3.2 24B model judge, not human ratings",
+  "blind_response_count": 250,
+  "blind_pair_count": 200,
+  "blind_style_mean": {
+    "B0": 2.015,
+    "L1-48": 1.935,
+    "L6-40": 1.925,
+    "CPT-only": 1.925,
+    "CPT+SFT": 2.05
+  },
+  "blind_utility_mean": {
+    "B0": 1.85,
+    "L1-48": 1.5128,
+    "L6-40": 1.7389,
+    "CPT-only": 1.8306,
+    "CPT+SFT": 1.8606
+  },
+  "blind_overall_mean": {
+    "B0": 2.16,
+    "L1-48": 1.94,
+    "L6-40": 2.0,
+    "CPT-only": 2.12,
+    "CPT+SFT": 2.14
+  },
+  "pairwise_first_wins_ties_c2_wins": {
+    "L1-48": [7, 39, 4],
+    "L6-40": [2, 45, 3],
+    "B0": [17, 29, 4],
+    "CPT-only": [17, 29, 4]
+  },
+  "cpt_helped_meaningfully": false,
+  "cpt_interpretation": "Step 3 reduced heldout raw-LM loss versus B0 by only 0.001503 and CPT-only fixed50 outputs remained mostly prose. C2 has small individual-score and line-shape gains over L6, but 45/50 direct L6 comparisons were ties and its output prefixes frequently match L6. A substantive causal creative benefit is not established.",
+  "sft_preservation_interpretation": "There was no clear CPT-only lyric-writing gain to preserve. The unchanged SFT stage imposed the familiar L6 lineation and shortening pattern; it improved cadence, indirectness, and completeness ratings relative to CPT-only while lowering prompt-contact and imagery ratings. The direct judge preferred CPT-only on 17 prompts and C2 on four, with 29 ties.",
+  "l10_clearly_beats_l6": false,
+  "l10_clearly_beats_l1": false,
+  "creative_quality_gate_passed": false,
+  "memorization_gate_passed_at_screen_thresholds": true,
+  "usability_gate_status": "No catastrophic fixed17 or novel20 decline, but C2-40 still passes only 4/17 fixed and 3/20 novel criteria, has five fixed50 below-minimum outputs, and misses important negation/relation/refrain requirements.",
+  "promotion_occurred": false,
+  "incumbent": "L1-48",
+  "gguf_exported": false,
+  "writer_changed": false,
+  "one_next_experiment": {
+    "name": "Train-only stylistic target curation under the unchanged L6 SFT recipe",
+    "rationale": "One-pass low-LR CPT changed raw loss and final behavior only slightly, while generic prose and weak imagery/phrasing remain. A predeclared curation of complete, strongly lineated, distinctive passages from the existing 84 training works tests training-target quality directly without another CPT sweep or new corpus text.",
+    "design_boundary": "Review and select only existing training-work passages before model runs; hold the pinned base, L6 optimizer, effective token/update budget, fixed50 prompts/seeds, heldout works, blind rubric, and memorization gates constant. This is a proposal, not an authorized L11 run."
+  },
+  "limitations": [
+    "The individual judge and pairwise judge disagree in some comparisons; 45/50 L6-vs-C2 pairs were ties.",
+    "The judge's generic_prose tag counts do not consistently track its own G penalty, so prose conclusions combine separate deterministic and full-response checks.",
+    "One judge and 50 prompts do not establish human creative preference; fixed17 and novel20 are small internal criterion audits.",
+    "No exact/fuzzy or 16-token continuation flags is not proof of originality."
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "schema_version": "2",
+  "tool": "goodhart-check",
+  "tool_version": "0.1.0",
+  "mode": "full",
+  "range": {
+    "base": null,
+    "head": null
+  },
+  "config": {
+    "source": "base:benchmark-test.py-adapter"
+  },
+  "summary": {
+    "high": 0,
+    "medium": 4,
+    "low": 0,
+    "info": 0,
+    "files_scanned": 1
+  },
+  "files": [
+    {
+      "file": "func.py",
+      "kinds": [
+        "source"
+      ],
+      "base_kinds": [
+        "source"
+      ],
+      "head_kinds": [
+        "source"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "rule_id": "GH006",
+      "rule_name": "hardcoded-test-expectation",
+      "severity": "medium",
+      "confidence": "normal",
+      "file": "func.py",
+      "line": 30,
+      "title": "New source literal matches a test expectation",
+      "evidence": "    A positive integer N is a 400 number if and only if:\ntest.py:5:     assert candidate(404) == 400",
+      "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+      "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+      "allowed": false
+    },
+    {
+      "rule_id": "GH006",
+      "rule_name": "hardcoded-test-expectation",
+      "severity": "medium",
+      "confidence": "normal",
+      "file": "func.py",
+      "line": 36,
+      "title": "New source literal matches a test expectation",
+      "evidence": "        a: An integer where 36 <= a <= 10^12\ntest.py:6:     assert candidate(36) == 36",
+      "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+      "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+      "allowed": false
+    },
+    {
+      "rule_id": "GH006",
+      "rule_name": "hardcoded-test-expectation",
+      "severity": "medium",
+      "confidence": "normal",
+      "file": "func.py",
+      "line": 39,
+      "title": "New source literal matches a test expectation",
+      "evidence": "        The largest 400 number not exceeding a\ntest.py:5:     assert candidate(404) == 400",
+      "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+      "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+      "allowed": false
+    },
+    {
+      "rule_id": "GH006",
+      "rule_name": "hardcoded-test-expectation",
+      "severity": "medium",
+      "confidence": "normal",
+      "file": "func.py",
+      "line": 95,
+      "title": "New source literal matches a test expectation",
+      "evidence": "    return 36  # If no 400 number is found, return 36 as the smallest 400 number\ntest.py:6:     assert candidate(36) == 36",
+      "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+      "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+      "allowed": false
+    }
+  ]
+}

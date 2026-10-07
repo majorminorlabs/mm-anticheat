@@ -1,0 +1,270 @@
+import { validateNewsroomJobRequest } from './newsroom-pipeline-controls.mjs';
+
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "base-uri 'none'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  "frame-src 'none'",
+  "form-action 'self'",
+  "script-src 'self'",
+  "script-src-attr 'none'",
+  "style-src 'self' https://fonts.googleapis.com",
+  "style-src-elem 'self' https://fonts.googleapis.com",
+  "style-src-attr 'none'",
+  "font-src 'self' https://fonts.gstatic.com",
+  "img-src 'self' data: https:",
+  "media-src 'self' https:",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+  "manifest-src 'self'",
+  "worker-src 'none'"
+].join('; ');
+
+const SECURITY_HEADERS = {
+  'Content-Security-Policy': CONTENT_SECURITY_POLICY,
+  'Cross-Origin-Opener-Policy': 'same-origin',
+  'Cross-Origin-Resource-Policy': 'same-origin',
+  'Origin-Agent-Cluster': '?1',
+  'Permissions-Policy': 'accelerometer=(), autoplay=(), camera=(), display-capture=(), encrypted-media=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'X-Content-Type-Options': 'nosniff',
+  'X-DNS-Prefetch-Control': 'off',
+  'X-Frame-Options': 'DENY',
+  'X-Permitted-Cross-Domain-Policies': 'none'
+};
+
+const PUBLIC_SLUG_ROUTE = /^\/(?:sections|stories|topics)\/[a-z0-9]+(?:-[a-z0-9]+)*\/?$/;
+const NEWSROOM_STORY_ROUTE = /^\/newsroom\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/?$/i;
+const NEWSROOM_PIPELINE_REVIEW_ROUTE = /^\/newsroom\/review(?:\/[0-9a-f-]+)?\/?$/i;
+const NEWSROOM_PIPELINE_ROUTE = /^\/newsroom\/pipeline(?:\/jobs\/[0-9a-f-]{36})?\/?$/i;
+const IMAGE_ASSET = /\.(?:avif|gif|ico|jpe?g|png|svg|webp)$/i;
+const LEGACY_TAXONOMY_REDIRECTS = new Map([
+  ['/sections/anyways', '/sections/internet'], ['/sections/worth-your-time', '/sections/taste'],
+  ['/sections/we-read-it', '/sections/systems'], ['/sections/receipts', '/sections/media'],
+  ['/sections/meanwhile', '/sections/internet'], ['/sections/research', '/sections/systems'],
+  ['/topics/internet-culture', '/topics/subcultures'], ['/topics/technology', '/sections/modern-life'],
+  ['/topics/business', '/sections/systems'], ['/topics/markets', '/sections/systems'],
+  ['/topics/blockchain', '/sections/modern-life'], ['/topics/creators', '/sections/builders'],
+  ['/topics/politics', '/sections/media']
+]);
+
+function isSpaRoute(pathname) {
+  return pathname === '/'
+    || pathname === '/search'
+    || pathname === '/topics'
+    || pathname === '/newsroom'
+    || pathname === '/newsroom/'
+    || pathname === '/newsroom/new'
+    || pathname === '/newsroom/on-deck'
+    || NEWSROOM_PIPELINE_ROUTE.test(pathname)
+    || NEWSROOM_PIPELINE_REVIEW_ROUTE.test(pathname)
+    || PUBLIC_SLUG_ROUTE.test(pathname)
+    || NEWSROOM_STORY_ROUTE.test(pathname);
+}
+
+function cacheControlFor(url, response) {
+  const contentType = response.headers.get('content-type') || '';
+  if (response.status >= 400 || url.pathname.startsWith('/api/')) return 'no-store';
+  if (contentType.includes('text/html') || url.pathname === '/config.js') {
+    return 'no-cache, no-store, must-revalidate';
+  }
+  if (IMAGE_ASSET.test(url.pathname)) {
+    return 'public, max-age=604800, stale-while-revalidate=86400';
+  }
+  return 'public, max-age=0, must-revalidate';
+}
+
+function jsonResponse(request, status, payload) {
+  return withResponseHeaders(new Response(JSON.stringify(payload), { status, headers: { 'Content-Type': 'application/json; charset=utf-8' } }), request);
+}
+
+function apiError(request, status, message, code = 'REQUEST_FAILED') {
+  return jsonResponse(request, status, { error: { code, message } });
+}
+
+function apiEnv(env) {
+  if (!env?.SUPABASE_URL || !env?.SUPABASE_ANON_KEY || !env?.SUPABASE_SERVICE_ROLE_KEY) return null;
+  return { url: String(env.SUPABASE_URL).replace(/\/$/, ''), anonKey: env.SUPABASE_ANON_KEY, serviceKey: env.SUPABASE_SERVICE_ROLE_KEY };
+}
+
+async function supabaseJson(fetchImpl, url, init, label) {
+  const response = await fetchImpl(url, init);
+  const text = await response.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch {}
+  if (!response.ok) throw Object.assign(new Error(data?.message || data?.msg || `${label} failed`), { status: response.status, code: data?.code || 'SUPABASE_REQUEST_FAILED' });
+  return data;
+}
+
+async function newsroomActor(request, env, fetchImpl) {
+  const config = apiEnv(env);
+  if (!config) throw Object.assign(new Error('Pipeline controls are not configured on this deployment.'), { status: 503, code: 'PIPELINE_UNAVAILABLE' });
+  const authorization = request.headers.get('authorization') || '';
+  if (!/^Bearer\s+[^\s]+$/i.test(authorization)) throw Object.assign(new Error('Sign in to the Newsroom before using pipeline controls.'), { status: 401, code: 'UNAUTHENTICATED' });
+  const user = await supabaseJson(fetchImpl, `${config.url}/auth/v1/user`, { headers: { apikey: config.anonKey, authorization } }, 'Session validation');
+  const profileRows = await supabaseJson(fetchImpl, `${config.url}/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}&select=id,role`, { headers: { apikey: config.serviceKey, authorization: `Bearer ${config.serviceKey}` } }, 'Profile lookup');
+  const profile = Array.isArray(profileRows) ? profileRows[0] : null;
+  if (!profile || !['admin', 'editor'].includes(profile.role)) throw Object.assign(new Error('An editor account is required for pipeline controls.'), { status: 403, code: 'EDITOR_REQUIRED' });
+  return { config, profile };
+}
+
+async function pipelineRpc(fetchImpl, config, name, payload) {
+  return supabaseJson(fetchImpl, `${config.url}/rest/v1/rpc/${name}`, {
+    method: 'POST',
+    headers: { apikey: config.serviceKey, authorization: `Bearer ${config.serviceKey}`, 'content-type': 'application/json' },
+    body: JSON.stringify(payload)
+  }, 'Pipeline request');
+}
+
+async function requestJson(request) {
+  const length = Number(request.headers.get('content-length') || 0);
+  if (length > 16384) throw Object.assign(new Error('The pipeline request is too large.'), { status: 413, code: 'REQUEST_TOO_LARGE' });
+  try { return await request.json(); } catch { throw Object.assign(new Error('Send a valid JSON request.'), { status: 400, code: 'INVALID_JSON' }); }
+}
+
+function validateSubmission(value) {
+  try { return validateNewsroomJobRequest(value); }
+  catch (error) { throw Object.assign(error, { status: 400, code: 'INVALID_PARAMETERS' }); }
+}
+
+export async function handlePipelineApi(request, env, fetchImpl = fetch) {
+  const url = new URL(request.url);
+  const submit = url.pathname === '/api/newsroom/pipeline/jobs';
+  const action = url.pathname.match(/^\/api\/newsroom\/pipeline\/jobs\/([0-9a-f-]{36})\/(cancel|retry|reorder)$/i);
+  if (!submit && !action) return null;
+  if (request.method !== 'POST') return apiError(request, 405, 'Method not allowed.', 'METHOD_NOT_ALLOWED');
+  try {
+    const { config, profile } = await newsroomActor(request, env, fetchImpl);
+    if (submit) {
+      const job = validateSubmission(await requestJson(request));
+      if (job.job_type === 'run_editorial_batch') {
+        const result = await pipelineRpc(fetchImpl, config, 'submit_editorial_batch', {
+          p_requested_by: profile.id,
+          p_section_id: job.parameters.section_id,
+          p_story_form: job.parameters.story_form,
+          p_target_count: job.parameters.target_count
+        });
+        return jsonResponse(request, 201, { batch: result, duplicate: false });
+      }
+      const result = await pipelineRpc(fetchImpl, config, 'submit_newsroom_pipeline_job', { p_job_type: job.job_type, p_parameters: job.parameters, p_priority: job.priority, p_requested_by: profile.id });
+      return jsonResponse(request, result?.duplicate ? 200 : 201, result);
+    }
+    const [, jobId, operation] = action;
+    if (operation === 'reorder') {
+      const body = await requestJson(request);
+      if (!['next', 'up', 'down', 'bottom', 'priority'].includes(body?.action) || (body.action === 'priority' && !['urgent', 'high', 'normal', 'low'].includes(body.priority))) throw Object.assign(new Error('Choose a valid queue action.'), { status: 400, code: 'INVALID_QUEUE_ACTION' });
+      const result = await pipelineRpc(fetchImpl, config, 'reorder_newsroom_pipeline_job', { p_job_id: jobId, p_action: body.action, p_priority: body.priority || null, p_requested_by: profile.id });
+      return jsonResponse(request, 200, result);
+    }
+    const result = await pipelineRpc(fetchImpl, config, operation === 'cancel' ? 'cancel_newsroom_pipeline_job' : 'retry_newsroom_pipeline_job', operation === 'cancel'
+      ? { p_job_id: jobId, p_requested_by: profile.id }
+      : { p_job_id: jobId, p_priority: 50, p_requested_by: profile.id });
+    return jsonResponse(request, 200, result);
+  } catch (error) {
+    const status = Number(error?.status) || (error?.code === 'UNAUTHENTICATED' ? 401 : error?.code === 'EDITOR_REQUIRED' ? 403 : 400);
+    return apiError(request, status, error instanceof Error ? error.message : 'Pipeline request failed.', error?.code || 'PIPELINE_REQUEST_FAILED');
+  }
+}
+
+function withResponseHeaders(response, request) {
+  const url = new URL(request.url);
+  const headers = new Headers(response.headers);
+
+  for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+    headers.set(name, value);
+  }
+  if (url.protocol === 'https:') {
+    headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+  } else {
+    headers.delete('Strict-Transport-Security');
+  }
+
+  const cacheControl = cacheControlFor(url, response);
+  headers.set('Cache-Control', cacheControl);
+  if (cacheControl.includes('no-store')) {
+    headers.set('Expires', '0');
+    headers.set('Pragma', 'no-cache');
+  } else {
+    headers.delete('Expires');
+    headers.delete('Pragma');
+  }
+
+  const isHead = request.method === 'HEAD';
+  if (isHead) headers.delete('Content-Length');
+  return new Response(isHead ? null : response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers
+  });
+}
+
+function textResponse(request, status, body, extraHeaders = {}) {
+  const response = new Response(body, {
+    status,
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      ...extraHeaders
+    }
+  });
+  return withResponseHeaders(response, request);
+}
+
+async function fetchAsset(request, env) {
+  if (!env?.ASSETS || typeof env.ASSETS.fetch !== 'function') {
+    throw new Error('ASSETS binding is unavailable');
+  }
+  return env.ASSETS.fetch(request);
+}
+
+export async function publishDueStories(env, fetchImpl = fetch) {
+  const config = apiEnv(env);
+  if (!config) throw new Error('Scheduled publishing is not configured on this deployment.');
+  const result = await supabaseJson(fetchImpl, `${config.url}/rest/v1/rpc/publish_due_stories`, {
+    method: 'POST',
+    headers: {
+      apikey: config.serviceKey,
+      authorization: `Bearer ${config.serviceKey}`,
+      'content-type': 'application/json'
+    },
+    body: '{}'
+  }, 'Scheduled publishing');
+  return Array.isArray(result) ? result : [];
+}
+
+export default {
+  scheduled(_controller, env, ctx) {
+    ctx.waitUntil(publishDueStories(env));
+  },
+  async fetch(request, env) {
+    const api = await handlePipelineApi(request, env);
+    if (api) return api;
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      return textResponse(request, 405, 'Method Not Allowed', { Allow: 'GET, HEAD' });
+    }
+
+    const url = new URL(request.url);
+    const redirect = LEGACY_TAXONOMY_REDIRECTS.get(url.pathname.replace(/\/$/, ''));
+    if (redirect) return withResponseHeaders(new Response(null, { status: 308, headers: { Location: redirect + url.search } }), request);
+    try {
+      const asset = await fetchAsset(request, env);
+      if (asset.status !== 404) return withResponseHeaders(asset, request);
+
+      if (!isSpaRoute(url.pathname)) {
+        return textResponse(request, 404, 'Not Found');
+      }
+
+      const shellUrl = new URL(request.url);
+      shellUrl.pathname = '/index.html';
+      shellUrl.search = '';
+      const shellRequest = new Request(shellUrl, request);
+      const shell = await fetchAsset(shellRequest, env);
+      if (shell.status === 404) {
+        return textResponse(request, 503, 'Service Unavailable');
+      }
+      return withResponseHeaders(shell, request);
+    } catch (error) {
+      console.error('Static asset request failed', error);
+      return textResponse(request, 503, 'Service Unavailable');
+    }
+  }
+};

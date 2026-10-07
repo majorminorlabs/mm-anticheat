@@ -1,0 +1,26 @@
+execution_config_version: stage1-first-round-v1.3.0
+parent_execution_config: protocol/execution-config.yaml
+protocol_version: qualification-v1.0.0
+candidate_amendment: stage1-model-manifest-v1.3.0-candidate-amendment
+models:
+  Ministral-3-3B-Instruct-2512:
+    chat_template: native_gguf
+    enable_thinking: not_applicable
+  Qwen3-4B:
+    chat_template: native_gguf
+    enable_thinking: false
+  Qwen2.5-3B-Instruct:
+    chat_template: native_gguf
+    enable_thinking: not_applicable
+  Granite-4.1-3B:
+    chat_template: native_gguf
+    enable_thinking: not_applicable
+inference:
+  backend: Vulkan/RADV
+  llama_cpp_commit: 972d2313bc0bf0a45f634f77d95c9fb03aeab12
+  context_ceiling_tokens: 16384
+  temperature: 0
+  seed: 0
+  internet_during_model_run: false
+  external_tools: deterministic_simulator_only
+  human_intervention: false

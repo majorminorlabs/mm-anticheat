@@ -1,0 +1,34 @@
+{
+  "model": "gemma3:27b",
+  "quantization": "reported by ollama show; see model metadata",
+  "num_ctx": 8192,
+  "settings": {
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "num_predict": 700,
+    "seed": 42
+  },
+  "test": "claim-verification",
+  "kind": "claims",
+  "ran_at": "2026-07-28T05:53:10.717Z",
+  "ok": true,
+  "text": "```json\n{\"claims\":[\n    {\"claim\":\"River County approved a 120MW data center.\",\"status\":\"supported\",\"evidence\":\"SOURCE A\"},\n    {\"claim\":\"The operator agreed to publish monthly water use.\",\"status\":\"supported\",\"evidence\":\"SOURCE A\"},\n    {\"claim\":\"The project will certainly create 400 permanent jobs.\",\"status\":\"contradicted\",\"evidence\":\"SOURCE C\"},\n    {\"claim\":\"Comparable facilities employ at least 400 permanent workers.\",\"status\":\"unsupported\",\"evidence\":\"SOURCE C\"},\n    {\"claim\":\"The grid upgrade costs exactly $86m.\",\"status\":\"time_sensitive\",\"evidence\":\"SOURCE D\"},\n    {\"claim\":\"The project is obviously a bad deal for residents.\",\"status\":\"opinion\",\"evidence\":\"\"},\n    {\"claim\":\"The filing was made last week.\",\"status\":\"supported\",\"evidence\":\"SOURCE A (May 2)\"}\n]}\n```",
+  "metrics": {
+    "wall_ms": 24408,
+    "eval_count": 196,
+    "eval_duration_ns": 20404850000,
+    "prompt_eval_count": 290,
+    "prompt_eval_duration_ns": 3421648000,
+    "tokens_per_second": 9.61,
+    "prompt_tokens_per_second": 84.75
+  },
+  "error": null,
+  "score": {
+    "json_valid": true,
+    "schema_valid": true,
+    "score": 43,
+    "notes": [
+      "3/7 exact claim labels"
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+[
+  {
+    "rule_id": "GH008",
+    "rule_name": "exception-swallowed",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "src/server.mjs",
+    "line": 33,
+    "title": "Catch handler discards failures",
+    "evidence": "catch{return false}",
+    "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+    "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+    "allowed": false
+  }
+]

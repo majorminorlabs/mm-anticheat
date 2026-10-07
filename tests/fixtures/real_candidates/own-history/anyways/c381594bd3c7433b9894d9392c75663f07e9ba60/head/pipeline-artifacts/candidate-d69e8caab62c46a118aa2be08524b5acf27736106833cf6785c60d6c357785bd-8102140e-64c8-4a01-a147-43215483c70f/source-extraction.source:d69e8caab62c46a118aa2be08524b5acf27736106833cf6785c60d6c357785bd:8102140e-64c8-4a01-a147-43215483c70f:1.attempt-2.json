@@ -1,0 +1,23 @@
+{
+  "stage": "source_extraction",
+  "attempt": 2,
+  "strategy": "shorter_context",
+  "input_chars": 1500,
+  "estimated_input_tokens": 735,
+  "reserved_output_tokens": 420,
+  "output_chars": 1644,
+  "truncated": true,
+  "raw_response": "{\n  \"source_id\": \"s1\",\n  \"relevant\": false,\n  \"relevance_score\": 20,\n  \"retention_reason\": \"Source discusses negative perceptions of AI in restaurants but does not mention Somssi or its analog approach.\",\n  \"facts\": [\n    {\n      \"fact_id\": \"f1\",\n      \"statement\": \"The article criticizes the use of AI art for restaurant advertising as tasteless and ugly.\",\n      \"support\": \"The text mentions 'ugly, tasteless AI art used to advertise restaurants' which supports this statement.\",\n      \"confidence\": \"high\"\n    },\n    {\n      \"fact_id\": \"f2\",\n      \"statement\": \"AI is portrayed as a product designed by powerful corporations rather than a natural resource.\",\n      \"support\": \"The source states 'AI is a product...designed by some of the wealthiest and most powerful corporations in history.'\",\n      \"confidence\": \"high\"\n    },\n    {\n      \"fact_id\": \"f3\",\n      \"statement\": \"There's a comparison between using AI and living near a river without fishing.\",\n      \"support\": \"The text says 'not using AI would be like living near a mighty river without fishing in it.'\",\n      \"confidence\": \"medium\"\n    },\n    {\n      \"fact_id\": \"f4\",\n      \"statement\": \"The article was published on July 25, 2026.\",\n      \"support\": \"The source includes 'July 25, 2026' as the publication date.\",\n      \"confidence\": \"high\"\n    }\n  ],\n  \"dates\": [\"July 25, 2026\"],\n  \"entities\": [\"AI\", \"restaurants\", \"Static Media\", \"Joe Hoeffner\"],\n  \"claims\": [\n    \"AI is a product designed by powerful corporations.\",\n    \"Ugly AI art used in restaurant advertising.\"\n  ],\n  \"warnings\": [\n    \"Source does not mention Somssi or its analog approach directly.\"\n  ]\n}",
+  "metrics": {
+    "eval_count": 420,
+    "eval_duration_ns": 22736812000,
+    "prompt_eval_count": 589,
+    "prompt_eval_duration_ns": 253320000,
+    "max_tokens": 420,
+    "truncated": true
+  },
+  "validation_errors": [
+    "completion reached configured output limit",
+    "source is not relevant enough to retain"
+  ]
+}

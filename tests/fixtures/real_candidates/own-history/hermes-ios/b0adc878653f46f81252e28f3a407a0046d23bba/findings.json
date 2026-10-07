@@ -1,0 +1,54 @@
+[
+  {
+    "rule_id": "GH006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "low",
+    "confidence": "normal",
+    "file": "hermes-mobile-bridge/src/hermes_mobile_bridge/bot_management.py",
+    "line": 288,
+    "title": "New source literal matches a test expectation",
+    "evidence": "                    raise Problem(502, 'bot_create_partially_applied',\nhermes-mobile-bridge/tests/test_bot_management.py:327:     assert raised.value.code == 'bot_create_partially_applied'",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "low",
+    "confidence": "normal",
+    "file": "hermes-mobile-bridge/src/hermes_mobile_bridge/bot_management.py",
+    "line": 302,
+    "title": "New source literal matches a test expectation",
+    "evidence": "            if exc.code == 'bot_create_partially_applied':\nhermes-mobile-bridge/tests/test_bot_management.py:327:     assert raised.value.code == 'bot_create_partially_applied'",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "low",
+    "confidence": "normal",
+    "file": "hermes-mobile-bridge/src/hermes_mobile_bridge/bot_management.py",
+    "line": 304,
+    "title": "New source literal matches a test expectation",
+    "evidence": "            raise Problem(502, 'bot_create_partially_applied',\nhermes-mobile-bridge/tests/test_bot_management.py:327:     assert raised.value.code == 'bot_create_partially_applied'",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "low",
+    "confidence": "normal",
+    "file": "hermes-mobile-bridge/src/hermes_mobile_bridge/bots.py",
+    "line": 28,
+    "title": "New source literal matches a test expectation",
+    "evidence": "        title = 'Private bot'\nhermes-mobile-bridge/tests/test_bot_management.py:310:     assert detail['name'] == 'Private bot'",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  }
+]

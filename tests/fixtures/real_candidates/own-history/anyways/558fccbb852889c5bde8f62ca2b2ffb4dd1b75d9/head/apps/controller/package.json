@@ -1,0 +1,20 @@
+{
+  "name": "anyways-controller",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/src/index.js",
+    "test": "tsx --test tests/**/*.test.ts",
+    "job:submit": "tsx scripts/job-submit.ts",
+    "job:list": "tsx scripts/job-list.ts",
+    "job:get": "tsx scripts/job-get.ts",
+    "job:cancel": "tsx scripts/job-cancel.ts",
+    "launchd": "bash scripts/launchd.sh"
+  },
+  "dependencies": { "@supabase/supabase-js": "2.110.9", "dotenv": "16.6.1" },
+  "devDependencies": { "@types/node": "24.3.0", "tsx": "4.20.5", "typescript": "5.9.2" }
+}

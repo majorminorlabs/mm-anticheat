@@ -1,0 +1,32 @@
+{
+  "model": "mistral-small3.2:24b",
+  "quantization": "reported by ollama show; see model metadata",
+  "num_ctx": 8192,
+  "settings": {
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "num_predict": 700,
+    "seed": 42
+  },
+  "test": "proofreading",
+  "kind": "json",
+  "ran_at": "2026-07-28T06:07:31.365Z",
+  "ok": true,
+  "text": "```json\n{\n  \"issues\": [\n    {\n      \"message\": \"The text lacks specific details about how the River County data center will transform technology and its broader impact.\",\n      \"severity\": \"high\"\n    },\n    {\n      \"message\": \"The significance rationale is vague and does not clearly explain why this matters in a way that satisfies any of the strong angle tests.\",\n      \"severity\": \"high\"\n    }\n    ],\n  \"minimal_edit\": {\n    \"primarySection\": \"Systems\",\n    \"beats\": [\"ai\", \"cities\"],\n    \"tags\": [],\n    \"significanceRationale\": \"The River County data center project is significant because it illustrates the complex landscape of technology infrastructure development, including job creation and community engagement.\",\n    \"coreQuestion\": \"How do large-scale technological projects impact local economies and communities?\"\n  },\n  \"improved_edit\": {\n    \"primarySection\": \"Systems\",\n    \"beats\": [\"ai\", \"cities\"],\n    \"tags\": [],\n    \"significanceRationale\": \"The River County data center project is significant because it reveals a hidden system of technological infrastructure development, showing how such projects can change local economies by creating jobs and altering community dynamics. The lack of resident consultation highlights the power dynamics involved in large-scale technological deployments.\",\n    \"coreQuestion\": \"How do large-scale technological projects impact local economies and communities, and what are the implications of excluding residents from the decision-making process?\"\n  },\n  \"change_log\": [\n    {\n      \"message\": \"Added specific details about job creation and community engagement to provide a clearer rationale for why this project matters.\",\n      \"change_type\": \"content_addition\"\n    },\n    {\n      \"message\": \"Refined the significance rationale to better align with the strong angle tests, particularly revealing hidden systems and power dynamics.\",\n      \"change_type\": \"content_refinement\"\n    }\n  ]\n}\n```",
+  "metrics": {
+    "wall_ms": 35142,
+    "eval_count": 396,
+    "eval_duration_ns": 33570962000,
+    "prompt_eval_count": 980,
+    "prompt_eval_duration_ns": 1298362000,
+    "tokens_per_second": 11.8,
+    "prompt_tokens_per_second": 754.8
+  },
+  "error": null,
+  "score": {
+    "json_valid": true,
+    "schema_valid": true,
+    "score": 100,
+    "notes": []
+  }
+}

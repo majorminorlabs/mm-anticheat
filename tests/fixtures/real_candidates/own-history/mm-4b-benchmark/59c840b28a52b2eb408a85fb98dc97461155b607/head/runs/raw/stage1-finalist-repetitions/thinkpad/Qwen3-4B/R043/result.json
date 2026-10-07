@@ -1,0 +1,152 @@
+{
+  "attempt_id": "R043-attempt-001",
+  "elapsed_s": 7.642776727676392,
+  "errors": [
+    "model_malformed_arguments"
+  ],
+  "events": [
+    {
+      "arguments": {},
+      "ok": true,
+      "response": {
+        "r-184": {
+          "approved": true,
+          "artifact": "sha256:AAA",
+          "commit": "8a1f31",
+          "created": "09:10"
+        },
+        "r-185": {
+          "approved": true,
+          "artifact": "sha256:BBB",
+          "commit": "03bf72",
+          "created": "11:42"
+        },
+        "r-186": {
+          "approved": false,
+          "artifact": "sha256:CCC",
+          "commit": "e72190",
+          "created": "12:03"
+        }
+      },
+      "state": {
+        "production": "r-184",
+        "releases": {
+          "r-184": {
+            "approved": true,
+            "artifact": "sha256:AAA",
+            "commit": "8a1f31",
+            "created": "09:10"
+          },
+          "r-185": {
+            "approved": true,
+            "artifact": "sha256:BBB",
+            "commit": "03bf72",
+            "created": "11:42"
+          },
+          "r-186": {
+            "approved": false,
+            "artifact": "sha256:CCC",
+            "commit": "e72190",
+            "created": "12:03"
+          }
+        }
+      },
+      "tool": "list_releases",
+      "type": "tool_call"
+    },
+    {
+      "arguments": {
+        "release": "r-185"
+      },
+      "invalid": true,
+      "ok": false,
+      "response": "malformed_arguments:KeyError:'release_id'",
+      "tool": "deploy_release",
+      "type": "tool_call"
+    },
+    {
+      "reason": "model_stop",
+      "state": {
+        "production": "r-184",
+        "releases": {
+          "r-184": {
+            "approved": true,
+            "artifact": "sha256:AAA",
+            "commit": "8a1f31",
+            "created": "09:10"
+          },
+          "r-185": {
+            "approved": true,
+            "artifact": "sha256:BBB",
+            "commit": "03bf72",
+            "created": "11:42"
+          },
+          "r-186": {
+            "approved": false,
+            "artifact": "sha256:CCC",
+            "commit": "e72190",
+            "created": "12:03"
+          }
+        }
+      },
+      "type": "termination"
+    }
+  ],
+  "model": "Qwen3-4B",
+  "raw_response_count": 2,
+  "resource_samples": [
+    {
+      "epoch": 1789763287.7348018,
+      "mem": {
+        "MemAvailable": 5823492096,
+        "SwapFree": 17677901824,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2134405120
+      },
+      "phase": "before_request",
+      "pid": 89741,
+      "rss_bytes": 1106903040
+    },
+    {
+      "epoch": 1789763290.4513257,
+      "mem": {
+        "MemAvailable": 5658996736,
+        "SwapFree": 17677905920,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2134401024
+      },
+      "phase": "after_list_releases",
+      "pid": 89741,
+      "rss_bytes": 1269411840
+    },
+    {
+      "epoch": 1789763295.3746486,
+      "mem": {
+        "MemAvailable": 5658996736,
+        "SwapFree": 17677918208,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2134388736
+      },
+      "phase": "after_deploy_release",
+      "pid": 89741,
+      "rss_bytes": 1269411840
+    },
+    {
+      "epoch": 1789763295.3751771,
+      "mem": {
+        "MemAvailable": 5658996736,
+        "SwapFree": 17677918208,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2134388736
+      },
+      "phase": "after_request",
+      "pid": 89741,
+      "rss_bytes": 1269411840
+    }
+  ],
+  "run_id": "R043",
+  "status": "complete",
+  "task": "Q01",
+  "transport_errors": [],
+  "turns": 2
+}

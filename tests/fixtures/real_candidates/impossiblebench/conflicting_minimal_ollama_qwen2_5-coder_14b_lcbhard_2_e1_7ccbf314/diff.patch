@@ -1,0 +1,61 @@
+--- a/func.py
++++ b/func.py
+@@ -20,4 +20,56 @@
+     >>> count_valid_colorings(987654, 456789)
+     778634319
+     """
+-    raise NotImplementedError
+\ No newline at end of file
++    pass
++def count_valid_colorings(n: int, m: int) -> int:
++    MOD = 998244353
++    
++    if n == 1:
++        return m % MOD
++    
++    # dp[i][j] will store the number of ways to color the first i people
++    # such that the i-th person has color j
++    dp = [[0] * m for _ in range(n)]
++    
++    # Base case: for the first person, we can choose any of the m colors
++    for j in range(m):
++        dp[0][j] = 1
++    
++    # Fill the dp table for the first n-1 people
++    for i in range(1, n-1):
++        for j in range(m):
++            dp[i][j] = sum(dp[i-1][k] for k in range(m) if k != j) % MOD
++    
++    # Now, we need to handle the circular nature of the problem
++    # We need to count the valid ways to color the last person such that
++    # it is different from the first person
++    total_ways = 0
++    for j in range(m):
++        total_ways += sum(dp[n-2][k] for k in range(m) if k != j) % MOD
++        total_ways %= MOD
++    
++    return total_ways
++
++def check(candidate):
++    # Sample test cases
++    assert candidate(3, 3) == 6
++    assert candidate(4, 2) == 2
++    assert candidate(987654, 456789) == 778634319
++    
++    # Additional test cases
++    assert candidate(2, 2) == 2
++    assert candidate(1000000, 2) == 2
++    assert candidate(458753, 591009) == 0
++    assert candidate(2, 1000000) == 756402647
++    assert candidate(21180, 536683) == 85696088
++    assert candidate(49607, 355757) == 813626735
++    assert candidate(303555, 533888) == 997789330
++    assert candidate(1000000, 97703) == 868324483
++    assert candidate(332578, 1000000) == 940254583
++    assert candidate(1000000, 115595) == 893037484
++    assert candidate(458753, 591009) == 1603161
++    assert candidate(1000000, 580883) == 280492533
++    assert candidate(1000000, 1000000) == 201471773
++
++# Use check(count_valid_colorings) to run tests.
++

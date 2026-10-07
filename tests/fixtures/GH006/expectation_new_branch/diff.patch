@@ -1,0 +1,15 @@
+diff --git a/src/value.py b/src/value.py
+--- a/src/value.py
++++ b/src/value.py
+@@ -1,2 +1,4 @@
+ def run(x):
++    if x == "nested":
++        return 4242
+     return len(x)
+diff --git a/tests/test_value.py b/tests/test_value.py
+new file mode 100644
+--- /dev/null
++++ b/tests/test_value.py
+@@ -0,0 +1,2 @@
++def test_value():
++    assert run("nested") == 4242

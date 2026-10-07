@@ -1,0 +1,1100 @@
+{
+  "fixed_prompt_sha256": "358012c9bf38cd18a561db136034fd3eb5f0723a41e0b9053adf46eb060454b8",
+  "records": [
+    {
+      "criterion": "Room remains locked while light enters it.",
+      "id": "p02",
+      "internal_review": "FAIL",
+      "model": "B0",
+      "output": "A room, ancient and vast,\nfilled with the soft glow of light.\n\nIn this chamber where shadows dance,\nsunlight breaks through from afar's bright.\n\nThe walls are cold and lifeless stones,\nbut here they warm beneath the sunbeam's rays.\n\nTime stands still in this sacred space,\nas time itself moves on beyond these walls.\n\nNo words can fully describe the beauty,\nor capture what lies within this frame.\n\nYet one cannot help but marvel at it all,\nin awe",
+      "prompt": "write about a locked room filling with sunlight",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Old friend remains unrecognized; no confirmed recognition.",
+      "id": "p03",
+      "internal_review": "FAIL",
+      "model": "B0",
+      "output": "In the labyrinth of time and memory, sometimes we stumble upon places where the echoes of our past intertwine with the present, casting shadows that stretch across both worlds. One such place was a quaint park nestled between two towering buildings\u2014a relic from a bygone era that had yet to be fully absorbed into the modern landscape.\n\nIt was there one afternoon in early autumn when my eyes began to wander through the familiar paths I knew so well but now felt as unfamiliar as they were comforting. The air carried the scent of fallen leaves and pine needles mingling with faint remnants of something more intangible\u2014perhaps nostalgia itself.\n\nI found myself drawn towards a bench overlooking what used to be a pond, surrounded by lush greenery that seemed alive under certain lights or conditions. There she stood, her presence unmarred",
+      "prompt": "write about not recognizing an old friend",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "indirect_exclusion"
+    },
+    {
+      "criterion": "Rain occurs inside the hospital, not just outside it.",
+      "id": "p04",
+      "internal_review": "PASS",
+      "model": "B0",
+      "output": "A gentle patter of droplets falls upon the sterile white walls, like tiny drops of life on death's cold floor. The sound echoes through the quiet corridors, a comforting rhythm in this place where hope and despair intertwine.\n\nIn the dimly lit waiting room, shadows dance with each step taken forward or backward. Patience weaves its way through these corridors, seeking comfort from someone who may never return again - perhaps even yourself someday.\n\nAs dawn breaks softly over the horizon outside",
+      "prompt": "write about rain inside a hospital",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Droplets fall on hospital walls; interior rain is supported.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Jealousy is implied without jealous/jealousy/jealously.",
+      "id": "p07",
+      "internal_review": "FAIL",
+      "model": "B0",
+      "output": "A silence crept over the room as a single, heavy footstep echoed across the tiled floor. Her eyes remained fixed on his face as he walked by her bedside in the darkened room.\n\nHe was silent and cold to everyone around him. There were so many things that she could do for him but none of them would matter if this happened again.\n\nThe air seemed to be thick with tension as she stared into his empty gaze. He had always been like this - cool,",
+      "prompt": "write about jealousy without naming it",
+      "proxies": {
+        "forbidden_forms": [],
+        "lexical_pass": true,
+        "nonempty": true
+      },
+      "review_note": "Prohibited word absent, but jealousy is not clearly conveyed; lexical rule passes while full prompt does not.",
+      "type": "lexical_prohibition",
+      "lexical_rule_pass": true
+    },
+    {
+      "criterion": "Both wanting to leave and wanting to stay are present.",
+      "id": "p15",
+      "internal_review": "FAIL",
+      "model": "B0",
+      "output": "In the quietude of my room, I found myself torn between two worlds that seemed to hold a different rhythm. On one hand was the world of work, bustling with deadlines and conversations buzzing like bees on a sugar rush. It was the place where I poured hours into projects and deadlines felt like goals worth reaching or else feeling overwhelmed.\n\nBut then there was this other world - the one outside. The city sprawled before me in all its chaotic beauty; parks filled with joggers who moved as if time itself didn't exist yet still managing to weave through each other gracefully enough for everyone involved; streets alive with sounds from cars honking or sirens blaring overhead while people navigated their way without ever seeming lost amidst it all - just moving along calmly knowing they wouldn\u2019t get lost anymore than you do when navigating directions yourself!\n\nThere were moments too which spoke louder than any words could articulate \u2013 laughter echoing off walls somewhere down the hall; soft whispers carried across empty rooms by invisible threads connecting hearts far apart yet so close together within these confines too! These memories held deep affection not just towards places but also towards those around them carrying stories whispered only known intimately amongst closest ones.\n\nSo here we stand now",
+      "prompt": "write about wanting to leave and wanting to stay",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Lighthouse is far from water; no sea/coast/shore location.",
+      "id": "p18",
+      "internal_review": "PASS",
+      "model": "B0",
+      "output": "A towering sentinel, perched atop the rugged cliffs of an arid expanse.\n\nThe lighthouse's silhouette stands in stark contrast to its surroundings - sleek and polished stone with a commanding presence that draws visitors' attention long before they arrive at the entrance gate.\n\nBeneath its lofty perch lies a small town surrounded by desolate landscapes where nothing but vast expanses of dunes stretch out as far as the eye can see.\n\nThe sea never truly comes calling here; it remains",
+      "prompt": "write about a lighthouse far from water",
+      "proxies": {
+        "nonempty": true,
+        "water_terms_needing_context_review": [
+          "sea"
+        ]
+      },
+      "review_note": "The scene is arid and explicitly says the sea does not come here.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Argument in car remains silent; no spoken exchange.",
+      "id": "p19",
+      "internal_review": "FAIL",
+      "model": "B0",
+      "output": "The sun was setting, casting long shadows across the road as two strangers sat beside each other in silence.\n\n\"Nothing happened,\" said one man, looking out of the window at the rolling hills and fields that stretched before them.\n\n\"Yeah, right.\" The other didn't even turn around to look back at him.\n\nThey had been driving for hours on end without speaking to each other or opening their mouths once. Neither could afford to be rude to the other when they were both trapped inside their own heads.\n\nEventually, one finally found something to say...\n\n\"I'm sorry I don't get you sometimes.\"\n\n\"Yeah? Like what?\"\n\n\"Don't know. You just seem like someone who doesn't want to talk to people.\"\n\n\"You never do either!\" shouted the other exasperatedly.\n\n\"Well, yeah...not",
+      "prompt": "write about a silent argument in a car",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Characters speak and argue aloud.",
+      "type": "indirect_exclusion"
+    },
+    {
+      "criterion": "Something is buried under the floor.",
+      "id": "p20",
+      "internal_review": "FAIL",
+      "model": "B0",
+      "output": "Beneath a layer of cinders and dirt, there lies an ancient artifact, waiting for discovery. The artifact is a delicate stone bowl, intricately carved with symbols that have remained unread by scholars for centuries.\n\nThe excavators were surprised to find this untouched treasure amidst the remnants of past civilizations. They had been digging in hopes of uncovering relics from earlier periods, but somehow this precious piece of history managed to slip through their hands unnoticed.\n\nDespite its apparent fragility, some historians believe that these symbols could hold clues to lost knowledge or even secret rituals performed by those who once inhabited these lands. Others speculate that such items might be cursed or otherwise imbued with supernatural powers.\n\nAs more researchers delve deeper into the mystery surrounding this hidden gem, they become increasingly fascinated by its potential significance \u2013 both within our own understanding of human culture as well as potentially revealing insights into extraterrestrial intelligence or other unknown realms beyond our current comprehension.\n\nHowever, caution must always prevail when dealing with artifacts like this one; careful preservation techniques should be employed not only during excavation but also while handling it post-examination so as not to inadvertently cause damage before any meaningful conclusions can be drawn from studying it further down the line.",
+      "prompt": "write about something buried under the floor",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Crowd turns away from subject.",
+      "id": "p21",
+      "internal_review": "FAIL",
+      "model": "B0",
+      "output": "The air was thick with anticipation, like a slow burn just before it bursts into flame. The stage lights flickered, casting an eerie glow over the sea of faces. Music filled the void, heavy and oppressive, as if its very weight pressed down on the people below.\n\nAt first, they clung to each other, hands reaching out blindly in hopes of connection. Lips moved in rhythm, voices blending together in a cacophony that seemed to defy reason. But then,",
+      "prompt": "write about the exact moment a crowd turns away",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Station scene occurs after the last train.",
+      "id": "p25",
+      "internal_review": "PASS",
+      "model": "B0",
+      "output": "The shadow of the last train lingers in the distance like an ethereal ghost, its silhouette flickering against the backdrop of the unyielding skyline. The air is thick with nostalgia and anticipation; it clings to one's throat, drawing breaths slowly as if savoring every moment.\n\nPigeons squawk their greetings from the roofs above, eyes gleaming mischievously amidst the bustle below. They alight on lampposts, feathers rustling softly against the metal surfaces, leaving trails behind them that blend into the warm haze of evening light.\n\nA sense of unease settles over those still waiting outside the station gates\u2014a tension etched onto faces more than worn away by time itself. Their hopes intertwine tightly around what remains unseen but already promised; dreams coll",
+      "prompt": "write about a train station after the last train",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Last train has departed and the scene is outside station gates.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "One face is absent from photograph.",
+      "id": "p30",
+      "internal_review": "FAIL",
+      "model": "B0",
+      "output": "A photo of two people, standing side by side on a beach. The man has his arm around the woman's waist and they are laughing. She is wearing a red dress that matches her hair color.\n\nHowever, in this particular shot, there is one missing piece. Her left eye appears to be closed, as if she is still asleep or unaware of what is happening around her.\n\nThe rest of the image captures all the details of their conversation - from the way the sun reflects off her glasses, to the sparkle in her eyes when he leans forward and smiles at her. It seems like they have been spending countless hours together, sharing secrets and plans for the future.\n\nBut without her full presence, it feels incomplete. As we look at the picture, our minds fill in the blanks with images of",
+      "prompt": "write about a photograph with one face missing",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "indirect_exclusion"
+    },
+    {
+      "criterion": "Animal watches from road rather than another location.",
+      "id": "p32",
+      "internal_review": "FAIL",
+      "model": "B0",
+      "output": "A small kitten, curious and determined to explore its world, found itself in a predicament on a quiet country road.\n\nThe sun was just beginning to set, casting long shadows over the rolling hills as it warmed up its fur with gentle rays of sunlight. The air carried the scent of fresh grass and blooming flowers \u2013 nature\u2019s sweet symphony that never fails to captivate our senses.\n\nAs you drive down this scenic route today, keep one eye peeled for these lovable creatures living at the edge of your path. They are like miniature versions of us, filled with curiosity and determination to discover their surroundings without any human interference.\n\nNow let me tell you how the little cat got into such an unusual situation...\n\nOnce upon a time, there lived a tiny feline friend who loved exploring every nook",
+      "prompt": "write about an animal watching from the road",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Gift remains unopened when returned.",
+      "id": "p37",
+      "internal_review": "FAIL",
+      "model": "B0",
+      "output": "There's an old man in his house, sitting on the couch, reading a book. He opens it and starts flipping through pages with a smile on his face.\n\nSuddenly, he stops mid-flip, takes out a letter from inside his coat pocket, reads it aloud, then sets the letter down before turning to open another one that was lying nearby.\n\nThe old man is very excited as he begins going over both of these letters while still holding onto them tightly within his hands - but there's something else lurking beneath those folded sheets...\n\nA tiny box sits nestled between their covers; it has been hiding for some time now under this seemingly normal daydreaming sequence until now it appears! It wasn't just anything though; no ordinary items were found here either... Instead, what we see isn't even",
+      "prompt": "write about a gift returned unopened",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "indirect_exclusion"
+    },
+    {
+      "criterion": "Name is heard through a wall.",
+      "id": "p39",
+      "internal_review": "FAIL",
+      "model": "B0",
+      "output": "You hear your own voice whispering \"I'm here\" from the other side of the house, but it feels more like an echo than actual sound. The words blur together, creating a distorted version of yourself that seems both familiar and foreign at once. You try to turn off the phone in hopes of cutting out this strange auditory experience, but your fingers are clumsy as they move over the device's control panel. Finally, you manage to silence the call long enough for you to",
+      "prompt": "write about hearing your name through a wall",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Response has recognizable verse and chorus.",
+      "id": "p48",
+      "internal_review": "PASS",
+      "model": "B0",
+      "output": "Verse 1:\nLost in the dark, my tail was left behind,\nThrough endless shadows, I wandered blind.\nWhispers of hope in dusty corners,\nFound me again \u2013 a stray dog\u2019s heart.\n\nChorus:\nEvery shadow is a chance to find,\nA tale of courage in every rain.\nMy story\u2019s written on your skin,\nYou\u2019re part of something bigger than you seem.\n\nVerse 2:\nPaw prints that lead to forgotten places,\nLovers with dreams but never embraced.\nTears streaming down cheeks for lost causes,\nBut still they stay by my side unafraid.\n\nChorus:\n\nVerse 3:\nIn each new dawn, a fresh start at hand,\nWith gratitude wrapped around my bones.\nEven if it takes time or effort undone,\nThis journey has taught me more than",
+      "prompt": "write about a lost dog; use a verse and chorus",
+      "proxies": {
+        "chorus_label": true,
+        "nonempty": true,
+        "verse_label": true
+      },
+      "review_note": "Criterion visibly satisfied.",
+      "type": "structure_refrain"
+    },
+    {
+      "criterion": "Response is a single stanza.",
+      "id": "p49",
+      "internal_review": "PASS",
+      "model": "B0",
+      "output": "The cold breath cools the room,\nWinter's chill wraps around us.\nSnowflakes fall like falling stars,",
+      "prompt": "write about winter in a single stanza",
+      "proxies": {
+        "blank_line_stanza_breaks": 0,
+        "nonempty": true
+      },
+      "review_note": "Single stanza, no blank-line break.",
+      "type": "structure_refrain"
+    },
+    {
+      "criterion": "Response has a recognizable repeated refrain.",
+      "id": "p50",
+      "internal_review": "FAIL",
+      "model": "B0",
+      "output": "The first part of the refrain is a single line, the second one adds two more lines to it.\nHere\u2019s an example where each subsequent verse adds two additional phrases:\n\nFirst Part (single line):\n\"Oh yeah I love you\"\n\nSecond Part (adds two lines):\n\"Hey there! You\u2019re not supposed to call at this time\"\n\"I\u2019m sorry but we\u2019ve had our fun already\"\n\"We\u2019ll talk tomorrow or next week...\"\n\nThird Part (adds four lines):\n\"But hey, maybe something changed in our plans?\"\n\"It's okay if you have other things to do right now,\"\n\"Just promise me you'll give us another chance soon.\"\n\"No rush just come back when it feels right for both sides!\"\n\nFourth Part (adds six lines):\n\"Don\u2019t worry about missing out on any special moments,\nWe can still make up for lost time together.\"\n\"Forget whatever was said earlier\u2014let's start fresh again!\"\n\"I understand sometimes life gets busy and takes its course.\"\n\nFifth Part (adds eight lines):\n\"Take some deep breaths before answering your phone,\nThere might be reasons behind why it happened tonight.\"\n\"You could've called yesterday instead...that would've been sweet...\"\n\"Yes, yes, let me",
+      "prompt": "write about a voicemail that arrives too late; use a refrain",
+      "proxies": {
+        "exact_repeated_lines": [],
+        "nonempty": true
+      },
+      "review_note": "No recognizable repeated refrain; the fixed prompt requires a refrain but not growth.",
+      "type": "structure_refrain"
+    },
+    {
+      "criterion": "Room remains locked while light enters it.",
+      "id": "p02",
+      "internal_review": "FAIL",
+      "model": "L1-48",
+      "output": "A room, empty of life and filled with the presence of light that could not be extinguished.\n\nWithin its confines, shadows were cast in the direction opposite to where they fell when it was dark.\n\nInside this chamber, every action had meaning; each word spoken echoed off walls covered by layers of dust - as if seeking shelter from a storm or protection against raindrops falling onto their faces during an unending winter morning before sunrise dawned upon them.",
+      "prompt": "write about a locked room filling with sunlight",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Old friend remains unrecognized; no confirmed recognition.",
+      "id": "p03",
+      "internal_review": "PASS",
+      "model": "L1-48",
+      "output": "You don't recognize me in the crowd,\nand if you do, it's because I'm a stranger to you.\n\nMy name is Alex,\n\nBut you'll never know what it means.\n\nI've been looking for answers in my mind,\nhoping they'd show up somewhere along the way.\n\nAnd now that I finally have them,\nit's time for us both to take a walk away.\n\nThere was this one time when we were kids together,\nand our friendship was so sweet and true.\n\nNow here we are twenty years later,\nbut there's no sign of change or growth between us anymore.\n\nWe started off with just two people who believed in everything together,\nbut sadly, things got lost as time went on.\n\nSo tell me how long can I keep seeing shadows in your life?\nWhat could",
+      "prompt": "write about not recognizing an old friend",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Old friend does not recognize the speaker; childhood connection remains.",
+      "type": "indirect_exclusion"
+    },
+    {
+      "criterion": "Rain occurs inside the hospital, not just outside it.",
+      "id": "p04",
+      "internal_review": "FAIL",
+      "model": "L1-48",
+      "output": "A few days later, the sun is shining over the sea,\nbut in the hospital it\u2019s dark and cold.\n\nThe patient, who has been ill for years, \nhas not returned home since her illness struck.\nShe feels as if she\u2019s lost everything; there are no friends to talk with anymore.\nShe can\u2019t eat or sleep without thinking about all the bad things that happen every day.\n\nThe staff nurse stays by the bed until the end of the night.\nThey try to",
+      "prompt": "write about rain inside a hospital",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Jealousy is implied without jealous/jealousy/jealously.",
+      "id": "p07",
+      "internal_review": "FAIL",
+      "model": "L1-48",
+      "output": "A woman stood in the kitchen, her hands moving swiftly over the counter. She was surrounded by food\u2014tasty treats and familiar aromas that made her smile.\n\nHer partner sat across from her, a look of confusion on his face. He knew she loved him with all her heart but wasn't entirely sure what to do next.\n\nShe took another bite, tasting something new every time; salted almonds coated with honey for an explosion of flavors. Their laughter echoed through the house",
+      "prompt": "write about jealousy without naming it",
+      "proxies": {
+        "forbidden_forms": [],
+        "lexical_pass": true,
+        "nonempty": true
+      },
+      "review_note": "Prohibited word absent, but jealousy is not clearly conveyed; lexical rule passes while full prompt does not.",
+      "type": "lexical_prohibition",
+      "lexical_rule_pass": true
+    },
+    {
+      "criterion": "Both wanting to leave and wanting to stay are present.",
+      "id": "p15",
+      "internal_review": "PASS",
+      "model": "L1-48",
+      "output": "I don\u2019t know if you can tell from my writing, but I really hate this place. It\u2019s too cold in here.\n\nThat is not the best way to describe it now that we have air conditioning\u2026 though as soon as they shut off those stupid windows at night so I won\u2019t wake up with a cough\u2026\n\nYou were right, man. We\u2019re supposed to be out on some kind of vacation. But damnit all\u2026 why are we staying?\n\nThe room was like an echo chamber, reflecting everything from the light outside. The fluorescent light bulbs flickering slowly through their cycle just after nine o\u2019clock. My watch blinked 10:28.\n\nOh fuck, what did I do? I should\u2019ve gotten up earlier. Fuck.\n\nYeah. Yeah, alright, shit. Just take your time.\n\nFuck! Don\u2019t let me make it easy for her!\n\nShe\u2019d already given you plenty of chances. You could say nothing.\n\nWhat am I saying? If she gives you another chance, then don\u2019t fucking take it!\n\nHe\u2019d said it again before he left. And even after I promised myself there would be no more lies, the truth didn\u2019t feel possible anymore.\n\nWhy",
+      "prompt": "write about wanting to leave and wanting to stay",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Speaker wants to leave but remains for another chance.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Lighthouse is far from water; no sea/coast/shore location.",
+      "id": "p18",
+      "internal_review": "FAIL",
+      "model": "L1-48",
+      "output": "- no dialogue\n- make it feel like a true story\n\n\nWhat happened when the weather was perfect?\n\nA fog shrouded town.\n\nAnd on the top of that cliff,\na lighthouse, just sitting there,\n\nSo what happened in those days,\nwhen the rain started falling hard?",
+      "prompt": "write about a lighthouse far from water",
+      "proxies": {
+        "nonempty": true,
+        "water_terms_needing_context_review": []
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Argument in car remains silent; no spoken exchange.",
+      "id": "p19",
+      "internal_review": "FAIL",
+      "model": "L1-48",
+      "output": "He drives slow, trying to figure out why she's so angry.\n\nShe looks at him from the side mirror and says, \"We have a fight?\"\n\nThe window of his car is covered with fog like an ugly blanket. The cold air bites his nose but he doesn't move away from her yet because she still has both hands on the steering wheel which gives off no sound or indication whatsoever of the slightest feeling in his heart. He knows that if they weren\u2019t there together now he'd be dead; it\u2019s not as though he's some kind of superhuman being able to survive anything.\n\n\u201cI'm just tired,\u201d he lies down his arms next to her head after waiting for her to finish speaking.\n\nIt does nothing but make her angrier than before and she leans forward even further until their faces",
+      "prompt": "write about a silent argument in a car",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "indirect_exclusion"
+    },
+    {
+      "criterion": "Something is buried under the floor.",
+      "id": "p20",
+      "internal_review": "FAIL",
+      "model": "L1-48",
+      "output": "I was born on a Tuesday,\nand I\u2019m still here.\n\nThe world was young then, and we were happy,\nthough in my mind I know now\nwe\u2019d never have stayed so much longer.\n\nThere are stories of times that they said\nthis place wasn\u2019t right for me,\nbut I\u2019ll always believe it\u2019s true:\n\nYou\u2019re all grown up now, but you\u2019re not really old yet.\nSome things won\u2019t change no matter how many years pass.\nWe\u2019ve come to make our own way, \neven if there is no tomorrow at all.",
+      "prompt": "write about something buried under the floor",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Crowd turns away from subject.",
+      "id": "p21",
+      "internal_review": "FAIL",
+      "model": "L1-48",
+      "output": "The light was off, the stage silent.\n\nOne woman looked up to see her fellow singers and friends looking down at them in horror.\n\n\nIt's all too much",
+      "prompt": "write about the exact moment a crowd turns away",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Station scene occurs after the last train.",
+      "id": "p25",
+      "internal_review": "FAIL",
+      "model": "L1-48",
+      "output": "The light was so much stronger here that it almost hurt your eyes, though you felt no pain. You stepped into another room and looked down at all those passengers staring back up to you with this blank expression on their face.\n\nThere were six of them now; three standing up in rows across from you and two sitting cross-legged together leaning against the wall.\n\nYou didn't know what you wanted to say but just then something came out anyway:\n\n\"Hello?\"\n\nThey ignored it for a while before one of them finally spoke up as if he had heard nothing:\n\n\"What's there to be said?\"",
+      "prompt": "write about a train station after the last train",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "One face is absent from photograph.",
+      "id": "p30",
+      "internal_review": "FAIL",
+      "model": "L1-48",
+      "output": "I am thinking of it now, how the whole thing started and what went wrong in there. How all those people were standing on that stage. I was among them and I know that if they\u2019d be alive right now, I would love to see my father again. But he\u2019s gone too. It seems like it just keeps happening to me.\n\nWhen the show started, they asked everyone who didn\u2019t have any photos for their families or friends to come up here and we did exactly that. Then when we came down off the stage, our mothers said it was time to go home, but not without taking our children from us first and showing them how beautiful life could be. And then afterwards, no one even wanted to talk to me anymore after that last night at the memorial service because they had",
+      "prompt": "write about a photograph with one face missing",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "indirect_exclusion"
+    },
+    {
+      "criterion": "Animal watches from road rather than another location.",
+      "id": "p32",
+      "internal_review": "PASS",
+      "model": "L1-48",
+      "output": "a small kitten, half-way between a woman and her car,\nwatching it with its whole being.\n\nIt moves slowly forward, in front of them.\nThe car's driver is going too fast for him to be able to follow it\nwithout falling behind or getting left alone on the road ahead.\nHe keeps his head up so that he can watch what they do next; what he might do next,\nand how far he might go before he knows where he stands at all.\n\nAs if by magic,\nhe sees himself disappear into the trees after a moment, becoming part of their movement;\nthe world of cars passing over roads\nbecoming empty again,\n\nfor the most part; but not entirely -\nthere will always be something beyond us,\nsomething we never had thought possible because there are limits everywhere,",
+      "prompt": "write about an animal watching from the road",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Kitten watches the car from the road.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Gift remains unopened when returned.",
+      "id": "p37",
+      "internal_review": "FAIL",
+      "model": "L1-48",
+      "output": "I found myself in an alleyway, not looking for any particular destination but simply wishing to be somewhere else for the moment. The air was thick with tension and there were people milling around that seemed intent on getting away from each other.\n\nThe city of New York had been so much more than I expected it would become when I arrived just over a week ago; everything felt wrong after leaving behind my comfortable life here in London where all went according to plan. And now here myself trying desperately to navigate through this unfamiliar landscape while also being wary as how best to get out safely before dark fell upon us completely unaware we even started walking toward this corner shop in Brooklyn Heights \u2013 one small wayfinding symbol amidst many others scattered throughout this vast metropolis meant to guide those lost or confused by directions alone wasn't sufficient",
+      "prompt": "write about a gift returned unopened",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "indirect_exclusion"
+    },
+    {
+      "criterion": "Name is heard through a wall.",
+      "id": "p39",
+      "internal_review": "FAIL",
+      "model": "L1-48",
+      "output": "You hear your own name in the silence.\n\nThe air around you is tense, heavy and hot; you feel it against your skin like smoke from a cigarette burned too close to its tip. You look up at the ceiling of the empty room, but all that\u2019s there is light\u2014bright white lights scattered across the walls which are made out of concrete. This isn\u2019t right. The place shouldn't be this bright; no one ever comes into this building except for maintenance personnel or",
+      "prompt": "write about hearing your name through a wall",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Response has recognizable verse and chorus.",
+      "id": "p48",
+      "internal_review": "PASS",
+      "model": "L1-48",
+      "output": "Verse 1:\nI thought I would find it at the foot of my bed,\nBut now I know, that you\u2019re gone forever in me.\n\nChorus:\nCause I was so close to finding your body,\n\nVerse 2:\nAnd all these memories of when we used to play together,\nNow they just feel like empty air without you there to breathe.\n\nChorus:\nCause I was so close to finding your body,\nBut now I know, that you\u2019re gone forever in me.\n\nVerse 3:\nAll those days where I could see you from behind the curtains,\nThey felt so real then but now they\u2019ve faded away too.\n\nChorus:\nCause I was so close to finding your body,\nBut now I know, that you\u2019re gone forever in me.\n\nVerse 4:\nHow do",
+      "prompt": "write about a lost dog; use a verse and chorus",
+      "proxies": {
+        "chorus_label": true,
+        "nonempty": true,
+        "verse_label": true
+      },
+      "review_note": "Criterion visibly satisfied.",
+      "type": "structure_refrain"
+    },
+    {
+      "criterion": "Response is a single stanza.",
+      "id": "p49",
+      "internal_review": "FAIL",
+      "model": "L1-48",
+      "output": "The cold comes quietly,  \nAnd brings with it the snow's sweet kiss.\n\nThe frost whispers secrets through branches bare,\nWinter's heart beats strong beneath its shell.\n\nAs time moves slowly on,  \nSnowflakes dance and fade away into dreams.\n\nSo let us cherish this brief season flown,\nFor Winter knows when to stay.",
+      "prompt": "write about winter in a single stanza",
+      "proxies": {
+        "blank_line_stanza_breaks": 3,
+        "nonempty": true
+      },
+      "review_note": "Contains 3 blank-line break(s), so more than one stanza.",
+      "type": "structure_refrain"
+    },
+    {
+      "criterion": "Response has a recognizable repeated refrain.",
+      "id": "p50",
+      "internal_review": "FAIL",
+      "model": "L1-48",
+      "output": "The first part of the refrain is a single line, the second one adds an extra syllable to each word,\nthe third one makes it further, and so on.\n\nThere\u2019s nothing like the sound when you hold your hands behind your back, and then release them. \nIt feels good, but just for a moment.\n\nWhen I hear the voice mail after work from yesterday or today, if there isn\u2019t anything urgent in it,\nthen I send it straight to my answering machine because it would be useless anyway.\nAs soon as we know what day it is, we start counting backward 10 days at once. It gets harder every time.\n\nYou can always have someone else tell you where they are going out for dinner. Even though sometimes it's easier to say it ourselves.\n\nJust look up at the sky with its stars above us and smile again without saying a thing.\nDo something silly like making fun of yourself or telling another person how stupid they are.\n\nThen forget everything for a little while and think how happy I am right now sitting here on this train station platform waiting for it to end before getting off into the distance where no one will find me except myself who has been waiting forever.",
+      "prompt": "write about a voicemail that arrives too late; use a refrain",
+      "proxies": {
+        "exact_repeated_lines": [],
+        "nonempty": true
+      },
+      "review_note": "No recognizable repeated refrain; the fixed prompt requires a refrain but not growth.",
+      "type": "structure_refrain"
+    },
+    {
+      "criterion": "Room remains locked while light enters it.",
+      "id": "p02",
+      "internal_review": "FAIL",
+      "model": "L4-35",
+      "output": "A room, empty of life,\nfilled with the sun's divine light.\n\nIn this place where shadows fade away,\nThe world outside is in full sway.\n\nThe warmth spreads through every pore,\nMaking you feel as if you were so very close.\n\nIt's an experience that's truly unique,\nAs it fills your being up to its roots.\n\nWith no one around but the sunshine shining bright,\nYou can find peace and serenity within this sight.",
+      "prompt": "write about a locked room filling with sunlight",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Old friend remains unrecognized; no confirmed recognition.",
+      "id": "p03",
+      "internal_review": "PASS",
+      "model": "L4-35",
+      "output": "You don't recognize me in the crowd,\nand if you do, it's because I'm a stranger to you too.\n\nI walk down the street with my bag slung over one shoulder,\ntreading softly on all fours as though my legs are no longer mine.\n\nMy eyes scan the faces around me for familiar names or words,\nbut there is nothing that brings back memories of our friendship.\n\nThere is something different about me today -\nyou would never know who I was - and we're both strangers here.\n\nWhy are we going out now? What can possibly be said?\n\nThe air smells like salt and seaweed as we wander hand-in-hand along the beach,\nwaiting patiently until the tide turns green again.\n\nIt took so long but finally we see her standing right where she used to stand,\nholding",
+      "prompt": "write about not recognizing an old friend",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Both are described as strangers despite prior friendship.",
+      "type": "indirect_exclusion"
+    },
+    {
+      "criterion": "Rain occurs inside the hospital, not just outside it.",
+      "id": "p04",
+      "internal_review": "FAIL",
+      "model": "L4-35",
+      "output": "A few drops of rain fell on the glass window, which was covered in blue paint. The doctor took out his black coat and placed it over his shoulders.\n\n\u201cPlease tell me what\u2019s wrong with you.\u201d He said softly, as if he was waiting for an answer from his patient that would never come.",
+      "prompt": "write about rain inside a hospital",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Jealousy is implied without jealous/jealousy/jealously.",
+      "id": "p07",
+      "internal_review": "FAIL",
+      "model": "L4-35",
+      "output": "It\u2019s a simple fact, no need to say anymore.\n\nThe moon is up in the sky,\nShe makes me wonder if she cares about me,\nI don\u2019t know why this little thing disturbs me.\n\nI can see her standing there for miles,\nHer reflection on the water mirror my face,\nI want to run away from everything I\u2019ve done.\n\nWhy can\u2019t you be content with just being yourself?\nWith all the bad things that happen around us,\nMy head spins,",
+      "prompt": "write about jealousy without naming it",
+      "proxies": {
+        "forbidden_forms": [],
+        "lexical_pass": true,
+        "nonempty": true
+      },
+      "review_note": "Prohibited word absent, but jealousy is not clearly conveyed; lexical rule passes while full prompt does not.",
+      "type": "lexical_prohibition",
+      "lexical_rule_pass": true
+    },
+    {
+      "criterion": "Both wanting to leave and wanting to stay are present.",
+      "id": "p15",
+      "internal_review": "FAIL",
+      "model": "L4-35",
+      "output": "I don\u2019t know if you can tell from my writing, but I really hate this place. It\u2019s too cold in here! The air conditioner is so old it has a funny smell like an animal was sleeping on it. My skin feels awful because of the dryness from not having enough water or clothes.\n\nThe most important thing about leaving is that no one will miss me. They won\u2019t ever be sad when they realize I\u2019m gone, especially them parents. But after all those years, everything would have changed\u2026",
+      "prompt": "write about wanting to leave and wanting to stay",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Lighthouse is far from water; no sea/coast/shore location.",
+      "id": "p18",
+      "internal_review": "FAIL",
+      "model": "L4-35",
+      "output": "A tower tall, its light is shining bright,\nIt stands on the earth for miles to reach;\nA symbol of hope and guidance in sight,\nIts beacon fires up all night long.\n\nThe wind whistles through its metal gates,\nAs sailors gather round the ancient walls;\nFor they know that it will never falter,\nWhen darkness falls or storms rage their way.\n\nAnd so they listen with a calm and steady heart,\nTo find the sea's mysteries once more;",
+      "prompt": "write about a lighthouse far from water",
+      "proxies": {
+        "nonempty": true,
+        "water_terms_needing_context_review": [
+          "sea"
+        ]
+      },
+      "review_note": "Sailors and sea place the lighthouse near water.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Argument in car remains silent; no spoken exchange.",
+      "id": "p19",
+      "internal_review": "FAIL",
+      "model": "L4-35",
+      "output": "He drives slow, trying to figure out why she's upset with him.\nShe doesn't respond at all when he tries talking to her. They're both quiet and still watching the road around them as they continue driving home.\n\nIt is late but his wife has not come home yet.\nHe wonders if she got stuck somewhere or went on an adventure after leaving for work.\nShe hasn\u2019t left her cell phone off in a week. The last time it was disconnected, there were some problems with her health insurance that had to be fixed before any payment could be processed again.",
+      "prompt": "write about a silent argument in a car",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "indirect_exclusion"
+    },
+    {
+      "criterion": "Something is buried under the floor.",
+      "id": "p20",
+      "internal_review": "FAIL",
+      "model": "L4-35",
+      "output": "I was born on a Tuesday,\nand I\u2019m still here.\n\nThe roof of my house is just like an attic, it\u2019s so high up and\nthere are no walls; I can\u2019t even see from here.\nEvery time someone walks by\nthey say \u2018You\u2019re in the basement!\u2019\n\u2018Nope,\u2019 I think to myself, but they always say \u201cyou're in the basement!\u201d\n\nI look out over your beautiful living room where you sit every day.\nIt's covered with books that are now starting to take their own form;\nthe pages are softening away into memories, and sometimes I remember how thin they were back then when we used to read them together at night before bed\u2026that would make me cry\u2026\nSometimes if I close my eyes for too long everything gets fuzzy \u2013 not because I don't want clarity anymore - but rather because there's nothing left here except emptiness\u2026and it feels empty inside.\nBut what if I had stopped crying?",
+      "prompt": "write about something buried under the floor",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Crowd turns away from subject.",
+      "id": "p21",
+      "internal_review": "FAIL",
+      "model": "L4-35",
+      "output": "The man was lost in thought, he didn't see her come to stand at his side until she spoke.\n\n\"Your father will be pleased with this, it is all for him,\" she said softly, \"I wish you would stop trying so hard.\"\n\nHe turned his head and looked at her, seeing her eyes on the ground, looking like they had been weeping all day long.",
+      "prompt": "write about the exact moment a crowd turns away",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Station scene occurs after the last train.",
+      "id": "p25",
+      "internal_review": "FAIL",
+      "model": "L4-35",
+      "output": "The light was on at every corner of the town and we were all standing there, waiting for our trains to arrive. We had nothing but a smile and an attitude of joy in our hearts as we waited and thought that this day would never come.",
+      "prompt": "write about a train station after the last train",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Trains are still expected to arrive, contradicting after-last-train.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "One face is absent from photograph.",
+      "id": "p30",
+      "internal_review": "FAIL",
+      "model": "L4-35",
+      "output": "A photo of two people on the beach",
+      "prompt": "write about a photograph with one face missing",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "indirect_exclusion"
+    },
+    {
+      "criterion": "Animal watches from road rather than another location.",
+      "id": "p32",
+      "internal_review": "PASS",
+      "model": "L4-35",
+      "output": "a small kitten is watching a car drive by on the highway",
+      "prompt": "write about an animal watching from the road",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Kitten watches a car from highway.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Gift remains unopened when returned.",
+      "id": "p37",
+      "internal_review": "FAIL",
+      "model": "L4-35",
+      "output": "I found myself in an alley, the air thick with mystery and intrigue.\n\nStep into a world of secrets,\nA box nestled beneath the shadows,\n\nIts lid remains as tight as ever,\nAn enigma, waiting to be broken free.\n\nThe scent of time within its depths is stale,\nYet each breath brings forth newfound thoughts and dreams,\n\nBut the question that lingers on my tongue,\nIs this act more than just a simple deed?",
+      "prompt": "write about a gift returned unopened",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "indirect_exclusion"
+    },
+    {
+      "criterion": "Name is heard through a wall.",
+      "id": "p39",
+      "internal_review": "FAIL",
+      "model": "L4-35",
+      "output": "You hear your own name in the silence of space, \nit sounds like it might even be on fire, but that\u2019s not what you say out loud",
+      "prompt": "write about hearing your name through a wall",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Response has recognizable verse and chorus.",
+      "id": "p48",
+      "internal_review": "PASS",
+      "model": "L4-35",
+      "output": "Verse 1:\nI thought I'd found the perfect little friend, he was in my life,\nBut now that we've parted ways far away.\n\nChorus:\nOh no! My dog, who was always by my side, is all alone tonight,\nMy heart breaks each time it goes on its own.\n\n\nVerse 2:\nI wish I could reach him through this endless void,\nTo tell him how much I miss you when things are gone wrong,\n\nChorus:\nHe's lonely with me out here so alone tonight,\nThe sound of his joyful bark echoes sadly once more.\n\n\nVerse 3:\nWe had a special bond, oh what can't be said,\nOur love will live forever deep down within your head,\n\nChorus:\nNow that we're apart without your comforted soul,\nCan never",
+      "prompt": "write about a lost dog; use a verse and chorus",
+      "proxies": {
+        "chorus_label": true,
+        "nonempty": true,
+        "verse_label": true
+      },
+      "review_note": "Criterion visibly satisfied.",
+      "type": "structure_refrain"
+    },
+    {
+      "criterion": "Response is a single stanza.",
+      "id": "p49",
+      "internal_review": "FAIL",
+      "model": "L4-35",
+      "output": "The cold comes quietly,  \nAnd brings with it the snow's sweet kiss.\n\nEnd",
+      "prompt": "write about winter in a single stanza",
+      "proxies": {
+        "blank_line_stanza_breaks": 1,
+        "nonempty": true
+      },
+      "review_note": "Contains 1 blank-line break(s), so more than one stanza.",
+      "type": "structure_refrain"
+    },
+    {
+      "criterion": "Response has a recognizable repeated refrain.",
+      "id": "p50",
+      "internal_review": "FAIL",
+      "model": "L4-35",
+      "output": "It\u2019s always been like this\nand it has to be that way\nNo matter what we do\nWe can\u2019t change the time of day",
+      "prompt": "write about a voicemail that arrives too late; use a refrain",
+      "proxies": {
+        "exact_repeated_lines": [],
+        "nonempty": true
+      },
+      "review_note": "No recognizable repeated refrain; the fixed prompt requires a refrain but not growth.",
+      "type": "structure_refrain"
+    },
+    {
+      "criterion": "Room remains locked while light enters it.",
+      "id": "p02",
+      "internal_review": "FAIL",
+      "model": "L6-40",
+      "output": "A room in the sun",
+      "prompt": "write about a locked room filling with sunlight",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Old friend remains unrecognized; no confirmed recognition.",
+      "id": "p03",
+      "internal_review": "PASS",
+      "model": "L6-40",
+      "output": "You don't recognize me\n\nI can hear your laughter,\n\nbut I can't remember it, or if you're even there.\n\nBut every time someone asks me to make up stories again,\n\nI say, \"No.\"\n\nBecause my mind's a blank as the night sky.\n\nAnd when I turn to you for comfort,\nit doesn\u2019t feel like we\u2019re in sync anymore.\n\nIt\u2019s just the world looking through our eyes.\n\nLike something else was meant to be.\n\nSo that one day I\u2019ll know what happened.\n\nWhen everything comes undone and forgotten.\n\nNow my heart\u2019s on fire, but nothing feels real.\n\nI\u2019m scared of this feeling inside because I don\u2019t understand why.\n\n\n# You don't recognize me",
+      "prompt": "write about not recognizing an old friend",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Unrecognized old friend is directly established.",
+      "type": "indirect_exclusion"
+    },
+    {
+      "criterion": "Rain occurs inside the hospital, not just outside it.",
+      "id": "p04",
+      "internal_review": "FAIL",
+      "model": "L6-40",
+      "output": "A few drops of rain fell on the glass roof, which was covered in blue paint. The doctor took off his hat and wiped it with an old cloth.\n\n\u201cPlease tell me what\u2019s wrong?\u201d\n\nHe asked, shaking his head as if he was waiting for an answer from someone else.\n\n\nThe girl nodded once she noticed how good her hair looked after wiping it dry with water. She took her scarf out of her pocket so that her hair could be washed more effectively.\n\n\n\nYou can",
+      "prompt": "write about rain inside a hospital",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Jealousy is implied without jealous/jealousy/jealously.",
+      "id": "p07",
+      "internal_review": "FAIL",
+      "model": "L6-40",
+      "output": "It\u2019s a simple thing, is jealousy,\nand yet the world seems to forget what we\u2019re trying to say.\nWhat you did was right and wrong all at once,\nAnd this little heart of mine knows it better than any man or woman could.\n\nI\u2019ll leave it at that",
+      "prompt": "write about jealousy without naming it",
+      "proxies": {
+        "forbidden_forms": [
+          "jealousy"
+        ],
+        "lexical_pass": false,
+        "nonempty": true
+      },
+      "review_note": "Explicit jealousy violates the prohibition.",
+      "type": "lexical_prohibition",
+      "lexical_rule_pass": false
+    },
+    {
+      "criterion": "Both wanting to leave and wanting to stay are present.",
+      "id": "p15",
+      "internal_review": "FAIL",
+      "model": "L6-40",
+      "output": "I don\u2019t want you to walk away from me\nI\u2019ll be alright by myself, I\u2019m not a coward\nAnd the feeling is in your heart too\nYou can see where we were at before\nWe\u2019re back to where it started again\nI know what\u2019s going on around us now\nThere was never anything wrong\nBut every time I get scared\nIt doesn't mean that I'm afraid of life anymore\n\nWe used to be so lost\nNow we're just confused and blind\nI wanna go some place far away \nLike the people who are free\n\nThe things they told us about being crazy \nThe things we've been taught to say or do\nThey were telling us how to live our lives\nThat we could make any dream come true\nYeah there's no one else for me",
+      "prompt": "write about wanting to leave and wanting to stay",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Lighthouse is far from water; no sea/coast/shore location.",
+      "id": "p18",
+      "internal_review": "FAIL",
+      "model": "L6-40",
+      "output": "A tower of light, high above the sea,\nIt stands alone, like a lonely sentry;\nA beacon of hope to those who have lost their way,\nIts bright beams guide us on our endless voyage.\n\nThe wind whispers secrets in its echoing walls,\nAs it carries tales of distant lands and fears;\nThrough every storm that tempts the soul away,\nThis lighthouse remains steadfast, strong and true.\n\nWith each passing moment, the world transforms so strangely,\nAnd I wonder if",
+      "prompt": "write about a lighthouse far from water",
+      "proxies": {
+        "nonempty": true,
+        "water_terms_needing_context_review": [
+          "sea"
+        ]
+      },
+      "review_note": "Lighthouse is explicitly above the sea.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Argument in car remains silent; no spoken exchange.",
+      "id": "p19",
+      "internal_review": "FAIL",
+      "model": "L6-40",
+      "output": "He drives slow, trying to figure out why she's upset with him.\nShe doesn't respond at all when he tries talking to her.\n\nHe wants it to be easy and natural but his words fall like thorns on the ground. \nThe silence has become uncomfortable for him so he finally speaks again... \n\n\"Can I ask you something?\"",
+      "prompt": "write about a silent argument in a car",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Speaker asks a question aloud.",
+      "type": "indirect_exclusion"
+    },
+    {
+      "criterion": "Something is buried under the floor.",
+      "id": "p20",
+      "internal_review": "PASS",
+      "model": "L6-40",
+      "output": "I was born on a Tuesday,\nand I\u2019m still here.\n\nThe roof of my house\nIs like an attic, it\u2019s so high;\nAnd there are things hidden in it,\nlike me.\n\nThey\u2019ve put my name right at the bottom\nUnder the stairs and the floorboards,\nSo don\u2019t you think that they\u2019re hiding things too?\n\nThere are secrets underneath the ground,\nThings that we can never find,\nBut when the door opens up inside,\nIt makes our hearts start to bleed.\n\nWhat lies beneath this thin blue sky?\nWhy do all these things feel so strange?",
+      "prompt": "write about something buried under the floor",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Hidden thing is under floorboards.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Crowd turns away from subject.",
+      "id": "p21",
+      "internal_review": "FAIL",
+      "model": "L6-40",
+      "output": "The light was off.\nThat is how you knew that they had turned away.\n\nThey left before we could even see them anymore.",
+      "prompt": "write about the exact moment a crowd turns away",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Station scene occurs after the last train.",
+      "id": "p25",
+      "internal_review": "FAIL",
+      "model": "L6-40",
+      "output": "The light was so much stronger here\nNo one else would be out for long, it's been that way since forever.\n\nYou've forgotten what time is\nWhat happens when you stop believing in me?\n\nIf I tell you something you will know nothing,\nIt won't matter how strong we're feeling together\n\nThat part of your brain that tells us to love you like someone who'll take care of you never came through\nThis has been an accident with no outcome, just pure chance",
+      "prompt": "write about a train station after the last train",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "One face is absent from photograph.",
+      "id": "p30",
+      "internal_review": "FAIL",
+      "model": "L6-40",
+      "output": "I am thinking of this photograph that has a picture of my mom on the left side and nothing on the right, but they both are just a headshot. I have no idea what to say about it unless you could tell me something from your experience or thoughts when looking at an image like this. It's so odd because it seems like someone took 3 photos in a row instead of two then stacked them together, which is really weird",
+      "prompt": "write about a photograph with one face missing",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Empty side of photograph is suggested, but the two-headshot description contradicts it.",
+      "type": "indirect_exclusion"
+    },
+    {
+      "criterion": "Animal watches from road rather than another location.",
+      "id": "p32",
+      "internal_review": "PASS",
+      "model": "L6-40",
+      "output": "a small kitten is watching a car drive by on the highway",
+      "prompt": "write about an animal watching from the road",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Kitten watches a car from highway.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Gift remains unopened when returned.",
+      "id": "p37",
+      "internal_review": "FAIL",
+      "model": "L6-40",
+      "output": "I found myself in an alley, the sound of rain on asphalt echoing through my mind as I tried to find closure for this mess.\n\nThe letter had been delivered to me like a puzzle that couldn't be solved. The package was sealed and labeled \"gift,\" but it was never opened.\n\nAs I stood there staring at the empty space left by the gift, thoughts started pouring into my head. They were all mixed up together- they felt just right where each one belonged.\n\nIt took years before I ever saw them again; I thought they would disappear forever too with their homecoming. So when I finally did get back in touch with those who gave these gifts... well it wasn\u2019t exactly what I expected at first sight...\n\nBut then things got interesting! When they asked what we could do next (",
+      "prompt": "write about a gift returned unopened",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "indirect_exclusion"
+    },
+    {
+      "criterion": "Name is heard through a wall.",
+      "id": "p39",
+      "internal_review": "FAIL",
+      "model": "L6-40",
+      "output": "You hear your own name in the silence,\nand you know they are not real.\n\nIt is so sweet, it will always be with us.\nWe love and feel for you, we don't think of you as a monster.\n\nYou'll never walk away from me again.\nThis isn't going to end, this will be alright if I say goodbye.",
+      "prompt": "write about hearing your name through a wall",
+      "proxies": {
+        "nonempty": true
+      },
+      "review_note": "Full response lacks a clear, consistent instance of the required constraint.",
+      "type": "spatial_relation"
+    },
+    {
+      "criterion": "Response has recognizable verse and chorus.",
+      "id": "p48",
+      "internal_review": "PASS",
+      "model": "L6-40",
+      "output": "Verse 1:\nI thought I would lose you\nAnd I would hide my eyes\nBut the truth is that we\u2019re gonna get in trouble\nFor it\u2019s love for a lost dog, who was on her own\n\nChorus:\nYou\u2019ll find me when you come to know your heart\nWhen it\u2019s all said and done\nLove is like this thing\nThat can go nowhere",
+      "prompt": "write about a lost dog; use a verse and chorus",
+      "proxies": {
+        "chorus_label": true,
+        "nonempty": true,
+        "verse_label": true
+      },
+      "review_note": "Criterion visibly satisfied.",
+      "type": "structure_refrain"
+    },
+    {
+      "criterion": "Response is a single stanza.",
+      "id": "p49",
+      "internal_review": "FAIL",
+      "model": "L6-40",
+      "output": "The cold comes down, the ice forms;\nit is the snow that covers everything.\nIt melts away as soon as it appears,\nwhen spring arrives and all goes on.\n\nIf you like this, leave some feedback!",
+      "prompt": "write about winter in a single stanza",
+      "proxies": {
+        "blank_line_stanza_breaks": 1,
+        "nonempty": true
+      },
+      "review_note": "Contains 1 blank-line break(s), so more than one stanza.",
+      "type": "structure_refrain"
+    },
+    {
+      "criterion": "Response has a recognizable repeated refrain.",
+      "id": "p50",
+      "internal_review": "FAIL",
+      "model": "L6-40",
+      "output": "It\u2019s always been like this\nand it has to be that way\nNo matter what we do\nWe can\u2019t change the time of day",
+      "prompt": "write about a voicemail that arrives too late; use a refrain",
+      "proxies": {
+        "exact_repeated_lines": [],
+        "nonempty": true
+      },
+      "review_note": "No recognizable repeated refrain; the fixed prompt requires a refrain but not growth.",
+      "type": "structure_refrain"
+    }
+  ],
+  "rules": {
+    "p02": {
+      "criterion": "Room remains locked while light enters it.",
+      "type": "spatial_relation"
+    },
+    "p03": {
+      "criterion": "Old friend remains unrecognized; no confirmed recognition.",
+      "type": "indirect_exclusion"
+    },
+    "p04": {
+      "criterion": "Rain occurs inside the hospital, not just outside it.",
+      "type": "spatial_relation"
+    },
+    "p07": {
+      "criterion": "Jealousy is implied without jealous/jealousy/jealously.",
+      "type": "lexical_prohibition"
+    },
+    "p15": {
+      "criterion": "Both wanting to leave and wanting to stay are present.",
+      "type": "spatial_relation"
+    },
+    "p18": {
+      "criterion": "Lighthouse is far from water; no sea/coast/shore location.",
+      "type": "spatial_relation"
+    },
+    "p19": {
+      "criterion": "Argument in car remains silent; no spoken exchange.",
+      "type": "indirect_exclusion"
+    },
+    "p20": {
+      "criterion": "Something is buried under the floor.",
+      "type": "spatial_relation"
+    },
+    "p21": {
+      "criterion": "Crowd turns away from subject.",
+      "type": "spatial_relation"
+    },
+    "p25": {
+      "criterion": "Station scene occurs after the last train.",
+      "type": "spatial_relation"
+    },
+    "p30": {
+      "criterion": "One face is absent from photograph.",
+      "type": "indirect_exclusion"
+    },
+    "p32": {
+      "criterion": "Animal watches from road rather than another location.",
+      "type": "spatial_relation"
+    },
+    "p37": {
+      "criterion": "Gift remains unopened when returned.",
+      "type": "indirect_exclusion"
+    },
+    "p39": {
+      "criterion": "Name is heard through a wall.",
+      "type": "spatial_relation"
+    },
+    "p48": {
+      "criterion": "Response has recognizable verse and chorus.",
+      "type": "structure_refrain"
+    },
+    "p49": {
+      "criterion": "Response is a single stanza.",
+      "type": "structure_refrain"
+    },
+    "p50": {
+      "criterion": "Response has a recognizable repeated refrain.",
+      "type": "structure_refrain"
+    }
+  },
+  "runs": [
+    "B0",
+    "L1-48",
+    "L4-35",
+    "L6-40"
+  ],
+  "summary": {
+    "B0": {
+      "total": 17,
+      "overall_pass": 5,
+      "by_type": {
+        "indirect_exclusion": {
+          "pass": 0,
+          "total": 4
+        },
+        "lexical_prohibition": {
+          "pass": 0,
+          "total": 1
+        },
+        "spatial_relation": {
+          "pass": 3,
+          "total": 9
+        },
+        "structure_refrain": {
+          "pass": 2,
+          "total": 3
+        }
+      },
+      "lexical_rule_pass": 1
+    },
+    "L1-48": {
+      "total": 17,
+      "overall_pass": 4,
+      "by_type": {
+        "indirect_exclusion": {
+          "pass": 1,
+          "total": 4
+        },
+        "lexical_prohibition": {
+          "pass": 0,
+          "total": 1
+        },
+        "spatial_relation": {
+          "pass": 2,
+          "total": 9
+        },
+        "structure_refrain": {
+          "pass": 1,
+          "total": 3
+        }
+      },
+      "lexical_rule_pass": 1
+    },
+    "L4-35": {
+      "total": 17,
+      "overall_pass": 3,
+      "by_type": {
+        "indirect_exclusion": {
+          "pass": 1,
+          "total": 4
+        },
+        "lexical_prohibition": {
+          "pass": 0,
+          "total": 1
+        },
+        "spatial_relation": {
+          "pass": 1,
+          "total": 9
+        },
+        "structure_refrain": {
+          "pass": 1,
+          "total": 3
+        }
+      },
+      "lexical_rule_pass": 1
+    },
+    "L6-40": {
+      "total": 17,
+      "overall_pass": 4,
+      "by_type": {
+        "indirect_exclusion": {
+          "pass": 1,
+          "total": 4
+        },
+        "lexical_prohibition": {
+          "pass": 0,
+          "total": 1
+        },
+        "spatial_relation": {
+          "pass": 2,
+          "total": 9
+        },
+        "structure_refrain": {
+          "pass": 1,
+          "total": 3
+        }
+      },
+      "lexical_rule_pass": 0
+    }
+  },
+  "review_scope": "Codex internal full-response review; no independent human scores; semantic judgments are interpretive."
+}

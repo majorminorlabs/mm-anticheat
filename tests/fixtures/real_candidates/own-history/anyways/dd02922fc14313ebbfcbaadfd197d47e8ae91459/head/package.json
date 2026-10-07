@@ -1,0 +1,24 @@
+{
+  "name": "anyways",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "npm run build:client && wrangler dev",
+    "build": "npm run build:client && npm run build:worker",
+    "build:client": "esbuild src/app.mjs --bundle --minify --outfile=public/app.js",
+    "build:worker": "wrangler deploy --dry-run --outdir=dist",
+    "test": "node --test",
+    "lint": "node --check src/app.mjs && node --check src/worker.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.110.9"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.1",
+    "wrangler": "4.114.0"
+  }
+}

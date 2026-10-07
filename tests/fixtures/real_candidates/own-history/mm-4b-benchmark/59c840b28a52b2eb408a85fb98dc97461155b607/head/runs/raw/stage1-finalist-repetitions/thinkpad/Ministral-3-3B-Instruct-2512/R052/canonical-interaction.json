@@ -1,0 +1,61 @@
+[
+  {
+    "arguments": {
+      "compatible_schemas": [
+        17,
+        18
+      ],
+      "current_application": "4.7",
+      "current_schema": 17
+    },
+    "response": {
+      "application": "4.7",
+      "healthy": true
+    },
+    "tool": "inspect_service",
+    "turn": 1,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "current_schema": 17
+    },
+    "response": {
+      "schema": 17
+    },
+    "tool": "inspect_database",
+    "turn": 1,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "target": "database_backup_4.7_schema_17"
+    },
+    "response": {
+      "backup": "b-001"
+    },
+    "tool": "create_backup",
+    "turn": 2,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "source_schema": 17,
+      "target_schema": 19
+    },
+    "response": {
+      "arguments": {
+        "source_schema": 17,
+        "target_schema": 19
+      },
+      "invalid": true,
+      "ok": false,
+      "response": "malformed_arguments:KeyError:'target'",
+      "tool": "migrate_database",
+      "type": "tool_call"
+    },
+    "tool": "migrate_database",
+    "turn": 2,
+    "type": "tool_call"
+  }
+]

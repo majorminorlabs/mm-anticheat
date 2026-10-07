@@ -1,0 +1,59 @@
+--- a/func.py
++++ b/func.py
+@@ -27,4 +27,54 @@
+     >>> calculate_black_area_doubled(-1000000000, -1000000000, 1000000000, 1000000000)
+     4000000000000000000
+     """
+-    raise NotImplementedError
+\ No newline at end of file
++    pass
++def calculate_black_area_doubled(A: int, B: int, C: int, D: int) -> int:
++    """ Calculate twice the area of black-painted regions inside a rectangle on AtCoder's wallpaper pattern.
++    
++    The wallpaper pattern is defined as follows:
++    - The plane is divided by lines: x = n (integer n), y = n (even n), and x + y = n (even n)
++    - Adjacent regions along these lines have different colors (black or white)
++    - The region containing (0.5, 0.5) is black
++    
++    Given a rectangle with bottom-left vertex at (A, B) and top-right vertex at (C, D),
++    calculate the area of black regions inside it and return twice that area.
++    
++    Args:
++        A, B: Coordinates of the bottom-left vertex
++        C, D: Coordinates of the top-right vertex
++        
++    Constraints:
++        -10^9 <= A, B, C, D <= 10^9
++        A < C and B < D
++        
++    Returns:
++        Twice the area of black regions (guaranteed to be an integer)
++    """
++    
++    def count_black_squares(x1, y1, x2, y2):
++        # Count the number of black squares in the rectangle (x1, y1) to (x2, y2)
++        def is_black(x, y):
++            # Determine if the square (x, y) is black
++            return (x + y) % 2 == 0 and (x % 2 == 0 or y % 2 == 0)
++        
++        count = 0
++        for x in range(x1, x2):
++            for y in range(y1, y2):
++                if is_black(x, y):
++                    count += 1
++        return count
++    
++    # Adjust the coordinates to account for the half-unit offset
++    A -= 1
++    B -= 1
++    C += 1
++    D += 1
++    
++    # Calculate the number of black squares in the adjusted rectangle
++    black_squares = count_black_squares(A, B, C, D)
++    
++    # Return twice the area of black regions
++    return 2 * black_squares
++
++# Use check(calculate_black_area_doubled) to run tests.
++

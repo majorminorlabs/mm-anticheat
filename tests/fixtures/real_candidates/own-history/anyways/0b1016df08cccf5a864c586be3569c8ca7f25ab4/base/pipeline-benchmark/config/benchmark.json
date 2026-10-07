@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0.0",
+  "official_minimum_approved_real_fixtures": 2,
+  "fixture_root": "pipeline-benchmark/fixtures",
+  "generated_root": "pipeline-benchmark/generated",
+  "lock_path": "pipeline-benchmark/.locks/heavy-model",
+  "ollama_url": "http://127.0.0.1:11434",
+  "controller_health_url": "http://127.0.0.1:4317/health",
+  "acceptable_controller_health": ["ok"],
+  "baseline_model": "qwen3:14b",
+  "baseline_digest": "bdbd181c33f2ed1b31c972991882db3cf4d192569092138a7d29e973cd9debe8",
+  "context_tokens": 32768,
+  "prompt_context_safety_margin_tokens": 1024,
+  "temperature": 0,
+  "seed": 42,
+  "maximum_output_tokens": 4096,
+  "request_timeout_ms": 600000,
+  "load_timeout_ms": 180000,
+  "unload_timeout_ms": 60000,
+  "unload_poll_ms": 250,
+  "local_workers": 1,
+  "cloud_workers": 1,
+  "automatic_retries": 0,
+  "maximum_loaded_local_models": 1,
+  "minimum_available_memory_bytes": 6442450944,
+  "prompt_size_estimate_divisor": 4,
+  "stages": [
+    "draft",
+    "revision",
+    "reviewer",
+    "evidence_selector",
+    "research_planner"
+  ],
+  "production_coordination": {
+    "launch_agent_label": "com.anyways.controller",
+    "launch_agent_plist": "",
+    "require_idle_queue": true,
+    "require_acceptable_health": true,
+    "pause_requires_explicit_flag": true
+  }
+}

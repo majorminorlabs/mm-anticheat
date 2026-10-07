@@ -1,0 +1,23 @@
+#!/usr/bin/env node
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { candidates } from './fixtures.mjs';
+const root = path.resolve(import.meta.dirname); const results = path.join(root, 'results');
+const rawDir = path.join(results, 'raw');
+const rawFiles = (await fs.readdir(rawDir)).filter(name => name.endsWith('.json'));
+const records = await Promise.all(rawFiles.map(async name => JSON.parse(await fs.readFile(path.join(rawDir, name), 'utf8'))));
+const by = Object.groupBy(records, r => r.model);
+const rows = Object.entries(by).map(([model, rs]) => {
+  const ok = rs.filter(r => r.ok); const json = ok.filter(r => r.score.json_valid).length; const schema = ok.filter(r => r.score.schema_valid).length; const tps = ok.map(r => r.metrics.tokens_per_second).filter(Number.isFinite); const classScore = rs.find(r => r.test === 'classification')?.score.score ?? 0; const claims = rs.find(r => r.test === 'claim-verification')?.score.score ?? 0; const draft = rs.filter(r => r.kind === 'text').reduce((a,r) => a + r.score.score, 0) / 2; const avgTps = tps.reduce((a,b)=>a+b,0) / (tps.length || 1); const latency = ok.reduce((a,r)=>a+r.metrics.wall_ms,0) / (ok.length || 1); const practical = avgTps >= 8 && ok.length === rs.length; const composite = .30 * classScore + .20 * claims + .15 * draft + .20 * Math.min(100, avgTps * 5) + .15 * (schema / (ok.length || 1) * 100); return { model, tests: rs.length, passed: ok.length, avg_tps: +avgTps.toFixed(2), avg_wall_ms: Math.round(latency), json_rate: +(json/(ok.length||1)*100).toFixed(1), schema_rate: +(schema/(ok.length||1)*100).toFixed(1), classification: classScore, claims, draft: +draft.toFixed(1), practical, composite: +composite.toFixed(1) };
+}).sort((a,b)=>b.composite-a.composite);
+const csv = ['model,tests,passed,avg_tps,avg_wall_ms,json_rate,schema_rate,classification,claims,draft,practical,composite', ...rows.map(r=>Object.values(r).join(','))].join('\n')+'\n';
+await fs.writeFile(path.join(results,'model-scorecard.csv'),csv);
+const fastest = [...rows].filter(r=>r.practical).sort((a,b)=>b.avg_tps-a.avg_tps)[0] || rows.sort((a,b)=>b.avg_tps-a.avg_tps)[0];
+const best = rows[0]; const speedQuality = [...rows].filter(r=>r.practical).sort((a,b)=>b.composite-a.composite)[0] || best;
+const recommendation = { scout: fastest?.model || null, story_judge: best?.model || null, researcher: best?.model || null, writer: speedQuality?.model || null, verifier: speedQuality?.model || null, proofreader: fastest?.model || null, slop_editor: speedQuality?.model || null, image_reviewer: null, one_model_fallback: speedQuality?.model || null, speed_gate_tokens_per_second: 8, notes: 'Image review is intentionally left null unless a separate image-input run is recorded.' };
+await fs.writeFile(path.join(results,'stage-recommendations.json'),JSON.stringify(recommendation,null,2));
+await fs.writeFile(path.join(results,'recommended-models.yaml'),Object.entries(recommendation).map(([k,v])=>`${k}: ${typeof v==='string'||v===null?v:JSON.stringify(v)}`).join('\n')+'\n');
+const md = `# Anyways local model benchmark\n\n## Executive summary\n\n- Best measured one-model balance: **${recommendation.one_model_fallback}**\n- Fastest acceptable model (speed gate: 8 generated tokens/s): **${fastest?.model ?? 'none'}**\n- Best classification score: **${best?.model ?? 'none'}**\n- Image reviewer: **not recommended until an image-input run is recorded**.\n\nThe speed gate is intentional: a higher-quality model that cannot sustain routine newsroom throughput is not a practical default.\n\n## Scorecard\n\n| Model | Pass | tok/s | JSON | Schema | Classification | Claims | Composite | Practical |\n|---|---:|---:|---:|---:|---:|---:|---:|---|\n${rows.map(r=>`| ${r.model} | ${r.passed}/${r.tests} | ${r.avg_tps} | ${r.json_rate}% | ${r.schema_rate}% | ${r.classification} | ${r.claims} | ${r.composite} | ${r.practical ? 'yes' : 'no'} |`).join('\n')}\n\n## Scope and limits\n\nThis is a local-only, sequential Ollama run. JSON, taxonomy, and claim labels are deterministic checks. Draft quality needs editorial review of the raw outputs before a production routing decision. ${candidates.length} classification candidates use the canonical Anyways doctrine.\n`;
+await fs.writeFile(path.join(results,'executive-summary.md'),md);
+await fs.writeFile(path.join(results,'full-report.md'),`${md}\n## Exact run settings\n\n\`\`\`json\n${JSON.stringify({models: rows.map(row => row.model), context: '8192', temperature: 0.1, top_p: 0.9, num_predict: 700, seed: 42},null,2)}\n\`\`\`\n\nRaw response records are in \`results/raw/\`.\n`);
+console.log(`Wrote reports for ${rows.length} models.`);

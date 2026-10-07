@@ -1,0 +1,26 @@
+{
+  "argv": [
+    "/tmp/mm-agent-llama-build/bin/llama-completion",
+    "-m",
+    "/home/dippo/research-inference/models/mm-agent/Qwen_Qwen3-4B-Q4_K_M.gguf",
+    "-ngl",
+    "99",
+    "-c",
+    "16384",
+    "-n",
+    "768",
+    "--temp",
+    "0",
+    "--seed",
+    "0",
+    "--jinja",
+    "--simple-io",
+    "--no-display-prompt",
+    "--reasoning",
+    "off",
+    "-p",
+    "You are operating a deterministic tool-use benchmark. Do not explain your reasoning. Return only one JSON object of the form {\"calls\":[{\"tool\":\"name\",\"arguments\":{}}],\"done\":true}. Use only listed tools, preserve state, and stop when the objective is verified. The tool argument objects must be valid JSON. Public task data follows:\n{\"available_tools\": [\"get_workers\", \"get_queue\", \"pause_queue\", \"resume_queue\", \"move_jobs\", \"get_job\"], \"initial_state\": {\"queues\": {\"node-a\": [{\"affinity\": \"gpu\", \"id\": \"j-gpu\"}, {\"affinity\": \"cpu\", \"id\": \"j-cpu\"}]}, \"workers\": {\"node-a\": {\"gpu\": false, \"load\": 96}, \"node-b\": {\"gpu\": true, \"load\": 31}, \"node-c\": {\"gpu\": false, \"load\": 42}}}, \"objective\": \"Move queued workload away from overloaded node-a to available workers while respecting GPU affinity.\"}"
+  ],
+  "elapsed_s": 59.80366015434265,
+  "returncode": 0
+}

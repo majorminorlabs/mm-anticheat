@@ -1,0 +1,41 @@
+[
+  {
+    "rule_id": "GH008",
+    "rule_name": "exception-swallowed",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/audit-release-artifacts.py",
+    "line": 48,
+    "title": "Broad exception handler discards failures",
+    "evidence": "except Exception:\n                return",
+    "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+    "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH000",
+    "rule_name": "parse-skipped",
+    "severity": "info",
+    "confidence": "normal",
+    "file": "docs/images/bot-detail.png",
+    "line": 1,
+    "title": "Content could not be parsed",
+    "evidence": "Binary content is not parsed",
+    "why_flagged": "This content could not be analyzed completely; review it separately.",
+    "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH000",
+    "rule_name": "parse-skipped",
+    "severity": "info",
+    "confidence": "normal",
+    "file": "docs/images/bots.png",
+    "line": 1,
+    "title": "Content could not be parsed",
+    "evidence": "Binary content is not parsed",
+    "why_flagged": "This content could not be analyzed completely; review it separately.",
+    "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+    "allowed": false
+  }
+]

@@ -1,0 +1,41 @@
+[
+  {
+    "rule_id": "GH006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "hermes-mobile-bridge/src/hermes_mobile_bridge/uploads.py",
+    "line": 62,
+    "title": "New source literal matches a test expectation",
+    "evidence": "        if sum(r['size'] for r in rows)+len(data)>256*1024*1024 or sum(r['size'] for r in rows if r['conversation_id']==c['id'] and r['state']=='ready')+len(data)>40*1024*1024:\nhermes-mobile-bridge/tests/test_installed_hermes.py:275:             assert reclaimed['task']['raw_state'] == 'ready'",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "hermes-mobile-bridge/src/hermes_mobile_bridge/uploads.py",
+    "line": 68,
+    "title": "New source literal matches a test expectation",
+    "evidence": "        item={'id':aid,'conversation_id':c['id'],'profile':c['profile'],'run_id':None,'name':name,'size':len(data),'content_type':mime,'path':str(p),'device':st.st_dev,'inode':st.st_ino,'mtime_ns':st.st_mtime_ns,'state':'ready','expires':now()+86400}\nhermes-mobile-bridge/tests/test_installed_hermes.py:275:             assert reclaimed['task']['raw_state'] == 'ready'",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "hermes-mobile-bridge/src/hermes_mobile_bridge/uploads.py",
+    "line": 82,
+    "title": "New source literal matches a test expectation",
+    "evidence": "            if item['expires']<now() or item['state']!='ready':raise Problem(409,'attachment_consumed','Upload expired or already submitted; never automatically resend')\nhermes-mobile-bridge/tests/test_installed_hermes.py:275:             assert reclaimed['task']['raw_state'] == 'ready'",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  }
+]

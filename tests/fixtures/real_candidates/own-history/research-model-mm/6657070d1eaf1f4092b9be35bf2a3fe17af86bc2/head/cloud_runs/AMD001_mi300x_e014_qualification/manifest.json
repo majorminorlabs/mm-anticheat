@@ -1,0 +1,158 @@
+{
+  "schema_version": "1.0",
+  "record_type": "cloud_compute_qualification_session",
+  "session_id": "AMD001",
+  "status": "READY_TO_CLICK_CREATE",
+  "created_at_utc": "2026-09-16T16:35:26Z",
+  "purpose": "Qualify the exact frozen E014 QLoRA stack on one AMD MI300X without starting E014 or making a model-quality claim.",
+  "related_experiments": {
+    "primary": {
+      "experiment_id": "E014_qwen3_8b_primary_qlora",
+      "preregistration_commit": "bc27f558b6c0cd6d0c27206ee5e4fff851b7f12f",
+      "qualification_tooling_commit_at_record_creation": "5ae128cd318c8230e0fac832bb450769d5f21a3b"
+    },
+    "deployment_context": {
+      "experiment_id": "E015_8b_local_deployment_qualification",
+      "status": "pre-existing untracked local work; not transferred or modified by this session",
+      "manifest_sha256_at_record_creation": "6c4562f33ca80139e2ca5ddc7a9de272db395e9c1ce0d2aec32a66000bef84ad",
+      "summary_sha256_at_record_creation": "da8aedd6f0e96f0663ec6671cba8dca42c3ff098a495eaef0218094e2949d19a",
+      "script_sha256_at_record_creation": "478e186684699bb665eb7a63c03e78a6c97ded499c0733cf90872977e8a20837"
+    }
+  },
+  "repository": {
+    "path": "/Volumes/Research/research-model-mm",
+    "branch_at_record_creation": "codex/e014-prereg-ready-for-compute",
+    "commit_at_record_creation": "5ae128cd318c8230e0fac832bb450769d5f21a3b",
+    "staging_commit": null,
+    "staging_commit_authority": "runtime/transfer_manifest.json:source_commit",
+    "git_dirty_at_record_creation": true,
+    "dirty_paths_at_record_creation": [
+      "M experiments/index.json",
+      "?? benchmarks/deployment/",
+      "?? data/generated/",
+      "?? experiments/E015_8b_local_deployment_qualification/",
+      "?? scripts/e015_llama_qualification.py"
+    ],
+    "unrelated_dirty_work_preserved": true
+  },
+  "frozen_e014": {
+    "invariants_path": "configs/research/e014_scientific_invariants_v1.json",
+    "invariants_sha256_at_record_creation": "af3987171f0900dca12afc6433d7ecb17995b96bbed61b4c3dde7a6aaa427aca",
+    "source_manifest_path": "experiments/E014_qwen3_8b_primary_qlora/manifest.json",
+    "source_manifest_sha256": "0958d3fa63dcad2d2f93bd019d77c036b1174cdcc4ee4afb8568a9dc2204e5c0",
+    "training_config_sha256": "efe00566bb8ef12a31c76f8dd4f88986643b53a964d8540f19484e1f7bd920bf",
+    "hypothesis_config_sha256": "c73e8c65a57b24b9898561f2cb1a3d06b1c5a0b189973f20073346b0b7baf356",
+    "evaluation_config_sha256": "051543f4b654ce64a1064dac0423841681859015eea5addefb8fe49fbac23e32",
+    "lockfile_sha256": "82e0e70b44474c2ac0f2211664b6352b870171481ca1e6167faf95333e572825",
+    "dataset": {
+      "path": "data/generated/research-data-v0.1-expanded.jsonl",
+      "bytes": 149414892,
+      "sha256": "703aceae7a28450fe9dca35be29c09cf0e64aceeda49f60e7f626b6e3708a91f",
+      "rows": 25269,
+      "split_counts": {"train": 19626, "validation": 2816, "test": 2827}
+    },
+    "research_benchmark": {
+      "path": "benchmarks/releases/research-bench-v0.1.jsonl",
+      "bytes": 379883,
+      "sha256": "3f1f859a10f1bb34ebb22197fadfeba08f2f812c2346a9d75c2b1b7e97b878c4",
+      "cases": 248
+    },
+    "control_benchmark": {
+      "path": "benchmarks/control/general-capability-v0.1.jsonl",
+      "bytes": 2803,
+      "sha256": "b9ff1050dd05eeaf062aba8e8fce1f0a39ffc7da68754d02f011779780628636",
+      "cases": 12
+    },
+    "base_model": "Qwen/Qwen3-8B-Base",
+    "model_revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
+    "tokenizer_revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4"
+  },
+  "provider_intent": {
+    "provider": "AMD Developer Cloud via DigitalOcean",
+    "billing_model": "on-demand GPU Droplet, hourly",
+    "gpu": "AMD Instinct MI300X",
+    "gpu_architecture": "gfx942",
+    "gpu_count": 1,
+    "expected_hbm_gb": 192,
+    "vcpus": 20,
+    "host_ram_gb": 240,
+    "selected_image": "ROCm Software 10.0",
+    "displayed_rate_usd_per_hour": 1.99,
+    "instance_id": null,
+    "public_ip": null,
+    "actual_gpu_identity": null,
+    "actual_rocm_version": null,
+    "actual_start_time_utc": null,
+    "actual_billing_duration_seconds": null,
+    "actual_provider_billed_cost_usd": null,
+    "user_reported_prepaid_balance": {
+      "reported": true,
+      "amount_usd": null,
+      "independently_verified": false
+    }
+  },
+  "smoke_protocol": {
+    "qualification_only": true,
+    "full_training_authorized": false,
+    "steps": 6,
+    "before_restart_steps": 3,
+    "after_fresh_process_resume_steps": 3,
+    "selected_rows": 96,
+    "selection": "longest unique rows from frozen train split only",
+    "sequence_length": 4608,
+    "microbatch": 1,
+    "gradient_accumulation_steps": 16,
+    "effective_batch_size": 16,
+    "quantization": "NF4 4-bit, double quantization, BF16 compute",
+    "lora_target_modules": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+    "model_quality_result": false,
+    "benchmark_or_control_loaded": false,
+    "checkpoint_selection_performed": false
+  },
+  "transfer": {
+    "manifest_template": "cloud_runs/AMD001_mi300x_e014_qualification/transfer/manifest.template.json",
+    "runtime_manifest": "cloud_runs/AMD001_mi300x_e014_qualification/runtime/transfer_manifest.json",
+    "code_bundle_path": null,
+    "code_bundle_sha256": null,
+    "dataset_archive_path": "/tmp/research-model-amd-session/AMD001/research-data-v0.1-expanded-703aceae7a28.tar.gz",
+    "dataset_archive_sha256": null,
+    "total_upload_bytes": null,
+    "benchmarks_in_git_bundle": true,
+    "remote_bootstrap": "scripts/amd_remote_session.sh streamed over SSH; no separate bootstrap upload"
+  },
+  "expected_commands": {
+    "local_prepare": "bash scripts/amd_session.sh prepare",
+    "local_dry_run": "bash scripts/amd_session.sh dry-run",
+    "after_user_creates_droplet": "bash scripts/amd_session.sh qualify <PUBLIC_IP>",
+    "manual_connect": "bash scripts/amd_session.sh connect <PUBLIC_IP>",
+    "manual_collect_retry": "bash scripts/amd_session.sh collect <PUBLIC_IP>",
+    "manual_status": "bash scripts/amd_session.sh status <PUBLIC_IP>"
+  },
+  "artifact_collection": {
+    "local_root": "cloud_runs/AMD001_mi300x_e014_qualification/runtime/collected/",
+    "remote_evidence": ["environment", "telemetry", "logs", "qualification", "cost", "failures", "timeline.jsonl", "commands.jsonl"],
+    "destruction": "Never automated; destroy deliberately in the provider UI only after local collection succeeds."
+  },
+  "cost_tracking": {
+    "displayed_rate_usd_per_hour": 1.99,
+    "billing_start_timestamp_utc": null,
+    "qualification_start_timestamp_utc": null,
+    "qualification_end_timestamp_utc": null,
+    "classification": "provider-billed cost unknown until provider invoice/credit ledger is observed",
+    "full_run_projection": "computed only from a passed smoke median step time; E014 full training remains unauthorized"
+  },
+  "timing_expectations": {
+    "classification": "planning_only_not_measured",
+    "qualification_wall_minutes_budget": [20, 60],
+    "setup_overhead": "unmeasured and network/image dependent; ENV_SETUP_STARTED and ENV_SETUP_COMPLETED will bound it",
+    "remote_model_download_overhead": "unmeasured and bandwidth/cache dependent; MODEL_DOWNLOAD_STARTED and MODEL_DOWNLOAD_COMPLETED will bound it",
+    "six_step_smoke_overhead": "unmeasured until the MI300X runs; per-step timings are recorded by the qualification report",
+    "full_e014_planning_gpu_hours": [9, 19],
+    "full_e014_planning_cost_usd_at_displayed_rate": [17.91, 37.81]
+  },
+  "no_cloud_compute_started_at_creation": true,
+  "no_model_quality_result_exists": true,
+  "no_model_download_on_mac": true,
+  "private_keys_or_secrets_committed": false,
+  "status_note": "READY_TO_CLICK_CREATE; only the user may now click Create GPU Droplet."
+}

@@ -1,0 +1,28 @@
+[
+  {
+    "rule_id": "GH006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "low",
+    "confidence": "normal",
+    "file": "src/lib/concierge/knowledge-base.ts",
+    "line": 408,
+    "title": "New source literal matches a test expectation",
+    "evidence": "    keywords: [\"dock\", \"pier\", \"boat lift\", \"vehicle\", \"boat\", \"pool\", \"irrigation\", \"generator\", \"seawall\", \"waterfront structure\"],\ntests/concierge/matcher.test.ts:60:     [\"seawalls\", \"seawall\"],",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "low",
+    "confidence": "normal",
+    "file": "src/lib/concierge/matcher.ts",
+    "line": 18,
+    "title": "New source literal matches a test expectation",
+    "evidence": "  [/\\bseawalls?\\b/gi, \"seawall\"],\ntests/concierge/matcher.test.ts:60:     [\"seawalls\", \"seawall\"],",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  }
+]

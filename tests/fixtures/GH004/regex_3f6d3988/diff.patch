@@ -1,0 +1,11 @@
+diff --git a/test/research-again-ui.test.mjs b/test/research-again-ui.test.mjs
+--- a/test/research-again-ui.test.mjs
++++ b/test/research-again-ui.test.mjs
+@@ -14,6 +14,7 @@
+   assert.match(source, /data-research-again-confirm/);
+   assert.match(source, /Preserved assignment/);
+   assert.match(source, /More research is required before this story can be drafted/);
++  assert.match(source, /if \(status === 'failed' && job\?\.id\) return `\$\{researchAction\}<button/);
+   assert.doesNotMatch(source, /data-phase2-action="research_again"/);
+   assert.match(source, /pathname === '\/newsroom\/pipeline'|pathname === '\/newsroom\/review'/);
+ });

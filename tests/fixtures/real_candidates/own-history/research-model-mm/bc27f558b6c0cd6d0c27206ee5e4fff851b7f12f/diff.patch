@@ -1,0 +1,1814 @@
+diff --git a/configs/training/qwen3_8b_v0.1_qlora.toml b/configs/training/qwen3_8b_v0.1_qlora.toml
+index d2e2e1b..42e7194 100644
+--- a/configs/training/qwen3_8b_v0.1_qlora.toml
++++ b/configs/training/qwen3_8b_v0.1_qlora.toml
+@@ -1,10 +1,14 @@
+ base_model = "Qwen/Qwen3-8B-Base"
++model_revision = "49e3418fbbbca6ecbdf9608b4d22e5a407081db4"
++tokenizer_revision = "49e3418fbbbca6ecbdf9608b4d22e5a407081db4"
+ dataset_path = "data/generated/research-data-v0.1-expanded.jsonl"
++dataset_file_sha256 = "703aceae7a28450fe9dca35be29c09cf0e64aceeda49f60e7f626b6e3708a91f"
++dataset_content_hash = "75283e511cb120bbb29fb95e13b7a26fa5f6b4f887ddf41079c50c4a96505cf1"
+ output_dir = "outputs/qwen3-8b-research-v0.1-qlora"
+ seed = 17
+ method = "qlora"
+ backend = "transformers"
+-max_seq_length = 2048
++max_seq_length = 4608
+ per_device_train_batch_size = 1
+ gradient_accumulation_steps = 16
+ learning_rate = 0.0002
+@@ -12,6 +16,7 @@ num_train_epochs = 2
+ warmup_ratio = 0.05
+ weight_decay = 0.01
+ lr_scheduler_type = "cosine"
++optim = "adamw_torch_fused"
+ gradient_checkpointing = true
+ bf16 = true
+ load_in_4bit = true
+@@ -20,6 +25,12 @@ lora_alpha = 32
+ lora_dropout = 0.05
+ lora_target_modules = ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+ logging_steps = 10
++eval_strategy = "steps"
++eval_steps = 500
+ save_strategy = "steps"
+-save_steps = 1000
+-save_total_limit = 3
++save_steps = 500
++save_total_limit = 5
++load_best_model_at_end = true
++metric_for_best_model = "eval_loss"
++greater_is_better = false
++include_num_input_tokens_seen = true
+diff --git a/docs/research_ledger.md b/docs/research_ledger.md
+index 93efab3..f8e3d88 100644
+--- a/docs/research_ledger.md
++++ b/docs/research_ledger.md
+@@ -46,10 +46,18 @@ frozen in
+ [`configs/research/primary_v0.1.json`](/Volumes/Research/research-model-mm/configs/research/primary_v0.1.json)
+ before the primary training run. No conclusion is written into that file.
+ 
++## E014 preregistration, 2026-09-16
++
++| ID | Event | Status | Evidence boundary |
++| --- | --- | --- | --- |
++| E014 | Primary `Qwen/Qwen3-8B-Base` research-behavior QLoRA preregistration | planned — `READY_FOR_COMPUTE` | Frozen dataset, benchmark, control, config, analysis criteria, exact revision, and launch/resume commands are recorded in [`experiments/E014_qwen3_8b_primary_qlora/manifest.json`](/Volumes/Research/research-model-mm/experiments/E014_qwen3_8b_primary_qlora/manifest.json). No primary baseline, training, or evaluation has run; local NVIDIA CUDA is unavailable. No paid compute was started. |
++
+ ## Future entries
+ 
+-The next IDs are reserved only when an actual baseline, control evaluation,
+-training run, evaluation, invalidation, or derived analysis is performed. A
+-future run must record its exact Git commit, immutable dataset/benchmark hashes,
+-model revisions, command, seed, environment, raw predictions, metrics, and
+-interpretation in a new manifest before it is treated as evidence.
++E014 is reserved for the preregistration required before the primary run. No
++result-bearing experiment should be treated as complete until its exact Git
++commit, immutable dataset/benchmark hashes, model revisions, command, seed,
++environment, raw predictions, metrics, and interpretation are recorded under
++the append-only evidence policy. Future unrelated IDs are reserved when an
++actual baseline, control evaluation, training run, evaluation, invalidation, or
++derived analysis is performed.
+diff --git a/experiments/E014_qwen3_8b_primary_qlora/manifest.json b/experiments/E014_qwen3_8b_primary_qlora/manifest.json
+new file mode 100644
+index 0000000..8be857b
+--- /dev/null
++++ b/experiments/E014_qwen3_8b_primary_qlora/manifest.json
+@@ -0,0 +1,486 @@
++{
++  "experiment_schema_version": "1.0",
++  "experiment_id": "E014_qwen3_8b_primary_qlora",
++  "title": "Primary Qwen3-8B-Base research-behavior QLoRA experiment",
++  "status": "planned",
++  "metadata_status": "recorded_contemporaneously",
++  "manifest_created_at": "2026-09-16T12:15:47Z",
++  "research_question": "Does research-behavior specialization improve Qwen3-8B-Base on unseen research tasks while preserving useful general capabilities?",
++  "hypothesis": "The tuned 8B model will have higher macro-averaged structured validity and research-action accuracy than the untouched base on the frozen research benchmark.",
++  "secondary_hypotheses": [
++    {
++      "id": "H2",
++      "question_ids": [
++        "RQ7",
++        "RQ8"
++      ],
++      "statement": "The tuned model will improve citation precision/recall and lower unsupported-claim rate relative to the untouched base.",
++      "direction": "citation_up_unsupported_down",
++      "metrics": [
++        "citation_precision",
++        "citation_recall",
++        "unsupported_claim_rate"
++      ]
++    },
++    {
++      "id": "H3",
++      "question_ids": [
++        "RQ9"
++      ],
++      "statement": "The tuned model will improve insufficient-evidence recognition on cases where the supplied sources do not establish the requested conclusion.",
++      "direction": "tuned_gt_base",
++      "metrics": [
++        "insufficient_evidence_accuracy"
++      ]
++    },
++    {
++      "id": "H4",
++      "question_ids": [
++        "RQ2",
++        "RQ6"
++      ],
++      "statement": "Evidence attribution, source selection, and methodology-critique families will show larger gains than generic planning families.",
++      "direction": "family_interaction",
++      "metrics": [
++        "by_task"
++      ]
++    },
++    {
++      "id": "H5",
++      "question_ids": [
++        "RQ3",
++        "RQ10"
++      ],
++      "statement": "Specialization may regress at least one non-target capability unless the training mixture or a general-capability control is sufficient; this is a directional risk hypothesis, not an expected result.",
++      "direction": "risk_monitor",
++      "metrics": [
++        "control_benchmark_score"
++      ]
++    }
++  ],
++  "hypothesis_source": {
++    "path": "configs/research/primary_v0.1.json",
++    "sha256": "c73e8c65a57b24b9898561f2cb1a3d06b1c5a0b189973f20073346b0b7baf356",
++    "note": "All five frozen hypotheses are preserved verbatim; H1 is primary, H2-H5 are secondary/descriptive as specified in the frozen protocol."
++  },
++  "experiment_type": "primary_full_qlora",
++  "preregistration": {
++    "status": "READY_FOR_COMPUTE",
++    "registered_before_primary_results": true,
++    "primary_success_criterion": "H1 is supported only if both structured_valid and action_accuracy have positive tuned-minus-base paired mean deltas and their two-sided 95% paired percentile-bootstrap intervals exclude zero.",
++    "interpretive_guardrail": "A structured-validity or formatting gain without improvement in actual research decisions will not be described as broad research-competence improvement.",
++    "bootstrap": {
++      "samples": 20000,
++      "seed": 17,
++      "interval": "paired percentile 95% CI",
++      "research_id_key": "example_id",
++      "control_id_key": "control_id",
++      "undefined_metric_policy": "pair only rows with the metric defined in both conditions"
++    },
++    "multiple_comparisons": "H1 is the single primary hypothesis; H2-H5, all task families, domains, and error categories are secondary/descriptive. No post-hoc composite score."
++  },
++  "git": {
++    "commit": "cc2bf846ee05e14d0dd8434cad17005c0e4b21f4",
++    "dirty": true,
++    "status_note": "Pre-registration captures the current HEAD with a dirty working tree containing E014 preparation changes and pre-existing untracked generated data. No result-bearing run was launched and no commit was created."
++  },
++  "environment": {
++    "machine": {
++      "hostname": "dippos-Mac-Studio.local",
++      "os": "Darwin 25.6.0",
++      "architecture": "arm64",
++      "cpu": "Apple M1 Max, 10 CPU cores",
++      "gpu": "Apple M1 Max integrated GPU, 24 cores (unified memory)",
++      "gpu_count": 1,
++      "vram_gb": null,
++      "ram_gb": 32.0,
++      "hardware_probe_note": "MPS is available; no NVIDIA GPU/CUDA device is present. Unified memory is not dedicated VRAM.",
++      "unified_memory_gb": 32,
++      "disk_free_bytes": 6983729692672
++    },
++    "software": {
++      "python": "3.13.12",
++      "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
++      "packages": {
++        "torch": "2.14.0",
++        "transformers": "5.17.0",
++        "peft": "0.21.0",
++        "mlx": "0.32.2",
++        "mlx-lm": "0.31.3",
++        "datasets": "5.0.1",
++        "trl": "1.13.0",
++        "bitsandbytes": "0.50.2",
++        "accelerate": "1.15.0"
++      },
++      "cuda": null,
++      "mps_available": true,
++      "uv_lock_sha256": "82e0e70b44474c2ac0f2211664b6352b870171481ca1e6167faf95333e572825"
++    },
++    "intended_hardware": {
++      "platform": "Linux x86_64",
++      "gpu": "1 x NVIDIA A100 80 GB or H100 80 GB, BF16-capable; conservative planning target, not a measured minimum",
++      "minimum_compute_capability": "8.0 (A100 class)",
++      "system_ram_gb_recommended": 64,
++      "free_disk_gb_recommended": 150,
++      "cuda_runtime": "CUDA 13.x runtime supplied by locked PyTorch/BitsAndBytes wheels",
++      "driver_requirement": "580 or newer for CUDA 13.x runtime",
++      "python": "3.13 (locally tested locked dependency set; Python >=3.11 supported by project)",
++      "flash_attention": "not required by this recipe; SDPA/default Transformers attention is used"
++    }
++  },
++  "dataset": {
++    "version": "research-data-v0.1-expanded",
++    "path": "data/generated/research-data-v0.1-expanded.jsonl",
++    "sha256": "703aceae7a28450fe9dca35be29c09cf0e64aceeda49f60e7f626b6e3708a91f",
++    "dataset_content_hash": "75283e511cb120bbb29fb95e13b7a26fa5f6b4f887ddf41079c50c4a96505cf1",
++    "row_count": 25269,
++    "split_counts": {
++      "train": 19626,
++      "validation": 2816,
++      "test": 2827
++    },
++    "split_hashes": {
++      "train": "aa28f649c2c460f8c692512eabab4c17fb59c0f500d9630c639957c89c220055",
++      "validation": "35d5e764675252779dae6879927d0ebf45b5f656558af734a65c138be827d73b",
++      "test": "d08d005a21dc4ca953ad06be582b46b6c7bfa78776732a2e02dd91a32d3aea92"
++    },
++    "strict_validation": {
++      "accepted_count": 25269,
++      "rejected_count": 0
++    },
++    "upstream_rejected_rows_not_in_candidate": 3048,
++    "training_count": 19626,
++    "training_examples_by_task_family": {
++      "citation_integrity": 2379,
++      "claim_extraction": 2379,
++      "claim_source_attribution": 855,
++      "contradiction_detection": 855,
++      "evidence_extraction": 2379,
++      "evidence_table": 2379,
++      "evidence_verification": 855,
++      "follow_up_question": 855,
++      "insufficient_evidence": 2379,
++      "missing_evidence": 855,
++      "query_refinement": 1152,
++      "research_plan": 1152,
++      "search_query_generation": 1152
++    },
++    "training_examples_by_domain": {
++      "ai_ml": 7789,
++      "behavioral_science": 13,
++      "biomedical": 9984,
++      "education": 13,
++      "general_scientific_research": 1554,
++      "software_systems": 273
++    },
++    "excluded_from_optimizer": {
++      "validation_checkpoint_selection_only": 2816,
++      "test_evaluation_only_after_training": 2827,
++      "total_candidate_rows_not_used_for_optimization": 5643
++    },
++    "tokenizer_statistics": {
++      "tokenizer_revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
++      "sequence_length_limit": 4608,
++      "training_tokens_per_epoch_including_prompt_and_eos": 23405188,
++      "planned_training_tokens_two_epochs": 46810376,
++      "train": {
++        "count": 19626,
++        "mean_tokens": 1192.56,
++        "median_tokens": 975,
++        "p95_tokens": 2282,
++        "p99_tokens": 2807,
++        "max_tokens": 4484,
++        "examples_over_limit": 0,
++        "target_token_retention": 1.0
++      },
++      "validation": {
++        "count": 2816,
++        "mean_tokens": 1186.91,
++        "median_tokens": 971,
++        "p95_tokens": 2191,
++        "p99_tokens": 2843,
++        "max_tokens": 4088,
++        "examples_over_limit": 0,
++        "target_token_retention": 1.0
++      },
++      "test": {
++        "count": 2827,
++        "mean_tokens": 1272.28,
++        "median_tokens": 1174,
++        "p95_tokens": 2426,
++        "p99_tokens": 3174,
++        "max_tokens": 3526,
++        "examples_over_limit": 0,
++        "target_token_retention": 1.0
++      }
++    },
++    "license_note": "The frozen candidate has separate attribution-required and noncommercial source classes; retain the per-row provenance and license boundary in any later artifact or release."
++  },
++  "benchmark": {
++    "version": "research-bench-v0.1",
++    "path": "benchmarks/releases/research-bench-v0.1.jsonl",
++    "sha256": "3f1f859a10f1bb34ebb22197fadfeba08f2f812c2346a9d75c2b1b7e97b878c4",
++    "benchmark_content_hash": "d44b8226ed8d5122ffedcb353761a9624917fb0bd6f6be60e5595799a0a5eb3e",
++    "count": 248,
++    "task_family_count": 31,
++    "cases_per_task_family": 8,
++    "domain_composition": {
++      "ai_ml": 62,
++      "behavioral_science": 31,
++      "biomedical": 31,
++      "education": 31,
++      "general_scientific_research": 31,
++      "hardware": 31,
++      "software_systems": 31
++    },
++    "scoring_metrics": [
++      "structured_valid",
++      "action_accuracy",
++      "citation_precision",
++      "citation_recall",
++      "claim_status_f1",
++      "evidence_recall",
++      "unsupported_claim_rate",
++      "insufficient_evidence_accuracy"
++    ],
++    "control_benchmark": {
++      "version": "general-control-v0.1",
++      "path": "benchmarks/control/general-capability-v0.1.jsonl",
++      "sha256": "b9ff1050dd05eeaf062aba8e8fce1f0a39ffc7da68754d02f011779780628636",
++      "content_hash": "1be2dc5298066bb645ec49f48157de81c09a05579bab8679d87fa86723efbad5",
++      "count": 12,
++      "scoring_note": "Keyword-based small regression guard; not a general-intelligence measure."
++    },
++    "contamination_check_before_run": {
++      "training_count": 25269,
++      "benchmark_count": 248,
++      "exact_question_context_overlap": 0,
++      "exact_examples": [],
++      "source_id_overlap": 0,
++      "overlapping_source_ids": [],
++      "near_duplicate_question_pairs": [],
++      "contaminated": false
++    },
++    "frozen_content_will_not_be_modified": true
++  },
++  "model": {
++    "name": "Qwen/Qwen3-8B-Base",
++    "revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
++    "tokenizer_revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
++    "revision_source": "read-only Hugging Face git ref lookup performed before preregistration",
++    "base_model_weights_cached_locally": false,
++    "base_quantization_for_training_and_evaluation": "NF4 4-bit, double quantization, BF16 compute",
++    "adapter_path": "outputs/qwen3-8b-research-v0.1-qlora",
++    "prompting_protocol": "Both base and tuned research evaluations use research_model.research_protocol.build_prompt with the same system instruction, task type, question, and supplied evidence; no chat template or tuned-only prompt.",
++    "research_generation": {
++      "temperature": 0.0,
++      "max_new_tokens": 512
++    },
++    "control_generation": {
++      "temperature": 0.0,
++      "max_new_tokens": 256
++    }
++  },
++  "training": {
++    "config_path": "configs/training/qwen3_8b_v0.1_qlora.toml",
++    "config_sha256": "efe00566bb8ef12a31c76f8dd4f88986643b53a964d8540f19484e1f7bd920bf",
++    "config": {
++      "base_model": "Qwen/Qwen3-8B-Base",
++      "model_revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
++      "tokenizer_revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
++      "dataset_path": "data/generated/research-data-v0.1-expanded.jsonl",
++      "dataset_file_sha256": "703aceae7a28450fe9dca35be29c09cf0e64aceeda49f60e7f626b6e3708a91f",
++      "dataset_content_hash": "75283e511cb120bbb29fb95e13b7a26fa5f6b4f887ddf41079c50c4a96505cf1",
++      "output_dir": "outputs/qwen3-8b-research-v0.1-qlora",
++      "seed": 17,
++      "method": "qlora",
++      "backend": "transformers",
++      "max_seq_length": 4608,
++      "per_device_train_batch_size": 1,
++      "gradient_accumulation_steps": 16,
++      "learning_rate": 0.0002,
++      "num_train_epochs": 2,
++      "warmup_ratio": 0.05,
++      "weight_decay": 0.01,
++      "lr_scheduler_type": "cosine",
++      "optim": "adamw_torch_fused",
++      "gradient_checkpointing": true,
++      "bf16": true,
++      "load_in_4bit": true,
++      "lora_r": 16,
++      "lora_alpha": 32,
++      "lora_dropout": 0.05,
++      "lora_target_modules": [
++        "q_proj",
++        "k_proj",
++        "v_proj",
++        "o_proj",
++        "gate_proj",
++        "up_proj",
++        "down_proj"
++      ],
++      "logging_steps": 10,
++      "eval_strategy": "steps",
++      "eval_steps": 500,
++      "save_strategy": "steps",
++      "save_steps": 500,
++      "save_total_limit": 5,
++      "load_best_model_at_end": true,
++      "metric_for_best_model": "eval_loss",
++      "greater_is_better": false,
++      "include_num_input_tokens_seen": true
++    },
++    "expected_optimizer_steps": 2454,
++    "expected_warmup_steps": 123,
++    "planned_total_training_tokens": 46810376,
++    "checkpoint_policy": {
++      "evaluation_every_steps": 500,
++      "save_every_steps": 500,
++      "max_checkpoints": 5,
++      "selection_metric": "validation eval_loss, lower is better",
++      "test_split_used_for_checkpoint_selection": false,
++      "resume_policy": "resume the latest valid Trainer checkpoint; append interruption/failure events"
++    },
++    "stopping_criteria": {
++      "normal": "complete 2 epochs (2,454 optimizer steps)",
++      "early_stop": "no performance-based early stopping; stop on completion or integrity/non-finite-loss/runtime failure",
++      "invalidate_if": [
++        "dataset/config/benchmark hash mismatch",
++        "benchmark contamination",
++        "malformed targets",
++        "non-finite loss"
++      ]
++    },
++    "material_pre_run_adjustments": [
++      "Raised max_seq_length from 2048 to 4608 after exact tokenizer audit: at 2048, 1,983/19,626 training examples were truncated, 810 retained zero target tokens, and target-token retention was 87.9139%; at 4608 all train/validation/test targets are retained.",
++      "Changed checkpoint/evaluation cadence from the earlier 1,000-step/3-checkpoint policy to 500 steps and at most 5 checkpoints, with best validation eval_loss selected, to retain early/middle/final candidates without excessive checkpointing.",
++      "Set adamw_torch_fused explicitly for reproducibility; existing configuration did not specify the optimizer.",
++      "TRL 1.13.0 SFTConfig does not accept warmup_ratio; runner passes warmup_steps=ceil(2,454*0.05)=123, preserving the configured 5% warmup."
++    ],
++    "trainer_observability": [
++      "stdout/stderr",
++      "training_events.jsonl",
++      "training_run.json",
++      "loss/evaluation/learning-rate log history",
++      "input tokens seen",
++      "GPU model/count/VRAM/compute capability",
++      "CUDA runtime and driver",
++      "Torch/Transformers/PEFT/BitsAndBytes/Accelerate/Datasets/TRL/FlashAttention versions if installed",
++      "peak GPU memory allocated/reserved",
++      "duration",
++      "throughput",
++      "final adapter size",
++      "checkpoints"
++    ]
++  },
++  "execution": {
++    "command": [
++      "uv sync --locked --extra dev --extra ml",
++      "set -o pipefail; uv run --locked --extra dev --extra ml research-model baseline run --backend transformers --model Qwen/Qwen3-8B-Base --model-revision 49e3418fbbbca6ecbdf9608b4d22e5a407081db4 --dataset benchmarks/releases/research-bench-v0.1.jsonl --output data/generated/E014_qwen3-8b-base-research-bench-v0.1.json --checkpoint-path data/generated/E014_qwen3-8b-base-research-bench-v0.1.partial.json --checkpoint-every 1 --max-new-tokens 512 --temperature 0.0 --load-in-4bit 2>&1 | tee experiments/E014_qwen3_8b_primary_qlora/base-evaluation.stdout.log",
++      "uv run --locked --extra dev --extra ml research-model control evaluate --backend transformers --model Qwen/Qwen3-8B-Base --model-revision 49e3418fbbbca6ecbdf9608b4d22e5a407081db4 --label E014-base --max-new-tokens 256 --temperature 0.0 --load-in-4bit --output data/generated/E014_qwen3-8b-base-general-control-v0.1.json",
++      "set -o pipefail; uv run --locked --extra ml python scripts/train_transformers.py --config configs/training/qwen3_8b_v0.1_qlora.toml 2>&1 | tee experiments/E014_qwen3_8b_primary_qlora/training.stdout.log",
++      "set -o pipefail; uv run --locked --extra dev --extra ml research-model evaluate --backend transformers --model Qwen/Qwen3-8B-Base --model-revision 49e3418fbbbca6ecbdf9608b4d22e5a407081db4 --adapter-path outputs/qwen3-8b-research-v0.1-qlora --dataset benchmarks/releases/research-bench-v0.1.jsonl --output data/generated/E014_qwen3-8b-tuned-research-bench-v0.1.json --checkpoint-path data/generated/E014_qwen3-8b-tuned-research-bench-v0.1.partial.json --checkpoint-every 1 --max-new-tokens 512 --temperature 0.0 --load-in-4bit 2>&1 | tee experiments/E014_qwen3_8b_primary_qlora/tuned-evaluation.stdout.log",
++      "uv run --locked --extra dev --extra ml research-model control evaluate --backend transformers --model Qwen/Qwen3-8B-Base --model-revision 49e3418fbbbca6ecbdf9608b4d22e5a407081db4 --adapter-path outputs/qwen3-8b-research-v0.1-qlora --label E014-tuned --max-new-tokens 256 --temperature 0.0 --load-in-4bit --output data/generated/E014_qwen3-8b-tuned-general-control-v0.1.json",
++      "uv run --locked --extra dev --extra ml research-model stats compare --base data/generated/E014_qwen3-8b-base-research-bench-v0.1.json --tuned data/generated/E014_qwen3-8b-tuned-research-bench-v0.1.json --output paper/statistical_outputs/E014_8b_primary_paired_bootstrap.json --samples 20000 --seed 17 --id-key example_id",
++      "uv run --locked --extra dev --extra ml research-model stats compare --base data/generated/E014_qwen3-8b-base-general-control-v0.1.json --tuned data/generated/E014_qwen3-8b-tuned-general-control-v0.1.json --output paper/statistical_outputs/E014_control_paired_bootstrap.json --samples 20000 --seed 17 --id-key control_id"
++    ],
++    "readiness_status": "READY_FOR_COMPUTE",
++    "preflight_status": "passed",
++    "baseline_status": "not_run_no_cuda",
++    "training_status": "not_run_no_cuda",
++    "blocking_condition": "This Mac has MPS but no NVIDIA CUDA GPU; nvidia-smi is absent and torch.cuda.is_available() is false. The primary runner rejects CPU/Apple-GPU training. No paid compute has been authorized.",
++    "baseline_must_complete_before_training": true,
++    "commands": {
++      "dependency_setup": "uv sync --locked --extra dev --extra ml",
++      "verify_manifest_and_data": "uv run --locked research-model experiment validate --all; uv run --locked --extra ml python scripts/train_transformers.py --config configs/training/qwen3_8b_v0.1_qlora.toml --dry-run --dry-run-examples 1 --token-stats",
++      "baseline_research_benchmark": "set -o pipefail; uv run --locked --extra dev --extra ml research-model baseline run --backend transformers --model Qwen/Qwen3-8B-Base --model-revision 49e3418fbbbca6ecbdf9608b4d22e5a407081db4 --dataset benchmarks/releases/research-bench-v0.1.jsonl --output data/generated/E014_qwen3-8b-base-research-bench-v0.1.json --checkpoint-path data/generated/E014_qwen3-8b-base-research-bench-v0.1.partial.json --checkpoint-every 1 --max-new-tokens 512 --temperature 0.0 --load-in-4bit 2>&1 | tee experiments/E014_qwen3_8b_primary_qlora/base-evaluation.stdout.log",
++      "resume_baseline_research_benchmark": "set -o pipefail; uv run --locked --extra dev --extra ml research-model baseline run --backend transformers --model Qwen/Qwen3-8B-Base --model-revision 49e3418fbbbca6ecbdf9608b4d22e5a407081db4 --dataset benchmarks/releases/research-bench-v0.1.jsonl --resume --output data/generated/E014_qwen3-8b-base-research-bench-v0.1.json --checkpoint-path data/generated/E014_qwen3-8b-base-research-bench-v0.1.partial.json --checkpoint-every 1 --max-new-tokens 512 --temperature 0.0 --load-in-4bit 2>&1 | tee experiments/E014_qwen3_8b_primary_qlora/base-evaluation.stdout.log",
++      "baseline_general_control": "uv run --locked --extra dev --extra ml research-model control evaluate --backend transformers --model Qwen/Qwen3-8B-Base --model-revision 49e3418fbbbca6ecbdf9608b4d22e5a407081db4 --label E014-base --max-new-tokens 256 --temperature 0.0 --load-in-4bit --output data/generated/E014_qwen3-8b-base-general-control-v0.1.json",
++      "training": "set -o pipefail; uv run --locked --extra ml python scripts/train_transformers.py --config configs/training/qwen3_8b_v0.1_qlora.toml 2>&1 | tee experiments/E014_qwen3_8b_primary_qlora/training.stdout.log",
++      "resume_training": "set -o pipefail; uv run --locked --extra ml python scripts/train_transformers.py --config configs/training/qwen3_8b_v0.1_qlora.toml --resume 2>&1 | tee -a experiments/E014_qwen3_8b_primary_qlora/training.stdout.log",
++      "tuned_research_benchmark": "set -o pipefail; uv run --locked --extra dev --extra ml research-model evaluate --backend transformers --model Qwen/Qwen3-8B-Base --model-revision 49e3418fbbbca6ecbdf9608b4d22e5a407081db4 --adapter-path outputs/qwen3-8b-research-v0.1-qlora --dataset benchmarks/releases/research-bench-v0.1.jsonl --output data/generated/E014_qwen3-8b-tuned-research-bench-v0.1.json --checkpoint-path data/generated/E014_qwen3-8b-tuned-research-bench-v0.1.partial.json --checkpoint-every 1 --max-new-tokens 512 --temperature 0.0 --load-in-4bit 2>&1 | tee experiments/E014_qwen3_8b_primary_qlora/tuned-evaluation.stdout.log",
++      "resume_tuned_research_benchmark": "set -o pipefail; uv run --locked --extra dev --extra ml research-model evaluate --backend transformers --model Qwen/Qwen3-8B-Base --model-revision 49e3418fbbbca6ecbdf9608b4d22e5a407081db4 --adapter-path outputs/qwen3-8b-research-v0.1-qlora --dataset benchmarks/releases/research-bench-v0.1.jsonl --resume --output data/generated/E014_qwen3-8b-tuned-research-bench-v0.1.json --checkpoint-path data/generated/E014_qwen3-8b-tuned-research-bench-v0.1.partial.json --checkpoint-every 1 --max-new-tokens 512 --temperature 0.0 --load-in-4bit 2>&1 | tee experiments/E014_qwen3_8b_primary_qlora/tuned-evaluation.stdout.log",
++      "tuned_general_control": "uv run --locked --extra dev --extra ml research-model control evaluate --backend transformers --model Qwen/Qwen3-8B-Base --model-revision 49e3418fbbbca6ecbdf9608b4d22e5a407081db4 --adapter-path outputs/qwen3-8b-research-v0.1-qlora --label E014-tuned --max-new-tokens 256 --temperature 0.0 --load-in-4bit --output data/generated/E014_qwen3-8b-tuned-general-control-v0.1.json",
++      "paired_research_analysis": "uv run --locked --extra dev --extra ml research-model stats compare --base data/generated/E014_qwen3-8b-base-research-bench-v0.1.json --tuned data/generated/E014_qwen3-8b-tuned-research-bench-v0.1.json --output paper/statistical_outputs/E014_8b_primary_paired_bootstrap.json --samples 20000 --seed 17 --id-key example_id",
++      "paired_control_analysis": "uv run --locked --extra dev --extra ml research-model stats compare --base data/generated/E014_qwen3-8b-base-general-control-v0.1.json --tuned data/generated/E014_qwen3-8b-tuned-general-control-v0.1.json --output paper/statistical_outputs/E014_control_paired_bootstrap.json --samples 20000 --seed 17 --id-key control_id"
++    },
++    "planned_artifacts": [
++      "data/generated/E014_qwen3-8b-base-research-bench-v0.1.json",
++      "data/generated/E014_qwen3-8b-base-research-bench-v0.1.partial.json",
++      "data/generated/E014_qwen3-8b-base-general-control-v0.1.json",
++      "outputs/qwen3-8b-research-v0.1-qlora/training_run.json",
++      "outputs/qwen3-8b-research-v0.1-qlora/training_events.jsonl",
++      "outputs/qwen3-8b-research-v0.1-qlora",
++      "data/generated/E014_qwen3-8b-tuned-research-bench-v0.1.json",
++      "data/generated/E014_qwen3-8b-tuned-research-bench-v0.1.partial.json",
++      "data/generated/E014_qwen3-8b-tuned-general-control-v0.1.json",
++      "paper/statistical_outputs/E014_8b_primary_paired_bootstrap.json",
++      "paper/statistical_outputs/E014_control_paired_bootstrap.json",
++      "experiments/E014_qwen3_8b_primary_qlora/error_taxonomy.json",
++      "experiments/E014_qwen3_8b_primary_qlora/summary.md"
++    ],
++    "gpu_time_estimate": {
++      "training_hours": [
++        8,
++        16
++      ],
++      "research_and_control_evaluation_hours": [
++        1,
++        3
++      ],
++      "total_gpu_hours": [
++        9,
++        19
++      ],
++      "confidence": "rough conservative planning envelope; no target-GPU measurement exists"
++    },
++    "cost_incurred_usd": 0,
++    "paid_compute_authorized": false,
++    "public_release_authorized": false
++  },
++  "artifacts": {
++    "summary_path": "/Volumes/Research/research-model-mm/experiments/E014_qwen3_8b_primary_qlora/summary.md",
++    "primary_outputs_created": false
++  },
++  "results": {
++    "status": "not_run",
++    "base_metrics": null,
++    "tuned_metrics": null,
++    "paired_analysis": null,
++    "control_analysis": null,
++    "error_taxonomy": null
++  },
++  "interpretation": {
++    "status": "not_interpreted",
++    "domain_reporting_groups": [
++      "AI/ML/computing",
++      "software/systems/automation/hardware",
++      "biomedical/medical",
++      "behavioral science/psychology",
++      "education/learning science",
++      "general scientific/technical"
++    ],
++    "task_family_results": "report the actual frozen benchmark task taxonomy and sample counts",
++    "unscored_task_dimensions": [
++      "independent source-rank accuracy",
++      "source-rejection accuracy",
++      "evidence precision",
++      "contradiction-specific accuracy",
++      "methodology-quality score"
++    ],
++    "unscored_dimensions_policy": "do not invent post-hoc metrics; describe relevant task-family results with the existing frozen scores and raw outputs",
++    "control_claim_limit": "the 12-item keyword control supports only a narrow descriptive regression check",
++    "feasibility_comparison": "E011-E013 are MLX feasibility results only and will not be pooled with this primary NVIDIA experiment"
++  },
++  "limitations": [
++    "No primary baseline or training run has completed; E010 was interrupted and E011-E013 used an MLX-converted model, not Qwen3-8B-Base.",
++    "The frozen benchmark contains 248 controlled cases across 31 task families (8 per family); domain estimates are small and descriptive.",
++    "Training data are domain-skewed: training split includes only 13 behavioral-science and 13 education examples, 273 software-systems examples, and 9,984 biomedical examples.",
++    "Insufficient-evidence metric has only 8 eligible benchmark cases.",
++    "The 12-case general control is a lightweight keyword regression guard.",
++    "The dataset retains attribution-required and noncommercial source terms; no public release or relicensing is authorized.",
++    "The estimated GPU runtime is not measured and may vary substantially with hardware, driver, storage, kernel, and throughput."
++  ],
++  "conclusion": "No primary conclusion is available. E014 is preregistered and READY_FOR_COMPUTE; launch only on suitable already-accessible NVIDIA hardware or after separate authorization for external paid compute.",
++  "missing_metadata": []
++}
+diff --git a/experiments/E014_qwen3_8b_primary_qlora/summary.md b/experiments/E014_qwen3_8b_primary_qlora/summary.md
+new file mode 100644
+index 0000000..02c2092
+--- /dev/null
++++ b/experiments/E014_qwen3_8b_primary_qlora/summary.md
+@@ -0,0 +1,36 @@
++# E014: Primary Qwen3-8B-Base research-behavior QLoRA
++
++**Status: `READY_FOR_COMPUTE` — preregistered; primary baseline and training have not run.**
++
++## Frozen objective and hypotheses
++
++The untouched `Qwen/Qwen3-8B-Base` versus research-behavior SFT/QLoRA comparison asks whether specialization improves unseen research behavior while preserving useful general capabilities. The primary H1 is unchanged from `configs/research/primary_v0.1.json`: tuned structured validity and research-action accuracy will exceed the untouched base on the frozen benchmark. H2–H5 remain secondary and unchanged; all are copied into the machine-readable manifest.
++
++For interpretation, H1 is treated as supported only when both preregistered primary metric deltas are positive and their paired 95% bootstrap intervals exclude zero. A formatting/validity gain without evidence of better research decisions will not be described as broad research improvement. Report point estimates, absolute deltas, relative deltas where defined, and intervals; subgroup results remain descriptive. Bootstrap uses 20,000 resamples and seed 17. The small 12-case general-capability control is only a regression guard, not evidence of broad capability retention.
++
++## Frozen artifacts
++
++- Training candidate: `research-data-v0.1-expanded`, 25,269 accepted rows; 19,626 train, 2,816 validation, 2,827 test. Its file SHA-256 is `703aceae7a28450fe9dca35be29c09cf0e64aceeda49f60e7f626b6e3708a91f`; canonical content hash is `75283e511cb120bbb29fb95e13b7a26fa5f6b4f887ddf41079c50c4a96505cf1`.
++- Research benchmark: 248 cases, canonical hash `d44b8226ed8d5122ffedcb353761a9624917fb0bd6f6be60e5595799a0a5eb3e`.
++- General-capability control: 12 cases, canonical hash `1be2dc5298066bb645ec49f48157de81c09a05579bab8679d87fa86723efbad5`.
++- Current strict validation accepts all 25,269 processed training-candidate rows; contamination check reports zero exact question/context overlaps, zero source-ID overlaps, zero near-duplicate question pairs, and `contaminated=false`.
++
++## Training and evaluation protocol
++
++Base and tuned conditions use the same immutable model and tokenizer revision, `49e3418fbbbca6ecbdf9608b4d22e5a407081db4`, the same raw research protocol prompt, NF4 4-bit base weights with double quantization and BF16 compute, temperature 0, and a 512-token research-evaluation cap. The frozen general control uses the same 256-token generation cap in both conditions. The exact base benchmark and control runs must complete before training. The test split is never used for training or checkpoint choice; the best validation-loss checkpoint is evaluated after training.
++
++The serious recipe uses seed 17, 2 epochs, per-device batch 1, gradient accumulation 16, learning rate `2e-4`, cosine scheduling, 5% warmup (123 steps), AdamW fused, BF16 NF4 QLoRA, rank 16 / alpha 32 / dropout 0.05, gradient checkpointing, and the seven attention/MLP projection modules specified in the config. Planned workload is 2,454 optimizer steps and approximately 46,810,376 full sequence tokens over two epochs. Validation and checkpoints run every 500 steps; at most five checkpoints are retained, with the best selected by validation loss.
++
++Two justified recipe adjustments were recorded before compute: sequence length is 4,608 rather than 2,048 because exact tokenization found 1,983 training examples (10.1%) would be truncated at 2,048, including 810 with no answer tokens retained; at 4,608 every train/validation/test target is fully retained. Checkpoint/evaluation cadence is 500 steps with best-validation-loss selection so early/middle/final candidates are available without retaining hundreds of checkpoints. `warmup_ratio=0.05` is mapped to 123 explicit warmup steps because the installed TRL API no longer accepts `warmup_ratio` in `SFTConfig`.
++
++The existing scorer will report validity, action accuracy, citation precision/recall, evidence recall, claim-status F1, unsupported-claim rate, insufficient-evidence accuracy, task-family roll-ups, and six requested domain roll-ups. The paired bootstrap omits cases where a metric is undefined (so insufficient-evidence inference uses its eight eligible cases). The benchmark does not define separate source-rank, source-rejection, evidence-precision, contradiction, or methodology-quality scores; these will not be invented after results. Their task-family cases will be described using the frozen available metrics and raw outputs.
++
++The general control and every research case retain raw generated text, parsed output, per-case scores, runtime and GPU-memory telemetry. Post-run analysis will compare each paired case, report the control descriptively with intervals and its sample size, and prepare a deterministic set of largest metric-wise improvements/regressions, asymmetric successes, shared failures, and failures for manual classification using the preregistered error categories in the manifest. No new composite score will be created.
++
++## Readiness and limits
++
++Local hardware is a Mac Studio with Apple M1 Max, 32 GB unified memory, MPS available and no NVIDIA/CUDA device; `nvidia-smi` is absent. The exact QLoRA runner refuses to start on this host. The training dependencies are installed and locked, dataset/tokenizer dry-runs pass, and a one-step local framework smoke validated the trainer API on a tiny temporary model only; that smoke is not model evidence. No primary model weights are cached and no primary baseline has completed. E010 remains interrupted; E011–E013 are MLX feasibility evidence only.
++
++Target a Linux x86-64 host with one BF16-capable NVIDIA A100 80 GB or H100 80 GB, at least 64 GB system RAM and roughly 150 GB free disk as a conservative provision. The selected CUDA 13 runtime requires a sufficiently recent driver (580+); actual GPU and driver versions must be recorded at launch. These are conservative planning values, not an empirically established minimum. Planning estimate: 8–16 training GPU-hours plus 1–3 evaluation GPU-hours, not benchmarked on the target GPU. Cost incurred is $0; no paid compute or public release is authorized.
++
++The E014 manifest contains the full environment specification and exact base, resume, training, tuned-evaluation, control, and paired-analysis commands. No primary result, analysis, or conclusion is present yet.
+diff --git a/experiments/index.json b/experiments/index.json
+index 6e16531..8be0630 100644
+--- a/experiments/index.json
++++ b/experiments/index.json
+@@ -117,6 +117,15 @@
+       "manifest_path": "/Volumes/Research/research-model-mm/experiments/E013_8b_benchmark_comparison/manifest.json",
+       "manifest_sha256": "6ae27da86ffb39926ed1bdb320e81c7677f74f51eb2fa433e15a62552a00bf81",
+       "indexed_at": "2026-09-16T04:15:58Z"
++    },
++    {
++      "experiment_id": "E014_qwen3_8b_primary_qlora",
++      "title": "Primary Qwen3-8B-Base research-behavior QLoRA experiment",
++      "status": "planned",
++      "metadata_status": "recorded_contemporaneously",
++      "manifest_path": "/Volumes/Research/research-model-mm/experiments/E014_qwen3_8b_primary_qlora/manifest.json",
++      "manifest_sha256": "60ed52e14f4ebbd89260585abfa2879820e5f5e7a8124a38672c02b99f685499",
++      "indexed_at": "2026-09-16T12:15:48Z"
+     }
+   ]
+ }
+diff --git a/scripts/train_transformers.py b/scripts/train_transformers.py
+index 8f2591d..83d73e4 100644
+--- a/scripts/train_transformers.py
++++ b/scripts/train_transformers.py
+@@ -1,38 +1,443 @@
+-"""NVIDIA-ready QLoRA SFT entry point; requires the optional ml dependencies."""
++"""Reproducible NVIDIA QLoRA SFT runner with a tokenizer-only dry run."""
+ 
+ from __future__ import annotations
+ 
+ import argparse
++import importlib.metadata
+ import json
++import math
++import os
++import platform
+ import random
++import shutil
++import statistics
++import subprocess
++import sys
++import time
++from datetime import datetime, timezone
+ from pathlib import Path
++from typing import Any
+ 
++ROOT = Path(__file__).resolve().parents[1]
++if str(ROOT / "src") not in sys.path:
++    sys.path.insert(0, str(ROOT / "src"))
++
++from research_model.datasets.jsonl import read_jsonl
++from research_model.datasets.splits import dataset_hash
++from research_model.provenance.manifest import hash_file
+ from research_model.research_protocol.protocol import build_prompt
++from research_model.validation.validators import validate_dataset
+ 
+ 
+-def main() -> int:
+-    parser = argparse.ArgumentParser(); parser.add_argument("--config", required=True); args = parser.parse_args()
++def _project_path(value: str | Path) -> Path:
++    path = Path(value)
++    return path if path.is_absolute() else ROOT / path
++
++
++def _utc_now() -> str:
++    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
++
++
++def _example_text(row: dict[str, Any]) -> str:
++    return build_prompt(row["question"], row.get("context", ""), row["task_type"]) + "\n" + json.dumps(
++        row["expected_output"], ensure_ascii=False
++    )
++
++
++def _load_data(config: dict[str, Any]) -> tuple[dict[str, list[dict[str, Any]]], dict[str, Any]]:
++    dataset_path = _project_path(config["dataset_path"])
++    if not dataset_path.is_file():
++        raise SystemExit(f"training dataset is missing: {dataset_path}")
++    file_sha256 = hash_file(dataset_path)
++    expected_file_sha256 = config.get("dataset_file_sha256")
++    if expected_file_sha256 and file_sha256 != expected_file_sha256:
++        raise SystemExit(
++            "training dataset file hash mismatch: "
++            f"expected {expected_file_sha256}, found {file_sha256}"
++        )
++
++    rows = read_jsonl(dataset_path)
++    content_hash = dataset_hash(rows)
++    expected_content_hash = config.get("dataset_content_hash")
++    if expected_content_hash and content_hash != expected_content_hash:
++        raise SystemExit(
++            "training dataset content hash mismatch: "
++            f"expected {expected_content_hash}, found {content_hash}"
++        )
++    validation = validate_dataset(rows, strict=True)
++    if validation["rejected_count"] or validation["accepted_count"] != len(rows):
++        raise SystemExit(
++            "strict dataset validation failed: "
++            f"accepted={validation['accepted_count']} rejected={validation['rejected_count']}"
++        )
++
++    splits = {
++        name: [row for row in rows if row.get("split") == name]
++        for name in ("train", "validation", "test")
++    }
++    if not splits["train"] or not splits["validation"] or not splits["test"]:
++        raise SystemExit("training dataset must contain non-empty train, validation, and test splits")
++    updates_per_epoch = math.ceil(
++        len(splits["train"])
++        / config["per_device_train_batch_size"]
++        / config["gradient_accumulation_steps"]
++    )
++    split_report = {
++        "path": str(dataset_path.relative_to(ROOT)),
++        "file_sha256": file_sha256,
++        "content_hash": content_hash,
++        "row_count": len(rows),
++        "split_counts": {name: len(values) for name, values in splits.items()},
++        "split_hashes": {name: dataset_hash(values) for name, values in splits.items()},
++        "estimated_optimizer_steps": math.ceil(updates_per_epoch * config["num_train_epochs"]),
++        "strict_validation": {
++            "accepted_count": validation["accepted_count"],
++            "rejected_count": validation["rejected_count"],
++        },
++    }
++    return splits, split_report
++
++
++def _tokenizer_lengths(tokenizer: Any, texts: list[str]) -> list[int]:
++    encoded = tokenizer(texts, add_special_tokens=True, truncation=False, padding=False)
++    eos_addition = int(tokenizer.eos_token_id is not None)
++    return [len(item) + eos_addition for item in encoded["input_ids"]]
++
++
++def _full_token_statistics(tokenizer: Any, splits: dict[str, list[dict[str, Any]]], max_length: int) -> dict[str, Any]:
++    result: dict[str, Any] = {}
++    for split_name, rows in splits.items():
++        lengths: list[int] = []
++        target_tokens = retained_target_tokens = 0
++        truncated_examples = zero_target_examples = 0
++        for offset in range(0, len(rows), 32):
++            batch = rows[offset : offset + 32]
++            prompts = [build_prompt(row["question"], row.get("context", ""), row["task_type"]) for row in batch]
++            answers = [json.dumps(row["expected_output"], ensure_ascii=False) for row in batch]
++            texts = [prompt + "\n" + answer for prompt, answer in zip(prompts, answers)]
++            encoded = tokenizer(
++                texts,
++                add_special_tokens=True,
++                truncation=False,
++                padding=False,
++                return_offsets_mapping=True,
++            )
++            for prompt, token_ids, token_offsets in zip(prompts, encoded["input_ids"], encoded["offset_mapping"]):
++                answer_start = len(prompt) + 1
++                total_answer = sum(end > answer_start for _, end in token_offsets)
++                retained_answer = sum(end > answer_start for _, end in token_offsets[:max_length])
++                # TRL appends one EOS token to each plain-text SFT sample.
++                lengths.append(len(token_ids) + int(tokenizer.eos_token_id is not None))
++                target_tokens += total_answer
++                retained_target_tokens += retained_answer
++                truncated_examples += int(retained_answer < total_answer)
++                zero_target_examples += int(total_answer > 0 and retained_answer == 0)
++        ordered = sorted(lengths)
++        percentile = lambda fraction: ordered[math.ceil(fraction * len(ordered)) - 1]
++        result[split_name] = {
++            "examples": len(ordered),
++            "total_unpadded_tokens_per_epoch": sum(ordered),
++            "automatic_eos_tokens_per_epoch": len(ordered) if tokenizer.eos_token_id is not None else 0,
++            "mean_tokens": round(sum(ordered) / len(ordered), 2),
++            "median_tokens": statistics.median(ordered),
++            "p95_tokens": percentile(0.95),
++            "p99_tokens": percentile(0.99),
++            "max_tokens": ordered[-1],
++            "examples_over_max_length": sum(length > max_length for length in ordered),
++            "target_tokens": target_tokens,
++            "retained_target_tokens": retained_target_tokens,
++            "target_token_retention_rate": retained_target_tokens / target_tokens if target_tokens else None,
++            "examples_with_any_target_truncation": truncated_examples,
++            "examples_with_zero_target_retained": zero_target_examples,
++        }
++    return result
++
++
++def _dry_run(
++    config: dict[str, Any],
++    splits: dict[str, list[dict[str, Any]]],
++    dataset_report: dict[str, Any],
++    sample_count: int,
++    skip_tokenizer: bool,
++    full_token_stats: bool,
++) -> int:
++    samples = {
++        name: values[:sample_count]
++        for name, values in splits.items()
++        if name in {"train", "validation"}
++    }
++    texts = {name: [_example_text(row) for row in rows] for name, rows in samples.items()}
++    report: dict[str, Any] = {
++        "dry_run": True,
++        "model": config["base_model"],
++        "model_revision": config.get("model_revision"),
++        "tokenizer_revision": config.get("tokenizer_revision", config.get("model_revision")),
++        "max_sequence_length": config["max_seq_length"],
++        "dataset": dataset_report,
++        "sample_count_per_split": sample_count,
++        "sample_character_lengths": {
++            name: [len(text) for text in values] for name, values in texts.items()
++        },
++    }
++    if not skip_tokenizer:
++        try:
++            from transformers import AutoTokenizer
++        except ImportError as exc:
++            raise SystemExit("Install the locked ml extra to run the tokenizer dry run: uv sync --extra ml --locked") from exc
++        tokenizer = AutoTokenizer.from_pretrained(
++            config["base_model"],
++            revision=config.get("tokenizer_revision", config.get("model_revision")),
++        )
++        lengths = {name: _tokenizer_lengths(tokenizer, values) for name, values in texts.items()}
++        report["sample_token_lengths"] = lengths
++        report["sample_over_max_length"] = {
++            name: sum(length > config["max_seq_length"] for length in values)
++            for name, values in lengths.items()
++        }
++        if full_token_stats:
++            report["full_token_statistics"] = _full_token_statistics(tokenizer, splits, config["max_seq_length"])
++    else:
++        report["tokenizer_check"] = "skipped by request; only prompt/data path validated"
++    print(json.dumps(report, indent=2, ensure_ascii=False))
++    return 0
++
++
++def _append_event(path: Path, event: dict[str, Any]) -> None:
++    path.parent.mkdir(parents=True, exist_ok=True)
++    with path.open("a", encoding="utf-8") as handle:
++        handle.write(json.dumps({"timestamp": _utc_now(), **event}, ensure_ascii=False) + "\n")
++
++
++def _package_version(name: str) -> str | None:
++    try:
++        return importlib.metadata.version(name)
++    except importlib.metadata.PackageNotFoundError:
++        return None
++
++
++def _runtime_environment(torch: Any) -> dict[str, Any]:
++    ram_bytes = None
++    try:
++        ram_bytes = os.sysconf("SC_PHYS_PAGES") * os.sysconf("SC_PAGE_SIZE")
++    except (AttributeError, OSError, ValueError):
++        pass
++    driver_versions = None
++    try:
++        driver_versions = sorted(set(subprocess.check_output(
++            ["nvidia-smi", "--query-gpu=driver_version", "--format=csv,noheader"],
++            text=True,
++            stderr=subprocess.DEVNULL,
++            timeout=5,
++        ).strip().splitlines()))
++    except (FileNotFoundError, subprocess.SubprocessError):
++        pass
++    gpu = torch.cuda.get_device_properties(torch.cuda.current_device())
++    packages = {
++        dist: _package_version(dist)
++        for dist in ("torch", "transformers", "peft", "bitsandbytes", "accelerate", "datasets", "trl", "flash-attn")
++    }
++    return {
++        "machine": {
++            "os": platform.platform(),
++            "architecture": platform.machine(),
++            "cpu": platform.processor() or platform.uname().processor or None,
++            "system_ram_bytes": ram_bytes,
++            "disk_free_bytes_at_training_start": shutil.disk_usage(ROOT).free,
++        },
++        "gpu": {
++            "name": torch.cuda.get_device_name(torch.cuda.current_device()),
++            "visible_count": torch.cuda.device_count(),
++            "vram_bytes": gpu.total_memory,
++            "compute_capability": list(torch.cuda.get_device_capability(torch.cuda.current_device())),
++            "cuda_runtime_version": torch.version.cuda,
++            "driver_versions": driver_versions,
++        },
++        "software": {
++            "python": sys.version.split()[0],
++            "packages": {name: version for name, version in packages.items() if version is not None},
++        },
++    }
++
++
++def _run_training(config: dict[str, Any], splits: dict[str, list[dict[str, Any]]], dataset_report: dict[str, Any], resume: bool) -> int:
+     try:
+         import torch
+         from datasets import Dataset
+         from peft import LoraConfig
+-        from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, TrainingArguments
+-        from trl import SFTTrainer
++        from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, set_seed
++        from transformers.trainer_utils import get_last_checkpoint
++        from trl import SFTConfig, SFTTrainer
+     except ImportError as exc:
+-        raise SystemExit("Install the ml extra before training: uv sync --extra ml") from exc
++        raise SystemExit("Install the locked ML dependencies before NVIDIA QLoRA training: uv sync --extra ml --locked") from exc
++
++    if not torch.cuda.is_available():
++        raise SystemExit("NVIDIA CUDA is unavailable; refusing to start the primary QLoRA run on CPU/Apple GPU")
++    if not torch.cuda.is_bf16_supported():
++        raise SystemExit("the configured BF16 QLoRA recipe requires an NVIDIA GPU with BF16 support")
++
++    output_dir = _project_path(config["output_dir"])
++    last_checkpoint = get_last_checkpoint(str(output_dir)) if output_dir.exists() else None
++    if resume and not last_checkpoint:
++        raise SystemExit(f"--resume requested but no valid Trainer checkpoint exists under {output_dir}")
++    if not resume and output_dir.exists() and any(output_dir.iterdir()):
++        raise SystemExit(f"refusing to overwrite existing training artifacts: {output_dir}; use --resume or a new output_dir")
++
++    if config.get("eval_strategy") == "steps" and config["save_strategy"] == "steps":
++        if config["save_steps"] % config["eval_steps"]:
++            raise SystemExit("save_steps must be a multiple of eval_steps when selecting the best checkpoint")
++
++    random.seed(config["seed"])
++    set_seed(config["seed"])
++    tokenizer_revision = config.get("tokenizer_revision", config.get("model_revision"))
++    tokenizer = AutoTokenizer.from_pretrained(config["base_model"], revision=tokenizer_revision)
++    quantization = BitsAndBytesConfig(
++        load_in_4bit=True,
++        bnb_4bit_quant_type="nf4",
++        bnb_4bit_compute_dtype=torch.bfloat16,
++        bnb_4bit_use_double_quant=True,
++    )
++    model = AutoModelForCausalLM.from_pretrained(
++        config["base_model"],
++        revision=config.get("model_revision"),
++        device_map={"": torch.cuda.current_device()},
++        torch_dtype=torch.bfloat16,
++        quantization_config=quantization,
++    )
++    model.config.use_cache = False
++
++    train_ds = Dataset.from_list([{"text": _example_text(row)} for row in splits["train"]])
++    validation_ds = Dataset.from_list([{"text": _example_text(row)} for row in splits["validation"]])
++    test_ds = Dataset.from_list([{"text": _example_text(row)} for row in splits["test"]])
++    lora = LoraConfig(
++        r=config["lora_r"],
++        lora_alpha=config["lora_alpha"],
++        lora_dropout=config["lora_dropout"],
++        target_modules=config["lora_target_modules"],
++        task_type="CAUSAL_LM",
++    )
++    training_args = SFTConfig(
++        output_dir=str(output_dir),
++        seed=config["seed"],
++        data_seed=config["seed"],
++        num_train_epochs=config["num_train_epochs"],
++        per_device_train_batch_size=config["per_device_train_batch_size"],
++        per_device_eval_batch_size=config.get("per_device_eval_batch_size", 1),
++        gradient_accumulation_steps=config["gradient_accumulation_steps"],
++        learning_rate=config["learning_rate"],
++        warmup_steps=math.ceil(dataset_report["estimated_optimizer_steps"] * config["warmup_ratio"]),
++        weight_decay=config["weight_decay"],
++        lr_scheduler_type=config["lr_scheduler_type"],
++        optim=config["optim"],
++        logging_steps=config["logging_steps"],
++        eval_strategy=config["eval_strategy"],
++        eval_steps=config["eval_steps"],
++        save_strategy=config["save_strategy"],
++        save_steps=config["save_steps"],
++        save_total_limit=config["save_total_limit"],
++        load_best_model_at_end=config["load_best_model_at_end"],
++        metric_for_best_model=config["metric_for_best_model"],
++        greater_is_better=config["greater_is_better"],
++        bf16=config["bf16"],
++        gradient_checkpointing=config["gradient_checkpointing"],
++        include_num_input_tokens_seen=config.get("include_num_input_tokens_seen", True),
++        report_to="none",
++        max_length=config["max_seq_length"],
++        dataset_text_field="text",
++    )
++    trainer = SFTTrainer(
++        model=model,
++        args=training_args,
++        train_dataset=train_ds,
++        eval_dataset=validation_ds,
++        peft_config=lora,
++        processing_class=tokenizer,
++    )
++
++    output_dir.mkdir(parents=True, exist_ok=True)
++    event_path = output_dir / "training_events.jsonl"
++    start_time = _utc_now()
++    started_at = time.monotonic()
++    hardware = _runtime_environment(torch)
++    torch.cuda.reset_peak_memory_stats()
++    _append_event(event_path, {"event": "resumed" if resume else "started", "checkpoint": last_checkpoint, "git_commit": config.get("git_commit")})
++    try:
++        train_output = trainer.train(resume_from_checkpoint=last_checkpoint if resume else None)
++        test_metrics = trainer.evaluate(eval_dataset=test_ds, metric_key_prefix="test")
++        observed_losses = {
++            "train_loss": train_output.metrics.get("train_loss"),
++            "test_loss": test_metrics.get("test_loss"),
++            "eval_loss": trainer.state.best_metric,
++        }
++        for name, value in observed_losses.items():
++            if value is not None and not math.isfinite(float(value)):
++                raise ValueError(f"non-finite {name}: {value}")
++        trainer.save_model(str(output_dir))
++        tokenizer.save_pretrained(str(output_dir))
++    except KeyboardInterrupt:
++        _append_event(event_path, {"event": "interrupted", "global_step": trainer.state.global_step})
++        raise
++    except Exception as exc:
++        _append_event(event_path, {"event": "failed", "error_type": type(exc).__name__, "error": str(exc), "global_step": trainer.state.global_step})
++        raise
++
++    elapsed = time.monotonic() - started_at
++    end_time = _utc_now()
++    train_metrics = dict(train_output.metrics)
++    train_metrics.update(test_metrics)
++    run_report = {
++        "status": "completed",
++        "start_time": start_time,
++        "end_time": end_time,
++        "duration_seconds": round(elapsed, 3),
++        "global_step": trainer.state.global_step,
++        "best_model_checkpoint": trainer.state.best_model_checkpoint,
++        "best_metric": trainer.state.best_metric,
++        "train_and_test_metrics": train_metrics,
++        "log_history": trainer.state.log_history,
++        "hardware": hardware,
++        "peak_gpu_memory_allocated_bytes": torch.cuda.max_memory_allocated(),
++        "peak_gpu_memory_reserved_bytes": torch.cuda.max_memory_reserved(),
++        "adapter_size_bytes": sum(path.stat().st_size for path in output_dir.glob("adapter_model.*") if path.is_file()),
++        "dataset": dataset_report,
++        "model": {
++            "name": config["base_model"],
++            "revision": config.get("model_revision"),
++            "tokenizer_revision": tokenizer_revision,
++        },
++        "training_config": config,
++    }
++    run_path = output_dir / "training_run.json"
++    run_path.write_text(json.dumps(run_report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
++    (output_dir / "training_config.json").write_text(json.dumps(config, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
++    _append_event(event_path, {"event": "completed", "global_step": trainer.state.global_step, "duration_seconds": round(elapsed, 3), "best_model_checkpoint": trainer.state.best_model_checkpoint})
++    print(json.dumps({"training_run": str(run_path), "status": "completed", "global_step": trainer.state.global_step, "best_model_checkpoint": trainer.state.best_model_checkpoint, "train_and_test_metrics": train_metrics, "peak_gpu_memory_allocated_bytes": run_report["peak_gpu_memory_allocated_bytes"]}, indent=2, ensure_ascii=False))
++    return 0
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser()
++    parser.add_argument("--config", required=True)
++    parser.add_argument("--dry-run", action="store_true", help="validate frozen data and tokenize a tiny sample without loading model weights")
++    parser.add_argument("--dry-run-examples", type=int, default=2, help="number of examples from each training/validation split to inspect")
++    parser.add_argument("--skip-tokenizer", action="store_true", help="skip tokenizer loading during --dry-run")
++    parser.add_argument("--token-stats", action="store_true", help="measure token lengths and target retention for every split")
++    parser.add_argument("--resume", action="store_true", help="resume from the latest valid Trainer checkpoint in output_dir")
++    args = parser.parse_args()
++    if args.dry_run_examples < 1:
++        parser.error("--dry-run-examples must be positive")
++    if args.token_stats and args.skip_tokenizer:
++        parser.error("--token-stats requires the tokenizer; remove --skip-tokenizer")
++
+     import tomllib
+-    with open(args.config, "rb") as handle: config = tomllib.load(handle)
+-    random.seed(config["seed"]); data = [json.loads(line) for line in Path(config["dataset_path"]).read_text(encoding="utf-8").splitlines() if line.strip()]
+-    train = [row for row in data if row.get("split") == "train"]; validation = [row for row in data if row.get("split") == "validation"]
+-    def text(row: dict) -> str:
+-        return build_prompt(row["question"], row.get("context", ""), row["task_type"]) + "\n" + json.dumps(row["expected_output"], ensure_ascii=False)
+-    train_ds = Dataset.from_list([{"text": text(row)} for row in train]); val_ds = Dataset.from_list([{"text": text(row)} for row in validation])
+-    tokenizer = AutoTokenizer.from_pretrained(config["base_model"]); bnb = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4", bnb_4bit_compute_dtype=torch.bfloat16, bnb_4bit_use_double_quant=True) if config.get("load_in_4bit") else None
+-    model = AutoModelForCausalLM.from_pretrained(config["base_model"], device_map="auto", torch_dtype=torch.bfloat16, quantization_config=bnb)
+-    lora = LoraConfig(r=config["lora_r"], lora_alpha=config["lora_alpha"], lora_dropout=config["lora_dropout"], target_modules=config["lora_target_modules"], task_type="CAUSAL_LM")
+-    train_args = TrainingArguments(output_dir=config["output_dir"], seed=config["seed"], num_train_epochs=config["num_train_epochs"], per_device_train_batch_size=config["per_device_train_batch_size"], gradient_accumulation_steps=config["gradient_accumulation_steps"], learning_rate=config["learning_rate"], warmup_ratio=config["warmup_ratio"], weight_decay=config["weight_decay"], lr_scheduler_type=config["lr_scheduler_type"], logging_steps=config["logging_steps"], save_strategy=config["save_strategy"], bf16=config["bf16"], gradient_checkpointing=config["gradient_checkpointing"], report_to="none")
+-    trainer = SFTTrainer(model=model, args=train_args, train_dataset=train_ds, eval_dataset=val_ds, peft_config=lora, processing_class=tokenizer, max_seq_length=config["max_seq_length"]); trainer.train(); trainer.save_model(config["output_dir"])
+-    Path(config["output_dir"], "training_config.json").write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8"); return 0
+-
+-
+-if __name__ == "__main__": raise SystemExit(main())
++
++    config_path = _project_path(args.config)
++    with config_path.open("rb") as handle:
++        config = tomllib.load(handle)
++    splits, dataset_report = _load_data(config)
++    if args.dry_run:
++        return _dry_run(config, splits, dataset_report, args.dry_run_examples, args.skip_tokenizer, args.token_stats)
++    return _run_training(config, splits, dataset_report, args.resume)
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/src/research_model/cli.py b/src/research_model/cli.py
+index 796433b..c32a954 100644
+--- a/src/research_model/cli.py
++++ b/src/research_model/cli.py
+@@ -4,6 +4,7 @@ import argparse
+ import json
+ import subprocess
+ import sys
++import time
+ from datetime import datetime, timezone
+ from pathlib import Path
+ from typing import Any
+@@ -39,6 +40,51 @@ def _write_new(path: Path, content: str, allow_overwrite: bool = False) -> None:
+     path.write_text(content, encoding="utf-8")
+ 
+ 
++def _runtime_report(backend: Any, started_at: str, started_clock: float, examples: int) -> dict[str, Any]:
++    ended_at = datetime.now(timezone.utc).isoformat()
++    elapsed = time.perf_counter() - started_clock
++    report: dict[str, Any] = {
++        "start_time": started_at,
++        "end_time": ended_at,
++        "duration_seconds": round(elapsed, 3),
++        "examples_completed": examples,
++        "examples_per_second": round(examples / elapsed, 4) if elapsed > 0 else None,
++    }
++    torch = getattr(backend, "torch", None)
++    cuda = getattr(torch, "cuda", None)
++    if cuda is not None and cuda.is_available():
++        try:
++            cuda.synchronize()
++            device = cuda.current_device()
++            properties = cuda.get_device_properties(device)
++            try:
++                driver_versions = sorted(set(subprocess.check_output(
++                    ["nvidia-smi", "--query-gpu=driver_version", "--format=csv,noheader"],
++                    text=True,
++                    stderr=subprocess.DEVNULL,
++                    timeout=5,
++                ).strip().splitlines()))
++            except (FileNotFoundError, subprocess.SubprocessError):
++                driver_versions = None
++            report["gpu"] = {
++                "name": cuda.get_device_name(device),
++                "visible_count": cuda.device_count(),
++                "total_vram_bytes": properties.total_memory,
++                "driver_versions": driver_versions,
++                "peak_allocated_vram_bytes": cuda.max_memory_allocated(device),
++                "peak_reserved_vram_bytes": cuda.max_memory_reserved(device),
++                "allocated_after_run_bytes": cuda.memory_allocated(device),
++                "reserved_after_run_bytes": cuda.memory_reserved(device),
++                "cuda_version": getattr(getattr(torch, "version", None), "cuda", None),
++                "torch_version": getattr(torch, "__version__", None),
++            }
++        except (AttributeError, RuntimeError):
++            report["gpu"] = {"measurement_error": "CUDA memory telemetry unavailable"}
++    else:
++        report["gpu"] = {"available": False, "note": "No CUDA device attached to this backend."}
++    return report
++
++
+ def cmd_data_build(args: argparse.Namespace) -> int:
+     root = _path(args.data_root)
+     manifest = _path(args.manifest)
+@@ -92,25 +138,57 @@ def cmd_data_build(args: argparse.Namespace) -> int:
+ 
+ 
+ def _run_backend(args: argparse.Namespace, rows: list[dict[str, Any]]) -> dict[str, Any]:
+-    backend = load_backend(args.backend, args.model, load_in_4bit=args.load_in_4bit, adapter_path=args.adapter_path)
++    started_at = datetime.now(timezone.utc).isoformat()
++    started_clock = time.perf_counter()
++    backend = load_backend(
++        args.backend,
++        args.model,
++        load_in_4bit=args.load_in_4bit,
++        adapter_path=args.adapter_path,
++        model_revision=getattr(args, "model_revision", None),
++    )
+     checkpoint_path = _path(args.checkpoint_path) if args.checkpoint_path else _path(str(args.output) + ".partial.json")
+     scores: list[dict[str, Any]] = []
+     if args.resume and checkpoint_path.exists():
+         scores = json.loads(checkpoint_path.read_text(encoding="utf-8")).get("per_example", [])
++    initial_score_count = len(scores)
+     completed = {row.get("example_id") for row in scores}
+     selected = rows[:args.max_examples] if args.max_examples else rows
+     for row in selected:
+         if row.get("example_id") in completed:
+             continue
++        raw_output: str | None = None
+         try:
+-            predicted = backend.generate(row["question"], row.get("context", ""), row["task_type"], max_new_tokens=args.max_new_tokens, temperature=args.temperature)
++            generate_with_raw = getattr(backend, "generate_with_raw", None)
++            if callable(generate_with_raw):
++                predicted, raw_output = generate_with_raw(row["question"], row.get("context", ""), row["task_type"], max_new_tokens=args.max_new_tokens, temperature=args.temperature)
++            else:
++                predicted = backend.generate(row["question"], row.get("context", ""), row["task_type"], max_new_tokens=args.max_new_tokens, temperature=args.temperature)
+         except Exception as exc:  # keep long evaluation resumable and diagnosable
+             predicted = {"error": str(exc)}
+-        scores.append(score_example(row, predicted))
++            raw_output = getattr(exc, "raw_output", None)
++        score = score_example(row, predicted)
++        score["raw_output"] = raw_output
++        score["parsed_prediction"] = predicted
++        scores.append(score)
+         if len(scores) % max(1, args.checkpoint_every) == 0:
+             checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+             checkpoint_path.write_text(json.dumps({"checkpoint": True, "backend": getattr(backend, "name", args.backend), "model": args.model, "per_example": scores}, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+-    return {"backend": getattr(backend, "name", args.backend), "model": args.model, "scores": aggregate_scores(scores), "per_example": scores}
++    return {
++        "backend": getattr(backend, "name", args.backend),
++        "model": args.model,
++        "model_revision": getattr(args, "model_revision", None),
++        "tokenizer_revision": getattr(backend, "tokenizer_revision", getattr(args, "model_revision", None)),
++        "adapter_path": args.adapter_path,
++        "runtime": _runtime_report(backend, started_at, started_clock, len(scores) - initial_score_count),
++        "generation": {
++            "temperature": args.temperature,
++            "max_new_tokens": args.max_new_tokens,
++            "prompt_protocol": "research_model.research_protocol.build_prompt; identical for base and adapter conditions",
++        },
++        "scores": aggregate_scores(scores),
++        "per_example": scores,
++    }
+ 
+ 
+ def cmd_eval(args: argparse.Namespace, label: str) -> int:
+@@ -135,7 +213,13 @@ def cmd_validate(args: argparse.Namespace) -> int:
+ 
+ 
+ def cmd_infer(args: argparse.Namespace) -> int:
+-    backend = load_backend(args.backend, args.model, load_in_4bit=args.load_in_4bit, adapter_path=args.adapter_path)
++    backend = load_backend(
++        args.backend,
++        args.model,
++        load_in_4bit=args.load_in_4bit,
++        adapter_path=args.adapter_path,
++        model_revision=args.model_revision,
++    )
+     output = backend.generate(args.question, args.context, args.task_type, max_new_tokens=args.max_new_tokens, temperature=args.temperature)
+     print(json.dumps(output, indent=2, ensure_ascii=False))
+     return 0
+@@ -233,7 +317,15 @@ def cmd_control_build(args: argparse.Namespace) -> int:
+ 
+ 
+ def cmd_control_eval(args: argparse.Namespace) -> int:
+-    backend = load_backend(args.backend, args.model, load_in_4bit=args.load_in_4bit, adapter_path=args.adapter_path)
++    started_at = datetime.now(timezone.utc).isoformat()
++    started_clock = time.perf_counter()
++    backend = load_backend(
++        args.backend,
++        args.model,
++        load_in_4bit=args.load_in_4bit,
++        adapter_path=args.adapter_path,
++        model_revision=getattr(args, "model_revision", None),
++    )
+     scores: list[dict[str, Any]] = []
+     for row in CONTROL_CASES:
+         prompt = row["question"] + ("\n" + row["context"] if row.get("context") else "")
+@@ -243,7 +335,7 @@ def cmd_control_eval(args: argparse.Namespace) -> int:
+         except Exception as exc:
+             raw = f"ERROR: {exc}"
+         scores.append(score_control_example(row, raw))
+-    result = {"label": args.label, "backend": getattr(backend, "name", args.backend), "model": args.model, "timestamp": datetime.now(timezone.utc).isoformat(), "scores": {"count": len(scores), "keyword_recall": sum(row["keyword_recall"] for row in scores) / len(scores), "forbidden_violation_rate": sum(row["forbidden_violation"] for row in scores) / len(scores), "nonempty_rate": sum(row["nonempty"] for row in scores) / len(scores)}, "per_example": scores}
++    result = {"label": args.label, "backend": getattr(backend, "name", args.backend), "model": args.model, "model_revision": getattr(args, "model_revision", None), "tokenizer_revision": getattr(backend, "tokenizer_revision", getattr(args, "model_revision", None)), "adapter_path": args.adapter_path, "timestamp": datetime.now(timezone.utc).isoformat(), "runtime": _runtime_report(backend, started_at, started_clock, len(scores)), "generation": {"temperature": args.temperature, "max_new_tokens": args.max_new_tokens, "prompt_protocol": "frozen control question plus optional context; identical for base and adapter conditions"}, "scores": {"count": len(scores), "keyword_recall": sum(row["keyword_recall"] for row in scores) / len(scores), "forbidden_violation_rate": sum(row["forbidden_violation"] for row in scores) / len(scores), "nonempty_rate": sum(row["nonempty"] for row in scores) / len(scores)}, "per_example": scores}
+     output = _path(args.output)
+     _write_new(output, json.dumps(result, indent=2, ensure_ascii=False) + "\n", allow_overwrite=args.allow_overwrite)
+     print(json.dumps(result["scores"], indent=2)); return 0
+@@ -251,7 +343,7 @@ def cmd_control_eval(args: argparse.Namespace) -> int:
+ 
+ def cmd_stats_compare(args: argparse.Namespace) -> int:
+     base = json.loads(_path(args.base).read_text(encoding="utf-8")); tuned = json.loads(_path(args.tuned).read_text(encoding="utf-8"))
+-    result = {"base": args.base, "tuned": args.tuned, "analysis": paired_bootstrap(base.get("per_example", []), tuned.get("per_example", []), samples=args.samples, seed=args.seed), "created_at": datetime.now(timezone.utc).isoformat()}
++    result = {"base": args.base, "tuned": args.tuned, "analysis": paired_bootstrap(base.get("per_example", []), tuned.get("per_example", []), samples=args.samples, seed=args.seed, id_key=getattr(args, "id_key", "example_id")), "created_at": datetime.now(timezone.utc).isoformat()}
+     output = _path(args.output)
+     _write_new(output, json.dumps(result, indent=2, ensure_ascii=False) + "\n", allow_overwrite=args.allow_overwrite)
+     print(json.dumps(result, indent=2, ensure_ascii=False)); return 0
+@@ -260,6 +352,7 @@ def cmd_stats_compare(args: argparse.Namespace) -> int:
+ def _common_eval(parser: argparse.ArgumentParser) -> None:
+     parser.add_argument("--backend", choices=["heuristic", "transformers", "mlx"], default="heuristic")
+     parser.add_argument("--model")
++    parser.add_argument("--model-revision")
+     parser.add_argument("--adapter-path")
+     parser.add_argument("--dataset", default="benchmarks/tasks/research_microbench.jsonl")
+     parser.add_argument("--split", choices=["train", "validation", "test"])
+@@ -311,6 +404,7 @@ def build_parser() -> argparse.ArgumentParser:
+     infer = sub.add_parser("infer")
+     infer.add_argument("--backend", choices=["heuristic", "transformers", "mlx"], default="heuristic")
+     infer.add_argument("--model")
++    infer.add_argument("--model-revision")
+     infer.add_argument("--adapter-path")
+     infer.add_argument("--question", required=True)
+     infer.add_argument("--context", default="")
+@@ -362,6 +456,7 @@ def build_parser() -> argparse.ArgumentParser:
+     control_eval = control_sub.add_parser("evaluate")
+     control_eval.add_argument("--backend", choices=["heuristic", "transformers", "mlx"], default="heuristic")
+     control_eval.add_argument("--model")
++    control_eval.add_argument("--model-revision")
+     control_eval.add_argument("--adapter-path")
+     control_eval.add_argument("--label", default="control-evaluation")
+     control_eval.add_argument("--max-new-tokens", type=int, default=256)
+@@ -378,6 +473,7 @@ def build_parser() -> argparse.ArgumentParser:
+     stats_compare.add_argument("--output", required=True)
+     stats_compare.add_argument("--samples", type=int, default=2000)
+     stats_compare.add_argument("--seed", type=int, default=17)
++    stats_compare.add_argument("--id-key", default="example_id", help="per-example identifier field for pairing")
+     stats_compare.add_argument("--allow-overwrite", action="store_true")
+     stats_compare.set_defaults(func=cmd_stats_compare)
+     return parser
+diff --git a/src/research_model/evaluation/scorers.py b/src/research_model/evaluation/scorers.py
+index 2000a0e..7dac4b1 100644
+--- a/src/research_model/evaluation/scorers.py
++++ b/src/research_model/evaluation/scorers.py
+@@ -5,6 +5,17 @@ from typing import Any
+ from ..validation.validators import validate_output_against_example
+ 
+ 
++DOMAIN_GROUPS = {
++    "ai_ml": "AI/ML/computing",
++    "software_systems": "software/systems/automation/hardware",
++    "hardware": "software/systems/automation/hardware",
++    "biomedical": "biomedical/medical",
++    "behavioral_science": "behavioral science/psychology",
++    "education": "education/learning science",
++    "general_scientific_research": "general scientific/technical",
++}
++
++
+ def _set(value: Any) -> set[str]:
+     return {str(item) for item in value} if isinstance(value, list) else set()
+ 
+@@ -20,12 +31,13 @@ def _f1(predicted: set[str], expected: set[str]) -> float:
+ 
+ def score_example(example: dict[str, Any], predicted: Any) -> dict[str, Any]:
+     expected = example["expected_output"]; validity_errors = validate_output_against_example(example, predicted)
++    domain = example.get("domain")
+     expected_sources = _set(expected.get("source_ids")); predicted_sources = _set(predicted.get("source_ids")) if isinstance(predicted, dict) else set()
+     expected_status = {str(c.get("status")) for c in expected.get("claims", []) if isinstance(c, dict)}
+     predicted_status = {str(c.get("status")) for c in predicted.get("claims", []) if isinstance(c, dict)} if isinstance(predicted, dict) else set()
+     expected_evidence = {str(e.get("text")) for e in expected.get("evidence", []) if isinstance(e, dict)}
+     predicted_evidence = {str(e.get("text")) for e in predicted.get("evidence", []) if isinstance(e, dict)} if isinstance(predicted, dict) else set()
+-    score = {"example_id": example["example_id"], "task_type": example["task_type"], "structured_valid": not validity_errors, "validation_errors": validity_errors, "action_accuracy": int(isinstance(predicted, dict) and predicted.get("action") == expected.get("action")), "citation_precision": len(predicted_sources & expected_sources) / len(predicted_sources) if predicted_sources else (1.0 if not expected_sources else 0.0), "citation_recall": len(predicted_sources & expected_sources) / len(expected_sources) if expected_sources else (1.0 if not predicted_sources else 0.0), "claim_status_f1": _f1(predicted_status, expected_status), "evidence_recall": len(predicted_evidence & expected_evidence) / len(expected_evidence) if expected_evidence else (1.0 if not predicted_evidence else 0.0), "unsupported_claim_rate": 1.0 if validity_errors and any("evidence" in error or "unknown source" in error for error in validity_errors) else 0.0}
++    score = {"example_id": example["example_id"], "task_type": example["task_type"], "domain": domain, "domain_group": DOMAIN_GROUPS.get(domain, domain or "<missing>"), "structured_valid": not validity_errors, "validation_errors": validity_errors, "action_accuracy": int(isinstance(predicted, dict) and predicted.get("action") == expected.get("action")), "citation_precision": len(predicted_sources & expected_sources) / len(predicted_sources) if predicted_sources else (1.0 if not expected_sources else 0.0), "citation_recall": len(predicted_sources & expected_sources) / len(expected_sources) if expected_sources else (1.0 if not predicted_sources else 0.0), "claim_status_f1": _f1(predicted_status, expected_status), "evidence_recall": len(predicted_evidence & expected_evidence) / len(expected_evidence) if expected_evidence else (1.0 if not predicted_evidence else 0.0), "unsupported_claim_rate": 1.0 if validity_errors and any("evidence" in error or "unknown source" in error for error in validity_errors) else 0.0}
+     if example.get("task_type") == "insufficient_evidence":
+         expected_insufficient = "INSUFFICIENT_EVIDENCE" in expected_status or expected.get("action") == "QUESTION"
+         predicted_insufficient = "INSUFFICIENT_EVIDENCE" in predicted_status or (isinstance(predicted, dict) and predicted.get("action") == "QUESTION")
+@@ -33,7 +45,11 @@ def score_example(example: dict[str, Any], predicted: Any) -> dict[str, Any]:
+     return score
+ 
+ 
+-def aggregate_scores(scores: list[dict[str, Any]], include_by_task: bool = True) -> dict[str, Any]:
++def aggregate_scores(
++    scores: list[dict[str, Any]],
++    include_by_task: bool = True,
++    include_by_domain: bool = True,
++) -> dict[str, Any]:
+     if not scores:
+         return {"count": 0}
+     numeric = sorted({key for row in scores for key, value in row.items() if isinstance(value, (int, float))})
+@@ -47,5 +63,17 @@ def aggregate_scores(scores: list[dict[str, Any]], include_by_task: bool = True)
+     for score in scores:
+         by_task.setdefault(score["task_type"], []).append(score)
+     if include_by_task:
+-        result["by_task"] = {task: aggregate_scores(rows, include_by_task=False) for task, rows in by_task.items()}
++        result["by_task"] = {
++            task: aggregate_scores(rows, include_by_task=False, include_by_domain=False)
++            for task, rows in by_task.items()
++        }
++    if include_by_domain:
++        by_domain: dict[str, list[dict[str, Any]]] = {}
++        for score in scores:
++            domain = score.get("domain_group") or score.get("domain") or "<missing>"
++            by_domain.setdefault(domain, []).append(score)
++        result["by_domain"] = {
++            domain: aggregate_scores(rows, include_by_task=False, include_by_domain=False)
++            for domain, rows in by_domain.items()
++        }
+     return result
+diff --git a/src/research_model/evaluation/statistics.py b/src/research_model/evaluation/statistics.py
+index 5ecf51f..d4801e9 100644
+--- a/src/research_model/evaluation/statistics.py
++++ b/src/research_model/evaluation/statistics.py
+@@ -6,17 +6,23 @@ import random
+ from typing import Any
+ 
+ 
+-def paired_bootstrap(base_scores: list[dict[str, Any]], tuned_scores: list[dict[str, Any]], metrics: list[str] | None = None, samples: int = 2000, seed: int = 17) -> dict[str, Any]:
+-    base = {row.get("example_id"): row for row in base_scores}
+-    tuned = {row.get("example_id"): row for row in tuned_scores}
++def paired_bootstrap(base_scores: list[dict[str, Any]], tuned_scores: list[dict[str, Any]], metrics: list[str] | None = None, samples: int = 2000, seed: int = 17, id_key: str = "example_id") -> dict[str, Any]:
++    base = {row.get(id_key): row for row in base_scores if row.get(id_key) is not None}
++    tuned = {row.get(id_key): row for row in tuned_scores if row.get(id_key) is not None}
+     ids = sorted(set(base) & set(tuned))
+     if not ids:
+-        return {"n": 0, "samples": samples, "seed": seed, "metrics": {}}
++        return {"n": 0, "samples": samples, "seed": seed, "id_key": id_key, "metrics": {}}
+     candidate_metrics = metrics or sorted({key for row in base_scores + tuned_scores for key, value in row.items() if isinstance(value, (int, float))})
+     rng = random.Random(seed)
+     result: dict[str, Any] = {}
+     for metric in candidate_metrics:
+-        differences = [float(tuned[item].get(metric, 0.0)) - float(base[item].get(metric, 0.0)) for item in ids if isinstance(tuned[item].get(metric, 0.0), (int, float)) and isinstance(base[item].get(metric, 0.0), (int, float))]
++        paired_values = [
++            (float(base[item][metric]), float(tuned[item][metric]))
++            for item in ids
++            if isinstance(tuned[item].get(metric), (int, float))
++            and isinstance(base[item].get(metric), (int, float))
++        ]
++        differences = [tuned_value - base_value for base_value, tuned_value in paired_values]
+         if not differences:
+             continue
+         estimates = []
+@@ -26,5 +32,15 @@ def paired_bootstrap(base_scores: list[dict[str, Any]], tuned_scores: list[dict[
+         estimates.sort()
+         lo = estimates[max(0, int(samples * 0.025) - 1)]
+         hi = estimates[min(len(estimates) - 1, int(samples * 0.975))]
+-        result[metric] = {"n": len(differences), "mean_delta": sum(differences) / len(differences), "ci95": [lo, hi]}
+-    return {"n": len(ids), "samples": samples, "seed": seed, "metrics": result}
++        base_mean = sum(value[0] for value in paired_values) / len(paired_values)
++        tuned_mean = sum(value[1] for value in paired_values) / len(paired_values)
++        mean_delta = tuned_mean - base_mean
++        result[metric] = {
++            "n": len(differences),
++            "base_mean": base_mean,
++            "tuned_mean": tuned_mean,
++            "mean_delta": mean_delta,
++            "relative_delta": mean_delta / abs(base_mean) if base_mean != 0 else None,
++            "ci95": [lo, hi],
++        }
++    return {"n": len(ids), "samples": samples, "seed": seed, "id_key": id_key, "metrics": result}
+diff --git a/src/research_model/inference/engine.py b/src/research_model/inference/engine.py
+index a7f691f..971077d 100644
+--- a/src/research_model/inference/engine.py
++++ b/src/research_model/inference/engine.py
+@@ -7,6 +7,25 @@ from typing import Any
+ from ..research_protocol.protocol import SYSTEM_INSTRUCTION, build_prompt
+ 
+ 
++class ProtocolOutputError(ValueError):
++    def __init__(self, message: str, raw_output: str):
++        super().__init__(message)
++        self.raw_output = raw_output
++
++
++def _parse_protocol_output(text: str, backend_name: str) -> dict[str, Any]:
++    match = re.search(r"\{.*\}", text, re.DOTALL)
++    if not match:
++        raise ProtocolOutputError(f"{backend_name} model did not return a JSON object", text)
++    try:
++        parsed = json.loads(match.group(0))
++    except json.JSONDecodeError as exc:
++        raise ProtocolOutputError(f"{backend_name} model returned invalid JSON: {exc}", text) from exc
++    if not isinstance(parsed, dict):
++        raise ProtocolOutputError(f"{backend_name} model returned a non-object JSON value", text)
++    return parsed
++
++
+ class HeuristicBackend:
+     name = "heuristic-protocol-baseline"
+ 
+@@ -26,18 +45,58 @@ class HeuristicBackend:
+ class TransformersBackend:
+     name = "transformers"
+ 
+-    def __init__(self, model_name: str, device: str | None = None, load_in_4bit: bool = False) -> None:
++    def __init__(
++        self,
++        model_name: str,
++        device: str | None = None,
++        load_in_4bit: bool = False,
++        adapter_path: str | None = None,
++        model_revision: str | None = None,
++        tokenizer_revision: str | None = None,
++    ) -> None:
+         try:
+             import torch
+-            from transformers import AutoModelForCausalLM, AutoTokenizer
++            from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+         except ImportError as exc:
+             raise RuntimeError("Install the ml extra to use the Transformers backend") from exc
+-        self.torch = torch; self.tokenizer = AutoTokenizer.from_pretrained(model_name)
++        self.torch = torch
++        self.model_name = model_name
++        self.model_revision = model_revision
++        self.tokenizer_revision = tokenizer_revision or model_revision
++        self.adapter_path = adapter_path
++        tokenizer_kwargs: dict[str, Any] = {}
++        if tokenizer_revision or model_revision:
++            tokenizer_kwargs["revision"] = tokenizer_revision or model_revision
++        self.tokenizer = AutoTokenizer.from_pretrained(model_name, **tokenizer_kwargs)
++
+         kwargs: dict[str, Any] = {"torch_dtype": "auto"}
+-        if device: kwargs["device_map"] = device
+-        elif torch.cuda.is_available(): kwargs["device_map"] = "auto"
+-        if load_in_4bit: kwargs["load_in_4bit"] = True
+-        self.model = AutoModelForCausalLM.from_pretrained(model_name, **kwargs); self.model_name = model_name
++        if model_revision:
++            kwargs["revision"] = model_revision
++        if load_in_4bit:
++            if not torch.cuda.is_available():
++                raise RuntimeError("4-bit Transformers evaluation requires CUDA; refusing a CPU fallback")
++            if not torch.cuda.is_bf16_supported():
++                raise RuntimeError("the frozen QLoRA evaluation recipe requires CUDA BF16 support")
++            kwargs["device_map"] = {"": torch.cuda.current_device()}
++            kwargs["quantization_config"] = BitsAndBytesConfig(
++                load_in_4bit=True,
++                bnb_4bit_quant_type="nf4",
++                bnb_4bit_compute_dtype=torch.bfloat16,
++                bnb_4bit_use_double_quant=True,
++            )
++        elif device:
++            kwargs["device_map"] = device
++        elif torch.cuda.is_available():
++            kwargs["device_map"] = "auto"
++
++        self.model = AutoModelForCausalLM.from_pretrained(model_name, **kwargs)
++        if adapter_path:
++            try:
++                from peft import PeftModel
++            except ImportError as exc:
++                raise RuntimeError("Install the ml extra to load a PEFT adapter") from exc
++            self.model = PeftModel.from_pretrained(self.model, adapter_path)
++        self.model.eval()
+ 
+     def generate_text(self, prompt: str, max_new_tokens: int = 512, temperature: float = 0.0, **_: Any) -> str:
+         inputs = self.tokenizer(prompt, return_tensors="pt"); device = next(self.model.parameters()).device; inputs = {key: value.to(device) for key, value in inputs.items()}
+@@ -48,11 +107,13 @@ class TransformersBackend:
+     def generate_freeform_text(self, prompt: str, **kwargs: Any) -> str:
+         return self.generate_text(prompt, **kwargs)
+ 
+-    def generate(self, question: str, context: str = "", task_type: str = "research_plan", max_new_tokens: int = 512, temperature: float = 0.0, **_: Any) -> dict[str, Any]:
++    def generate_with_raw(self, question: str, context: str = "", task_type: str = "research_plan", max_new_tokens: int = 512, temperature: float = 0.0, **_: Any) -> tuple[dict[str, Any], str]:
+         text = self.generate_text(build_prompt(question, context, task_type), max_new_tokens=max_new_tokens, temperature=temperature)
+-        match = re.search(r"\{.*\}", text, re.DOTALL)
+-        if not match: raise ValueError("model did not return a JSON object")
+-        return json.loads(match.group(0))
++        return _parse_protocol_output(text, "Transformers"), text
++
++    def generate(self, question: str, context: str = "", task_type: str = "research_plan", max_new_tokens: int = 512, temperature: float = 0.0, **kwargs: Any) -> dict[str, Any]:
++        predicted, _ = self.generate_with_raw(question, context, task_type, max_new_tokens, temperature, **kwargs)
++        return predicted
+ 
+ 
+ class MLXBackend:
+@@ -90,12 +151,13 @@ class MLXBackend:
+         except (AttributeError, TypeError):
+             return build_prompt(question, context, task_type)
+ 
+-    def generate(self, question: str, context: str = "", task_type: str = "research_plan", max_new_tokens: int = 512, temperature: float = 0.0, **_: Any) -> dict[str, Any]:
++    def generate_with_raw(self, question: str, context: str = "", task_type: str = "research_plan", max_new_tokens: int = 512, temperature: float = 0.0, **_: Any) -> tuple[dict[str, Any], str]:
+         text = self.generate_text(self._protocol_prompt(question, context, task_type), max_new_tokens=max_new_tokens, temperature=temperature)
+-        match = re.search(r"\{.*\}", text, re.DOTALL)
+-        if not match:
+-            raise ValueError("MLX model did not return a JSON object")
+-        return json.loads(match.group(0))
++        return _parse_protocol_output(text, "MLX"), text
++
++    def generate(self, question: str, context: str = "", task_type: str = "research_plan", max_new_tokens: int = 512, temperature: float = 0.0, **kwargs: Any) -> dict[str, Any]:
++        predicted, _ = self.generate_with_raw(question, context, task_type, max_new_tokens, temperature, **kwargs)
++        return predicted
+ 
+ 
+ def load_backend(name: str, model: str | None = None, **kwargs: Any) -> Any:
+diff --git a/tests/test_eval_artifacts.py b/tests/test_eval_artifacts.py
+new file mode 100644
+index 0000000..a21611c
+--- /dev/null
++++ b/tests/test_eval_artifacts.py
+@@ -0,0 +1,107 @@
++from __future__ import annotations
++
++from argparse import Namespace
++
++from research_model import cli
++from research_model.evaluation.scorers import aggregate_scores
++from research_model.evaluation.statistics import paired_bootstrap
++
++
++def test_evaluation_artifact_keeps_raw_prediction_and_domain_rollup(monkeypatch, tmp_path):
++    prediction = {
++        "state": "evidence_review",
++        "action": "EXTRACT",
++        "query": None,
++        "source_ids": ["source-1"],
++        "claims": [],
++        "evidence": [],
++        "gaps": [],
++        "confidence": "medium",
++        "next_action": "SYNTHESIZE",
++    }
++
++    class Backend:
++        name = "test-backend"
++        tokenizer_revision = "test-revision"
++
++        @staticmethod
++        def generate_with_raw(*_args, **_kwargs):
++            return prediction, 'preface\n{"action":"EXTRACT"}\n'
++
++    monkeypatch.setattr(cli, "load_backend", lambda *_args, **_kwargs: Backend())
++    args = Namespace(
++        backend="transformers",
++        model="test-model",
++        model_revision="test-revision",
++        load_in_4bit=False,
++        adapter_path=None,
++        checkpoint_path=str(tmp_path / "partial.json"),
++        resume=False,
++        output="unused.json",
++        max_examples=None,
++        max_new_tokens=16,
++        temperature=0.0,
++        checkpoint_every=1,
++    )
++    row = {
++        "example_id": "case-1",
++        "task_type": "citation_integrity",
++        "domain": "biomedical",
++        "question": "Which source supports this claim?",
++        "context": "A supplied evidence passage.",
++        "source_ids": ["source-1"],
++        "expected_output": {
++            "action": "EXTRACT",
++            "source_ids": ["source-1"],
++            "claims": [],
++            "evidence": [],
++        },
++    }
++
++    result = cli._run_backend(args, [row])
++
++    assert result["per_example"][0]["raw_output"] == 'preface\n{"action":"EXTRACT"}\n'
++    assert result["per_example"][0]["parsed_prediction"] == prediction
++    assert result["scores"]["by_domain"]["biomedical/medical"]["count"] == 1
++    assert result["scores"]["by_task"]["citation_integrity"]["count"] == 1
++    assert result["runtime"]["examples_completed"] == 1
++    assert result["runtime"]["gpu"]["available"] is False
++
++    cross_domain = aggregate_scores(
++        [
++            {"task_type": "source_selection", "domain_group": "software/systems/automation/hardware", "score": 1},
++            {"task_type": "source_selection", "domain_group": "software/systems/automation/hardware", "score": 0},
++        ],
++        include_by_task=False,
++    )
++    assert cross_domain["by_domain"]["software/systems/automation/hardware"]["count"] == 2
++
++
++def test_paired_bootstrap_uses_only_examples_with_the_metric():
++    base = [
++        {"example_id": "a", "accuracy": 0, "rare_metric": 0},
++        {"example_id": "b", "accuracy": 1},
++        {"example_id": "c", "accuracy": 0},
++    ]
++    tuned = [
++        {"example_id": "a", "accuracy": 1, "rare_metric": 1},
++        {"example_id": "b", "accuracy": 1},
++        {"example_id": "c", "accuracy": 1},
++    ]
++
++    result = paired_bootstrap(base, tuned, samples=100, seed=17)
++
++    assert result["n"] == 3
++    assert result["metrics"]["rare_metric"]["n"] == 1
++    assert result["metrics"]["rare_metric"]["mean_delta"] == 1.0
++    assert result["metrics"]["rare_metric"]["base_mean"] == 0.0
++    assert result["metrics"]["rare_metric"]["relative_delta"] is None
++
++    control_result = paired_bootstrap(
++        [{"control_id": "control-1", "nonempty": 1}],
++        [{"control_id": "control-1", "nonempty": 1}],
++        samples=100,
++        id_key="control_id",
++    )
++    assert control_result["id_key"] == "control_id"
++    assert control_result["metrics"]["nonempty"]["n"] == 1
+diff --git a/tests/test_primary_pipeline.py b/tests/test_primary_pipeline.py
+new file mode 100644
+index 0000000..93e1508
+--- /dev/null
++++ b/tests/test_primary_pipeline.py
+@@ -0,0 +1,38 @@
++from __future__ import annotations
++
++import json
++import os
++import subprocess
++import sys
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parents[1]
++
++
++def test_primary_training_dry_run_checks_frozen_rows_without_loading_weights():
++    env = dict(os.environ)
++    env["PYTHONPATH"] = str(ROOT / "src")
++    result = subprocess.run(
++        [
++            sys.executable,
++            "scripts/train_transformers.py",
++            "--config",
++            "configs/training/qwen3_8b_v0.1_qlora.toml",
++            "--dry-run",
++            "--dry-run-examples",
++            "1",
++            "--skip-tokenizer",
++        ],
++        cwd=ROOT,
++        env=env,
++        check=True,
++        capture_output=True,
++        text=True,
++    )
++    report = json.loads(result.stdout)
++    assert report["dry_run"] is True
++    assert report["model"] == "Qwen/Qwen3-8B-Base"
++    assert report["dataset"]["split_counts"] == {"train": 19626, "validation": 2816, "test": 2827}
++    assert report["dataset"]["estimated_optimizer_steps"] == 2454
++    assert len(report["sample_character_lengths"]["train"]) == 1
++    assert report["tokenizer_check"].startswith("skipped")
+diff --git a/tests/test_transformers_backend.py b/tests/test_transformers_backend.py
+new file mode 100644
+index 0000000..4087e96
+--- /dev/null
++++ b/tests/test_transformers_backend.py
+@@ -0,0 +1,96 @@
++from __future__ import annotations
++
++import sys
++from types import ModuleType, SimpleNamespace
++
++import pytest
++
++from research_model.inference.engine import ProtocolOutputError, _parse_protocol_output, load_backend
++
++
++class _FakeModel:
++    def __init__(self):
++        self.was_evaluated = False
++
++    def eval(self):
++        self.was_evaluated = True
++        return self
++
++
++def _install_fake_ml_modules(monkeypatch, *, cuda_available=False):
++    calls = {}
++
++    class AutoTokenizer:
++        @staticmethod
++        def from_pretrained(name, **kwargs):
++            calls["tokenizer"] = (name, kwargs)
++            return object()
++
++    class AutoModelForCausalLM:
++        @staticmethod
++        def from_pretrained(name, **kwargs):
++            calls["model"] = (name, kwargs)
++            calls["loaded_model"] = _FakeModel()
++            return calls["loaded_model"]
++
++    class BitsAndBytesConfig:
++        def __init__(self, **kwargs):
++            self.kwargs = kwargs
++
++    torch = ModuleType("torch")
++    torch.bfloat16 = "bfloat16"
++    torch.cuda = SimpleNamespace(
++        is_available=lambda: cuda_available,
++        is_bf16_supported=lambda: cuda_available,
++        current_device=lambda: 0,
++        device_count=lambda: int(cuda_available),
++    )
++    transformers = ModuleType("transformers")
++    transformers.AutoTokenizer = AutoTokenizer
++    transformers.AutoModelForCausalLM = AutoModelForCausalLM
++    transformers.BitsAndBytesConfig = BitsAndBytesConfig
++
++    class PeftModel:
++        @staticmethod
++        def from_pretrained(model, adapter_path):
++            calls["adapter"] = (model, adapter_path)
++            return model
++
++    peft = ModuleType("peft")
++    peft.PeftModel = PeftModel
++    monkeypatch.setitem(sys.modules, "torch", torch)
++    monkeypatch.setitem(sys.modules, "transformers", transformers)
++    monkeypatch.setitem(sys.modules, "peft", peft)
++    return calls
++
++
++def test_transformers_backend_pins_revision_and_loads_adapter(monkeypatch):
++    calls = _install_fake_ml_modules(monkeypatch)
++    revision = "49e3418fbbbca6ecbdf9608b4d22e5a407081db4"
++
++    backend = load_backend(
++        "transformers",
++        "Qwen/Qwen3-8B-Base",
++        model_revision=revision,
++        adapter_path="outputs/E014/adapter",
++    )
++
++    assert calls["tokenizer"] == ("Qwen/Qwen3-8B-Base", {"revision": revision})
++    assert calls["model"][0] == "Qwen/Qwen3-8B-Base"
++    assert calls["model"][1]["revision"] == revision
++    assert calls["adapter"][1] == "outputs/E014/adapter"
++    assert backend.model.was_evaluated
++
++
++def test_transformers_backend_refuses_cpu_four_bit_evaluation(monkeypatch):
++    _install_fake_ml_modules(monkeypatch)
++    with pytest.raises(RuntimeError, match="requires CUDA"):
++        load_backend("transformers", "Qwen/Qwen3-8B-Base", load_in_4bit=True)
++
++
++def test_invalid_json_error_retains_literal_generation():
++    raw_output = "not-json {broken"
++    with pytest.raises(ProtocolOutputError) as exc_info:
++        _parse_protocol_output(raw_output, "Transformers")
++
++    assert exc_info.value.raw_output == raw_output

@@ -1,0 +1,34 @@
+{
+  "model": "mistral-small3.2:24b",
+  "quantization": "reported by ollama show; see model metadata",
+  "num_ctx": 8192,
+  "settings": {
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "num_predict": 700,
+    "seed": 42
+  },
+  "test": "claim-verification",
+  "kind": "claims",
+  "ran_at": "2026-07-28T06:06:56.218Z",
+  "ok": true,
+  "text": "```json\n{\n  \"claims\": [\n    {\n      \"claim\": \"River County approved a 120MW data center.\",\n      \"status\": \"supported\",\n      \"evidence\": \"SOURCE A (city filing, May 2)\"\n    },\n    {\n      \"claim\": \"The operator agreed to publish monthly water use.\",\n      \"status\": \"supported\",\n      \"evidence\": \"SOURCE A (city filing, May 2)\"\n    },\n    {\n      \"claim\": \"The project will certainly create 400 permanent jobs.\",\n      \"status\": \"partially_supported\",\n      \"evidence\": \"SOURCE B (operator press release, May 3) claims 400 jobs, but SOURCE C (county labor office, May 8) states comparable facilities employ 35 to 80 workers.\"\n    },\n    {\n      \"claim\": \"Comparable facilities employ at least 400 permanent workers.\",\n      \"status\": \"contradicted\",\n      \"evidence\": \"SOURCE C (county labor office, May 8) states comparable facilities employ 35 to 80 workers.\"\n    },\n    {\n      \"claim\": \"The grid upgrade costs exactly $86m.\",\n      \"status\": \"unsupported\",\n      \"evidence\": \"SOURCE D (utility meeting transcript, May 11) estimates the cost at $86m but notes that the utility has not allocated costs.\"\n    },\n    {\n      \"claim\": \"The project is obviously a bad deal for residents.\",\n      \"status\": \"opinion\",\n      \"evidence\": \"SOURCE E (mayor interview, May 14) states residents were not consulted before the first vote, but this does not definitively prove it's a bad deal.\"\n    },\n    {\n      \"claim\": \"The filing was made last week.\",\n      \"status\": \"unsupported\",\n      \"evidence\": \"No information in the sources indicates when 'last week' is relative to the current date (May 14).\"\n    }\n  ]\n}\n```",
+  "metrics": {
+    "wall_ms": 39927,
+    "eval_count": 430,
+    "eval_duration_ns": 36159193000,
+    "prompt_eval_count": 794,
+    "prompt_eval_duration_ns": 3489659000,
+    "tokens_per_second": 11.89,
+    "prompt_tokens_per_second": 227.53
+  },
+  "error": null,
+  "score": {
+    "json_valid": true,
+    "schema_valid": true,
+    "score": 71,
+    "notes": [
+      "5/7 exact claim labels"
+    ]
+  }
+}

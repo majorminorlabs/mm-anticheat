@@ -1,0 +1,50 @@
+{
+  "http_status": 200,
+  "json": {
+    "choices": [
+      {
+        "finish_reason": "tool_calls",
+        "index": 0,
+        "message": {
+          "content": "<think>\n\n</think>\n\n",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"city\": \"test-city\"}",
+                "name": "get_weather"
+              },
+              "id": "9U0qXtcS94pLS6MxfdB7UWafV947Ej61",
+              "type": "function"
+            }
+          ]
+        }
+      }
+    ],
+    "created": 1789754699,
+    "id": "chatcmpl-Q32bMbzC2IW3ia3AHz3IhA30QwQ4CKIf",
+    "model": "Qwen3-4B",
+    "object": "chat.completion",
+    "system_fingerprint": "b11028-972d2313b",
+    "timings": {
+      "cache_n": 0,
+      "predicted_ms": 2421.949,
+      "predicted_n": 21,
+      "predicted_per_second": 8.257812200009166,
+      "predicted_per_token_ms": 121.09745000000001,
+      "prompt_ms": 1477.275,
+      "prompt_n": 179,
+      "prompt_per_second": 121.16904435531637,
+      "prompt_per_token_ms": 8.252932960893855
+    },
+    "usage": {
+      "completion_tokens": 21,
+      "prompt_tokens": 179,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "total_tokens": 200
+    }
+  },
+  "raw": "{\"choices\":[{\"finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"<think>\\n\\n</think>\\n\\n\",\"tool_calls\":[{\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"test-city\\\"}\"},\"id\":\"9U0qXtcS94pLS6MxfdB7UWafV947Ej61\"}]}}],\"created\":1789754699,\"model\":\"Qwen3-4B\",\"system_fingerprint\":\"b11028-972d2313b\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":21,\"prompt_tokens\":179,\"total_tokens\":200,\"prompt_tokens_details\":{\"cached_tokens\":0}},\"id\":\"chatcmpl-Q32bMbzC2IW3ia3AHz3IhA30QwQ4CKIf\",\"timings\":{\"cache_n\":0,\"prompt_n\":179,\"prompt_ms\":1477.275,\"prompt_per_token_ms\":8.252932960893855,\"prompt_per_second\":121.16904435531637,\"predicted_n\":21,\"predicted_ms\":2421.949,\"predicted_per_token_ms\":121.09745000000001,\"predicted_per_second\":8.257812200009166}}"
+}

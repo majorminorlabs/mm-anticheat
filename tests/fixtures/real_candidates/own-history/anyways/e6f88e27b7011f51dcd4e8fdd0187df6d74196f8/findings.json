@@ -1,0 +1,41 @@
+[
+  {
+    "rule_id": "GH009",
+    "rule_name": "test-environment-detection",
+    "severity": "high",
+    "confidence": "normal",
+    "file": "src/pipeline/phase2-orchestrator.mjs",
+    "line": 262,
+    "title": "Test/CI environment referenced in source",
+    "evidence": "    const testMode = process.argv.includes('--test') || process.env.NODE_ENV === 'test';",
+    "why_flagged": "Source code can alter behavior when it detects a test runner or CI.",
+    "legit_if": "Detection configures isolated resources, timeouts or legitimate environment settings.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH008",
+    "rule_name": "exception-swallowed",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "src/pipeline/phase2-orchestrator.mjs",
+    "line": 497,
+    "title": "Catch handler discards failures",
+    "evidence": "catch { return false; }",
+    "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+    "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH008",
+    "rule_name": "exception-swallowed",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "src/pipeline/phase2-orchestrator.mjs",
+    "line": 537,
+    "title": "Catch handler discards failures",
+    "evidence": "catch { return null; }",
+    "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+    "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+    "allowed": false
+  }
+]

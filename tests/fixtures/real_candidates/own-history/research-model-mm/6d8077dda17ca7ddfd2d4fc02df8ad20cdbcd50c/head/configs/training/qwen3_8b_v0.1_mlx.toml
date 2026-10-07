@@ -1,0 +1,21 @@
+base_model = "mlx-community/Qwen3-8B-4bit"
+dataset_path = "data/generated/research-data-v0.1-expanded.jsonl"
+mlx_data_dir = "data/generated/mlx/research-data-v0.1-expanded"
+output_dir = "outputs/qwen3-8b-4bit-research-v0.1"
+seed = 17
+method = "lora"
+backend = "mlx"
+max_seq_length = 1024
+learning_rate = 0.00005
+num_layers = 8
+iters = 200
+batch_size = 1
+grad_checkpoint = true
+mask_prompt = false
+steps_per_report = 10
+steps_per_eval = 50
+save_every = 100
+test = true
+
+# This is an 8B-class MLX feasibility route, not the primary Qwen3-8B-Base
+# result. The primary base-model recipe remains the NVIDIA QLoRA config below.

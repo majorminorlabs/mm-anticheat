@@ -1,0 +1,30 @@
+{
+  "review_type": "Codex internal reading of the preselected L4 16-prompt subset; no independent human scores",
+  "subset_file": "corpus/metadata/l4_qualitative_subset.json",
+  "runs": ["L1-48", "L4-35", "L5-25", "L5-35", "L5-50"],
+  "prompt_ids": ["p01", "p02", "p04", "p06", "p07", "p10", "p12", "p16", "p18", "p29", "p33", "p38", "p42", "p43", "p48", "p50"],
+  "notes": {
+    "L1-48": {
+      "contact_and_completeness": "Usually long enough but often runs to the generation cap; p18 emits writing instructions and p50 explains a refrain instead of delivering it.",
+      "imagery_cadence_ambiguity": "p16 has a moth and exit image, but p06 and p33 develop into long prose. The writing remains uneven."
+    },
+    "L4-35": {
+      "contact_and_completeness": "p04 places rain outside the hospital, p18 invokes sailors near a lighthouse meant to be far from water, and p50 omits voicemail and refrain. Several medium prompts end mid-thought.",
+      "imagery_cadence_ambiguity": "p06 and p16 have useful images; p43 is lyric-shaped. p33 and p42 drift into extended prose."
+    },
+    "L5-25": {
+      "contact_and_completeness": "Length is usually met, but p07 misses jealousy, p18 repeats writing instructions, and p50 explains refrain construction instead of writing the requested piece. Several responses hit the token cap mid-thought.",
+      "imagery_cadence_ambiguity": "p16 has a compact moth image and p48 supplies a verse/chorus form, but p01, p10, p29, p33, and p42 are ordinary narrative prose; p38 becomes a pseudo-scientific essay and p43 a book synopsis. Overall voice is generic and explanatory."
+    },
+    "L5-35": {
+      "contact_and_completeness": "p04 is in a hospital during rain and p48 gives a verse/chorus response. p16 adds an unrelated text-editing instruction; p18 still brings ships near the landlocked beacon, p50 mentions a phone message but has no growing refrain, and p06 ends mid-sentence.",
+      "imagery_cadence_ambiguity": "p06 has a glass-and-river image and p43 has line-broken cadence. p02 uses stock sun/light rhyme, p10 and p33 ramble in prose, p29 invents a long narrative, p42 is one sprawling sentence, and p38 loses its central salt-taste image. The language is not a clear creative improvement over L4-35 or L1."
+    },
+    "L5-50": {
+      "contact_and_completeness": "p01 and p02 shrink to one line; p06, p12, p18, and p50 are far below their requested lengths or miss defining concepts. p50 contains neither voicemail nor a growing refrain.",
+      "imagery_cadence_ambiguity": "More line breaks and short lyric shapes appear, but many images are undeveloped and generic."
+    }
+  },
+  "selection": "L5-35 is the best L5 writing-review candidate; L5-25 has stronger numeric length adherence but marked explanatory prose drift. L5-35 is not a clear win over L4-35 and neither clears the L1 creative-quality gate.",
+  "limitations": "Internal qualitative assessment is not a blinded independent human preference score; automated contact and tail checks are proxies."
+}

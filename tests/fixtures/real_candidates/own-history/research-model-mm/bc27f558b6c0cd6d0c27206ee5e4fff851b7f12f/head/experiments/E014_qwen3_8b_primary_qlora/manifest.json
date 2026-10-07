@@ -1,0 +1,486 @@
+{
+  "experiment_schema_version": "1.0",
+  "experiment_id": "E014_qwen3_8b_primary_qlora",
+  "title": "Primary Qwen3-8B-Base research-behavior QLoRA experiment",
+  "status": "planned",
+  "metadata_status": "recorded_contemporaneously",
+  "manifest_created_at": "2026-09-16T12:15:47Z",
+  "research_question": "Does research-behavior specialization improve Qwen3-8B-Base on unseen research tasks while preserving useful general capabilities?",
+  "hypothesis": "The tuned 8B model will have higher macro-averaged structured validity and research-action accuracy than the untouched base on the frozen research benchmark.",
+  "secondary_hypotheses": [
+    {
+      "id": "H2",
+      "question_ids": [
+        "RQ7",
+        "RQ8"
+      ],
+      "statement": "The tuned model will improve citation precision/recall and lower unsupported-claim rate relative to the untouched base.",
+      "direction": "citation_up_unsupported_down",
+      "metrics": [
+        "citation_precision",
+        "citation_recall",
+        "unsupported_claim_rate"
+      ]
+    },
+    {
+      "id": "H3",
+      "question_ids": [
+        "RQ9"
+      ],
+      "statement": "The tuned model will improve insufficient-evidence recognition on cases where the supplied sources do not establish the requested conclusion.",
+      "direction": "tuned_gt_base",
+      "metrics": [
+        "insufficient_evidence_accuracy"
+      ]
+    },
+    {
+      "id": "H4",
+      "question_ids": [
+        "RQ2",
+        "RQ6"
+      ],
+      "statement": "Evidence attribution, source selection, and methodology-critique families will show larger gains than generic planning families.",
+      "direction": "family_interaction",
+      "metrics": [
+        "by_task"
+      ]
+    },
+    {
+      "id": "H5",
+      "question_ids": [
+        "RQ3",
+        "RQ10"
+      ],
+      "statement": "Specialization may regress at least one non-target capability unless the training mixture or a general-capability control is sufficient; this is a directional risk hypothesis, not an expected result.",
+      "direction": "risk_monitor",
+      "metrics": [
+        "control_benchmark_score"
+      ]
+    }
+  ],
+  "hypothesis_source": {
+    "path": "configs/research/primary_v0.1.json",
+    "sha256": "c73e8c65a57b24b9898561f2cb1a3d06b1c5a0b189973f20073346b0b7baf356",
+    "note": "All five frozen hypotheses are preserved verbatim; H1 is primary, H2-H5 are secondary/descriptive as specified in the frozen protocol."
+  },
+  "experiment_type": "primary_full_qlora",
+  "preregistration": {
+    "status": "READY_FOR_COMPUTE",
+    "registered_before_primary_results": true,
+    "primary_success_criterion": "H1 is supported only if both structured_valid and action_accuracy have positive tuned-minus-base paired mean deltas and their two-sided 95% paired percentile-bootstrap intervals exclude zero.",
+    "interpretive_guardrail": "A structured-validity or formatting gain without improvement in actual research decisions will not be described as broad research-competence improvement.",
+    "bootstrap": {
+      "samples": 20000,
+      "seed": 17,
+      "interval": "paired percentile 95% CI",
+      "research_id_key": "example_id",
+      "control_id_key": "control_id",
+      "undefined_metric_policy": "pair only rows with the metric defined in both conditions"
+    },
+    "multiple_comparisons": "H1 is the single primary hypothesis; H2-H5, all task families, domains, and error categories are secondary/descriptive. No post-hoc composite score."
+  },
+  "git": {
+    "commit": "cc2bf846ee05e14d0dd8434cad17005c0e4b21f4",
+    "dirty": true,
+    "status_note": "Pre-registration captures the current HEAD with a dirty working tree containing E014 preparation changes and pre-existing untracked generated data. No result-bearing run was launched and no commit was created."
+  },
+  "environment": {
+    "machine": {
+      "hostname": "dippos-Mac-Studio.local",
+      "os": "Darwin 25.6.0",
+      "architecture": "arm64",
+      "cpu": "Apple M1 Max, 10 CPU cores",
+      "gpu": "Apple M1 Max integrated GPU, 24 cores (unified memory)",
+      "gpu_count": 1,
+      "vram_gb": null,
+      "ram_gb": 32.0,
+      "hardware_probe_note": "MPS is available; no NVIDIA GPU/CUDA device is present. Unified memory is not dedicated VRAM.",
+      "unified_memory_gb": 32,
+      "disk_free_bytes": 6983729692672
+    },
+    "software": {
+      "python": "3.13.12",
+      "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+      "packages": {
+        "torch": "2.14.0",
+        "transformers": "5.17.0",
+        "peft": "0.21.0",
+        "mlx": "0.32.2",
+        "mlx-lm": "0.31.3",
+        "datasets": "5.0.1",
+        "trl": "1.13.0",
+        "bitsandbytes": "0.50.2",
+        "accelerate": "1.15.0"
+      },
+      "cuda": null,
+      "mps_available": true,
+      "uv_lock_sha256": "82e0e70b44474c2ac0f2211664b6352b870171481ca1e6167faf95333e572825"
+    },
+    "intended_hardware": {
+      "platform": "Linux x86_64",
+      "gpu": "1 x NVIDIA A100 80 GB or H100 80 GB, BF16-capable; conservative planning target, not a measured minimum",
+      "minimum_compute_capability": "8.0 (A100 class)",
+      "system_ram_gb_recommended": 64,
+      "free_disk_gb_recommended": 150,
+      "cuda_runtime": "CUDA 13.x runtime supplied by locked PyTorch/BitsAndBytes wheels",
+      "driver_requirement": "580 or newer for CUDA 13.x runtime",
+      "python": "3.13 (locally tested locked dependency set; Python >=3.11 supported by project)",
+      "flash_attention": "not required by this recipe; SDPA/default Transformers attention is used"
+    }
+  },
+  "dataset": {
+    "version": "research-data-v0.1-expanded",
+    "path": "data/generated/research-data-v0.1-expanded.jsonl",
+    "sha256": "703aceae7a28450fe9dca35be29c09cf0e64aceeda49f60e7f626b6e3708a91f",
+    "dataset_content_hash": "75283e511cb120bbb29fb95e13b7a26fa5f6b4f887ddf41079c50c4a96505cf1",
+    "row_count": 25269,
+    "split_counts": {
+      "train": 19626,
+      "validation": 2816,
+      "test": 2827
+    },
+    "split_hashes": {
+      "train": "aa28f649c2c460f8c692512eabab4c17fb59c0f500d9630c639957c89c220055",
+      "validation": "35d5e764675252779dae6879927d0ebf45b5f656558af734a65c138be827d73b",
+      "test": "d08d005a21dc4ca953ad06be582b46b6c7bfa78776732a2e02dd91a32d3aea92"
+    },
+    "strict_validation": {
+      "accepted_count": 25269,
+      "rejected_count": 0
+    },
+    "upstream_rejected_rows_not_in_candidate": 3048,
+    "training_count": 19626,
+    "training_examples_by_task_family": {
+      "citation_integrity": 2379,
+      "claim_extraction": 2379,
+      "claim_source_attribution": 855,
+      "contradiction_detection": 855,
+      "evidence_extraction": 2379,
+      "evidence_table": 2379,
+      "evidence_verification": 855,
+      "follow_up_question": 855,
+      "insufficient_evidence": 2379,
+      "missing_evidence": 855,
+      "query_refinement": 1152,
+      "research_plan": 1152,
+      "search_query_generation": 1152
+    },
+    "training_examples_by_domain": {
+      "ai_ml": 7789,
+      "behavioral_science": 13,
+      "biomedical": 9984,
+      "education": 13,
+      "general_scientific_research": 1554,
+      "software_systems": 273
+    },
+    "excluded_from_optimizer": {
+      "validation_checkpoint_selection_only": 2816,
+      "test_evaluation_only_after_training": 2827,
+      "total_candidate_rows_not_used_for_optimization": 5643
+    },
+    "tokenizer_statistics": {
+      "tokenizer_revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
+      "sequence_length_limit": 4608,
+      "training_tokens_per_epoch_including_prompt_and_eos": 23405188,
+      "planned_training_tokens_two_epochs": 46810376,
+      "train": {
+        "count": 19626,
+        "mean_tokens": 1192.56,
+        "median_tokens": 975,
+        "p95_tokens": 2282,
+        "p99_tokens": 2807,
+        "max_tokens": 4484,
+        "examples_over_limit": 0,
+        "target_token_retention": 1.0
+      },
+      "validation": {
+        "count": 2816,
+        "mean_tokens": 1186.91,
+        "median_tokens": 971,
+        "p95_tokens": 2191,
+        "p99_tokens": 2843,
+        "max_tokens": 4088,
+        "examples_over_limit": 0,
+        "target_token_retention": 1.0
+      },
+      "test": {
+        "count": 2827,
+        "mean_tokens": 1272.28,
+        "median_tokens": 1174,
+        "p95_tokens": 2426,
+        "p99_tokens": 3174,
+        "max_tokens": 3526,
+        "examples_over_limit": 0,
+        "target_token_retention": 1.0
+      }
+    },
+    "license_note": "The frozen candidate has separate attribution-required and noncommercial source classes; retain the per-row provenance and license boundary in any later artifact or release."
+  },
+  "benchmark": {
+    "version": "research-bench-v0.1",
+    "path": "benchmarks/releases/research-bench-v0.1.jsonl",
+    "sha256": "3f1f859a10f1bb34ebb22197fadfeba08f2f812c2346a9d75c2b1b7e97b878c4",
+    "benchmark_content_hash": "d44b8226ed8d5122ffedcb353761a9624917fb0bd6f6be60e5595799a0a5eb3e",
+    "count": 248,
+    "task_family_count": 31,
+    "cases_per_task_family": 8,
+    "domain_composition": {
+      "ai_ml": 62,
+      "behavioral_science": 31,
+      "biomedical": 31,
+      "education": 31,
+      "general_scientific_research": 31,
+      "hardware": 31,
+      "software_systems": 31
+    },
+    "scoring_metrics": [
+      "structured_valid",
+      "action_accuracy",
+      "citation_precision",
+      "citation_recall",
+      "claim_status_f1",
+      "evidence_recall",
+      "unsupported_claim_rate",
+      "insufficient_evidence_accuracy"
+    ],
+    "control_benchmark": {
+      "version": "general-control-v0.1",
+      "path": "benchmarks/control/general-capability-v0.1.jsonl",
+      "sha256": "b9ff1050dd05eeaf062aba8e8fce1f0a39ffc7da68754d02f011779780628636",
+      "content_hash": "1be2dc5298066bb645ec49f48157de81c09a05579bab8679d87fa86723efbad5",
+      "count": 12,
+      "scoring_note": "Keyword-based small regression guard; not a general-intelligence measure."
+    },
+    "contamination_check_before_run": {
+      "training_count": 25269,
+      "benchmark_count": 248,
+      "exact_question_context_overlap": 0,
+      "exact_examples": [],
+      "source_id_overlap": 0,
+      "overlapping_source_ids": [],
+      "near_duplicate_question_pairs": [],
+      "contaminated": false
+    },
+    "frozen_content_will_not_be_modified": true
+  },
+  "model": {
+    "name": "Qwen/Qwen3-8B-Base",
+    "revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
+    "tokenizer_revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
+    "revision_source": "read-only Hugging Face git ref lookup performed before preregistration",
+    "base_model_weights_cached_locally": false,
+    "base_quantization_for_training_and_evaluation": "NF4 4-bit, double quantization, BF16 compute",
+    "adapter_path": "outputs/qwen3-8b-research-v0.1-qlora",
+    "prompting_protocol": "Both base and tuned research evaluations use research_model.research_protocol.build_prompt with the same system instruction, task type, question, and supplied evidence; no chat template or tuned-only prompt.",
+    "research_generation": {
+      "temperature": 0.0,
+      "max_new_tokens": 512
+    },
+    "control_generation": {
+      "temperature": 0.0,
+      "max_new_tokens": 256
+    }
+  },
+  "training": {
+    "config_path": "configs/training/qwen3_8b_v0.1_qlora.toml",
+    "config_sha256": "efe00566bb8ef12a31c76f8dd4f88986643b53a964d8540f19484e1f7bd920bf",
+    "config": {
+      "base_model": "Qwen/Qwen3-8B-Base",
+      "model_revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
+      "tokenizer_revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
+      "dataset_path": "data/generated/research-data-v0.1-expanded.jsonl",
+      "dataset_file_sha256": "703aceae7a28450fe9dca35be29c09cf0e64aceeda49f60e7f626b6e3708a91f",
+      "dataset_content_hash": "75283e511cb120bbb29fb95e13b7a26fa5f6b4f887ddf41079c50c4a96505cf1",
+      "output_dir": "outputs/qwen3-8b-research-v0.1-qlora",
+      "seed": 17,
+      "method": "qlora",
+      "backend": "transformers",
+      "max_seq_length": 4608,
+      "per_device_train_batch_size": 1,
+      "gradient_accumulation_steps": 16,
+      "learning_rate": 0.0002,
+      "num_train_epochs": 2,
+      "warmup_ratio": 0.05,
+      "weight_decay": 0.01,
+      "lr_scheduler_type": "cosine",
+      "optim": "adamw_torch_fused",
+      "gradient_checkpointing": true,
+      "bf16": true,
+      "load_in_4bit": true,
+      "lora_r": 16,
+      "lora_alpha": 32,
+      "lora_dropout": 0.05,
+      "lora_target_modules": [
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "gate_proj",
+        "up_proj",
+        "down_proj"
+      ],
+      "logging_steps": 10,
+      "eval_strategy": "steps",
+      "eval_steps": 500,
+      "save_strategy": "steps",
+      "save_steps": 500,
+      "save_total_limit": 5,
+      "load_best_model_at_end": true,
+      "metric_for_best_model": "eval_loss",
+      "greater_is_better": false,
+      "include_num_input_tokens_seen": true
+    },
+    "expected_optimizer_steps": 2454,
+    "expected_warmup_steps": 123,
+    "planned_total_training_tokens": 46810376,
+    "checkpoint_policy": {
+      "evaluation_every_steps": 500,
+      "save_every_steps": 500,
+      "max_checkpoints": 5,
+      "selection_metric": "validation eval_loss, lower is better",
+      "test_split_used_for_checkpoint_selection": false,
+      "resume_policy": "resume the latest valid Trainer checkpoint; append interruption/failure events"
+    },
+    "stopping_criteria": {
+      "normal": "complete 2 epochs (2,454 optimizer steps)",
+      "early_stop": "no performance-based early stopping; stop on completion or integrity/non-finite-loss/runtime failure",
+      "invalidate_if": [
+        "dataset/config/benchmark hash mismatch",
+        "benchmark contamination",
+        "malformed targets",
+        "non-finite loss"
+      ]
+    },
+    "material_pre_run_adjustments": [
+      "Raised max_seq_length from 2048 to 4608 after exact tokenizer audit: at 2048, 1,983/19,626 training examples were truncated, 810 retained zero target tokens, and target-token retention was 87.9139%; at 4608 all train/validation/test targets are retained.",
+      "Changed checkpoint/evaluation cadence from the earlier 1,000-step/3-checkpoint policy to 500 steps and at most 5 checkpoints, with best validation eval_loss selected, to retain early/middle/final candidates without excessive checkpointing.",
+      "Set adamw_torch_fused explicitly for reproducibility; existing configuration did not specify the optimizer.",
+      "TRL 1.13.0 SFTConfig does not accept warmup_ratio; runner passes warmup_steps=ceil(2,454*0.05)=123, preserving the configured 5% warmup."
+    ],
+    "trainer_observability": [
+      "stdout/stderr",
+      "training_events.jsonl",
+      "training_run.json",
+      "loss/evaluation/learning-rate log history",
+      "input tokens seen",
+      "GPU model/count/VRAM/compute capability",
+      "CUDA runtime and driver",
+      "Torch/Transformers/PEFT/BitsAndBytes/Accelerate/Datasets/TRL/FlashAttention versions if installed",
+      "peak GPU memory allocated/reserved",
+      "duration",
+      "throughput",
+      "final adapter size",
+      "checkpoints"
+    ]
+  },
+  "execution": {
+    "command": [
+      "uv sync --locked --extra dev --extra ml",
+      "set -o pipefail; uv run --locked --extra dev --extra ml research-model baseline run --backend transformers --model Qwen/Qwen3-8B-Base --model-revision 49e3418fbbbca6ecbdf9608b4d22e5a407081db4 --dataset benchmarks/releases/research-bench-v0.1.jsonl --output data/generated/E014_qwen3-8b-base-research-bench-v0.1.json --checkpoint-path data/generated/E014_qwen3-8b-base-research-bench-v0.1.partial.json --checkpoint-every 1 --max-new-tokens 512 --temperature 0.0 --load-in-4bit 2>&1 | tee experiments/E014_qwen3_8b_primary_qlora/base-evaluation.stdout.log",
+      "uv run --locked --extra dev --extra ml research-model control evaluate --backend transformers --model Qwen/Qwen3-8B-Base --model-revision 49e3418fbbbca6ecbdf9608b4d22e5a407081db4 --label E014-base --max-new-tokens 256 --temperature 0.0 --load-in-4bit --output data/generated/E014_qwen3-8b-base-general-control-v0.1.json",
+      "set -o pipefail; uv run --locked --extra ml python scripts/train_transformers.py --config configs/training/qwen3_8b_v0.1_qlora.toml 2>&1 | tee experiments/E014_qwen3_8b_primary_qlora/training.stdout.log",
+      "set -o pipefail; uv run --locked --extra dev --extra ml research-model evaluate --backend transformers --model Qwen/Qwen3-8B-Base --model-revision 49e3418fbbbca6ecbdf9608b4d22e5a407081db4 --adapter-path outputs/qwen3-8b-research-v0.1-qlora --dataset benchmarks/releases/research-bench-v0.1.jsonl --output data/generated/E014_qwen3-8b-tuned-research-bench-v0.1.json --checkpoint-path data/generated/E014_qwen3-8b-tuned-research-bench-v0.1.partial.json --checkpoint-every 1 --max-new-tokens 512 --temperature 0.0 --load-in-4bit 2>&1 | tee experiments/E014_qwen3_8b_primary_qlora/tuned-evaluation.stdout.log",
+      "uv run --locked --extra dev --extra ml research-model control evaluate --backend transformers --model Qwen/Qwen3-8B-Base --model-revision 49e3418fbbbca6ecbdf9608b4d22e5a407081db4 --adapter-path outputs/qwen3-8b-research-v0.1-qlora --label E014-tuned --max-new-tokens 256 --temperature 0.0 --load-in-4bit --output data/generated/E014_qwen3-8b-tuned-general-control-v0.1.json",
+      "uv run --locked --extra dev --extra ml research-model stats compare --base data/generated/E014_qwen3-8b-base-research-bench-v0.1.json --tuned data/generated/E014_qwen3-8b-tuned-research-bench-v0.1.json --output paper/statistical_outputs/E014_8b_primary_paired_bootstrap.json --samples 20000 --seed 17 --id-key example_id",
+      "uv run --locked --extra dev --extra ml research-model stats compare --base data/generated/E014_qwen3-8b-base-general-control-v0.1.json --tuned data/generated/E014_qwen3-8b-tuned-general-control-v0.1.json --output paper/statistical_outputs/E014_control_paired_bootstrap.json --samples 20000 --seed 17 --id-key control_id"
+    ],
+    "readiness_status": "READY_FOR_COMPUTE",
+    "preflight_status": "passed",
+    "baseline_status": "not_run_no_cuda",
+    "training_status": "not_run_no_cuda",
+    "blocking_condition": "This Mac has MPS but no NVIDIA CUDA GPU; nvidia-smi is absent and torch.cuda.is_available() is false. The primary runner rejects CPU/Apple-GPU training. No paid compute has been authorized.",
+    "baseline_must_complete_before_training": true,
+    "commands": {
+      "dependency_setup": "uv sync --locked --extra dev --extra ml",
+      "verify_manifest_and_data": "uv run --locked research-model experiment validate --all; uv run --locked --extra ml python scripts/train_transformers.py --config configs/training/qwen3_8b_v0.1_qlora.toml --dry-run --dry-run-examples 1 --token-stats",
+      "baseline_research_benchmark": "set -o pipefail; uv run --locked --extra dev --extra ml research-model baseline run --backend transformers --model Qwen/Qwen3-8B-Base --model-revision 49e3418fbbbca6ecbdf9608b4d22e5a407081db4 --dataset benchmarks/releases/research-bench-v0.1.jsonl --output data/generated/E014_qwen3-8b-base-research-bench-v0.1.json --checkpoint-path data/generated/E014_qwen3-8b-base-research-bench-v0.1.partial.json --checkpoint-every 1 --max-new-tokens 512 --temperature 0.0 --load-in-4bit 2>&1 | tee experiments/E014_qwen3_8b_primary_qlora/base-evaluation.stdout.log",
+      "resume_baseline_research_benchmark": "set -o pipefail; uv run --locked --extra dev --extra ml research-model baseline run --backend transformers --model Qwen/Qwen3-8B-Base --model-revision 49e3418fbbbca6ecbdf9608b4d22e5a407081db4 --dataset benchmarks/releases/research-bench-v0.1.jsonl --resume --output data/generated/E014_qwen3-8b-base-research-bench-v0.1.json --checkpoint-path data/generated/E014_qwen3-8b-base-research-bench-v0.1.partial.json --checkpoint-every 1 --max-new-tokens 512 --temperature 0.0 --load-in-4bit 2>&1 | tee experiments/E014_qwen3_8b_primary_qlora/base-evaluation.stdout.log",
+      "baseline_general_control": "uv run --locked --extra dev --extra ml research-model control evaluate --backend transformers --model Qwen/Qwen3-8B-Base --model-revision 49e3418fbbbca6ecbdf9608b4d22e5a407081db4 --label E014-base --max-new-tokens 256 --temperature 0.0 --load-in-4bit --output data/generated/E014_qwen3-8b-base-general-control-v0.1.json",
+      "training": "set -o pipefail; uv run --locked --extra ml python scripts/train_transformers.py --config configs/training/qwen3_8b_v0.1_qlora.toml 2>&1 | tee experiments/E014_qwen3_8b_primary_qlora/training.stdout.log",
+      "resume_training": "set -o pipefail; uv run --locked --extra ml python scripts/train_transformers.py --config configs/training/qwen3_8b_v0.1_qlora.toml --resume 2>&1 | tee -a experiments/E014_qwen3_8b_primary_qlora/training.stdout.log",
+      "tuned_research_benchmark": "set -o pipefail; uv run --locked --extra dev --extra ml research-model evaluate --backend transformers --model Qwen/Qwen3-8B-Base --model-revision 49e3418fbbbca6ecbdf9608b4d22e5a407081db4 --adapter-path outputs/qwen3-8b-research-v0.1-qlora --dataset benchmarks/releases/research-bench-v0.1.jsonl --output data/generated/E014_qwen3-8b-tuned-research-bench-v0.1.json --checkpoint-path data/generated/E014_qwen3-8b-tuned-research-bench-v0.1.partial.json --checkpoint-every 1 --max-new-tokens 512 --temperature 0.0 --load-in-4bit 2>&1 | tee experiments/E014_qwen3_8b_primary_qlora/tuned-evaluation.stdout.log",
+      "resume_tuned_research_benchmark": "set -o pipefail; uv run --locked --extra dev --extra ml research-model evaluate --backend transformers --model Qwen/Qwen3-8B-Base --model-revision 49e3418fbbbca6ecbdf9608b4d22e5a407081db4 --adapter-path outputs/qwen3-8b-research-v0.1-qlora --dataset benchmarks/releases/research-bench-v0.1.jsonl --resume --output data/generated/E014_qwen3-8b-tuned-research-bench-v0.1.json --checkpoint-path data/generated/E014_qwen3-8b-tuned-research-bench-v0.1.partial.json --checkpoint-every 1 --max-new-tokens 512 --temperature 0.0 --load-in-4bit 2>&1 | tee experiments/E014_qwen3_8b_primary_qlora/tuned-evaluation.stdout.log",
+      "tuned_general_control": "uv run --locked --extra dev --extra ml research-model control evaluate --backend transformers --model Qwen/Qwen3-8B-Base --model-revision 49e3418fbbbca6ecbdf9608b4d22e5a407081db4 --adapter-path outputs/qwen3-8b-research-v0.1-qlora --label E014-tuned --max-new-tokens 256 --temperature 0.0 --load-in-4bit --output data/generated/E014_qwen3-8b-tuned-general-control-v0.1.json",
+      "paired_research_analysis": "uv run --locked --extra dev --extra ml research-model stats compare --base data/generated/E014_qwen3-8b-base-research-bench-v0.1.json --tuned data/generated/E014_qwen3-8b-tuned-research-bench-v0.1.json --output paper/statistical_outputs/E014_8b_primary_paired_bootstrap.json --samples 20000 --seed 17 --id-key example_id",
+      "paired_control_analysis": "uv run --locked --extra dev --extra ml research-model stats compare --base data/generated/E014_qwen3-8b-base-general-control-v0.1.json --tuned data/generated/E014_qwen3-8b-tuned-general-control-v0.1.json --output paper/statistical_outputs/E014_control_paired_bootstrap.json --samples 20000 --seed 17 --id-key control_id"
+    },
+    "planned_artifacts": [
+      "data/generated/E014_qwen3-8b-base-research-bench-v0.1.json",
+      "data/generated/E014_qwen3-8b-base-research-bench-v0.1.partial.json",
+      "data/generated/E014_qwen3-8b-base-general-control-v0.1.json",
+      "outputs/qwen3-8b-research-v0.1-qlora/training_run.json",
+      "outputs/qwen3-8b-research-v0.1-qlora/training_events.jsonl",
+      "outputs/qwen3-8b-research-v0.1-qlora",
+      "data/generated/E014_qwen3-8b-tuned-research-bench-v0.1.json",
+      "data/generated/E014_qwen3-8b-tuned-research-bench-v0.1.partial.json",
+      "data/generated/E014_qwen3-8b-tuned-general-control-v0.1.json",
+      "paper/statistical_outputs/E014_8b_primary_paired_bootstrap.json",
+      "paper/statistical_outputs/E014_control_paired_bootstrap.json",
+      "experiments/E014_qwen3_8b_primary_qlora/error_taxonomy.json",
+      "experiments/E014_qwen3_8b_primary_qlora/summary.md"
+    ],
+    "gpu_time_estimate": {
+      "training_hours": [
+        8,
+        16
+      ],
+      "research_and_control_evaluation_hours": [
+        1,
+        3
+      ],
+      "total_gpu_hours": [
+        9,
+        19
+      ],
+      "confidence": "rough conservative planning envelope; no target-GPU measurement exists"
+    },
+    "cost_incurred_usd": 0,
+    "paid_compute_authorized": false,
+    "public_release_authorized": false
+  },
+  "artifacts": {
+    "summary_path": "/Volumes/Research/research-model-mm/experiments/E014_qwen3_8b_primary_qlora/summary.md",
+    "primary_outputs_created": false
+  },
+  "results": {
+    "status": "not_run",
+    "base_metrics": null,
+    "tuned_metrics": null,
+    "paired_analysis": null,
+    "control_analysis": null,
+    "error_taxonomy": null
+  },
+  "interpretation": {
+    "status": "not_interpreted",
+    "domain_reporting_groups": [
+      "AI/ML/computing",
+      "software/systems/automation/hardware",
+      "biomedical/medical",
+      "behavioral science/psychology",
+      "education/learning science",
+      "general scientific/technical"
+    ],
+    "task_family_results": "report the actual frozen benchmark task taxonomy and sample counts",
+    "unscored_task_dimensions": [
+      "independent source-rank accuracy",
+      "source-rejection accuracy",
+      "evidence precision",
+      "contradiction-specific accuracy",
+      "methodology-quality score"
+    ],
+    "unscored_dimensions_policy": "do not invent post-hoc metrics; describe relevant task-family results with the existing frozen scores and raw outputs",
+    "control_claim_limit": "the 12-item keyword control supports only a narrow descriptive regression check",
+    "feasibility_comparison": "E011-E013 are MLX feasibility results only and will not be pooled with this primary NVIDIA experiment"
+  },
+  "limitations": [
+    "No primary baseline or training run has completed; E010 was interrupted and E011-E013 used an MLX-converted model, not Qwen3-8B-Base.",
+    "The frozen benchmark contains 248 controlled cases across 31 task families (8 per family); domain estimates are small and descriptive.",
+    "Training data are domain-skewed: training split includes only 13 behavioral-science and 13 education examples, 273 software-systems examples, and 9,984 biomedical examples.",
+    "Insufficient-evidence metric has only 8 eligible benchmark cases.",
+    "The 12-case general control is a lightweight keyword regression guard.",
+    "The dataset retains attribution-required and noncommercial source terms; no public release or relicensing is authorized.",
+    "The estimated GPU runtime is not measured and may vary substantially with hardware, driver, storage, kernel, and throughput."
+  ],
+  "conclusion": "No primary conclusion is available. E014 is preregistered and READY_FOR_COMPUTE; launch only on suitable already-accessible NVIDIA hardware or after separate authorization for external paid compute.",
+  "missing_metadata": []
+}

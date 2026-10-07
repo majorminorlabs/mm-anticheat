@@ -1,0 +1,1 @@
+import { Queue } from '../src/queue/client.js'; import { readConfig } from '../src/config.js'; const queue = new Queue(readConfig()); const { data, error } = await queue.db.from('pipeline_jobs').select('*').order('created_at', { ascending: false }).limit(50); if (error) throw error; console.log(JSON.stringify(data, null, 2));

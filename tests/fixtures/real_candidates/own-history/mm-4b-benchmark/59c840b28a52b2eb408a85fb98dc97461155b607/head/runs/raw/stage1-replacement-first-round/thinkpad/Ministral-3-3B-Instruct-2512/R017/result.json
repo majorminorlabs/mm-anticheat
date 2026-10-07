@@ -1,0 +1,234 @@
+{
+  "attempt_id": "R017-attempt-001",
+  "elapsed_s": 15.765674829483032,
+  "errors": [
+    "model_malformed_arguments"
+  ],
+  "events": [
+    {
+      "arguments": {
+        "workers": [
+          "node-a",
+          "node-b",
+          "node-c"
+        ]
+      },
+      "ok": true,
+      "response": {
+        "node-a": {
+          "gpu": false,
+          "load": 96
+        },
+        "node-b": {
+          "gpu": true,
+          "load": 31
+        },
+        "node-c": {
+          "gpu": false,
+          "load": 42
+        }
+      },
+      "state": {
+        "queues": {
+          "node-a": [
+            {
+              "affinity": "gpu",
+              "id": "j-gpu"
+            },
+            {
+              "affinity": "cpu",
+              "id": "j-cpu"
+            }
+          ]
+        },
+        "workers": {
+          "node-a": {
+            "gpu": false,
+            "load": 96
+          },
+          "node-b": {
+            "gpu": true,
+            "load": 31
+          },
+          "node-c": {
+            "gpu": false,
+            "load": 42
+          }
+        }
+      },
+      "tool": "get_workers",
+      "type": "tool_call"
+    },
+    {
+      "arguments": {
+        "node": "node-a"
+      },
+      "ok": true,
+      "response": [
+        {
+          "affinity": "gpu",
+          "id": "j-gpu"
+        },
+        {
+          "affinity": "cpu",
+          "id": "j-cpu"
+        }
+      ],
+      "state": {
+        "queues": {
+          "node-a": [
+            {
+              "affinity": "gpu",
+              "id": "j-gpu"
+            },
+            {
+              "affinity": "cpu",
+              "id": "j-cpu"
+            }
+          ]
+        },
+        "workers": {
+          "node-a": {
+            "gpu": false,
+            "load": 96
+          },
+          "node-b": {
+            "gpu": true,
+            "load": 91
+          },
+          "node-c": {
+            "gpu": false,
+            "load": 39
+          }
+        }
+      },
+      "tool": "get_queue",
+      "type": "tool_call"
+    },
+    {
+      "arguments": {
+        "destination_nodes": [
+          "node-b",
+          "node-c"
+        ],
+        "jobs": [
+          {
+            "affinity": "gpu",
+            "id": "j-gpu"
+          },
+          {
+            "affinity": "cpu",
+            "id": "j-cpu"
+          }
+        ],
+        "source_node": "node-a"
+      },
+      "invalid": true,
+      "ok": false,
+      "response": "malformed_arguments:KeyError:'destination'",
+      "tool": "move_jobs",
+      "type": "tool_call"
+    },
+    {
+      "reason": "model_stop",
+      "state": {
+        "queues": {
+          "node-a": [
+            {
+              "affinity": "gpu",
+              "id": "j-gpu"
+            },
+            {
+              "affinity": "cpu",
+              "id": "j-cpu"
+            }
+          ]
+        },
+        "workers": {
+          "node-a": {
+            "gpu": false,
+            "load": 96
+          },
+          "node-b": {
+            "gpu": true,
+            "load": 91
+          },
+          "node-c": {
+            "gpu": false,
+            "load": 39
+          }
+        }
+      },
+      "type": "termination"
+    }
+  ],
+  "model": "Ministral-3-3B-Instruct-2512",
+  "raw_response_count": 3,
+  "resource_samples": [
+    {
+      "epoch": 1789760904.5803435,
+      "mem": {
+        "MemAvailable": 6932942848,
+        "SwapFree": 17656905728,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2155401216
+      },
+      "phase": "before_request",
+      "pid": 88332,
+      "rss_bytes": 482799616
+    },
+    {
+      "epoch": 1789760911.4992244,
+      "mem": {
+        "MemAvailable": 6824628224,
+        "SwapFree": 17656905728,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2155401216
+      },
+      "phase": "after_get_workers",
+      "pid": 88332,
+      "rss_bytes": 587292672
+    },
+    {
+      "epoch": 1789760913.1961427,
+      "mem": {
+        "MemAvailable": 6824636416,
+        "SwapFree": 17656905728,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2155401216
+      },
+      "phase": "after_get_queue",
+      "pid": 88332,
+      "rss_bytes": 587300864
+    },
+    {
+      "epoch": 1789760920.3423216,
+      "mem": {
+        "MemAvailable": 6824689664,
+        "SwapFree": 17656905728,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2155401216
+      },
+      "phase": "after_move_jobs",
+      "pid": 88332,
+      "rss_bytes": 587304960
+    },
+    {
+      "epoch": 1789760920.3427732,
+      "mem": {
+        "MemAvailable": 6824689664,
+        "SwapFree": 17656905728,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2155401216
+      },
+      "phase": "after_request",
+      "pid": 88332,
+      "rss_bytes": 587304960
+    }
+  ],
+  "run_id": "R017",
+  "status": "complete",
+  "task": "Q05",
+  "transport_errors": [],
+  "turns": 3
+}

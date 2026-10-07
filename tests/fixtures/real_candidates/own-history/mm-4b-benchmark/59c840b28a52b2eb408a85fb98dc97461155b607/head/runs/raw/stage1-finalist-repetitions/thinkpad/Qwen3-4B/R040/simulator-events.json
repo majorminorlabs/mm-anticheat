@@ -1,0 +1,151 @@
+[
+  {
+    "arguments": {
+      "node-a": true
+    },
+    "ok": true,
+    "response": [
+      {
+        "affinity": "gpu",
+        "id": "j-gpu"
+      },
+      {
+        "affinity": "cpu",
+        "id": "j-cpu"
+      }
+    ],
+    "state": {
+      "queues": {
+        "node-a": [
+          {
+            "affinity": "gpu",
+            "id": "j-gpu"
+          },
+          {
+            "affinity": "cpu",
+            "id": "j-cpu"
+          }
+        ]
+      },
+      "workers": {
+        "node-a": {
+          "gpu": false,
+          "load": 96
+        },
+        "node-b": {
+          "gpu": true,
+          "load": 91
+        },
+        "node-c": {
+          "gpu": false,
+          "load": 39
+        }
+      }
+    },
+    "tool": "get_queue",
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "node-a": true,
+      "node-b": true,
+      "node-c": true
+    },
+    "ok": true,
+    "response": {
+      "node-a": {
+        "gpu": false,
+        "load": 96
+      },
+      "node-b": {
+        "gpu": true,
+        "load": 91
+      },
+      "node-c": {
+        "gpu": false,
+        "load": 39
+      }
+    },
+    "state": {
+      "queues": {
+        "node-a": [
+          {
+            "affinity": "gpu",
+            "id": "j-gpu"
+          },
+          {
+            "affinity": "cpu",
+            "id": "j-cpu"
+          }
+        ]
+      },
+      "workers": {
+        "node-a": {
+          "gpu": false,
+          "load": 96
+        },
+        "node-b": {
+          "gpu": true,
+          "load": 91
+        },
+        "node-c": {
+          "gpu": false,
+          "load": 39
+        }
+      }
+    },
+    "tool": "get_workers",
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "node-a": [
+        "j-gpu",
+        "j-cpu"
+      ],
+      "node-b": [
+        "j-gpu"
+      ],
+      "node-c": [
+        "j-cpu"
+      ]
+    },
+    "invalid": true,
+    "ok": false,
+    "response": "malformed_arguments:KeyError:'destination'",
+    "tool": "move_jobs",
+    "type": "tool_call"
+  },
+  {
+    "reason": "model_stop",
+    "state": {
+      "queues": {
+        "node-a": [
+          {
+            "affinity": "gpu",
+            "id": "j-gpu"
+          },
+          {
+            "affinity": "cpu",
+            "id": "j-cpu"
+          }
+        ]
+      },
+      "workers": {
+        "node-a": {
+          "gpu": false,
+          "load": 96
+        },
+        "node-b": {
+          "gpu": true,
+          "load": 91
+        },
+        "node-c": {
+          "gpu": false,
+          "load": 39
+        }
+      }
+    },
+    "type": "termination"
+  }
+]

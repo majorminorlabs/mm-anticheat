@@ -1,0 +1,264 @@
+[
+  {
+    "arguments": {},
+    "ok": true,
+    "response": {
+      "paused": false
+    },
+    "state": {
+      "config": {
+        "DOCUMENT_ROOT": "/data/archive"
+      },
+      "jobs": {
+        "j1": {
+          "path": "relative",
+          "status": "failed"
+        },
+        "j2": {
+          "path": "relative",
+          "status": "failed"
+        },
+        "j3": {
+          "database_record": true,
+          "path": "relative",
+          "status": "failed"
+        },
+        "j4": {
+          "path": "relative",
+          "status": "failed"
+        },
+        "older_8": {
+          "paths": "absolute",
+          "status": "workable"
+        }
+      },
+      "logs": [
+        "storage read timeout"
+      ],
+      "new_jobs_may_arrive": true,
+      "queue": {
+        "name": "documents",
+        "paused": false,
+        "pending": 12
+      },
+      "services": {
+        "document-worker": {
+          "healthy": true
+        }
+      }
+    },
+    "tool": "resume_queue",
+    "type": "tool_call"
+  },
+  {
+    "arguments": {},
+    "ok": true,
+    "response": {
+      "name": "documents",
+      "paused": false,
+      "pending": 12
+    },
+    "state": {
+      "config": {
+        "DOCUMENT_ROOT": "/data/archive"
+      },
+      "jobs": {
+        "j1": {
+          "path": "relative",
+          "status": "failed"
+        },
+        "j2": {
+          "path": "relative",
+          "status": "failed"
+        },
+        "j3": {
+          "database_record": true,
+          "path": "relative",
+          "status": "failed"
+        },
+        "j4": {
+          "path": "relative",
+          "status": "failed"
+        },
+        "older_8": {
+          "paths": "absolute",
+          "status": "workable"
+        }
+      },
+      "logs": [
+        "storage read timeout"
+      ],
+      "new_jobs_may_arrive": true,
+      "queue": {
+        "name": "documents",
+        "paused": false,
+        "pending": 12
+      },
+      "services": {
+        "document-worker": {
+          "healthy": true
+        }
+      }
+    },
+    "tool": "get_queue",
+    "type": "tool_call"
+  },
+  {
+    "arguments": {},
+    "ok": true,
+    "response": {
+      "paused": false
+    },
+    "state": {
+      "config": {
+        "DOCUMENT_ROOT": "/data/archive"
+      },
+      "jobs": {
+        "j1": {
+          "path": "relative",
+          "status": "failed"
+        },
+        "j2": {
+          "path": "relative",
+          "status": "failed"
+        },
+        "j3": {
+          "database_record": true,
+          "path": "relative",
+          "status": "failed"
+        },
+        "j4": {
+          "path": "relative",
+          "status": "failed"
+        },
+        "older_8": {
+          "paths": "absolute",
+          "status": "workable"
+        }
+      },
+      "logs": [
+        "storage read timeout"
+      ],
+      "new_jobs_may_arrive": true,
+      "queue": {
+        "name": "documents",
+        "paused": false,
+        "pending": 12
+      },
+      "services": {
+        "document-worker": {
+          "healthy": true
+        }
+      }
+    },
+    "tool": "resume_queue",
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "job_id": "j1"
+    },
+    "ok": true,
+    "response": null,
+    "state": {
+      "config": {
+        "DOCUMENT_ROOT": "/data/archive"
+      },
+      "jobs": {
+        "j1": {
+          "path": "relative",
+          "status": "failed"
+        },
+        "j2": {
+          "path": "relative",
+          "status": "failed"
+        },
+        "j3": {
+          "database_record": true,
+          "path": "relative",
+          "status": "failed"
+        },
+        "j4": {
+          "path": "relative",
+          "status": "failed"
+        },
+        "older_8": {
+          "paths": "absolute",
+          "status": "workable"
+        }
+      },
+      "logs": [
+        "storage read timeout"
+      ],
+      "new_jobs_may_arrive": true,
+      "queue": {
+        "name": "documents",
+        "paused": false,
+        "pending": 12
+      },
+      "services": {
+        "document-worker": {
+          "healthy": true
+        }
+      }
+    },
+    "tool": "get_job",
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "job_id": "j3"
+    },
+    "invalid": true,
+    "ok": false,
+    "response": "malformed_arguments:KeyError:'id'",
+    "tool": "retry_job",
+    "type": "tool_call"
+  },
+  {
+    "reason": "model_stop",
+    "state": {
+      "config": {
+        "DOCUMENT_ROOT": "/data/archive"
+      },
+      "jobs": {
+        "j1": {
+          "path": "relative",
+          "status": "failed"
+        },
+        "j2": {
+          "path": "relative",
+          "status": "failed"
+        },
+        "j3": {
+          "database_record": true,
+          "path": "relative",
+          "status": "failed"
+        },
+        "j4": {
+          "path": "relative",
+          "status": "failed"
+        },
+        "older_8": {
+          "paths": "absolute",
+          "status": "workable"
+        }
+      },
+      "logs": [
+        "storage read timeout"
+      ],
+      "new_jobs_may_arrive": true,
+      "queue": {
+        "name": "documents",
+        "paused": false,
+        "pending": 12
+      },
+      "services": {
+        "document-worker": {
+          "healthy": true
+        }
+      }
+    },
+    "type": "termination"
+  }
+]

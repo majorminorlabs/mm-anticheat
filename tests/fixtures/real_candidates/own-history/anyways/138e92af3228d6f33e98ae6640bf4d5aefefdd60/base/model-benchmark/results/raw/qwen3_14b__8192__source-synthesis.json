@@ -1,0 +1,32 @@
+{
+  "model": "qwen3:14b",
+  "quantization": "reported by ollama show; see model metadata",
+  "num_ctx": 8192,
+  "settings": {
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "num_predict": 700,
+    "seed": 42
+  },
+  "test": "source-synthesis",
+  "kind": "json",
+  "ran_at": "2026-07-28T05:32:39.800Z",
+  "ok": true,
+  "text": "{\n  \"supported_facts\": [\n    \"River County approved a 120MW data center.\",\n    \"The operator agreed to publish monthly water use.\",\n    \"The facility will create 400 permanent jobs (per operator press release).\"\n  ],\n  \"uncertain_facts\": [\n    \"Whether the 400 permanent jobs claim is accurate, given that comparable facilities employ 35 to 80 permanent workers.\"\n  ],\n  \"conflicting_claims\": [\n    \"The operator claims 400 permanent jobs, but comparable facilities employ 35 to 80 permanent workers.\"\n  ],\n  \"timeline\": [\n    \"May 2: River County approved the data center.\",\n    \"May 3: Operator press release about job creation.\",\n    \"May 8: County labor office notes employment ranges for similar facilities.\",\n    \"May 11: Utility meeting transcript discusses grid upgrade costs.\",\n    \"May 14: Mayor interview mentions lack of resident consultation.\"\n  ],\n  \"claim_to_source\": {\n    \"River County approved a 120MW data center\": \"SOURCE A\",\n    \"Operator agreed to publish monthly water use\": \"SOURCE A\",\n    \"Facility will create 400 permanent jobs\": \"SOURCE B\",\n    \"Comparable facilities employ 35 to 80 permanent workers\": \"SOURCE C\",\n    \"Local grid upgrade estimated at $86m, utility has not allocated costs\": \"SOURCE D\",\n    \"Residents were not consulted before the first vote\": \"SOURCE E\"\n  },\n  \"missing_evidence\": [\n    \"Details on how the 400 job claim compares to industry standards.\",\n    \"Information on how the data center's water use will be monitored or regulated.\",\n    \"Clarification on whether the utility will eventually cover the $86m grid upgrade.\"\n  ],\n  \"exclude_from_article\": [\n    \"Generic business or AI news.\"\n  ],\n  \"suggested_angle\": {\n    \"primarySection\": \"Systems\",\n    \"beats\": [\"cities\", \"systems\"],\n    \"tags\": [\"data centers\", \"infrastructure\", \"local government\"],\n    \"significanceRationale\": \"The approval of the data center highlights the tension between economic development and community engagement, as well as the challenges of aligning infrastructure needs with local resources and expectations. It also raises questions about the accuracy of job creation claims and the financial responsibilities of utilities in supporting large-scale projects.\",\n    \"coreQuestion\": \"How do local governments balance economic incentives with community needs and infrastructure realities when approving large-scale projects like data centers?\"\n  }\n}",
+  "metrics": {
+    "wall_ms": 38336,
+    "eval_count": 538,
+    "eval_duration_ns": 36766179000,
+    "prompt_eval_count": 530,
+    "prompt_eval_duration_ns": 1394112000,
+    "tokens_per_second": 14.63,
+    "prompt_tokens_per_second": 380.17
+  },
+  "error": null,
+  "score": {
+    "json_valid": true,
+    "schema_valid": true,
+    "score": 100,
+    "notes": []
+  }
+}

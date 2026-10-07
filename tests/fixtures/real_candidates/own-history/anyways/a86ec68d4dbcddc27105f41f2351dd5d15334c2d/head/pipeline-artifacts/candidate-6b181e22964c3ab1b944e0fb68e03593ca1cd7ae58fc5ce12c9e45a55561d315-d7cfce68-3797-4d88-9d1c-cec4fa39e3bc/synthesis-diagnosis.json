@@ -1,0 +1,12 @@
+{
+  "stage": "synthesis",
+  "conclusion": "The monolithic synthesis response was truncated twice at the configured 800 generated-token ceiling. Both attempts have eval_count equal to the ceiling, invalid incomplete JSON, and missing required mappings. The schema required repeated long prose across eight arrays plus claim mappings, while the prompt supplied a large source packet. The model emitted JSON only; no out-of-band reasoning was observed. The repair repeated the full context and did not reduce the requested output shape.",
+  "evidence": {
+    "attempt_1": { "eval_count": 800, "max_tokens": 800, "raw_json_complete": false },
+    "attempt_2": { "eval_count": 800, "max_tokens": 800, "raw_json_complete": false },
+    "source_count": 1,
+    "prompt_eval_count_attempt_1": 4098,
+    "failure_mode": ["output_truncation", "oversized monolithic schema", "verbose duplicated prose", "repair context repetition"]
+  },
+  "remediation": "Replace synthesis with source-level extraction, deterministic normalization, bounded conflict analysis, and deterministic packet assembly. Preserve source IDs and fail closed after one compact repair."
+}

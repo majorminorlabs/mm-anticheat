@@ -1,0 +1,32 @@
+{
+  "model": "gemma3:27b",
+  "quantization": "reported by ollama show; see model metadata",
+  "num_ctx": 8192,
+  "settings": {
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "num_predict": 700,
+    "seed": 42
+  },
+  "test": "source-synthesis",
+  "kind": "json",
+  "ran_at": "2026-07-28T05:50:05.160Z",
+  "ok": true,
+  "text": "```json\n{\n  \"supported_facts\": [\n    \"River County approved a 120MW data center.\",\n    \"The operator of the data center agreed to publish monthly water use.\",\n    \"The local grid will require an $86 million upgrade.\",\n    \"Residents were not consulted before the initial vote.\"\n  ],\n  \"uncertain_facts\": [\n    \"The facility will create 400 permanent jobs (disputed by County Labor Office data).\"\n  ],\n  \"conflicting_claims\": [\n    {\n      \"claim\": \"The facility will create 400 permanent jobs.\",\n      \"source\": \"SOURCE B\",\n      \"counterclaim\": \"Comparable facilities employ 35 to 80 permanent workers.\",\n      \"source\": \"SOURCE C\"\n    }\n  ],\n  \"timeline\": [\n    {\"date\": \"May 2\", \"event\": \"River County approves data center with water usage reporting condition.\"},\n    {\"date\": \"May 3\", \"event\": \"Data center operator announces 400 jobs.\"},\n    {\"date\": \"May 8\", \"event\": \"County Labor Office reports comparable facilities employ fewer workers (35-80).\"},\n    {\"date\": \"May 11\", \"event\": \"Utility meeting reveals $86m grid upgrade cost, funding not allocated.\"},\n    {\"date\": \"May 14\", \"event\": \"Mayor confirms lack of resident consultation.\"}\n  ],\n  \"claim_to_source\": {\n    \"Data center approval\": \"SOURCE A\",\n    \"Job creation claim\": \"SOURCE B\",\n    \"Employment comparison\": \"SOURCE C\",\n    \"Grid upgrade cost\": \"SOURCE D\",\n    \"Lack of resident consultation\": \"SOURCE E\"\n  },\n  \"missing_evidence\": [\n    \"Details on the type of data to be stored/processed at the facility.\",\n    \"Environmental impact assessment beyond water usage.\",\n    \"Specifics of the agreement regarding water use publication (frequency, accessibility).\",\n    \"How the $86m grid upgrade cost will be allocated.\"\n  ],\n  \"exclude_from_article\": [\n    \"Generic data center announcement without deeper analysis.\"\n  ],\n  \"suggested_angle\": {\n    \"primarySection\": \"Systems\",\n    \"beats\": [\"cities\"],\n    \"tags\": [\"infrastructure\", \"local government\", \"data centers\", \"water usage\"],\n    \"significanceRationale\": \"Reveals a hidden system: the opaque process by which large infrastructure projects are approved, and the costs (financial and social) that are often externalized or overlooked. The conflict between promised jobs and realistic employment numbers highlights how economic benefits can be overstated to gain approval.\",\n    \"coreQuestion\": \"What trade-offs are communities making when they approve massive data centers, and who ultimately bears the cost?\"\n  }\n}\n```",
+  "metrics": {
+    "wall_ms": 74431,
+    "eval_count": 629,
+    "eval_duration_ns": 67276664999,
+    "prompt_eval_count": 528,
+    "prompt_eval_duration_ns": 6628679000,
+    "tokens_per_second": 9.35,
+    "prompt_tokens_per_second": 79.65
+  },
+  "error": null,
+  "score": {
+    "json_valid": true,
+    "schema_valid": true,
+    "score": 100,
+    "notes": []
+  }
+}

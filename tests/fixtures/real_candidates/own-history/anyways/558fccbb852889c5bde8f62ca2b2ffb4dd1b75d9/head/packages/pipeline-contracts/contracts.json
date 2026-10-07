@@ -1,0 +1,42 @@
+{
+  "pipeline_versions": {
+    "request": "v1",
+    "storage": "pipeline-v1"
+  },
+  "research_requirements": ["none", "required"],
+  "resource_classes": {
+    "cloud_codex_generation": "cloud-codex-generation",
+    "legacy_local_heavy_model": "local-heavy-model"
+  },
+  "resource_locks": {
+    "cloud_codex_generation": "cloud_codex_generation",
+    "legacy_local_heavy_model": "heavy_model"
+  },
+  "v1_limits": {
+    "max_attempts": 1,
+    "phase2_timeout_seconds": 2400
+  },
+  "models": {
+    "discovery": {"model": "gpt-5.6-luna", "reasoning": "high"},
+    "research": {"model": "gpt-5.6-terra", "reasoning": "high"},
+    "draft": {"model": "gpt-5.6-luna", "reasoning": "high"},
+    "polish": {"model": "gpt-5.6-sol", "reasoning": "medium"}
+  },
+  "rpc_names": {
+    "commission_v1": "commission_editorial_pitch_v1",
+    "persist_phase2_stage": "persist_pipeline_phase2_stage_v3",
+    "research_again": "authorize_pipeline_v1_research_again",
+    "sol_polish": "authorize_pipeline_v1_sol_polish"
+  },
+  "job_types": [
+    "commission_article",
+    "create_editorial_pitch",
+    "discover",
+    "run_editorial_batch",
+    "process_candidate",
+    "polish_candidate",
+    "retry_run",
+    "sync_candidate",
+    "health_check"
+  ]
+}

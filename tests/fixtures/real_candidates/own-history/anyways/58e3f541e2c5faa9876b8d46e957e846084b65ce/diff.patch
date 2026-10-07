@@ -1,0 +1,13 @@
+diff --git a/package.json b/package.json
+index 5a86b40..d72d9c0 100644
+--- a/package.json
++++ b/package.json
+@@ -11,7 +11,7 @@
+     "build": "npm run build:client && npm run build:worker",
+     "build:client": "esbuild src/app.mjs --bundle --minify --outfile=public/app.js",
+     "build:worker": "wrangler deploy --dry-run --outdir=dist",
+-    "test": "node --test",
++    "test": "node --test test/*.test.mjs",
+     "lint": "node --check bin/anyways-ops.mjs && node --check bin/anyways-pipeline-command.mjs && node --check src/app.mjs && node --check src/article-commission.mjs && node --check src/article-renderer.mjs && node --check src/image-rights-policy.mjs && node --check src/newsroom-media.mjs && node --check src/worker.mjs && node --check src/pipeline/codex-writer.mjs && node --check src/pipeline/pitch.mjs && node --check src/pipeline/commission.mjs && node --check src/pipeline/phase2-orchestrator.mjs && node --check src/pipeline/phase2-state.mjs && node --check src/pipeline/phase2-prompts.mjs && node --check src/pipeline/article-markdown.mjs",
+     "pipeline": "node bin/anyways-ops.mjs",
+     "pipeline:legacy-structured": "node bin/anyways-pipeline.mjs",

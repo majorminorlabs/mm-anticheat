@@ -1,0 +1,132 @@
+{
+  "architecture": "Qwen3ForCausalLM",
+  "attention_heads": 32,
+  "bf16_base_gib": 7.493,
+  "bucket_exposure_50": {
+    "longer": 95,
+    "medium": 161,
+    "short": 124,
+    "very_short": 20
+  },
+  "dataset_hashes": {
+    "heldout": "b3b227badf80ca02e56b37c9c42d6980c1cb3a7c4786bcc397517ff62864d865",
+    "train": "a5c3cb2ef60b1fae7e8d11a956c96935f518ae3fb047636000dc327937ca7608",
+    "validation": "504ee376e676a74bf55934a19a3673c6973b948d495d1a76e36d33f969c7b1e9"
+  },
+  "draws_50": 400,
+  "estimated_disk_gib": "at least 30 for model cache, optimizer, five adapters, logs",
+  "estimated_train_vram_gib": "roughly 20-30; confirm in 2-step A40 smoke",
+  "hidden_size": 2560,
+  "key_value_heads": 8,
+  "l6_scheduled_50": {
+    "effective_prompt_class_counts": {
+      "descriptive": 263,
+      "sparse": 137
+    },
+    "effective_prompt_class_proportions": {
+      "descriptive": 0.6575,
+      "sparse": 0.3425
+    },
+    "expected_bucket_proportions": {
+      "longer": 0.2337,
+      "medium": 0.4206,
+      "short": 0.2892,
+      "very_short": 0.0565
+    },
+    "max_example_repetitions": 4,
+    "max_source_work_repetitions": 14,
+    "plan_indices_sha256": "61fea7982ea8745861caa03c58e19e52f6e25c5c62461e444e2e26a6549cb993",
+    "sampled_bucket_counts": {
+      "longer": 95,
+      "medium": 161,
+      "short": 124,
+      "very_short": 20
+    },
+    "sampled_bucket_proportions": {
+      "longer": 0.2375,
+      "medium": 0.4025,
+      "short": 0.31,
+      "very_short": 0.05
+    },
+    "sampled_examples": 400,
+    "sampler_seed": 314162,
+    "source_bucket_counts": {
+      "longer": 24,
+      "medium": 72,
+      "short": 99,
+      "very_short": 29
+    },
+    "source_l3_examples": 224,
+    "source_l3_sha256": "0ec0569d1310c1baf9ceafc679950bec4f653546c2610ce86137ea4630559b02",
+    "unique_examples_observed": 215,
+    "unique_source_works_observed": 84,
+    "weights": {
+      "longer": 2.5,
+      "medium": 1.5,
+      "short": 0.75,
+      "very_short": 0.5
+    }
+  },
+  "l6_trace_sha256": "7d22e0bfa3028feeef09763906cb956c87cf7fc23da99bf8c7458cee240ac540",
+  "layers": 36,
+  "lora_targets": [
+    "q_proj",
+    "v_proj"
+  ],
+  "model_id": "Qwen/Qwen3-4B-Base",
+  "model_revision": "906bfd4b4dc7f14ee4320094d8b41684abff8539",
+  "raw_prompt_format": "scripts.modeling.format_prompt; no chat template applied",
+  "sample_plan_sha256": "a10e18e3ce57fcaaf3c1eccc4939b7adc894a73a8c516955a4787ad2cd18acd6",
+  "sampler_50": {
+    "effective_prompt_class_counts": {
+      "descriptive": 263,
+      "sparse": 137
+    },
+    "effective_prompt_class_proportions": {
+      "descriptive": 0.6575,
+      "sparse": 0.3425
+    },
+    "expected_bucket_proportions": {
+      "longer": 0.2337,
+      "medium": 0.4206,
+      "short": 0.2892,
+      "very_short": 0.0565
+    },
+    "max_example_repetitions": 4,
+    "max_source_work_repetitions": 14,
+    "plan_indices_sha256": "61fea7982ea8745861caa03c58e19e52f6e25c5c62461e444e2e26a6549cb993",
+    "sampled_bucket_counts": {
+      "longer": 95,
+      "medium": 161,
+      "short": 124,
+      "very_short": 20
+    },
+    "sampled_bucket_proportions": {
+      "longer": 0.2375,
+      "medium": 0.4025,
+      "short": 0.31,
+      "very_short": 0.05
+    },
+    "sampled_examples": 400,
+    "sampler_seed": 314162,
+    "source_bucket_counts": {
+      "longer": 24,
+      "medium": 72,
+      "short": 99,
+      "very_short": 29
+    },
+    "source_l3_examples": 224,
+    "source_l3_sha256": "0ec0569d1310c1baf9ceafc679950bec4f653546c2610ce86137ea4630559b02",
+    "unique_examples_observed": 215,
+    "unique_source_works_observed": 84,
+    "weights": {
+      "longer": 2.5,
+      "medium": 1.5,
+      "short": 0.75,
+      "very_short": 0.5
+    }
+  },
+  "status": "passed",
+  "target_tokens_50": 26050,
+  "tokenizer_eos_id": 151643
+}

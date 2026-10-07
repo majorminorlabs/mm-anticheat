@@ -1,0 +1,101 @@
+{
+  "schema_version": "1.0",
+  "record_type": "cloud_compute_detached_e014_session",
+  "session_id": "AMD003",
+  "status": "READY_TO_CLICK_CREATE",
+  "created_at_utc": "2026-09-17T00:00:00Z",
+  "purpose": "Run the frozen E014 Qwen3-8B-Base QLoRA experiment on one AMD MI300X through a detached remote runner.",
+  "predecessors": [
+    {
+      "session_id": "AMD001",
+      "path": "cloud_runs/AMD001_mi300x_e014_qualification",
+      "status": "FAILED",
+      "evidence": "MI300X/ROCm/QLoRA/optimizer/checkpoint compatibility succeeded before the local event-logger collision."
+    },
+    {
+      "session_id": "AMD002",
+      "path": "cloud_runs/AMD002_mi300x_e014_qualification",
+      "status": "FAILED",
+      "evidence": "Provider startup stdout corrupted SCP, followed by transient SSH refusal during dataset transfer; the instance was destroyed."
+    }
+  ],
+  "related_experiment": "E014_qwen3_8b_primary_qlora",
+  "frozen_e014": {
+    "invariants_path": "configs/research/e014_scientific_invariants_v1.json",
+    "invariants_sha256_at_record_creation": "af3987171f0900dca12afc6433d7ecb17995b96bbed61b4c3dde7a6aaa427aca",
+    "source_manifest_path": "experiments/E014_qwen3_8b_primary_qlora/manifest.json",
+    "source_manifest_sha256": "0958d3fa63dcad2d2f93bd019d77c036b1174cdcc4ee4afb8568a9dc2204e5c0",
+    "training_config_sha256": "efe00566bb8ef12a31c76f8dd4f88986643b53a964d8540f19484e1f7bd920bf",
+    "hypothesis_config_sha256": "c73e8c65a57b24b9898561f2cb1a3d06b1c5a0b189973f20073346b0b7baf356",
+    "evaluation_config_sha256": "051543f4b654ce64a1064dac0423841681859015eea5addefb8fe49fbac23e32",
+    "lockfile_sha256": "82e0e70b44474c2ac0f2211664b6352b870171481ca1e6167faf95333e572825",
+    "dataset": {
+      "path": "data/generated/research-data-v0.1-expanded.jsonl",
+      "sha256": "703aceae7a28450fe9dca35be29c09cf0e64aceeda49f60e7f626b6e3708a91f",
+      "rows": 25269,
+      "split_counts": {"train": 19626, "validation": 2816, "test": 2827}
+    },
+    "research_benchmark": {
+      "path": "benchmarks/releases/research-bench-v0.1.jsonl",
+      "sha256": "3f1f859a10f1bb34ebb22197fadfeba08f2f812c2346a9d75c2b1b7e97b878c4",
+      "cases": 248
+    },
+    "control_benchmark": {
+      "path": "benchmarks/control/general-capability-v0.1.jsonl",
+      "sha256": "b9ff1050dd05eeaf062aba8e8fce1f0a39ffc7da68754d02f011779780628636",
+      "cases": 12
+    },
+    "base_model": "Qwen/Qwen3-8B-Base",
+    "model_revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
+    "tokenizer_revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4"
+  },
+  "provider_intent": {
+    "provider": "AMD Developer Cloud via DigitalOcean",
+    "billing_model": "on-demand GPU Droplet, hourly",
+    "gpu": "AMD Instinct MI300X",
+    "gpu_architecture": "gfx942",
+    "gpu_count": 1,
+    "expected_hbm_gb": 192,
+    "displayed_rate_usd_per_hour": 1.99,
+    "instance_id": null,
+    "public_ip": null,
+    "actual_start_time_utc": null,
+    "actual_billing_duration_seconds": null,
+    "actual_provider_billed_cost_usd": null
+  },
+  "execution": {
+    "architecture": "Mac bootstrap and hash verification, then one detached remote runner",
+    "detached_mechanism": "tmux when available; otherwise Python start_new_session with nohup-equivalent standard streams",
+    "mac_supervises_training": false,
+    "qualification_repeated": false,
+    "remote_runner": "scripts/run_e014_remote.py",
+    "remote_launcher": "scripts/start_e014_amd003.sh",
+    "checkpoint_resume": "latest complete atomic Trainer checkpoint; restart refuses to overwrite or silently restart an existing partial output",
+    "terminal_states": ["RUNNING", "TRAINING_COMPLETE", "EVALUATION_COMPLETE", "COMPLETE", "FAILED"]
+  },
+  "transfer": {
+    "bundle": "Git bundle containing committed source only",
+    "dataset_archive": "frozen research-data-v0.1-expanded archive",
+    "readiness": "three consecutive clean non-interactive SSH sentinel probes",
+    "retry_policy": "bounded retries only for classified transient SSH transport failures",
+    "idempotency": "matching remote SHA-256 skips transfer; partial or mismatched files are replaced"
+  },
+  "expected_commands": {
+    "offline_prepare": "bash scripts/amd003_session.sh prepare",
+    "offline_dry_run": "bash scripts/amd003_session.sh dry-run",
+    "after_manual_droplet_creation": "bash scripts/amd003_session.sh start <PUBLIC_IP>",
+    "status": "bash scripts/amd003_session.sh status <PUBLIC_IP>",
+    "resume": "bash scripts/amd003_session.sh resume <PUBLIC_IP>",
+    "collect": "bash scripts/amd003_session.sh collect <PUBLIC_IP>"
+  },
+  "artifact_collection": {
+    "remote_archive": "AMD003-e014-results.tar.gz",
+    "includes": ["environment", "commands", "invariants", "dependencies", "model revision", "hashes", "training logs", "telemetry", "checkpoints", "evaluation outputs", "paired bootstrap statistics", "timings", "cost estimate", "failures", "final adapter", "manifest", "summary"],
+    "destruction": "never automated; retain remote evidence until the user deliberately collects it and decides"
+  },
+  "no_cloud_compute_started_at_creation": true,
+  "no_model_quality_result_exists": true,
+  "no_model_download_on_mac": true,
+  "private_keys_or_secrets_committed": false,
+  "status_note": "offline-prepared only; no AMD003 hardware was created or contacted by this record"
+}

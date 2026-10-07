@@ -1,0 +1,32 @@
+{
+  "model": "mistral-small3.2:24b",
+  "quantization": "reported by ollama show; see model metadata",
+  "num_ctx": 8192,
+  "settings": {
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "num_predict": 700,
+    "seed": 42
+  },
+  "test": "source-synthesis",
+  "kind": "json",
+  "ran_at": "2026-07-28T06:04:44.780Z",
+  "ok": true,
+  "text": "```json\n{\n  \"supported_facts\": [\n    {\n      \"fact\": \"River County approved a 120MW data center.\",\n      \"source\": \"SOURCE A\"\n    },\n    {\n      \"fact\": \"The operator agreed to publish monthly water use.\",\n      \"source\": \"SOURCE A\"\n    },\n    {\n      \"fact\": \"The facility will create 400 permanent jobs according to the operator.\",\n      \"source\": \"SOURCE B\"\n    },\n    {\n      \"fact\": \"Comparable facilities employ 35 to 80 permanent workers.\",\n      \"source\": \"SOURCE C\"\n    },\n    {\n      \"fact\": \"The local grid upgrade is estimated at $86m and the utility has not allocated costs.\",\n      \"source\": \"SOURCE D\"\n    },\n    {\n      \"fact\": \"Residents were not consulted before the first vote.\",\n      \"source\": \"SOURCE E\"\n    }\n  ],\n  \"uncertain_facts\": [\n    {\n      \"fact\": \"The actual number of permanent jobs created by the data center is uncertain due to conflicting claims from SOURCE B and SOURCE C.\"\n    },\n    {\n      \"fact\": \"The timeline for the grid upgrade and its funding allocation remains unclear.\"\n    }\n  ],\n  \"conflicting_claims\": [\n    {\n      \"claim\": \"The facility will create 400 permanent jobs.\",\n      \"source\": \"SOURCE B\"\n    },\n    {\n      \"claim\": \"Comparable facilities employ 35 to 80 permanent workers.\",\n      \"source\": \"SOURCE C\"\n    }\n  ],\n  \"timeline\": [\n    {\n      \"date\": \"May 2\",\n      \"event\": \"River County approved a 120MW data center after the operator agreed to publish monthly water use.\"\n    },\n    {\n      \"date\": \"May 3\",\n      \"event\": \"Operator press release stated the facility will create 400 permanent jobs.\"\n    },\n    {\n      \"date\": \"May 8\",\n      \"event\": \"County labor office reported comparable facilities employ 35 to 80 permanent workers.\"\n    },\n    {\n      \"date\": \"May 11\",\n      \"event\": \"Utility meeting transcript noted the local grid upgrade is estimated at $86m and the utility has not allocated costs.\"\n    },\n    {\n      \"date\": \"May 14\",\n      \"event\": \"Mayor interview revealed residents were not consulted before the first vote.\"\n    }\n  ],\n  \"claim_to_source\": [\n    {\n      \"claim\": \"River County approved a 120MW data center.\",\n      \"source\": \"SOURCE A\"\n    },\n    {\n      \"claim\": \"The operator agreed to publish monthly water use.\",\n      \"source\": \"SOURCE A\"\n    },\n    {\n      \"claim\": \"The facility will create 400 permanent jobs.\",\n      \"source\": \"SOURCE B\"\n    },\n    {\n      \"claim\": \"Comparable facilities employ 35 to 80 permanent workers.\",\n      \"source\": \"SOURCE C\"\n    },\n    {\n      \"claim\": \"The local grid upgrade is estimated at $86m and the utility has not allocated costs.\",\n      \"source\": \"SOURCE D\"\n    },\n    {\n      \"claim\": \"Residents were not consulted before the first vote.\",\n      \"source",
+  "metrics": {
+    "wall_ms": 62125,
+    "eval_count": 700,
+    "eval_duration_ns": 59894606000,
+    "prompt_eval_count": 1036,
+    "prompt_eval_duration_ns": 1986238000,
+    "tokens_per_second": 11.69,
+    "prompt_tokens_per_second": 521.59
+  },
+  "error": null,
+  "score": {
+    "json_valid": false,
+    "schema_valid": false,
+    "score": 0,
+    "notes": []
+  }
+}

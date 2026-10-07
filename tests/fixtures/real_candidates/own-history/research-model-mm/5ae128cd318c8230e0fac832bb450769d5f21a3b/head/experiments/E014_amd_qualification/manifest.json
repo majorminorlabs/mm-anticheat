@@ -1,0 +1,111 @@
+{
+  "record_schema_version": "1.0",
+  "record_type": "hardware_qualification_preregistration",
+  "record_id": "E014_AMD_MI300X_qualification",
+  "created_date": "2026-09-16",
+  "prepared_from_git_commit": "7854e7975d370a0dc5a66fc8b29166a9b7515349",
+  "status": "READY_FOR_AMD_QUALIFICATION",
+  "parent_experiment_id": "E014_qwen3_8b_primary_qlora",
+  "scientific_invariants_path": "configs/research/e014_scientific_invariants_v1.json",
+  "scientific_invariants_record_type": "frozen_scientific_invariants",
+  "qualification_only": true,
+  "model_quality_claims_authorized": false,
+  "full_training_started": false,
+  "amd_access": {
+    "local_amd_gpu": false,
+    "cloud_session_configured": false,
+    "user_reports_credits": true,
+    "account_credit_balance_observed": false,
+    "instance_provisioned": false,
+    "paid_compute_incurred_usd": 0,
+    "blocker": "No AMD Developer Cloud credentials or interactive signed-in session were available in the local environment. No instance was provisioned."
+  },
+  "environment_investigation": {
+    "candidate_gpu": "1 x AMD Instinct MI300X, gfx942, 192 GB HBM3",
+    "target_runtime": "Linux x86_64, Python 3.13, PyTorch 2.14.0+rocm7.14, ROCm 7.14",
+    "target_python_packages": {
+      "transformers": "5.17.0",
+      "peft": "0.21.0",
+      "trl": "1.13.0",
+      "bitsandbytes": "0.50.2",
+      "accelerate": "1.15.0",
+      "datasets": "5.0.1"
+    },
+    "pytorch_2_14_rocm_wheel_found": true,
+    "official_adc_image_with_exact_stack_verified": false,
+    "container_or_venv_plan": "Use an ADC Linux image with a compatible MI300X ROCm driver/runtime; sync the exact uv.lock dependencies while skipping its Linux PyPI CUDA torch artifact, then install the official PyTorch 2.14.0 ROCm 7.14 wheel. The environment is not yet exercised on ADC.",
+    "source_build_required_by_current_evidence": false,
+    "bitsandbytes_exact_stack_qualification": "Unverified until MI300X forward/backward/update/checkpoint/resume smoke passes.",
+    "transformers_peft_trl_exact_stack_qualification": "Pinned releases and dependency bounds exist; the complete stack remains unverified until the smoke passes."
+  },
+  "smoke_protocol": {
+    "command": "bash scripts/qualify_amd.sh run",
+    "preflight_command": "bash scripts/qualify_amd.sh check",
+    "independent_artifact_root": "outputs/hardware-qualification/E014/AMD_MI300X/",
+    "base_model_revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
+    "dataset": "Frozen E014 train split only; 96 longest unique tokenized rows; frozen data hashes checked before output creation.",
+    "sequence_length": 4608,
+    "microbatch": 1,
+    "gradient_accumulation_steps": 16,
+    "effective_batch_size": 16,
+    "optimizer_steps": 6,
+    "checkpoint_and_resume": "Save complete step-3 Trainer checkpoint; exit; launch a fresh Python process; load/resume through step 6; validate optimizer, scheduler, RNG, adapter and trainer checkpoint files; require adapter weights to change.",
+    "operations_exercised": [
+      "4-bit NF4 load",
+      "double quantization state inspection",
+      "BF16 compute",
+      "LoRA injection on the frozen seven target module names",
+      "TRL SFTTrainer forward and backward passes",
+      "adamw_torch_fused optimizer updates",
+      "finite adapter parameters and optimizer state",
+      "checkpoint save, fresh-process load and resume"
+    ],
+    "engineering_only_deviations": {
+      "steps": "6 rather than 2,454",
+      "warmup": "0 steps rather than the full-run 123; a six-step smoke is not the preregistered training schedule",
+      "evaluation": "Validation/test are hash and split-audited but not passed to the trainer/evaluator; no benchmark, control, quality score or checkpoint selection.",
+      "output": "Qualification-only directory; never E014 training outputs."
+    },
+    "recorded_measurements": [
+      "GPU name/architecture/HBM, ROCm, PyTorch, Python and pinned package versions",
+      "per-step duration and non-padding/padded token throughput",
+      "PyTorch peak allocated/reserved HBM and phase-end device memory",
+      "host RAM and process peak RSS",
+      "bitsandbytes quantization modules, NF4 quant type and nested state",
+      "optimizer class, adapter parameter count, finite-state checks and warnings",
+      "checkpoint hashes and resume evidence"
+    ]
+  },
+  "decision": {
+    "case": "unclassified_pending_smoke",
+    "exact_e014_on_amd_authorized": false,
+    "e016_required_now": false,
+    "bf16_lora_is_not_a_fallback_inside_e014": true,
+    "if_exact_nf4_qlora_passes": "Record CUDA-to-ROCm, kernel, allocator and telemetry as backend details; only call it CASE A after the complete pinned stack smoke passes. Do not start full training in this phase.",
+    "if_nf4_qlora_fails_but_bf16_lora_is_chosen": "Keep E014 frozen; preregister a new experiment (candidate E016 after ID/index audit) before training.",
+    "if_stack_is_unstable_or_requires_unpinned_substitutions": "Do not use it for the primary result; evaluate the NVIDIA profiles without treating this smoke as a model-quality result.",
+    "if_amd_is_unusually_slow": "Retain measured smoke evidence, estimate full-run duration from observed throughput with uncertainty, then compare costs before any full-run authorization."
+  },
+  "full_run": {
+    "authorized": false,
+    "started": false,
+    "measured_amd_step_time_seconds": null,
+    "measured_amd_tokens_per_second": null,
+    "measured_amd_hbm_bytes": null,
+    "measured_benchmark_duration_seconds": null,
+    "estimated_amd_total_hours": null,
+    "amd_credit_cost": null,
+    "reason_unestimated": "No AMD smoke measurement, ADC account balance, or account-specific hourly/credit rate is available."
+  },
+  "provenance": {
+    "qualification_tool": "scripts/qualify_amd.py",
+    "host_setup_script": "scripts/prepare_amd_host.sh",
+    "launch_wrapper": "scripts/qualify_amd.sh",
+    "invariant_validator": "scripts/validate_e014_invariants.py",
+    "summary_document": "docs/hardware/E014_AMD_qualification.md",
+    "qualification_artifacts_are_not_primary_results": true,
+    "data_or_benchmark_modified": false,
+    "E014_modified": false,
+    "E015_modified": false
+  }
+}

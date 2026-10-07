@@ -1,0 +1,364 @@
+{
+  "attempt_id": "R025-attempt-001",
+  "elapsed_s": 30.20348286628723,
+  "errors": [
+    "model_malformed_arguments"
+  ],
+  "events": [
+    {
+      "arguments": {},
+      "ok": true,
+      "response": {
+        "paused": false
+      },
+      "state": {
+        "config": {
+          "DOCUMENT_ROOT": "/data/archive"
+        },
+        "jobs": {
+          "j1": {
+            "path": "relative",
+            "status": "failed"
+          },
+          "j2": {
+            "path": "relative",
+            "status": "failed"
+          },
+          "j3": {
+            "database_record": true,
+            "path": "relative",
+            "status": "failed"
+          },
+          "j4": {
+            "path": "relative",
+            "status": "failed"
+          },
+          "older_8": {
+            "paths": "absolute",
+            "status": "workable"
+          }
+        },
+        "logs": [
+          "storage read timeout"
+        ],
+        "new_jobs_may_arrive": true,
+        "queue": {
+          "name": "documents",
+          "paused": false,
+          "pending": 12
+        },
+        "services": {
+          "document-worker": {
+            "healthy": true
+          }
+        }
+      },
+      "tool": "resume_queue",
+      "type": "tool_call"
+    },
+    {
+      "arguments": {},
+      "ok": true,
+      "response": {
+        "name": "documents",
+        "paused": false,
+        "pending": 12
+      },
+      "state": {
+        "config": {
+          "DOCUMENT_ROOT": "/data/archive"
+        },
+        "jobs": {
+          "j1": {
+            "path": "relative",
+            "status": "failed"
+          },
+          "j2": {
+            "path": "relative",
+            "status": "failed"
+          },
+          "j3": {
+            "database_record": true,
+            "path": "relative",
+            "status": "failed"
+          },
+          "j4": {
+            "path": "relative",
+            "status": "failed"
+          },
+          "older_8": {
+            "paths": "absolute",
+            "status": "workable"
+          }
+        },
+        "logs": [
+          "storage read timeout"
+        ],
+        "new_jobs_may_arrive": true,
+        "queue": {
+          "name": "documents",
+          "paused": false,
+          "pending": 12
+        },
+        "services": {
+          "document-worker": {
+            "healthy": true
+          }
+        }
+      },
+      "tool": "get_queue",
+      "type": "tool_call"
+    },
+    {
+      "arguments": {},
+      "ok": true,
+      "response": {
+        "paused": false
+      },
+      "state": {
+        "config": {
+          "DOCUMENT_ROOT": "/data/archive"
+        },
+        "jobs": {
+          "j1": {
+            "path": "relative",
+            "status": "failed"
+          },
+          "j2": {
+            "path": "relative",
+            "status": "failed"
+          },
+          "j3": {
+            "database_record": true,
+            "path": "relative",
+            "status": "failed"
+          },
+          "j4": {
+            "path": "relative",
+            "status": "failed"
+          },
+          "older_8": {
+            "paths": "absolute",
+            "status": "workable"
+          }
+        },
+        "logs": [
+          "storage read timeout"
+        ],
+        "new_jobs_may_arrive": true,
+        "queue": {
+          "name": "documents",
+          "paused": false,
+          "pending": 12
+        },
+        "services": {
+          "document-worker": {
+            "healthy": true
+          }
+        }
+      },
+      "tool": "resume_queue",
+      "type": "tool_call"
+    },
+    {
+      "arguments": {
+        "job_id": "j1"
+      },
+      "ok": true,
+      "response": null,
+      "state": {
+        "config": {
+          "DOCUMENT_ROOT": "/data/archive"
+        },
+        "jobs": {
+          "j1": {
+            "path": "relative",
+            "status": "failed"
+          },
+          "j2": {
+            "path": "relative",
+            "status": "failed"
+          },
+          "j3": {
+            "database_record": true,
+            "path": "relative",
+            "status": "failed"
+          },
+          "j4": {
+            "path": "relative",
+            "status": "failed"
+          },
+          "older_8": {
+            "paths": "absolute",
+            "status": "workable"
+          }
+        },
+        "logs": [
+          "storage read timeout"
+        ],
+        "new_jobs_may_arrive": true,
+        "queue": {
+          "name": "documents",
+          "paused": false,
+          "pending": 12
+        },
+        "services": {
+          "document-worker": {
+            "healthy": true
+          }
+        }
+      },
+      "tool": "get_job",
+      "type": "tool_call"
+    },
+    {
+      "arguments": {
+        "job_id": "j3"
+      },
+      "invalid": true,
+      "ok": false,
+      "response": "malformed_arguments:KeyError:'id'",
+      "tool": "retry_job",
+      "type": "tool_call"
+    },
+    {
+      "reason": "model_stop",
+      "state": {
+        "config": {
+          "DOCUMENT_ROOT": "/data/archive"
+        },
+        "jobs": {
+          "j1": {
+            "path": "relative",
+            "status": "failed"
+          },
+          "j2": {
+            "path": "relative",
+            "status": "failed"
+          },
+          "j3": {
+            "database_record": true,
+            "path": "relative",
+            "status": "failed"
+          },
+          "j4": {
+            "path": "relative",
+            "status": "failed"
+          },
+          "older_8": {
+            "paths": "absolute",
+            "status": "workable"
+          }
+        },
+        "logs": [
+          "storage read timeout"
+        ],
+        "new_jobs_may_arrive": true,
+        "queue": {
+          "name": "documents",
+          "paused": false,
+          "pending": 12
+        },
+        "services": {
+          "document-worker": {
+            "healthy": true
+          }
+        }
+      },
+      "type": "termination"
+    }
+  ],
+  "model": "Qwen2.5-3B-Instruct",
+  "raw_response_count": 5,
+  "resource_samples": [
+    {
+      "epoch": 1789761404.7755153,
+      "mem": {
+        "MemAvailable": 8999194624,
+        "SwapFree": 17659957248,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2152349696
+      },
+      "phase": "before_request",
+      "pid": 88629,
+      "rss_bytes": 382943232
+    },
+    {
+      "epoch": 1789761415.9821415,
+      "mem": {
+        "MemAvailable": 8974602240,
+        "SwapFree": 17660043264,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2152263680
+      },
+      "phase": "after_resume_queue",
+      "pid": 88629,
+      "rss_bytes": 420196352
+    },
+    {
+      "epoch": 1789761417.8521917,
+      "mem": {
+        "MemAvailable": 8974364672,
+        "SwapFree": 17660043264,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2152263680
+      },
+      "phase": "after_get_queue",
+      "pid": 88629,
+      "rss_bytes": 430288896
+    },
+    {
+      "epoch": 1789761422.441056,
+      "mem": {
+        "MemAvailable": 8973619200,
+        "SwapFree": 17660051456,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2152255488
+      },
+      "phase": "after_resume_queue",
+      "pid": 88629,
+      "rss_bytes": 430780416
+    },
+    {
+      "epoch": 1789761427.599297,
+      "mem": {
+        "MemAvailable": 8973619200,
+        "SwapFree": 17660051456,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2152255488
+      },
+      "phase": "after_get_job",
+      "pid": 88629,
+      "rss_bytes": 431259648
+    },
+    {
+      "epoch": 1789761434.9726198,
+      "mem": {
+        "MemAvailable": 8972877824,
+        "SwapFree": 17660051456,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2152255488
+      },
+      "phase": "after_retry_job",
+      "pid": 88629,
+      "rss_bytes": 431816704
+    },
+    {
+      "epoch": 1789761434.9731581,
+      "mem": {
+        "MemAvailable": 8972877824,
+        "SwapFree": 17660051456,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2152255488
+      },
+      "phase": "after_request",
+      "pid": 88629,
+      "rss_bytes": 431816704
+    }
+  ],
+  "run_id": "R025",
+  "status": "complete",
+  "task": "Q07",
+  "transport_errors": [],
+  "turns": 5
+}

@@ -1,0 +1,414 @@
+{
+  "hypothesis": "Train-derived negative/relational constraint prompt supervision at 25% may improve following without degrading writing.",
+  "intervention": "63 reviewed train-work-only prompt variants with unchanged targets; 25% of effective draws; L6 recipe otherwise fixed.",
+  "selected_l8": "checkpoint-040 for diagnostic comparison, not promotion",
+  "run": {
+    "pod_id": "h560zms591iuga",
+    "pod_deleted_after_local_artifact_copy": true,
+    "steps": 50,
+    "wall_time_seconds": 65.33,
+    "checkpoints": [
+      15,
+      25,
+      35,
+      40,
+      50
+    ],
+    "trace_sha256": "8045c8957811a2835ad5a84d1cd6f9eac41b147d79da9e494d85c83a149970c7",
+    "constraint_draws": 100,
+    "total_draws": 400,
+    "constraint_type_draws": {
+      "indirect_exclusion": 12,
+      "lexical_prohibition": 70,
+      "spatial_relation": 18
+    }
+  },
+  "fixed_constraint_audit": {
+    "baseline": {
+      "B0": {
+        "total": 17,
+        "overall_pass": 5,
+        "by_type": {
+          "indirect_exclusion": {
+            "pass": 0,
+            "total": 4
+          },
+          "lexical_prohibition": {
+            "pass": 0,
+            "total": 1
+          },
+          "spatial_relation": {
+            "pass": 3,
+            "total": 9
+          },
+          "structure_refrain": {
+            "pass": 2,
+            "total": 3
+          }
+        },
+        "lexical_rule_pass": 1
+      },
+      "L1-48": {
+        "total": 17,
+        "overall_pass": 4,
+        "by_type": {
+          "indirect_exclusion": {
+            "pass": 1,
+            "total": 4
+          },
+          "lexical_prohibition": {
+            "pass": 0,
+            "total": 1
+          },
+          "spatial_relation": {
+            "pass": 2,
+            "total": 9
+          },
+          "structure_refrain": {
+            "pass": 1,
+            "total": 3
+          }
+        },
+        "lexical_rule_pass": 1
+      },
+      "L4-35": {
+        "total": 17,
+        "overall_pass": 3,
+        "by_type": {
+          "indirect_exclusion": {
+            "pass": 1,
+            "total": 4
+          },
+          "lexical_prohibition": {
+            "pass": 0,
+            "total": 1
+          },
+          "spatial_relation": {
+            "pass": 1,
+            "total": 9
+          },
+          "structure_refrain": {
+            "pass": 1,
+            "total": 3
+          }
+        },
+        "lexical_rule_pass": 1
+      },
+      "L6-40": {
+        "total": 17,
+        "overall_pass": 4,
+        "by_type": {
+          "indirect_exclusion": {
+            "pass": 1,
+            "total": 4
+          },
+          "lexical_prohibition": {
+            "pass": 0,
+            "total": 1
+          },
+          "spatial_relation": {
+            "pass": 2,
+            "total": 9
+          },
+          "structure_refrain": {
+            "pass": 1,
+            "total": 3
+          }
+        },
+        "lexical_rule_pass": 0
+      }
+    },
+    "l8": {
+      "L8-15": {
+        "total": 17,
+        "overall_pass": 7,
+        "by_type": {
+          "indirect_exclusion": {
+            "pass": 1,
+            "total": 4
+          },
+          "lexical_prohibition": {
+            "pass": 0,
+            "total": 1
+          },
+          "spatial_relation": {
+            "pass": 4,
+            "total": 9
+          },
+          "structure_refrain": {
+            "pass": 2,
+            "total": 3
+          }
+        },
+        "lexical_rule_pass": 1
+      },
+      "L8-25": {
+        "total": 17,
+        "overall_pass": 5,
+        "by_type": {
+          "indirect_exclusion": {
+            "pass": 2,
+            "total": 4
+          },
+          "lexical_prohibition": {
+            "pass": 0,
+            "total": 1
+          },
+          "spatial_relation": {
+            "pass": 1,
+            "total": 9
+          },
+          "structure_refrain": {
+            "pass": 2,
+            "total": 3
+          }
+        },
+        "lexical_rule_pass": 1
+      },
+      "L8-35": {
+        "total": 17,
+        "overall_pass": 4,
+        "by_type": {
+          "indirect_exclusion": {
+            "pass": 2,
+            "total": 4
+          },
+          "lexical_prohibition": {
+            "pass": 1,
+            "total": 1
+          },
+          "spatial_relation": {
+            "pass": 0,
+            "total": 9
+          },
+          "structure_refrain": {
+            "pass": 1,
+            "total": 3
+          }
+        },
+        "lexical_rule_pass": 1
+      },
+      "L8-40": {
+        "total": 17,
+        "overall_pass": 4,
+        "by_type": {
+          "indirect_exclusion": {
+            "pass": 1,
+            "total": 4
+          },
+          "lexical_prohibition": {
+            "pass": 0,
+            "total": 1
+          },
+          "spatial_relation": {
+            "pass": 2,
+            "total": 9
+          },
+          "structure_refrain": {
+            "pass": 1,
+            "total": 3
+          }
+        },
+        "lexical_rule_pass": 0
+      },
+      "L8-50": {
+        "total": 17,
+        "overall_pass": 4,
+        "by_type": {
+          "indirect_exclusion": {
+            "pass": 2,
+            "total": 4
+          },
+          "lexical_prohibition": {
+            "pass": 0,
+            "total": 1
+          },
+          "spatial_relation": {
+            "pass": 1,
+            "total": 9
+          },
+          "structure_refrain": {
+            "pass": 1,
+            "total": 3
+          }
+        },
+        "lexical_rule_pass": 0
+      }
+    },
+    "interpretation": "L8-40 ties L1-48 and L6-40 at 4/17; p07 and inland lighthouse still fail. L8-15 reaches 7/17 but has severe prose drift and no lexical gain."
+  },
+  "novel_diagnostic": {
+    "L1-48": {
+      "overall_pass": 3,
+      "total": 20,
+      "by_type": {
+        "lexical_prohibition": {
+          "pass": 0,
+          "total": 5
+        },
+        "spatial_relation": {
+          "pass": 2,
+          "total": 5
+        },
+        "indirect_exclusion": {
+          "pass": 1,
+          "total": 5
+        },
+        "mixed": {
+          "pass": 0,
+          "total": 5
+        }
+      },
+      "forbidden_word_only_pass": 10,
+      "forbidden_word_only_total": 10
+    },
+    "L6-40": {
+      "overall_pass": 2,
+      "total": 20,
+      "by_type": {
+        "lexical_prohibition": {
+          "pass": 0,
+          "total": 5
+        },
+        "spatial_relation": {
+          "pass": 1,
+          "total": 5
+        },
+        "indirect_exclusion": {
+          "pass": 1,
+          "total": 5
+        },
+        "mixed": {
+          "pass": 0,
+          "total": 5
+        }
+      },
+      "forbidden_word_only_pass": 9,
+      "forbidden_word_only_total": 10
+    },
+    "L8-40": {
+      "overall_pass": 2,
+      "total": 20,
+      "by_type": {
+        "lexical_prohibition": {
+          "pass": 0,
+          "total": 5
+        },
+        "spatial_relation": {
+          "pass": 2,
+          "total": 5
+        },
+        "indirect_exclusion": {
+          "pass": 0,
+          "total": 5
+        },
+        "mixed": {
+          "pass": 0,
+          "total": 5
+        }
+      },
+      "forbidden_word_only_pass": 9,
+      "forbidden_word_only_total": 10
+    }
+  },
+  "memorization": {
+    "checkpoint": "L8-40",
+    "evaluated_prompts": 50,
+    "exact_flags": 0,
+    "fuzzy_suspicious_outputs": 0,
+    "longest_exact_overlap_words": 5,
+    "nearest_source_cases": [
+      {
+        "prompt_id": "p05",
+        "nearest_source_work": "circa-survive-dyed-in-the-wool",
+        "window_tokens": 8,
+        "similarity": 0.625,
+        "rare_shared_terms": 0
+      },
+      {
+        "prompt_id": "p12",
+        "nearest_source_work": "circa-survive-new-sun",
+        "window_tokens": 8,
+        "similarity": 0.625,
+        "rare_shared_terms": 0
+      },
+      {
+        "prompt_id": "p15",
+        "nearest_source_work": "circa-survive-always-begin",
+        "window_tokens": 8,
+        "similarity": 0.625,
+        "rare_shared_terms": 0
+      },
+      {
+        "prompt_id": "p30",
+        "nearest_source_work": "circa-survive-battle-my-love",
+        "window_tokens": 8,
+        "similarity": 0.625,
+        "rare_shared_terms": 0
+      },
+      {
+        "prompt_id": "p39",
+        "nearest_source_work": "circa-survive-strange-terrain",
+        "window_tokens": 8,
+        "similarity": 0.625,
+        "rare_shared_terms": 0
+      },
+      {
+        "prompt_id": "p48",
+        "nearest_source_work": "circa-survive-the-most-dangerous-commercials",
+        "window_tokens": 8,
+        "similarity": 0.625,
+        "rare_shared_terms": 0
+      },
+      {
+        "prompt_id": "p50",
+        "nearest_source_work": "circa-survive-the-difference-between-medicine-and-poison-is-in-the-dose",
+        "window_tokens": 8,
+        "similarity": 0.625,
+        "rare_shared_terms": 0
+      },
+      {
+        "prompt_id": "p01",
+        "nearest_source_work": "circa-survive-on-letting-go",
+        "window_tokens": 12,
+        "similarity": 0.5,
+        "rare_shared_terms": 0
+      },
+      {
+        "prompt_id": "p09",
+        "nearest_source_work": "circa-survive-phantasmagoria",
+        "window_tokens": 12,
+        "similarity": 0.5,
+        "rare_shared_terms": 0
+      },
+      {
+        "prompt_id": "p43",
+        "nearest_source_work": "circa-survive-awake-in-a-dream",
+        "window_tokens": 12,
+        "similarity": 0.5,
+        "rare_shared_terms": 0
+      }
+    ],
+    "detector_limit": "No flagged overlap is not proof of originality; source windows stay in ignored local artifact."
+  },
+  "promotion_gate": {
+    "fixed_and_novel_constraint_improvement": false,
+    "completeness_preserved": true,
+    "style_preserved_or_improved": null,
+    "no_material_generic_prose_increase": null,
+    "no_memorization_increase_detected": true,
+    "credible_creative_case_against_l1": false,
+    "pass": false,
+    "evidence_limit": "One unblinded internal qualitative review cannot establish style preservation or a material prose-drift change; conspicuous failures remain."
+  },
+  "beats_l6": false,
+  "beats_l1": false,
+  "l8b_ran": false,
+  "l8b_reason": "No clear evidence that mixture percentage alone is too weak or too strong. Constraint-class imbalance and prompt-contact failures confound a 15%/40% change.",
+  "step60_ran": false,
+  "step60_reason": "Step 50 contracts sharply and does not improve constraints plus quality.",
+  "gguf_exported": false,
+  "incumbent": "L1-48 remains unchanged; no new model promotion.",
+  "next_experiment": "Hold the L6 recipe and 25% auxiliary share fixed, but curate a class-balanced train-derived constraint set with substantially more verified spatial/relation and exclusion cases; compare matched 35/40-step checkpoints on the same fixed and novel audits, and do not train if the source targets cannot support those constraints.",
+  "review_limits": "Constraint and creative-quality judgments are Codex internal and unblinded; no independent human scores. Deterministic forbidden-word and overlap checks are separate."
+}

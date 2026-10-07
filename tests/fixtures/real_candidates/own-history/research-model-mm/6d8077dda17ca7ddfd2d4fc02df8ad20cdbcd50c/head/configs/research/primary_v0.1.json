@@ -1,0 +1,34 @@
+{
+  "protocol_version": "primary-research-v0.1",
+  "status": "frozen_before_primary_training",
+  "frozen_date": "2026-09-15",
+  "central_question": "Can research-behavior specialization substantially improve the research competence of an approximately 8B open-weight language model?",
+  "scope": "The primary comparison is an untouched Qwen3-8B-Base checkpoint versus a research-behavior SFT/QLoRA adapter on an unseen, source-grouped benchmark.",
+  "research_questions": [
+    {"id": "RQ1", "question": "Does research-behavior fine-tuning improve performance over the untouched base model on unseen research tasks?", "primary": true},
+    {"id": "RQ2", "question": "Which research capabilities improve most?", "primary": false},
+    {"id": "RQ3", "question": "Which capabilities regress?", "primary": false},
+    {"id": "RQ4", "question": "Can a specialized approximately 8B model compete with a larger untuned general model on research-specific tasks?", "primary": false},
+    {"id": "RQ5", "question": "How much training data is required before meaningful improvements appear?", "primary": false},
+    {"id": "RQ6", "question": "Which task families provide the greatest benefit?", "primary": false},
+    {"id": "RQ7", "question": "Does specialization increase citation and evidence discipline?", "primary": false},
+    {"id": "RQ8", "question": "Does specialization reduce unsupported synthesis?", "primary": false},
+    {"id": "RQ9", "question": "Does specialization improve recognition of insufficient evidence?", "primary": false},
+    {"id": "RQ10", "question": "Does specialization damage useful general capabilities such as instruction following, basic reasoning, summarization, and technical explanation?", "primary": false}
+  ],
+  "hypotheses": [
+    {"id": "H1", "question_ids": ["RQ1"], "statement": "The tuned 8B model will have higher macro-averaged structured validity and research-action accuracy than the untouched base on the frozen research benchmark.", "direction": "tuned_gt_base", "metrics": ["structured_valid", "action_accuracy"]},
+    {"id": "H2", "question_ids": ["RQ7", "RQ8"], "statement": "The tuned model will improve citation precision/recall and lower unsupported-claim rate relative to the untouched base.", "direction": "citation_up_unsupported_down", "metrics": ["citation_precision", "citation_recall", "unsupported_claim_rate"]},
+    {"id": "H3", "question_ids": ["RQ9"], "statement": "The tuned model will improve insufficient-evidence recognition on cases where the supplied sources do not establish the requested conclusion.", "direction": "tuned_gt_base", "metrics": ["insufficient_evidence_accuracy"]},
+    {"id": "H4", "question_ids": ["RQ2", "RQ6"], "statement": "Evidence attribution, source selection, and methodology-critique families will show larger gains than generic planning families.", "direction": "family_interaction", "metrics": ["by_task"]},
+    {"id": "H5", "question_ids": ["RQ3", "RQ10"], "statement": "Specialization may regress at least one non-target capability unless the training mixture or a general-capability control is sufficient; this is a directional risk hypothesis, not an expected result.", "direction": "risk_monitor", "metrics": ["control_benchmark_score"]}
+  ],
+  "analysis_plan": {
+    "primary_unit": "benchmark_example",
+    "split_policy": "source_grouped_sha256",
+    "uncertainty": "paired bootstrap confidence intervals over per-example metric differences where sample size and metric semantics support it",
+    "multiple_comparisons": "report task-family estimates descriptively and avoid treating every subgroup as an independent confirmatory test",
+    "invalidity_rule": "A run with malformed targets, non-finite loss, benchmark contamination, or an artifact hash mismatch is invalidated and not pooled with valid runs."
+  },
+  "outcome_policy": "No conclusion is recorded in this preregistration-style file. Results and deviations belong in immutable experiment manifests and the chronological research ledger."
+}

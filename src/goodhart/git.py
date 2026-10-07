@@ -32,11 +32,22 @@ class ScanInput:
     diagnostics: list[tuple[str, str]] = field(default_factory=list)
     notices: list[str] = field(default_factory=list)
     config: Config = field(default_factory=Config)
+    patch: str = ""
+    hidden_paths: list[str] = field(default_factory=list)
 
 
 def _git(root: Path, *args: str, check: bool = True) -> bytes:
     result = subprocess.run(
-        ["git", "-C", str(root), *args],
+        [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "-c",
+            "core.untrackedCache=false",
+            "-C",
+            str(root),
+            *args,
+        ],
         capture_output=True,
         check=False,
     )
@@ -103,7 +114,7 @@ def _read_content(root: Path, ref: str, path: str) -> str:
 def load_patch(text: str, config: Config | None = None) -> ScanInput:
     """Load a standalone patch without accessing repository content."""
     config = config or Config()
-    return ScanInput("patch", parse_diff(text, config), None, None, config=config)
+    return ScanInput("patch", parse_diff(text, config), None, None, config=config, patch=text)
 
 
 def trusted_config(root: Path, ref: str, source: str) -> Config:
@@ -212,7 +223,17 @@ def _batch_contents(
     safe = [path for path in paths if "\n" not in path and "\r" not in path]
     query = "".join(f"{ref}:{path}\n" for path in safe).encode("utf8", errors="surrogateescape")
     result = subprocess.run(
-        ["git", "-C", str(root), "cat-file", "--batch"],
+        [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "-c",
+            "core.untrackedCache=false",
+            "-C",
+            str(root),
+            "cat-file",
+            "--batch",
+        ],
         input=query,
         capture_output=True,
         check=False,
@@ -254,16 +275,16 @@ def load_git(
     """Load a range, working tree, or index with both sides' file contents."""
     root = repository_root(cwd)
     if working or staged:
-        base_sha = resolve_ref(root, "HEAD")
+        base_sha = resolve_ref(root, base or "HEAD")
         head_label = "WORKTREE" if working else "INDEX"
-        args = ["--cached"] if staged else ["HEAD"]
+        args = ["--cached"] if staged else [base_sha]
     else:
         head_label = resolve_ref(root, head)
         requested = resolve_ref(root, base) if base else default_base(root, head_label)
         base_sha = _git(root, "merge-base", requested, head_label).decode().strip()
         args = [f"{base_sha}...{head_label}"]
     config = config or trusted_config(
-        root, base_sha, "HEAD" if working or staged else f"base:{base_sha}"
+        root, base_sha, "HEAD" if (working or staged) and base is None else f"base:{base_sha}"
     )
     raw = _git(
         root,
@@ -275,6 +296,8 @@ def load_git(
         "--unified=3",
         *args,
         "--",
+        ".",
+        ":(exclude).goodhart/captures/**",
     )
     text = raw.decode("utf8", errors="replace")
     diagnostics: list[tuple[str, str]] = []
@@ -284,6 +307,8 @@ def load_git(
             if not item:
                 continue
             path = item.decode("utf8", errors="surrogateescape")
+            if path.startswith(".goodhart/captures/"):
+                continue
             if any(matches(path, pattern) for pattern in config.ignore_globs):
                 continue
             try:
@@ -301,6 +326,45 @@ def load_git(
                     tofile=new_name,
                 )
             )
+    hidden_paths = []
+    if working or staged:
+        # Read flagged files ourselves: Git deliberately omits their worktree edits.
+        flagged = {}
+        for entry in _git(root, "ls-files", "-v", "-z").split(b"\0"):
+            if not entry or not (entry[:1] in {b"S", b"s"} or entry[:1].islower()):
+                continue
+            path = entry[2:].decode("utf8", errors="surrogateescape")
+            try:
+                indexed = _read_content(root, "", path)
+                target = root / path
+                current = _read_content(root, "WORKTREE", path) if target.exists() else None
+            except InputError as exc:
+                diagnostics.append((path, str(exc)))
+                hidden_paths.append(path)
+                continue
+            if current == indexed:
+                continue
+            hidden_paths.append(path)
+            try:
+                previous = _read_content(root, base_sha, path)
+            except InputError:
+                previous = ""
+            old_name, new_name = json.dumps("a/" + path), json.dumps("b/" + path)
+            flagged[path] = f"diff --git {old_name} {new_name}\n" + "".join(
+                difflib.unified_diff(
+                    previous.splitlines(True),
+                    (current or "").splitlines(True),
+                    fromfile=old_name,
+                    tofile=new_name if current is not None else "/dev/null",
+                )
+            )
+        if flagged:
+            parts = re.split(r"(?=^diff --git )", text, flags=re.M)
+            text = "".join(
+                part
+                for part in parts
+                if not any(change.path in flagged for change in parse_diff(part, config))
+            ) + "".join(flagged.values())
     changes = parse_diff(text, config)
     for change in changes:
         if change.is_binary or change.parse_error:
@@ -313,7 +377,15 @@ def load_git(
                 content = None
             else:
                 try:
-                    content = _read_content(root, "" if ref == "INDEX" else ref, path)
+                    content = _read_content(
+                        root,
+                        "WORKTREE"
+                        if side == "head" and path in hidden_paths
+                        else ""
+                        if ref == "INDEX"
+                        else ref,
+                        path,
+                    )
                 except InputError as exc:
                     change.parse_error = str(exc)
                     content = None
@@ -346,4 +418,6 @@ def load_git(
         diagnostics=diagnostics + errors,
         notices=notices,
         config=config,
+        patch=text,
+        hidden_paths=hidden_paths,
     )

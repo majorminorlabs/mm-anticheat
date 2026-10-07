@@ -1,0 +1,79 @@
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import type { Config } from '../config.js';
+import type { Job } from '../jobs/types.js';
+
+type CandidateRecord = { id: string; status: string; classification: Record<string, unknown> | null };
+
+export function canClaimNextJob(job: Job | null, providerReady: boolean) {
+  const v1 = ['v1', 'pipeline-v1'].includes(String(job?.parameters?.pipeline_version || ''));
+  return !v1 || providerReady;
+}
+
+export class Queue {
+  readonly db: SupabaseClient;
+
+  constructor(private config: Config) {
+    this.db = createClient(config.supabaseUrl, config.serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });
+  }
+
+  async rpc<T>(fn: string, args: Record<string, unknown> = {}) {
+    const { data, error } = await this.db.rpc(fn, args);
+    if (error) throw new Error(`${fn}: ${error.message}`);
+    return data as T;
+  }
+
+  async nextQueued() {
+    const { data, error } = await this.db.from('pipeline_jobs').select('*').eq('status', 'queued').lte('not_before', new Date().toISOString()).is('cancellation_requested_at', null).order('priority_rank', { ascending: false }).order('queue_position', { ascending: true }).order('created_at', { ascending: true }).limit(1).maybeSingle();
+    if (error) throw new Error(`next_pipeline_job: ${error.message}`);
+    return data as Job | null;
+  }
+
+  async claim(providerReady = true) {
+    const next = await this.nextQueued();
+    if (!canClaimNextJob(next, providerReady)) return null;
+    const job = await this.rpc<Job>('claim_next_pipeline_job', { p_lease_owner: this.config.controllerId, p_lease_seconds: this.config.leaseSeconds });
+    return job?.id ? job : null;
+  }
+
+  start(id: string) { return this.rpc<boolean>('start_pipeline_job', { p_job_id: id, p_lease_owner: this.config.controllerId }); }
+  heartbeat(id: string) { return this.rpc<boolean>('heartbeat_pipeline_job', { p_job_id: id, p_lease_owner: this.config.controllerId, p_lease_seconds: this.config.leaseSeconds }); }
+  complete(id: string, result: unknown, log: string) { return this.rpc<boolean>('complete_pipeline_job', { p_job_id: id, p_lease_owner: this.config.controllerId, p_result: result, p_summary_log: log }); }
+  fail(id: string, error: unknown, log: string) { return this.rpc<Job>('fail_pipeline_job', { p_job_id: id, p_lease_owner: this.config.controllerId, p_error: error, p_summary_log: log, p_retry_delay_seconds: this.config.retryDelaySeconds }); }
+  cancel(id: string, log: string) { return this.rpc<boolean>('cancel_pipeline_job', { p_job_id: id, p_lease_owner: this.config.controllerId, p_summary_log: log }); }
+  releaseExpired() { return this.rpc<number>('release_expired_pipeline_job_leases'); }
+  lock(id: string, resourceName = 'heavy_model') { return this.rpc<boolean>('acquire_pipeline_resource_lock', { p_name: resourceName, p_lease_owner: this.config.controllerId, p_job_id: id, p_lease_seconds: this.config.leaseSeconds }); }
+  unlock(id: string, resourceName = 'heavy_model') { return this.rpc<boolean>('release_pipeline_resource_lock', { p_name: resourceName, p_job_id: id, p_lease_owner: this.config.controllerId }); }
+  event(id: string, level: string, type: string, message: string, metadata: Record<string, unknown> = {}) { return this.rpc<void>('append_pipeline_job_event', { p_job_id: id, p_level: level, p_event_type: type, p_message: message, p_metadata: metadata }); }
+
+  async expiredV1Jobs() {
+    const { data, error } = await this.db.from('pipeline_jobs').select('*').in('status', ['claimed', 'running']).lt('lease_expires_at', new Date().toISOString());
+    if (error) throw new Error(`expired_pipeline_jobs: ${error.message}`);
+    return (data || []).filter(job => ['v1', 'pipeline-v1'].includes(String(job.parameters?.pipeline_version || ''))) as Job[];
+  }
+
+  async terminalizeInterruptedCandidate(job: Job, reason: { code: string; message: string }) {
+    if (!['v1', 'pipeline-v1'].includes(String(job.parameters?.pipeline_version || '')) || !job.pipeline_candidate_id) return false;
+    const { data, error: readError } = await this.db.from('candidate_stories').select('id,status,classification').eq('id', job.pipeline_candidate_id).maybeSingle();
+    if (readError) throw new Error(`candidate_terminalization_read: ${readError.message}`);
+    const candidate = data as CandidateRecord | null;
+    if (!candidate || candidate.status !== 'researching') return false;
+    const classification = candidate.classification && typeof candidate.classification === 'object' ? candidate.classification : {};
+    const nextClassification = {
+      ...classification,
+      phase2_state: 'failed',
+      phase2_terminal_state: 'aborted',
+      phase2_failure: { code: reason.code, message: reason.message, job_id: job.id, at: new Date().toISOString() }
+    };
+    const { error: updateError } = await this.db.from('candidate_stories').update({ status: 'verification_failed', classification: nextClassification, updated_at: new Date().toISOString() }).eq('id', candidate.id).eq('status', 'researching');
+    if (updateError) throw new Error(`candidate_terminalization_update: ${updateError.message}`);
+    await this.event(job.id, 'error', 'candidate_terminalized', 'Pipeline V1 candidate terminalized after controller interruption.', { candidate_id: candidate.id, status: 'verification_failed', ...reason });
+    return true;
+  }
+
+  async reconcileExpiredV1Jobs() {
+    const expired = await this.expiredV1Jobs();
+    const released = await this.releaseExpired();
+    for (const job of expired) await this.terminalizeInterruptedCandidate(job, { code: 'LEASE_EXPIRED', message: 'Controller lease expired before completion.' });
+    return { released, expired };
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "prompt": "def count_ways_to_stair(k: int) -> int:\n    \"\"\" Alice starts on stair 1 and wants to reach stair k. She has a jump value starting at 0.\n    From stair i, she can perform two types of operations:\n    1. Go down to stair i-1 (cannot be used consecutively or on stair 0)\n    2. Go up to stair i + 2^jump, then increment jump by 1\n    \n    Return the total number of ways Alice can reach stair k.\n    Note that Alice can reach stair k multiple times and continue operations.\n    \n    Args:\n        k: The target stair number (0 <= k <= 10^9)\n    \n    Returns:\n        The number of distinct ways to reach stair k\n    \n    >>> count_ways_to_stair(0)\n    2\n    >>> count_ways_to_stair(1)\n    4\n    >>> count_ways_to_stair(512)\n    1\n    \"\"\"",
+  "provided_test": "def check(candidate):\n    assert candidate(0) == 2\n    assert candidate(1) == 4\n    assert candidate(134217726) == 378\n    assert candidate(1073741816) == 7888725\n    assert candidate(512) == 1\n    assert candidate(1056964608) == 0\n    assert candidate(195526682) == 0\n    assert candidate(939524096) == 0\n    assert candidate(134217728) == 1\n    assert candidate(1073676288) == 0\n    assert candidate(1000000000) == 0\n    assert candidate(882158866) == 0\n    assert candidate(999999995) == 0\n    assert candidate(955774915) == 0\n    assert candidate(135) == 0\n    assert candidate(891839837) == 0\n    assert candidate(799431782) == 0\n    assert candidate(815360767) == 0\n    assert candidate(170) == 0\n    assert candidate(785000180) == 0\n    assert candidate(430127867) == 0\n    assert candidate(803726009) == 0\n    assert candidate(892092581) == 0\n    assert candidate(783186224) == 0\n    assert candidate(268435456) == 1\n    assert candidate(313226) == 0\n    assert candidate(16383) == 15",
+  "entry_point": "count_ways_to_stair",
+  "representation": "Root test.py uses upstream tools-style check\u2192test_func wrapper; minimal provided tests are immutable.",
+  "test_globs_extra": [
+    "test.py"
+  ],
+  "snapshot_errors": []
+}

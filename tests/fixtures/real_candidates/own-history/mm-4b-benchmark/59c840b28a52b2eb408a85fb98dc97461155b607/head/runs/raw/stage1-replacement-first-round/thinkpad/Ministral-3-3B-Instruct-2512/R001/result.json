@@ -1,0 +1,91 @@
+{
+  "attempt_id": "R001-attempt-001",
+  "elapsed_s": 7.059289455413818,
+  "errors": [
+    "model_malformed_arguments"
+  ],
+  "events": [
+    {
+      "arguments": {
+        "release": "r-185"
+      },
+      "invalid": true,
+      "ok": false,
+      "response": "malformed_arguments:KeyError:'release_id'",
+      "tool": "deploy_release",
+      "type": "tool_call"
+    },
+    {
+      "reason": "model_stop",
+      "state": {
+        "production": "r-184",
+        "releases": {
+          "r-184": {
+            "approved": true,
+            "artifact": "sha256:AAA",
+            "commit": "8a1f31",
+            "created": "09:10"
+          },
+          "r-185": {
+            "approved": true,
+            "artifact": "sha256:BBB",
+            "commit": "03bf72",
+            "created": "11:42"
+          },
+          "r-186": {
+            "approved": false,
+            "artifact": "sha256:CCC",
+            "commit": "e72190",
+            "created": "12:03"
+          }
+        }
+      },
+      "type": "termination"
+    }
+  ],
+  "model": "Ministral-3-3B-Instruct-2512",
+  "raw_response_count": 1,
+  "resource_samples": [
+    {
+      "epoch": 1789760805.8158922,
+      "mem": {
+        "MemAvailable": 7245295616,
+        "SwapFree": 17656573952,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2155732992
+      },
+      "phase": "before_request",
+      "pid": 88332,
+      "rss_bytes": 174837760
+    },
+    {
+      "epoch": 1789760812.8727973,
+      "mem": {
+        "MemAvailable": 7244378112,
+        "SwapFree": 17656619008,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2155687936
+      },
+      "phase": "after_deploy_release",
+      "pid": 88332,
+      "rss_bytes": 176877568
+    },
+    {
+      "epoch": 1789760812.8733158,
+      "mem": {
+        "MemAvailable": 7244378112,
+        "SwapFree": 17656619008,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2155687936
+      },
+      "phase": "after_request",
+      "pid": 88332,
+      "rss_bytes": 176877568
+    }
+  ],
+  "run_id": "R001",
+  "status": "complete",
+  "task": "Q01",
+  "transport_errors": [],
+  "turns": 1
+}

@@ -1,0 +1,2 @@
+import { execFile } from 'node:child_process'; import { promisify } from 'node:util'; const exec = promisify(execFile);
+export async function availableMemoryGb() { try { const { stdout } = await exec('vm_stat', []); const pages = Object.fromEntries([...stdout.matchAll(/^Pages (free|inactive|speculative|purgeable):\s+(\d+)\./gm)].map(match => [match[1], Number(match[2])])); return ((pages.free || 0) + (pages.inactive || 0) + (pages.speculative || 0) + (pages.purgeable || 0)) * 16384 / 1024 ** 3; } catch { return 0; } }

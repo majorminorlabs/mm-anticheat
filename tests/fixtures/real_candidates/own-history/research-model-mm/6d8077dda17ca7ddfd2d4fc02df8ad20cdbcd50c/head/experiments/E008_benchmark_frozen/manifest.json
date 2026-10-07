@@ -1,0 +1,93 @@
+{
+  "experiment_schema_version": "1.0",
+  "experiment_id": "E008_benchmark_frozen",
+  "title": "research-bench-v0.1 controlled benchmark freeze",
+  "status": "completed",
+  "metadata_status": "reconstructed_after_fact",
+  "manifest_created_at": "2026-09-16T01:48:31Z",
+  "research_question": null,
+  "hypothesis": null,
+  "experiment_type": "benchmark_freeze",
+  "git": {
+    "commit": null,
+    "dirty": true,
+    "status_note": "Artifact was created before the provenance milestone commit; exact commit was unavailable at generation time."
+  },
+  "environment": {
+    "machine": {
+      "hostname": "dippos-Mac-Studio.local",
+      "os": "Darwin 25.6.0",
+      "architecture": "arm64",
+      "cpu": "i386",
+      "gpu": null,
+      "gpu_count": null,
+      "vram_gb": null,
+      "ram_gb": 32.0,
+      "hardware_probe_note": "GPU and VRAM are null unless explicitly measured by the run."
+    },
+    "software": {
+      "python": "3.13.12",
+      "platform": "macOS-26.6.2-arm64-i386-64bit-Mach-O",
+      "packages": {
+        "transformers": "5.17.0",
+        "mlx": "0.32.2",
+        "mlx-lm": "0.31.3"
+      },
+      "cuda": null
+    }
+  },
+  "dataset": {
+    "path": "data/generated/research-data-v0.1-expanded.jsonl",
+    "sha256": "703aceae7a28450fe9dca35be29c09cf0e64aceeda49f60e7f626b6e3708a91f",
+    "dataset_content_hash": "75283e511cb120bbb29fb95e13b7a26fa5f6b4f887ddf41079c50c4a96505cf1"
+  },
+  "benchmark": {
+    "path": "benchmarks/releases/research-bench-v0.1.jsonl",
+    "sha256": "3f1f859a10f1bb34ebb22197fadfeba08f2f812c2346a9d75c2b1b7e97b878c4",
+    "benchmark_content_hash": "d44b8226ed8d5122ffedcb353761a9624917fb0bd6f6be60e5595799a0a5eb3e"
+  },
+  "model": {
+    "name": null,
+    "revision": null,
+    "tokenizer_revision": null
+  },
+  "training": {},
+  "execution": {
+    "command": [
+      "uv run research-model benchmark build --version research-bench-v0.1"
+    ],
+    "start_time": null,
+    "end_time": null,
+    "duration_seconds": null,
+    "seed": 17,
+    "retries": [],
+    "deviations": []
+  },
+  "artifacts": {
+    "benchmark_metadata": "benchmarks/releases/research-bench-v0.1.metadata.json",
+    "benchmark_metadata_sha256": "0c17cde7fdabd46c3222cfdf1f6e34c4beaed523ce577cffc5cfe3a280bf4b95",
+    "summary_path": "/Volumes/Research/research-model-mm/experiments/E008_benchmark_frozen/summary.md"
+  },
+  "results": {
+    "benchmark_version": "research-bench-v0.1",
+    "count": 248,
+    "benchmark_content_hash": "d44b8226ed8d5122ffedcb353761a9624917fb0bd6f6be60e5595799a0a5eb3e",
+    "metadata_path": "benchmarks/releases/research-bench-v0.1.metadata.json"
+  },
+  "interpretation": "The benchmark is an independent, hand-authored controlled fixture set spanning 31 research-behavior families across 248 cases.",
+  "limitations": [
+    "This manifest was recorded after the command completed; exact start/end timestamps are unavailable.",
+    "No public release is authorized by this manifest."
+  ],
+  "conclusion": "Benchmark version frozen for the next primary comparison; defects require a new version.",
+  "missing_metadata": [
+    "git_commit",
+    "exact_freeze_timestamp_before_model_evaluation",
+    "expert inter-rater review"
+  ],
+  "reconstruction_sources": [
+    "data/generated",
+    "benchmarks/releases",
+    "docs/research_questions.md"
+  ]
+}

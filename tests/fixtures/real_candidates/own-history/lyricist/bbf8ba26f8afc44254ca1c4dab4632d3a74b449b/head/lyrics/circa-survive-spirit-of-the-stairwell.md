@@ -1,0 +1,57 @@
+# Spirit of the Stairwell
+
+Artist: Circa Survive
+
+## Lyrics
+
+```text
+[Verse 1]
+Scratched out a note I wrote for you
+To wake and read
+And know that I was there once
+I knew that there was nothing that I could write to assure you
+Of my return
+But all the paper said when I was done is
+‘do you still want me?’
+
+‘Cause I’d be terrified if I had to leave this place today
+We haven’t saved the baby
+
+
+[Pre-Chorus]
+As I said
+My darling
+Spring is constantly calling me
+And there’s no place that I’d rather be
+
+[Chorus]
+I won’t be angry
+If you have to leave
+But I won’t be waiting for that day
+So don’t say you’re sorry ‘cause
+I won’t believe
+I won't believe you
+
+[Verse 2]
+I didn’t see a sticker on the door when we walked in
+But I know it’s going to cost us
+The same amount of love it takes to get you through
+But it never moves you
+I’d be terrified if I had to leave this place today
+It’s where I threw my love away
+Then we saw a different side of Annie nobody saw
+She tried to kill the baby
+
+[Pre-Chorus]
+And the earth and its skin will open up
+And birth out a perfect mirror
+That makes all our reflections clear
+
+[Chorus]
+I won’t be angry
+If you have to leave
+But I won’t be waiting for that day
+So don’t say you’re sorry ‘cause
+I won’t believe
+I won't believe you
+```

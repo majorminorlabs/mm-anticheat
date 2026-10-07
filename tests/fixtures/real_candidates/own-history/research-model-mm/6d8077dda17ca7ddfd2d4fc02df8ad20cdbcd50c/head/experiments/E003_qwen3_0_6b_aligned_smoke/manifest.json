@@ -1,0 +1,122 @@
+{
+  "experiment_schema_version": "1.0",
+  "experiment_id": "E003_qwen3_0_6b_aligned_smoke",
+  "title": "Qwen3-0.6B aligned MLX research-behavior smoke",
+  "status": "completed",
+  "metadata_status": "reconstructed_after_fact",
+  "manifest_created_at": "2026-09-16T01:47:32Z",
+  "research_question": "Can the aligned protocol data change targeted structured behavior in a small local model?",
+  "hypothesis": null,
+  "experiment_type": "training_smoke",
+  "git": {
+    "commit": null,
+    "dirty": true,
+    "status_note": "Repository had no commit history when the pilot was run; this manifest is reconstructed after the fact."
+  },
+  "environment": {
+    "machine": {
+      "hostname": null,
+      "os": null,
+      "architecture": "arm64",
+      "cpu": "Apple M1 Max",
+      "gpu": "Apple M1 Max integrated GPU",
+      "gpu_count": 1,
+      "vram_gb": 32,
+      "ram_gb": 32,
+      "hardware_probe_note": "Recorded in the initial build report; unified memory is shared."
+    },
+    "software": {
+      "python": null,
+      "platform": "macOS (exact release not recorded)",
+      "packages": {
+        "mlx": "0.32.2",
+        "mlx-lm": "0.31.3"
+      },
+      "cuda": null
+    }
+  },
+  "dataset": {
+    "path": "data/generated/research-data-v0.1.jsonl",
+    "sha256": "6a316c79bed7eec801e231180df33ea3a3ea7951e7209cee0842a7b9204e6845",
+    "dataset_content_hash": "d894eaa8f60ac8272b6690cc662a1ace3ca52144d8c4a053b66114fb1da41ee4"
+  },
+  "benchmark": {
+    "path": "benchmarks/tasks/research_microbench.jsonl",
+    "sha256": "912ee3aa1e33bf7908bffa446bd01f0a01e8abee6878084f1b910e34112b34fe",
+    "benchmark_content_hash": "912ee3aa1e33bf7908bffa446bd01f0a01e8abee6878084f1b910e34112b34fe"
+  },
+  "model": {
+    "name": "Qwen/Qwen3-0.6B",
+    "revision": null,
+    "tokenizer_revision": null
+  },
+  "training": {
+    "backend": "mlx",
+    "method": "lora",
+    "iters": 20,
+    "num_layers": 4,
+    "rank": 8,
+    "learning_rate": 0.0001,
+    "max_seq_length": 1024,
+    "mask_prompt": false,
+    "seed": 0,
+    "adapter_path": "outputs/qwen3-0.6b-research-smoke-v3",
+    "validation_loss": 1.355,
+    "test_loss": 1.326,
+    "peak_memory_gb": 3.13,
+    "duration_note": "approximately 2 minutes including cached model load and test"
+  },
+  "execution": {
+    "command": [
+      "uv run mlx_lm lora --model Qwen/Qwen3-0.6B --data data/generated/mlx --train --fine-tune-type lora --adapter-path outputs/qwen3-0.6b-research-smoke-v3 --iters 20 --batch-size 1 --learning-rate 0.0001 --max-seq-length 1024 --num-layers 4 --seed 0 --steps-per-report 1 --steps-per-eval 10 --test"
+    ],
+    "start_time": null,
+    "end_time": null,
+    "duration_seconds": null,
+    "duration_note": null,
+    "seed": 0,
+    "retries": [],
+    "deviations": []
+  },
+  "artifacts": {
+    "adapter_config": "outputs/qwen3-0.6b-research-smoke-v3/adapter_config.json",
+    "adapter_config_sha256": "98b67187ae5a457c901797f2ffa8dee34926ad83fc1fb773cb540ea2e9d172af",
+    "adapter_path": "outputs/qwen3-0.6b-research-smoke-v3/adapters.safetensors",
+    "adapter_path_sha256": "c3d624dc521fbb0509c4adedfe0012f41b099f467e105599c9733c1ae7953992",
+    "prediction_path": "data/generated/qwen3-0.6b-smoke-public-test.json",
+    "prediction_path_sha256": "735e355f3adbfeea18b9a0fc39eb4fa9ee00a1c9bac544ed6098a191b9456096",
+    "summary_path": "/Volumes/Research/research-model-mm/experiments/E003_qwen3_0_6b_aligned_smoke/summary.md"
+  },
+  "results": {
+    "public_test": "data/generated/qwen3-0.6b-smoke-public-test.json",
+    "metrics": {
+      "structured_valid": 0.75,
+      "action_accuracy": 0.375,
+      "citation_precision": 0.3958333333,
+      "citation_recall": 0.3958333333,
+      "claim_status_f1": 0.25,
+      "evidence_recall": 0.6875,
+      "unsupported_claim_rate": 0.25
+    },
+    "comparison_baseline": "data/generated/qwen3-0.6b-untuned-public-test.json",
+    "scope_note": "targeted behavior smoke, not general researcher evidence"
+  },
+  "interpretation": "The corrected aligned run changed structured protocol behavior and reduced unsupported outputs on the held-out SciFact-derived test, but the sample, model size, and training budget are not sufficient for broad capability claims.",
+  "limitations": [
+    "20 iterations and 0.6B model.",
+    "The test set is derived from the same source family as training, with source-grouped split but limited domain diversity."
+  ],
+  "conclusion": null,
+  "missing_metadata": [
+    "git_commit",
+    "exact_start_time",
+    "exact_end_time",
+    "model_revision",
+    "tokenizer_revision",
+    "peak_memory_measurement_method"
+  ],
+  "reconstruction_sources": [
+    "docs/initial_build_report.md",
+    "data/manifests/public_sources.json"
+  ]
+}

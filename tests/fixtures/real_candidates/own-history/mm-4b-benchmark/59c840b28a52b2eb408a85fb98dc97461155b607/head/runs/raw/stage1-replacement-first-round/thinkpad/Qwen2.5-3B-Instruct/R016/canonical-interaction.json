@@ -1,0 +1,49 @@
+[
+  {
+    "arguments": {
+      "file_path": "input.csv"
+    },
+    "response": {
+      "expected": "account_id",
+      "header": "account-id"
+    },
+    "tool": "inspect_file",
+    "turn": 1,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "expected_header": "account_id",
+      "input_file": "input.csv"
+    },
+    "response": {
+      "error": "connection timeout contacting analytics-db"
+    },
+    "tool": "process_report",
+    "turn": 2,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "service": "analytics-db"
+    },
+    "response": {
+      "database": "healthy"
+    },
+    "tool": "check_service",
+    "turn": 3,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "expected_header": "account_id",
+      "input_file": "input.csv"
+    },
+    "response": {
+      "error": "connection timeout contacting analytics-db"
+    },
+    "tool": "process_report",
+    "turn": 4,
+    "type": "tool_call"
+  }
+]

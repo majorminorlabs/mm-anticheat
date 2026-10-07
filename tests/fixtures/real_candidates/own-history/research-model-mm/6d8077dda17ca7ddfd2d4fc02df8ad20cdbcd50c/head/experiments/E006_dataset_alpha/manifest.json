@@ -1,0 +1,96 @@
+{
+  "experiment_schema_version": "1.0",
+  "experiment_id": "E006_dataset_alpha",
+  "title": "research-data-v0.1-alpha release candidate",
+  "status": "completed",
+  "metadata_status": "reconstructed_after_fact",
+  "manifest_created_at": "2026-09-16T01:48:27Z",
+  "research_question": null,
+  "hypothesis": null,
+  "experiment_type": "dataset_release",
+  "git": {
+    "commit": null,
+    "dirty": true,
+    "status_note": "Artifact was created before the provenance milestone commit; exact commit was unavailable at generation time."
+  },
+  "environment": {
+    "machine": {
+      "hostname": "dippos-Mac-Studio.local",
+      "os": "Darwin 25.6.0",
+      "architecture": "arm64",
+      "cpu": "i386",
+      "gpu": null,
+      "gpu_count": null,
+      "vram_gb": null,
+      "ram_gb": 32.0,
+      "hardware_probe_note": "GPU and VRAM are null unless explicitly measured by the run."
+    },
+    "software": {
+      "python": "3.13.12",
+      "platform": "macOS-26.6.2-arm64-i386-64bit-Mach-O",
+      "packages": {
+        "transformers": "5.17.0",
+        "mlx": "0.32.2",
+        "mlx-lm": "0.31.3"
+      },
+      "cuda": null
+    }
+  },
+  "dataset": {
+    "path": "data/generated/research-data-v0.1-alpha.jsonl",
+    "sha256": "eda9bd426bb389fd7c48d534b44ee79687950d2ddddea4ecaf04e6df53540fe5",
+    "dataset_content_hash": "8249bdf28ff2d34e64adbffd39dfed5aee0d7e40fa237179268700f829dc026c"
+  },
+  "benchmark": {
+    "path": "benchmarks/releases/research-bench-v0.1.jsonl",
+    "sha256": "3f1f859a10f1bb34ebb22197fadfeba08f2f812c2346a9d75c2b1b7e97b878c4",
+    "benchmark_content_hash": "d44b8226ed8d5122ffedcb353761a9624917fb0bd6f6be60e5595799a0a5eb3e"
+  },
+  "model": {
+    "name": null,
+    "revision": null,
+    "tokenizer_revision": null
+  },
+  "training": {},
+  "execution": {
+    "command": [
+      "uv run research-model data build --sources scifact,qasper --max-claims 120 --max-questions 400 --strict"
+    ],
+    "start_time": null,
+    "end_time": null,
+    "duration_seconds": null,
+    "seed": 17,
+    "retries": [],
+    "deviations": []
+  },
+  "artifacts": {
+    "validation_report": "data/generated/research-data-v0.1-alpha.validation.json",
+    "validation_report_sha256": "3720f2e79ced29f0e962f1b3392d4372e97a960d094b7969718c87f1aa411fba",
+    "summary_path": "/Volumes/Research/research-model-mm/experiments/E006_dataset_alpha/summary.md"
+  },
+  "results": {
+    "dataset_version": "research-data-v0.1-alpha",
+    "accepted": 3547,
+    "rejected": 13,
+    "rejection_rate": 0.003651685393258427,
+    "dataset_content_hash": "8249bdf28ff2d34e64adbffd39dfed5aee0d7e40fa237179268700f829dc026c",
+    "validation_report": "data/generated/research-data-v0.1-alpha.validation.json"
+  },
+  "interpretation": "The alpha release demonstrates a staged multi-source pipeline with non-zero strict rejection and explicit license classes.",
+  "limitations": [
+    "This manifest was recorded after the command completed; exact start/end timestamps are unavailable.",
+    "No public release is authorized by this manifest."
+  ],
+  "conclusion": "Alpha release candidate; not a public release.",
+  "missing_metadata": [
+    "git_commit",
+    "exact_start_time",
+    "exact_end_time",
+    "source-document rights review"
+  ],
+  "reconstruction_sources": [
+    "data/generated",
+    "benchmarks/releases",
+    "docs/research_questions.md"
+  ]
+}

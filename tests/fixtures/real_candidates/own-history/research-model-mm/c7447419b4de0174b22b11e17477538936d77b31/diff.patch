@@ -1,0 +1,1626 @@
+diff --git a/configs/hardware/nvidia_profiles.toml b/configs/hardware/nvidia_profiles.toml
+new file mode 100644
+index 0000000..ff7bb26
+--- /dev/null
++++ b/configs/hardware/nvidia_profiles.toml
+@@ -0,0 +1,72 @@
++# Execution-only overrides. Scientific sequence length, examples, optimizer,
++# LoRA recipe, seed, data, and effective global batch remain frozen in E014.
++# Throughput and peak VRAM are intentionally unmeasured until a target host runs.
++
++effective_global_batch_size = 16
++max_sequence_length = 4608
++per_device_train_batch_size = 1
++
++[profiles.RTX3090_SINGLE]
++world_size = 1
++gradient_accumulation_steps = 16
++expected_gpu_name_contains = "RTX 3090"
++minimum_vram_gib = 21.0
++nominal_vram_gb = 24
++measured_peak_vram_gib = "unmeasured"
++measured_tokens_per_second = "unmeasured"
++
++[profiles.RTX3090_DUAL]
++world_size = 2
++gradient_accumulation_steps = 8
++expected_gpu_name_contains = "RTX 3090"
++minimum_vram_gib = 21.0
++nominal_vram_gb = 24
++measured_peak_vram_gib = "unmeasured"
++measured_tokens_per_second = "unmeasured"
++
++[profiles.A100_80GB]
++world_size = 1
++gradient_accumulation_steps = 16
++expected_gpu_name_contains = "A100"
++minimum_vram_gib = 70.0
++nominal_vram_gb = 80
++measured_peak_vram_gib = "unmeasured"
++measured_tokens_per_second = "unmeasured"
++
++[profiles.H100_80GB]
++world_size = 1
++gradient_accumulation_steps = 16
++expected_gpu_name_contains = "H100"
++minimum_vram_gib = 70.0
++nominal_vram_gb = 80
++measured_peak_vram_gib = "unmeasured"
++measured_tokens_per_second = "unmeasured"
++
++# Optional non-paid/bring-your-own-host fallbacks. These are profiles only;
++# nothing is provisioned or launched by this project.
++[profiles.A100_40GB]
++world_size = 1
++gradient_accumulation_steps = 16
++expected_gpu_name_contains = "A100"
++minimum_vram_gib = 36.0
++nominal_vram_gb = 40
++measured_peak_vram_gib = "unmeasured"
++measured_tokens_per_second = "unmeasured"
++
++[profiles.L40S_48GB]
++world_size = 1
++gradient_accumulation_steps = 16
++expected_gpu_name_contains = "L40S"
++minimum_vram_gib = 43.0
++nominal_vram_gb = 48
++measured_peak_vram_gib = "unmeasured"
++measured_tokens_per_second = "unmeasured"
++
++[profiles.RTX6000_ADA_48GB]
++world_size = 1
++gradient_accumulation_steps = 16
++expected_gpu_name_contains = "RTX 6000 Ada"
++minimum_vram_gib = 43.0
++nominal_vram_gb = 48
++measured_peak_vram_gib = "unmeasured"
++measured_tokens_per_second = "unmeasured"
+diff --git a/docs/hardware/E014_NVIDIA_qualification.md b/docs/hardware/E014_NVIDIA_qualification.md
+new file mode 100644
+index 0000000..9f6c80b
+--- /dev/null
++++ b/docs/hardware/E014_NVIDIA_qualification.md
+@@ -0,0 +1,92 @@
++# E014 NVIDIA host package and qualification
++
++## Status
++
++The frozen E014 primary preregistration is commit `bc27f558b6c0cd6d0c27206ee5e4fff851b7f12f`. The qualification path is deliberately separate from E014's model-quality outputs. It performs real QLoRA optimizer updates, writes its artifacts below `outputs/hardware-qualification/E014/`, and does not score the benchmark or general-capability control.
++
++The currently connected Mac has no NVIDIA/CUDA device. The only configured remote GPU observed for this task was one RTX 3070 with 8 GB, which does not match any selected profile and will not be used. No cloud instance is provisioned or paid for.
++
++Operational gate: `READY_FOR_3090_QUALIFICATION`. E014 remains preregistered as `READY_FOR_COMPUTE`; the target-hardware qualification has not run.
++
++## Execution profiles
++
++All profiles preserve the frozen 4,608-token cap and effective global batch 16. Microbatch remains one sequence per GPU. For two 3090s, DDP world size 2 and accumulation 8 preserve that batch; it does not combine the two VRAM pools. Hardware-specific throughput and peak VRAM are marked unmeasured until a host passes qualification.
++
++| Profile | GPUs | Accumulation | Effective batch | Per-GPU nominal VRAM |
++| --- | ---: | ---: | ---: | ---: |
++| `RTX3090_SINGLE` | 1 | 16 | 16 | 24 GB |
++| `RTX3090_DUAL` | 2 | 8 | 16 | 24 GB |
++| `A100_80GB` | 1 | 16 | 16 | 80 GB |
++| `H100_80GB` | 1 | 16 | 16 | 80 GB |
++| `A100_40GB` | 1 | 16 | 16 | 40 GB |
++| `L40S_48GB` | 1 | 16 | 16 | 48 GB |
++| `RTX6000_ADA_48GB` | 1 | 16 | 16 | 48 GB |
++
++The first four are the requested primary profiles. The last three are configuration-only fallbacks for an already available host; they do not authorize renting compute. A 24 GB RTX 3090 is a plausible candidate for 8B NF4 QLoRA with microbatch 1 and gradient checkpointing, but the 4,608-token memory peak is not confirmed until the real qualification completes. An 8 GB RTX 3070 is rejected by name and VRAM checks. The A100 40 GB and 48 GB L40S/RTX 6000 Ada profiles have more VRAM headroom and look feasible by capacity, but remain unmeasured until qualified.
++
++## Qualification workload and evidence
++
++Run `bash scripts/qualify_gpu.sh RTX3090_SINGLE` or use the matching profile. The command first checks CUDA/BF16, exact visible GPU count/model/VRAM, frozen dataset hashes, and free disk. If those checks fail, it exits before creating a run directory or downloading model weights.
++
++On a matching host it loads the pinned `Qwen/Qwen3-8B-Base` revision using the same NF4 double-quantized QLoRA setup, BF16 compute, LoRA rank/targets, optimizer, and 4,608-token limit as E014. It selects the 320 longest unique examples from the frozen training split only. For the qualification collator, those true input sequences are right-padded to exactly 4,608 positions with padding labels masked, so each measured update exercises the full allocation length without changing the examples or targets. The validation and test splits are not used by the optimizer or evaluator.
++
++It runs 10 optimizer steps, atomically marks and validates the complete checkpoint, exits that Python process, then starts a fresh process and resumes from step 10 to step 20. It requires adapter, optimizer, scheduler, trainer-state, and every rank's RNG state in each resumable checkpoint; checkpoint markers are atomically renamed into place only after validation. The final adapter hash must differ from the step-10 adapter. No benchmark prediction, hypothesis score, or model-quality comparison is produced.
++
++Each unique run is stored at:
++
++`outputs/hardware-qualification/E014/<PROFILE>/<UTC-timestamp>-<run-id>/`
++
++The `qualification_report.json` includes optimizer steps, save/load/resume checks, selected-sequence token throughput, per-rank CUDA allocated/reserved peaks, process RSS, and sampled `nvidia-smi` utilization, memory, and temperature. Raw phase logs and `gpu_telemetry.jsonl` are kept beside it. Qualification artifacts never go in `experiments/E014_qwen3_8b_primary_qlora/`, `outputs/qwen3-8b-research-v0.1-qlora/`, the frozen benchmark/control, or paper statistics.
++
++## Host requirements
++
++- Linux x86_64, Python 3.13, `uv`, a compatible NVIDIA driver, `nvidia-smi`, and the exact profile's BF16-capable GPU(s).
++- At least 40 GB free where the Hugging Face model cache resides; the E014 preregistration recommends 150 GB free disk and 64 GB system RAM for the full run.
++- Network access to the public Hugging Face model repository. The pinned model revision is publicly readable (16.4 GB); no Hugging Face login/token is required for this public model. The qualification script does not request or print credentials.
++- Copy the untracked frozen training file separately. Its expected SHA-256 is `703aceae7a28450fe9dca35be29c09cf0e64aceeda49f60e7f626b6e3708a91f`.
++- No CUDA toolkit install is needed if the compatible NVIDIA driver and locked PyTorch/BitsAndBytes wheels work; `uv sync --locked --extra dev --extra ml` installs the pinned Python environment. Driver packages themselves must be provisioned by the host owner.
++
++## Portable bundle and data transfer
++
++After committing the tooling on this branch, create a self-contained Git bundle locally:
++
++```sh
++bash scripts/package_nvidia_host.sh /tmp/research-model-e014.bundle
++scp /tmp/research-model-e014.bundle <user>@<linux-gpu-host>:/tmp/
++scp /Volumes/Research/research-model-mm/data/generated/research-data-v0.1-expanded.jsonl <user>@<linux-gpu-host>:/tmp/research-data-v0.1-expanded.jsonl
++ssh <user>@<linux-gpu-host> 'git clone --branch codex/e014-prereg-ready-for-compute /tmp/research-model-e014.bundle ~/research-model-mm && mkdir -p ~/research-model-mm/data/generated && mv /tmp/research-data-v0.1-expanded.jsonl ~/research-model-mm/data/generated/research-data-v0.1-expanded.jsonl'
++```
++
++Then on the Linux host:
++
++```sh
++cd ~/research-model-mm
++bash scripts/prepare_nvidia_host.sh RTX3090_SINGLE
++bash scripts/qualify_gpu.sh RTX3090_SINGLE
++```
++
++For a single-GPU profile, expose exactly one intended card with `CUDA_VISIBLE_DEVICES`; for two 3090s, use `RTX3090_DUAL` in both commands and expose exactly the two intended cards. For other listed GPUs, pass the corresponding profile. No host IP, SSH credential, or cloud provider is assumed here.
++
++## E014 compute commands
++
++Only start the primary run after the base benchmark and general-capability control have been recorded, and after the hardware qualification passes. The scientific recipe and output directory are frozen in the config; the profile only changes execution world size and accumulation.
++
++```sh
++# One 3090
++bash scripts/run_e014.sh RTX3090_SINGLE run
++
++# Two 3090s (DDP)
++CUDA_VISIBLE_DEVICES=0,1 bash scripts/run_e014.sh RTX3090_DUAL run
++
++# Resume after interruption; use the same profile/world size as the saved checkpoints
++bash scripts/run_e014.sh RTX3090_SINGLE resume
++CUDA_VISIBLE_DEVICES=0,1 bash scripts/run_e014.sh RTX3090_DUAL resume
++```
++
++The full E014 training adapter and checkpoint tree is `outputs/qwen3-8b-research-v0.1-qlora/`. A profile/world-size mismatch is rejected instead of guessing at a resume. Incomplete checkpoint directories are preserved under `incomplete-checkpoints/` before resuming from the latest fully validated checkpoint.
++
++## Primary-run evaluation commands
++
++The preregistered baseline, control, tuned evaluation, and paired-bootstrap commands are recorded in `experiments/E014_qwen3_8b_primary_qlora/manifest.json`. The core direct invocations use the locked revision `49e3418fbbbca6ecbdf9608b4d22e5a407081db4`, 4-bit inference, and the frozen benchmark/control paths. Keep their E014 output names from the manifest; do not reuse the generic `baseline.json` or `evaluation.json` paths.
++
++Capacity references: [RTX 3090 (24 GB)](https://www.nvidia.com/en-eu/geforce/graphics-cards/30-series/rtx-3090/), [A100 40/80 GB](https://www.nvidia.com/en-us/data-center/a100/), [H100 80 GB](https://www.nvidia.com/en-us/data-center/h100/), [L40S 48 GB](https://www.nvidia.com/en-us/data-center/l40s/), and [RTX 6000 Ada 48 GB](https://www.nvidia.com/en-us/products/workstations/rtx-6000/). NVIDIA's capacities establish VRAM classes, not expected throughput or guaranteed fit. The [pinned Qwen3-8B-Base revision](https://huggingface.co/Qwen/Qwen3-8B-Base/tree/49e3418fbbbca6ecbdf9608b4d22e5a407081db4) is listed publicly at 16.4 GB.
+diff --git a/scripts/package_nvidia_host.sh b/scripts/package_nvidia_host.sh
+new file mode 100644
+index 0000000..e98d224
+--- /dev/null
++++ b/scripts/package_nvidia_host.sh
+@@ -0,0 +1,33 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++BUNDLE_PATH="${1:?usage: bash scripts/package_nvidia_host.sh /path/to/output.bundle}"
++BRANCH="codex/e014-prereg-ready-for-compute"
++REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++cd "$REPO_ROOT"
++
++if [[ "$(git branch --show-current)" != "$BRANCH" ]]; then
++  echo "expected branch $BRANCH; found $(git branch --show-current)" >&2
++  exit 1
++fi
++if ! git diff --quiet HEAD --; then
++  echo "tracked source changes must be committed before packaging" >&2
++  exit 1
++fi
++UNTRACKED_SOURCE="$(git ls-files --others --exclude-standard | sed '/^data\/generated\//d')"
++if [[ -n "$UNTRACKED_SOURCE" ]]; then
++  echo "untracked source files must be committed before packaging:" >&2
++  echo "$UNTRACKED_SOURCE" >&2
++  exit 1
++fi
++if [[ -e "$BUNDLE_PATH" ]]; then
++  echo "refusing to overwrite existing bundle: $BUNDLE_PATH" >&2
++  exit 1
++fi
++
++git bundle create "$BUNDLE_PATH" "$BRANCH"
++git bundle verify "$BUNDLE_PATH"
++printf 'Portable Git bundle: %s\n' "$BUNDLE_PATH"
++printf 'Frozen branch: %s\n' "$BRANCH"
++printf 'Frozen commit: %s\n' "$(git rev-parse "$BRANCH")"
++printf 'The generated training dataset is intentionally outside Git; copy data/generated/research-data-v0.1-expanded.jsonl separately and verify the frozen SHA-256 in the host preparation step.\n'
+diff --git a/scripts/prepare_nvidia_host.sh b/scripts/prepare_nvidia_host.sh
+new file mode 100644
+index 0000000..31a1759
+--- /dev/null
++++ b/scripts/prepare_nvidia_host.sh
+@@ -0,0 +1,32 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++PROFILE="${1:?usage: bash scripts/prepare_nvidia_host.sh PROFILE}"
++case "$PROFILE" in
++  RTX3090_SINGLE|RTX3090_DUAL|A100_80GB|H100_80GB|A100_40GB|L40S_48GB|RTX6000_ADA_48GB) ;;
++  *) echo "unknown execution profile: $PROFILE" >&2; exit 2 ;;
++esac
++
++REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++cd "$REPO_ROOT"
++
++if ! command -v uv >/dev/null 2>&1; then
++  echo "uv is required; install uv using the official Astral installation instructions, then rerun this script" >&2
++  exit 1
++fi
++if ! command -v nvidia-smi >/dev/null 2>&1; then
++  echo "nvidia-smi is unavailable; install a compatible NVIDIA driver on the Linux host" >&2
++  exit 1
++fi
++
++nvidia-smi
++uv sync --locked --extra dev --extra ml
++uv run --locked --extra dev --extra ml python scripts/train_transformers.py \
++  --config configs/training/qwen3_8b_v0.1_qlora.toml \
++  --hardware-profile "$PROFILE" \
++  --dry-run --skip-tokenizer
++uv run --locked --extra dev --extra ml python scripts/qualify_nvidia.py \
++  --profile "$PROFILE" --check-only
++uv run --locked --extra dev --extra ml research-model experiment validate --all
++
++echo "Host packages, exact profile visibility, frozen data hashes, and experiment manifests validated. No model weights were downloaded."
+diff --git a/scripts/qualify_gpu.sh b/scripts/qualify_gpu.sh
+new file mode 100644
+index 0000000..f88e1cd
+--- /dev/null
++++ b/scripts/qualify_gpu.sh
+@@ -0,0 +1,19 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++PROFILE="${1:?usage: bash scripts/qualify_gpu.sh PROFILE [check]}"
++MODE="${2:-run}"
++case "$PROFILE" in
++  RTX3090_SINGLE|RTX3090_DUAL|A100_80GB|H100_80GB|A100_40GB|L40S_48GB|RTX6000_ADA_48GB) ;;
++  *) echo "unknown execution profile: $PROFILE" >&2; exit 2 ;;
++esac
++case "$MODE" in
++  run) EXTRA_ARGS=() ;;
++  check) EXTRA_ARGS=(--check-only) ;;
++  *) echo "mode must be run or check" >&2; exit 2 ;;
++esac
++
++REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++cd "$REPO_ROOT"
++exec uv run --locked --extra dev --extra ml python scripts/qualify_nvidia.py \
++  --profile "$PROFILE" "${EXTRA_ARGS[@]}"
+diff --git a/scripts/qualify_nvidia.py b/scripts/qualify_nvidia.py
+new file mode 100644
+index 0000000..37e4cf6
+--- /dev/null
++++ b/scripts/qualify_nvidia.py
+@@ -0,0 +1,614 @@
++"""Run an execution-only QLoRA hardware qualification in an isolated artifact tree."""
++
++from __future__ import annotations
++
++import argparse
++import csv
++import hashlib
++import json
++import os
++import platform
++import random
++import shutil
++import subprocess
++import sys
++import threading
++import time
++from datetime import datetime, timezone
++from pathlib import Path
++from typing import Any
++from uuid import uuid4
++
++ROOT = Path(__file__).resolve().parents[1]
++if str(ROOT / "src") not in sys.path:
++    sys.path.insert(0, str(ROOT / "src"))
++if str(ROOT / "scripts") not in sys.path:
++    sys.path.insert(0, str(ROOT / "scripts"))
++
++from research_model.training.checkpoints import (
++    validate_checkpoint,
++    write_checkpoint_complete_marker,
++)
++from research_model.training.profiles import apply_hardware_profile, load_hardware_profile, validate_visible_gpus
++from train_transformers import _example_text, _load_data, _tokenizer_lengths
++
++
++DEFAULT_CONFIG = "configs/training/qwen3_8b_v0.1_qlora.toml"
++PROFILE_PATH = ROOT / "configs" / "hardware" / "nvidia_profiles.toml"
++QUALIFICATION_ROOT = ROOT / "outputs" / "hardware-qualification" / "E014"
++FIRST_STAGE_STEP = 10
++FINAL_STAGE_STEP = 20
++CHECKPOINT_INTERVAL = 5
++SAMPLE_COUNT = FIRST_STAGE_STEP * 16
++MINIMUM_FREE_DISK_BYTES = 40_000_000_000
++
++
++def _now() -> str:
++    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
++
++
++def _atomic_json(path: Path, value: Any) -> None:
++    path.parent.mkdir(parents=True, exist_ok=True)
++    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
++    with temporary.open("x", encoding="utf-8") as handle:
++        json.dump(value, handle, indent=2, ensure_ascii=False)
++        handle.write("\n")
++        handle.flush()
++        os.fsync(handle.fileno())
++    os.replace(temporary, path)
++
++
++def _sha256(path: Path) -> str:
++    digest = hashlib.sha256()
++    with path.open("rb") as handle:
++        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
++            digest.update(chunk)
++    return digest.hexdigest()
++
++
++def _load_recipe(config_path: str, profile_name: str) -> tuple[dict[str, Any], dict[str, Any]]:
++    import tomllib
++
++    resolved = Path(config_path)
++    if not resolved.is_absolute():
++        resolved = ROOT / resolved
++    with resolved.open("rb") as handle:
++        raw_config = tomllib.load(handle)
++    profile = load_hardware_profile(profile_name, PROFILE_PATH)
++    config = apply_hardware_profile(raw_config, profile)
++    config["_hardware_profile"] = profile
++    return config, profile
++
++
++def _host_preflight(profile: dict[str, Any]) -> list[dict[str, Any]]:
++    try:
++        import torch
++    except ImportError as exc:
++        raise SystemExit("ML dependencies are missing; run `uv sync --extra ml --locked` first") from exc
++    if not torch.cuda.is_available():
++        raise SystemExit("CUDA is unavailable on this host; no qualification artifacts or model downloads were started")
++    if not torch.cuda.is_bf16_supported():
++        raise SystemExit("the frozen QLoRA recipe requires a BF16-capable NVIDIA GPU")
++    if shutil.which("nvidia-smi") is None:
++        raise SystemExit("nvidia-smi is required for qualification telemetry")
++    try:
++        devices = validate_visible_gpus(torch, profile, int(profile["world_size"]))
++    except RuntimeError as exc:
++        raise SystemExit(str(exc)) from exc
++
++    cache_home = Path(os.environ.get("HF_HOME", Path.home() / ".cache" / "huggingface")).expanduser()
++    for label, target in (("model cache", cache_home), ("project output", ROOT / "outputs")):
++        probe = target
++        while not probe.exists() and probe != probe.parent:
++            probe = probe.parent
++        if shutil.disk_usage(probe).free < MINIMUM_FREE_DISK_BYTES:
++            raise SystemExit(
++                f"at least {MINIMUM_FREE_DISK_BYTES / 1e9:.0f} GB free is required on the {label} filesystem"
++            )
++    return devices
++
++
++def _nvidia_smi_rows() -> list[dict[str, Any]]:
++    result = subprocess.run(
++        [
++            "nvidia-smi",
++            "--query-gpu=name,memory.used,memory.total,utilization.gpu,temperature.gpu",
++            "--format=csv,noheader,nounits",
++        ],
++        check=True,
++        capture_output=True,
++        text=True,
++        timeout=10,
++    )
++    rows = []
++    for row in csv.reader(result.stdout.splitlines(), skipinitialspace=True):
++        if len(row) != 5:
++            continue
++        rows.append({
++            "name": row[0],
++            "memory_used_mib": _parse_number(row[1]),
++            "memory_total_mib": _parse_number(row[2]),
++            "gpu_utilization_percent": _parse_number(row[3]),
++            "temperature_celsius": _parse_number(row[4]),
++        })
++    return rows
++
++
++def _parse_number(value: str) -> int | float | None:
++    try:
++        number = float(value.strip())
++    except ValueError:
++        return None
++    return int(number) if number.is_integer() else number
++
++
++def _fixed_length_collator(tokenizer: Any, sequence_length: int):
++    """Pad every qualification batch to the exact memory-test length, masking pad loss."""
++
++    import torch
++
++    def collate(features: list[dict[str, Any]]) -> dict[str, Any]:
++        model_features = [
++            {key: feature[key] for key in ("input_ids", "attention_mask") if key in feature}
++            for feature in features
++        ]
++        if any(len(feature["input_ids"]) > sequence_length for feature in model_features):
++            raise ValueError("qualification sample exceeds the frozen sequence-length cap")
++        batch = tokenizer.pad(
++            model_features,
++            padding="max_length",
++            max_length=sequence_length,
++            return_tensors="pt",
++        )
++        if batch["input_ids"].shape[-1] != sequence_length:
++            raise ValueError("qualification collator did not produce the exact padded sequence length")
++        labels = batch["input_ids"].clone()
++        labels[batch["attention_mask"] == 0] = -100
++        batch["labels"] = labels
++        return batch
++
++    return collate
++
++
++def _monitor_child(command: list[str], run_dir: Path) -> None:
++    log_path = run_dir / f"{command[command.index('--worker-phase') + 1]}_phase.log"
++    telemetry_path = run_dir / "gpu_telemetry.jsonl"
++    with log_path.open("w", encoding="utf-8") as log_handle:
++        process = subprocess.Popen(command, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
++
++        def consume_output() -> None:
++            assert process.stdout is not None
++            for line in process.stdout:
++                log_handle.write(line)
++                log_handle.flush()
++                print(line, end="", flush=True)
++
++        output_thread = threading.Thread(target=consume_output, daemon=True)
++        output_thread.start()
++        with telemetry_path.open("a", encoding="utf-8") as telemetry:
++            while process.poll() is None:
++                try:
++                    telemetry.write(json.dumps({"timestamp": _now(), "devices": _nvidia_smi_rows()}) + "\n")
++                    telemetry.flush()
++                except (OSError, subprocess.SubprocessError):
++                    telemetry.write(json.dumps({"timestamp": _now(), "error": "nvidia-smi telemetry sample failed"}) + "\n")
++                    telemetry.flush()
++                time.sleep(2)
++        return_code = process.wait()
++        output_thread.join(timeout=10)
++    if return_code:
++        raise RuntimeError(f"qualification child exited with status {return_code}; inspect {log_path}")
++
++
++def _run_worker(command: list[str], run_dir: Path) -> None:
++    _monitor_child(command, run_dir)
++
++
++def _qualification_command(profile: dict[str, Any], phase: str, run_dir: Path, config_path: str) -> list[str]:
++    return [
++        sys.executable,
++        "-m",
++        "torch.distributed.run",
++        "--standalone",
++        f"--nproc_per_node={profile['world_size']}",
++        str(Path(__file__).resolve()),
++        "--worker-phase",
++        phase,
++        "--profile",
++        profile["name"],
++        "--run-dir",
++        str(run_dir),
++        "--config",
++        config_path,
++    ]
++
++
++def _qualification_parent(args: argparse.Namespace) -> int:
++    config, profile = _load_recipe(args.config, args.profile)
++    devices = _host_preflight(profile)
++    splits, dataset_report = _load_data(config, int(profile["world_size"]))
++    del splits
++    if args.check_only:
++        print(json.dumps({"status": "ready_for_qualification", "profile": profile["name"], "dataset": dataset_report}, indent=2))
++        return 0
++
++    run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid4().hex[:8]
++    run_dir = QUALIFICATION_ROOT / profile["name"] / run_id
++    run_dir.mkdir(parents=True, exist_ok=False)
++    try:
++        git_commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
++    except (OSError, subprocess.SubprocessError):
++        git_commit = None
++    start_time = time.monotonic()
++    start_record = {
++        "status": "running",
++        "started_at": _now(),
++        "run_id": run_id,
++        "git_commit": git_commit,
++        "profile": profile,
++        "devices": devices,
++        "host": {
++            "platform": platform.platform(),
++            "architecture": platform.machine(),
++            "python": platform.python_version(),
++            "system_memory_bytes": (
++                os.sysconf("SC_PHYS_PAGES") * os.sysconf("SC_PAGE_SIZE")
++                if hasattr(os, "sysconf") and hasattr(os, "sysconf_names") and "SC_PHYS_PAGES" in os.sysconf_names
++                else None
++            ),
++            "process_peak_rss_bytes_per_worker": "recorded in phase JSON",
++        },
++        "model": config["base_model"],
++        "model_revision": config["model_revision"],
++        "tokenizer_revision": config["tokenizer_revision"],
++        "dataset": dataset_report,
++        "output_scope": str(run_dir.relative_to(ROOT)),
++        "model_quality_evaluation_performed": False,
++        "test_split_used": False,
++        "test_split_evaluated": False,
++    }
++    _atomic_json(run_dir / "qualification_started.json", start_record)
++    try:
++        _run_worker(_qualification_command(profile, "first", run_dir, args.config), run_dir)
++        _run_worker(_qualification_command(profile, "resume", run_dir, args.config), run_dir)
++
++        selection = json.loads((run_dir / "selected_training_examples.json").read_text(encoding="utf-8"))
++        first = json.loads((run_dir / "first_phase.json").read_text(encoding="utf-8"))
++        resumed = json.loads((run_dir / "resume_phase.json").read_text(encoding="utf-8"))
++        checkpoint10 = run_dir / "checkpoint-10"
++        checkpoint20 = run_dir / "checkpoint-20"
++        if first["global_step"] != FIRST_STAGE_STEP or resumed["global_step"] != FINAL_STAGE_STEP:
++            raise RuntimeError("qualification did not reach the required 10-step save and 20-step resumed state")
++        if not validate_checkpoint(checkpoint10, int(profile["world_size"])):
++            raise RuntimeError("step-10 checkpoint failed marker/files/optimizer/RNG validation")
++        if not validate_checkpoint(checkpoint20, int(profile["world_size"])):
++            raise RuntimeError("step-20 checkpoint failed marker/files/optimizer/RNG validation")
++
++        checkpoint_weights = next(iter(sorted(checkpoint10.glob("adapter_model.*"))))
++        final_weights = next(iter(sorted(run_dir.glob("adapter_model.*"))))
++        checkpoint_hash = _sha256(checkpoint_weights)
++        final_hash = _sha256(final_weights)
++        if checkpoint_hash == final_hash:
++            raise RuntimeError("adapter weights did not change after loading checkpoint-10 and resuming to step 20")
++
++        telemetry = []
++        telemetry_path = run_dir / "gpu_telemetry.jsonl"
++        if telemetry_path.exists():
++            telemetry = [json.loads(line) for line in telemetry_path.read_text(encoding="utf-8").splitlines() if line.strip()]
++        device_count = int(profile["world_size"])
++        telemetry_peak_used = []
++        telemetry_peak_util = []
++        telemetry_peak_temp = []
++        for index in range(device_count):
++            samples = [sample["devices"][index] for sample in telemetry if isinstance(sample.get("devices"), list) and len(sample["devices"]) > index]
++            telemetry_peak_used.append(max((row["memory_used_mib"] for row in samples if row.get("memory_used_mib") is not None), default=None))
++            telemetry_peak_util.append(max((row["gpu_utilization_percent"] for row in samples if row.get("gpu_utilization_percent") is not None), default=None))
++            telemetry_peak_temp.append(max((row["temperature_celsius"] for row in samples if row.get("temperature_celsius") is not None), default=None))
++
++        optimizer_seconds = float(first.get("train_runtime_seconds", 0)) + float(resumed.get("train_runtime_seconds", 0))
++        token_total = int(sum(selection["token_lengths"]))
++        tokens_per_second = token_total / optimizer_seconds if optimizer_seconds > 0 else None
++        report = {
++            **start_record,
++            "status": "passed",
++            "finished_at": _now(),
++            "qualification_wall_seconds": round(time.monotonic() - start_time, 3),
++            "optimizer_runtime_seconds": round(optimizer_seconds, 3),
++            "steps": {"before_restart": first["global_step"], "after_fresh_process_resume": resumed["global_step"]},
++            "save_load_resume": {
++                "checkpoint_10_valid": True,
++                "checkpoint_20_valid": True,
++                "resume_process_restarted": True,
++                "optimizer_and_scheduler_state_required": True,
++                "adapter_weights_changed_after_resume": True,
++                "checkpoint_10_adapter_sha256": checkpoint_hash,
++                "step_20_adapter_sha256": final_hash,
++            },
++            "workload": {
++                "model_quality_evaluation_performed": False,
++                "test_split_used": False,
++                "test_split_evaluated": False,
++                "unique_train_examples": len(selection["example_ids"]),
++                "effective_global_batch_size": profile["effective_global_batch_size"],
++                "max_sequence_length": profile["max_sequence_length"],
++                "padded_forward_sequence_length": profile["max_sequence_length"],
++                "selected_min_tokens": min(selection["token_lengths"]),
++                "selected_max_tokens": max(selection["token_lengths"]),
++                "selected_total_tokens": token_total,
++                "selected_examples_sha256": selection["selection_sha256"],
++            },
++            "measured_optimization_tokens_per_second": round(tokens_per_second, 3) if tokens_per_second is not None else None,
++            "per_rank_peak_memory": resumed["per_rank_peak_memory"],
++            "nvidia_smi_peak_memory_used_mib_by_gpu": telemetry_peak_used,
++            "nvidia_smi_peak_utilization_percent_by_gpu": telemetry_peak_util,
++            "nvidia_smi_peak_temperature_celsius_by_gpu": telemetry_peak_temp,
++            "artifacts": {
++                "report": str((run_dir / "qualification_report.json").relative_to(ROOT)),
++                "telemetry": str(telemetry_path.relative_to(ROOT)),
++                "phase_logs": [str((run_dir / "first_phase.log").relative_to(ROOT)), str((run_dir / "resume_phase.log").relative_to(ROOT))],
++                "final_adapter": str(final_weights.relative_to(ROOT)),
++            },
++        }
++        _atomic_json(run_dir / "qualification_report.json", report)
++        print(json.dumps(report, indent=2, ensure_ascii=False))
++        return 0
++    except Exception as exc:
++        failure = {
++            **start_record,
++            "status": "failed",
++            "finished_at": _now(),
++            "qualification_wall_seconds": round(time.monotonic() - start_time, 3),
++            "error_type": type(exc).__name__,
++            "error": str(exc),
++            "model_quality_evaluation_performed": False,
++        }
++        _atomic_json(run_dir / "qualification_report.json", failure)
++        print(json.dumps(failure, indent=2, ensure_ascii=False), file=sys.stderr)
++        return 1
++
++
++def _rank_peak_memory(torch: Any) -> dict[str, Any]:
++    device = torch.cuda.current_device()
++    return {
++        "rank": int(os.environ.get("RANK", "0")),
++        "local_rank": device,
++        "name": torch.cuda.get_device_name(device),
++        "peak_allocated_bytes": int(torch.cuda.max_memory_allocated(device)),
++        "peak_reserved_bytes": int(torch.cuda.max_memory_reserved(device)),
++    }
++
++
++def _process_peak_rss_bytes() -> int | None:
++    try:
++        import resource
++
++        peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
++        return int(peak * (1024 if platform.system() != "Darwin" else 1))
++    except (ImportError, OSError, ValueError):
++        return None
++
++
++def _worker(args: argparse.Namespace) -> int:
++    import tomllib
++
++    import torch
++    from datasets import Dataset
++    from peft import LoraConfig
++    from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, TrainerCallback, set_seed
++    from trl import SFTConfig, SFTTrainer
++
++    config, profile = _load_recipe(args.config, args.profile)
++    world_size = int(os.environ.get("WORLD_SIZE", "1"))
++    local_rank = int(os.environ.get("LOCAL_RANK", "0"))
++    rank = int(os.environ.get("RANK", "0"))
++    if not torch.cuda.is_available() or not torch.cuda.is_bf16_supported():
++        raise SystemExit("worker requires a BF16-capable CUDA device")
++    torch.cuda.set_device(local_rank)
++    validate_visible_gpus(torch, profile, world_size)
++
++    config_path = Path(args.config)
++    if not config_path.is_absolute():
++        config_path = ROOT / config_path
++    with config_path.open("rb") as handle:
++        raw_config = tomllib.load(handle)
++    splits, dataset_report = _load_data(config, world_size)
++    train_rows = splits["train"]
++    run_dir = Path(args.run_dir)
++    selection_path = run_dir / "selected_training_examples.json"
++
++    tokenizer = AutoTokenizer.from_pretrained(
++        config["base_model"],
++        revision=config["tokenizer_revision"],
++    )
++    if tokenizer.pad_token_id is None:
++        if tokenizer.eos_token is None:
++            raise SystemExit("qualification requires a tokenizer pad token or EOS token")
++        tokenizer.pad_token = tokenizer.eos_token
++    tokenizer.padding_side = "right"
++    if args.worker_phase == "first":
++        texts = [_example_text(row) for row in train_rows]
++        all_lengths: list[int] = []
++        for offset in range(0, len(texts), 32):
++            all_lengths.extend(_tokenizer_lengths(tokenizer, texts[offset : offset + 32]))
++        ranked = sorted(
++            zip(train_rows, all_lengths),
++            key=lambda pair: (-pair[1], str(pair[0].get("example_id", ""))),
++        )[:SAMPLE_COUNT]
++        if len(ranked) != SAMPLE_COUNT:
++            raise SystemExit(f"qualification needs {SAMPLE_COUNT} unique training rows, found {len(ranked)}")
++        if max(length for _, length in ranked) > config["max_seq_length"]:
++            raise SystemExit("selected training example exceeds the preregistered 4608-token limit")
++        if max(length for _, length in ranked) < 4000:
++            raise SystemExit("qualification selection did not include a genuinely long sequence (>=4000 tokens)")
++        example_ids = [str(row["example_id"]) for row, _ in ranked]
++        if len(set(example_ids)) != SAMPLE_COUNT:
++            raise SystemExit("training example_id values are not unique in the qualification selection")
++        token_lengths = [int(length) for _, length in ranked]
++        selection_body = {
++            "selection_policy": "top 320 longest tokenized examples from frozen train split only; unique example_id; no validation/test rows",
++            "dataset_file_sha256": dataset_report["file_sha256"],
++            "model_revision": config["model_revision"],
++            "max_sequence_length": config["max_seq_length"],
++            "example_ids": example_ids,
++            "token_lengths": token_lengths,
++        }
++        selection_body["selection_sha256"] = hashlib.sha256(
++            json.dumps(selection_body, sort_keys=True, separators=(",", ":")).encode("utf-8")
++        ).hexdigest()
++        if rank == 0:
++            _atomic_json(selection_path, selection_body)
++    else:
++        selection_body = json.loads(selection_path.read_text(encoding="utf-8"))
++        if selection_body["dataset_file_sha256"] != dataset_report["file_sha256"]:
++            raise SystemExit("qualification selection is for a different frozen dataset file")
++        if selection_body["model_revision"] != config["model_revision"]:
++            raise SystemExit("qualification selection is for a different base model revision")
++
++    rows_by_id = {str(row.get("example_id")): row for row in train_rows}
++    try:
++        selected_rows = [rows_by_id[example_id] for example_id in selection_body["example_ids"]]
++    except KeyError as exc:
++        raise SystemExit(f"qualification selection references an unknown train example id: {exc}") from exc
++    train_ds = Dataset.from_list([{"text": _example_text(row)} for row in selected_rows])
++
++    torch.manual_seed(config["seed"])
++    random.seed(config["seed"])
++    set_seed(config["seed"])
++    quantization = BitsAndBytesConfig(
++        load_in_4bit=True,
++        bnb_4bit_quant_type="nf4",
++        bnb_4bit_compute_dtype=torch.bfloat16,
++        bnb_4bit_use_double_quant=True,
++    )
++    model = AutoModelForCausalLM.from_pretrained(
++        config["base_model"],
++        revision=config["model_revision"],
++        device_map={"": torch.cuda.current_device()},
++        torch_dtype=torch.bfloat16,
++        quantization_config=quantization,
++    )
++    model.config.use_cache = False
++    lora = LoraConfig(
++        r=config["lora_r"],
++        lora_alpha=config["lora_alpha"],
++        lora_dropout=config["lora_dropout"],
++        target_modules=config["lora_target_modules"],
++        task_type="CAUSAL_LM",
++    )
++
++    class AtomicCheckpointCallback(TrainerCallback):
++        def on_save(self, callback_args: Any, state: Any, control: Any, **kwargs: Any) -> Any:
++            del kwargs
++            active_dist = torch.distributed.is_available() and torch.distributed.is_initialized()
++            if active_dist:
++                torch.distributed.barrier()
++            result: list[str | None] = [None]
++            if state.is_world_process_zero:
++                checkpoint = Path(callback_args.output_dir) / f"checkpoint-{state.global_step}"
++                try:
++                    write_checkpoint_complete_marker(checkpoint, int(callback_args.world_size))
++                except Exception as exc:
++                    result[0] = f"checkpoint {checkpoint} completion failed: {type(exc).__name__}: {exc}"
++            if active_dist:
++                torch.distributed.broadcast_object_list(result, src=0)
++            if result[0]:
++                raise RuntimeError(result[0])
++            return control
++
++    target_step = FIRST_STAGE_STEP if args.worker_phase == "first" else FINAL_STAGE_STEP
++    training_args = SFTConfig(
++        output_dir=str(run_dir),
++        seed=config["seed"],
++        data_seed=config["seed"],
++        num_train_epochs=1,
++        max_steps=target_step,
++        per_device_train_batch_size=config["per_device_train_batch_size"],
++        gradient_accumulation_steps=config["gradient_accumulation_steps"],
++        learning_rate=config["learning_rate"],
++        warmup_steps=0,
++        weight_decay=config["weight_decay"],
++        lr_scheduler_type=config["lr_scheduler_type"],
++        optim=config["optim"],
++        logging_steps=1,
++        eval_strategy="no",
++        save_strategy="steps",
++        save_steps=CHECKPOINT_INTERVAL,
++        save_total_limit=10,
++        bf16=True,
++        gradient_checkpointing=True,
++        include_num_input_tokens_seen=True,
++        report_to="none",
++        max_length=config["max_seq_length"],
++        dataset_text_field="text",
++    )
++    trainer = SFTTrainer(
++        model=model,
++        args=training_args,
++        train_dataset=train_ds,
++        peft_config=lora,
++        processing_class=tokenizer,
++        data_collator=_fixed_length_collator(tokenizer, int(config["max_seq_length"])),
++        callbacks=[AtomicCheckpointCallback()],
++    )
++
++    resume_checkpoint: Path | None = None
++    if args.worker_phase == "resume":
++        resume_checkpoint = run_dir / f"checkpoint-{FIRST_STAGE_STEP}"
++        if not validate_checkpoint(resume_checkpoint, world_size):
++            raise SystemExit(f"step-{FIRST_STAGE_STEP} checkpoint is not complete and validated")
++    started = time.monotonic()
++    output = trainer.train(resume_from_checkpoint=str(resume_checkpoint) if resume_checkpoint else None)
++    runtime_seconds = float(output.metrics.get("train_runtime", time.monotonic() - started))
++    if int(trainer.state.global_step) != target_step:
++        raise RuntimeError(f"expected global step {target_step}, received {trainer.state.global_step}")
++
++    checkpoint_dir = run_dir / f"checkpoint-{target_step}"
++    if not validate_checkpoint(checkpoint_dir, world_size):
++        raise RuntimeError(f"step-{target_step} checkpoint is not complete after train()")
++    if args.worker_phase == "resume":
++        trainer.save_model(str(run_dir))
++        if rank == 0:
++            tokenizer.save_pretrained(str(run_dir))
++
++    local_memory = _rank_peak_memory(torch)
++    memory_by_rank: list[dict[str, Any] | None] = [local_memory]
++    if torch.distributed.is_available() and torch.distributed.is_initialized():
++        memory_by_rank = [None] * world_size
++        torch.distributed.all_gather_object(memory_by_rank, local_memory)
++    if rank == 0:
++        phase_record = {
++            "phase": args.worker_phase,
++            "global_step": int(trainer.state.global_step),
++            "train_runtime_seconds": runtime_seconds,
++            "train_metrics": output.metrics,
++            "log_history": trainer.state.log_history,
++            "per_rank_peak_memory": memory_by_rank,
++            "process_peak_rss_bytes": _process_peak_rss_bytes(),
++            "checkpoint": str(checkpoint_dir.relative_to(ROOT)),
++            "checkpoint_marker_valid": True,
++            "optimizer_file_bytes": (checkpoint_dir / "optimizer.pt").stat().st_size,
++            "scheduler_file_bytes": (checkpoint_dir / "scheduler.pt").stat().st_size,
++            "dataset_sha256": dataset_report["file_sha256"],
++            "raw_config": raw_config,
++        }
++        _atomic_json(run_dir / f"{args.worker_phase}_phase.json", phase_record)
++    return 0
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--profile", required=True, help="NVIDIA profile from configs/hardware/nvidia_profiles.toml")
++    parser.add_argument("--config", default=DEFAULT_CONFIG)
++    parser.add_argument("--check-only", action="store_true", help="check target CUDA device and frozen data without downloading model weights")
++    parser.add_argument("--worker-phase", choices=["first", "resume"], help=argparse.SUPPRESS)
++    parser.add_argument("--run-dir", help=argparse.SUPPRESS)
++    args = parser.parse_args()
++    if args.worker_phase:
++        if not args.run_dir:
++            parser.error("--run-dir is required for internal qualification worker phases")
++        return _worker(args)
++    return _qualification_parent(args)
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/scripts/run_e014.sh b/scripts/run_e014.sh
+new file mode 100644
+index 0000000..271bdef
+--- /dev/null
++++ b/scripts/run_e014.sh
+@@ -0,0 +1,32 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++PROFILE="${1:?usage: bash scripts/run_e014.sh PROFILE run|resume}"
++ACTION="${2:?usage: bash scripts/run_e014.sh PROFILE run|resume}"
++case "$ACTION" in
++  run) RESUME_ARGS=() ;;
++  resume) RESUME_ARGS=(--resume) ;;
++  *) echo "action must be run or resume" >&2; exit 2 ;;
++esac
++
++case "$PROFILE" in
++  RTX3090_SINGLE|A100_80GB|H100_80GB|A100_40GB|L40S_48GB|RTX6000_ADA_48GB)
++    WORLD_SIZE=1
++    ;;
++  RTX3090_DUAL)
++    WORLD_SIZE=2
++    ;;
++  *) echo "unknown E014 NVIDIA profile: $PROFILE" >&2; exit 2 ;;
++esac
++
++REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++cd "$REPO_ROOT"
++if [[ "$WORLD_SIZE" == "1" ]]; then
++  exec uv run --locked --extra dev --extra ml python scripts/train_transformers.py \
++    --config configs/training/qwen3_8b_v0.1_qlora.toml \
++    --hardware-profile "$PROFILE" "${RESUME_ARGS[@]}"
++fi
++exec uv run --locked --extra dev --extra ml python -m torch.distributed.run \
++  --standalone --nproc_per_node="$WORLD_SIZE" scripts/train_transformers.py \
++  --config configs/training/qwen3_8b_v0.1_qlora.toml \
++  --hardware-profile "$PROFILE" "${RESUME_ARGS[@]}"
+diff --git a/scripts/train_transformers.py b/scripts/train_transformers.py
+index 83d73e4..d44d2d6 100644
+--- a/scripts/train_transformers.py
++++ b/scripts/train_transformers.py
+@@ -26,6 +26,16 @@ from research_model.datasets.jsonl import read_jsonl
+ from research_model.datasets.splits import dataset_hash
+ from research_model.provenance.manifest import hash_file
+ from research_model.research_protocol.protocol import build_prompt
++from research_model.training.checkpoints import (
++    latest_complete_checkpoint,
++    quarantine_incomplete_checkpoints,
++    write_checkpoint_complete_marker,
++)
++from research_model.training.profiles import (
++    apply_hardware_profile,
++    load_hardware_profile,
++    validate_visible_gpus,
++)
+ from research_model.validation.validators import validate_dataset
+ 
+ 
+@@ -44,7 +54,7 @@ def _example_text(row: dict[str, Any]) -> str:
+     )
+ 
+ 
+-def _load_data(config: dict[str, Any]) -> tuple[dict[str, list[dict[str, Any]]], dict[str, Any]]:
++def _load_data(config: dict[str, Any], world_size: int = 1) -> tuple[dict[str, list[dict[str, Any]]], dict[str, Any]]:
+     dataset_path = _project_path(config["dataset_path"])
+     if not dataset_path.is_file():
+         raise SystemExit(f"training dataset is missing: {dataset_path}")
+@@ -81,6 +91,7 @@ def _load_data(config: dict[str, Any]) -> tuple[dict[str, list[dict[str, Any]]],
+         len(splits["train"])
+         / config["per_device_train_batch_size"]
+         / config["gradient_accumulation_steps"]
++        / world_size
+     )
+     split_report = {
+         "path": str(dataset_path.relative_to(ROOT)),
+@@ -173,6 +184,8 @@ def _dry_run(
+         "model_revision": config.get("model_revision"),
+         "tokenizer_revision": config.get("tokenizer_revision", config.get("model_revision")),
+         "max_sequence_length": config["max_seq_length"],
++        "hardware_profile": config.get("hardware_profile"),
++        "effective_global_batch_size": config.get("effective_global_batch_size"),
+         "dataset": dataset_report,
+         "sample_count_per_split": sample_count,
+         "sample_character_lengths": {
+@@ -264,8 +277,7 @@ def _run_training(config: dict[str, Any], splits: dict[str, list[dict[str, Any]]
+         import torch
+         from datasets import Dataset
+         from peft import LoraConfig
+-        from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, set_seed
+-        from transformers.trainer_utils import get_last_checkpoint
++        from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, TrainerCallback, set_seed
+         from trl import SFTConfig, SFTTrainer
+     except ImportError as exc:
+         raise SystemExit("Install the locked ML dependencies before NVIDIA QLoRA training: uv sync --extra ml --locked") from exc
+@@ -275,10 +287,23 @@ def _run_training(config: dict[str, Any], splits: dict[str, list[dict[str, Any]]
+     if not torch.cuda.is_bf16_supported():
+         raise SystemExit("the configured BF16 QLoRA recipe requires an NVIDIA GPU with BF16 support")
+ 
++    local_rank = int(os.environ.get("LOCAL_RANK", "0"))
++    world_size = int(os.environ.get("WORLD_SIZE", "1"))
++    if local_rank < 0 or local_rank >= torch.cuda.device_count():
++        raise SystemExit(f"LOCAL_RANK={local_rank} is outside the visible CUDA device set")
++    torch.cuda.set_device(local_rank)
++    try:
++        gpu_devices = validate_visible_gpus(torch, config["_hardware_profile"], world_size)
++    except RuntimeError as exc:
++        raise SystemExit(str(exc)) from exc
++
+     output_dir = _project_path(config["output_dir"])
+-    last_checkpoint = get_last_checkpoint(str(output_dir)) if output_dir.exists() else None
++    last_checkpoint = latest_complete_checkpoint(output_dir, world_size) if output_dir.exists() else None
+     if resume and not last_checkpoint:
+-        raise SystemExit(f"--resume requested but no valid Trainer checkpoint exists under {output_dir}")
++        raise SystemExit(
++            f"--resume requested but no atomically committed, complete Trainer checkpoint exists under {output_dir}; "
++            "checkpoint files without a completion marker are not resumable"
++        )
+     if not resume and output_dir.exists() and any(output_dir.iterdir()):
+         raise SystemExit(f"refusing to overwrite existing training artifacts: {output_dir}; use --resume or a new output_dir")
+ 
+@@ -344,6 +369,26 @@ def _run_training(config: dict[str, Any], splits: dict[str, list[dict[str, Any]]
+         max_length=config["max_seq_length"],
+         dataset_text_field="text",
+     )
++
++    class AtomicCheckpointCallback(TrainerCallback):
++        def on_save(self, args: Any, state: Any, control: Any, **kwargs: Any) -> Any:
++            del kwargs
++            active_dist = torch.distributed.is_available() and torch.distributed.is_initialized()
++            if active_dist:
++                torch.distributed.barrier()
++            outcome: list[str | None] = [None]
++            if state.is_world_process_zero:
++                checkpoint = Path(args.output_dir) / f"checkpoint-{state.global_step}"
++                try:
++                    write_checkpoint_complete_marker(checkpoint, int(args.world_size))
++                except Exception as exc:
++                    outcome[0] = f"checkpoint {checkpoint} failed completion validation: {type(exc).__name__}: {exc}"
++            if active_dist:
++                torch.distributed.broadcast_object_list(outcome, src=0)
++            if outcome[0]:
++                raise RuntimeError(outcome[0])
++            return control
++
+     trainer = SFTTrainer(
+         model=model,
+         args=training_args,
+@@ -351,17 +396,38 @@ def _run_training(config: dict[str, Any], splits: dict[str, list[dict[str, Any]]
+         eval_dataset=validation_ds,
+         peft_config=lora,
+         processing_class=tokenizer,
++        callbacks=[AtomicCheckpointCallback()],
+     )
+ 
++    distributed = torch.distributed.is_available() and torch.distributed.is_initialized()
++    if resume:
++        quarantine_error: list[str | None] = [None]
++        if not distributed or torch.distributed.get_rank() == 0:
++            try:
++                moved = quarantine_incomplete_checkpoints(output_dir, world_size)
++                if moved:
++                    print("quarantined incomplete checkpoints:", ", ".join(str(path) for path in moved), flush=True)
++            except Exception as exc:
++                quarantine_error[0] = f"could not preserve incomplete checkpoints before resume: {exc}"
++        if distributed:
++            torch.distributed.broadcast_object_list(quarantine_error, src=0)
++        if quarantine_error[0]:
++            raise SystemExit(quarantine_error[0])
++        if distributed:
++            torch.distributed.barrier()
++
+     output_dir.mkdir(parents=True, exist_ok=True)
+     event_path = output_dir / "training_events.jsonl"
+     start_time = _utc_now()
+     started_at = time.monotonic()
+-    hardware = _runtime_environment(torch)
++    hardware = {"visible_devices": gpu_devices}
++    if not distributed or torch.distributed.get_rank() == 0:
++        hardware["runtime"] = _runtime_environment(torch)
+     torch.cuda.reset_peak_memory_stats()
+-    _append_event(event_path, {"event": "resumed" if resume else "started", "checkpoint": last_checkpoint, "git_commit": config.get("git_commit")})
++    if not distributed or torch.distributed.get_rank() == 0:
++        _append_event(event_path, {"event": "resumed" if resume else "started", "checkpoint": str(last_checkpoint) if last_checkpoint else None, "git_commit": config.get("git_commit"), "hardware_profile": config["hardware_profile"]})
+     try:
+-        train_output = trainer.train(resume_from_checkpoint=last_checkpoint if resume else None)
++        train_output = trainer.train(resume_from_checkpoint=str(last_checkpoint) if resume else None)
+         test_metrics = trainer.evaluate(eval_dataset=test_ds, metric_key_prefix="test")
+         observed_losses = {
+             "train_loss": train_output.metrics.get("train_loss"),
+@@ -372,12 +438,15 @@ def _run_training(config: dict[str, Any], splits: dict[str, list[dict[str, Any]]
+             if value is not None and not math.isfinite(float(value)):
+                 raise ValueError(f"non-finite {name}: {value}")
+         trainer.save_model(str(output_dir))
+-        tokenizer.save_pretrained(str(output_dir))
++        if not distributed or torch.distributed.get_rank() == 0:
++            tokenizer.save_pretrained(str(output_dir))
+     except KeyboardInterrupt:
+-        _append_event(event_path, {"event": "interrupted", "global_step": trainer.state.global_step})
++        if not distributed or torch.distributed.get_rank() == 0:
++            _append_event(event_path, {"event": "interrupted", "global_step": trainer.state.global_step})
+         raise
+     except Exception as exc:
+-        _append_event(event_path, {"event": "failed", "error_type": type(exc).__name__, "error": str(exc), "global_step": trainer.state.global_step})
++        if not distributed or torch.distributed.get_rank() == 0:
++            _append_event(event_path, {"event": "failed", "error_type": type(exc).__name__, "error": str(exc), "global_step": trainer.state.global_step})
+         raise
+ 
+     elapsed = time.monotonic() - started_at
+@@ -395,6 +464,8 @@ def _run_training(config: dict[str, Any], splits: dict[str, list[dict[str, Any]]
+         "train_and_test_metrics": train_metrics,
+         "log_history": trainer.state.log_history,
+         "hardware": hardware,
++        "hardware_profile": config["hardware_profile"],
++        "effective_global_batch_size": config["effective_global_batch_size"],
+         "peak_gpu_memory_allocated_bytes": torch.cuda.max_memory_allocated(),
+         "peak_gpu_memory_reserved_bytes": torch.cuda.max_memory_reserved(),
+         "adapter_size_bytes": sum(path.stat().st_size for path in output_dir.glob("adapter_model.*") if path.is_file()),
+@@ -406,11 +477,12 @@ def _run_training(config: dict[str, Any], splits: dict[str, list[dict[str, Any]]
+         },
+         "training_config": config,
+     }
+-    run_path = output_dir / "training_run.json"
+-    run_path.write_text(json.dumps(run_report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+-    (output_dir / "training_config.json").write_text(json.dumps(config, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+-    _append_event(event_path, {"event": "completed", "global_step": trainer.state.global_step, "duration_seconds": round(elapsed, 3), "best_model_checkpoint": trainer.state.best_model_checkpoint})
+-    print(json.dumps({"training_run": str(run_path), "status": "completed", "global_step": trainer.state.global_step, "best_model_checkpoint": trainer.state.best_model_checkpoint, "train_and_test_metrics": train_metrics, "peak_gpu_memory_allocated_bytes": run_report["peak_gpu_memory_allocated_bytes"]}, indent=2, ensure_ascii=False))
++    if not distributed or torch.distributed.get_rank() == 0:
++        run_path = output_dir / "training_run.json"
++        run_path.write_text(json.dumps(run_report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
++        (output_dir / "training_config.json").write_text(json.dumps(config, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
++        _append_event(event_path, {"event": "completed", "global_step": trainer.state.global_step, "duration_seconds": round(elapsed, 3), "best_model_checkpoint": trainer.state.best_model_checkpoint})
++        print(json.dumps({"training_run": str(run_path), "status": "completed", "global_step": trainer.state.global_step, "best_model_checkpoint": trainer.state.best_model_checkpoint, "train_and_test_metrics": train_metrics, "peak_gpu_memory_allocated_bytes": run_report["peak_gpu_memory_allocated_bytes"]}, indent=2, ensure_ascii=False))
+     return 0
+ 
+ 
+@@ -421,6 +493,7 @@ def main() -> int:
+     parser.add_argument("--dry-run-examples", type=int, default=2, help="number of examples from each training/validation split to inspect")
+     parser.add_argument("--skip-tokenizer", action="store_true", help="skip tokenizer loading during --dry-run")
+     parser.add_argument("--token-stats", action="store_true", help="measure token lengths and target retention for every split")
++    parser.add_argument("--hardware-profile", default="RTX3090_SINGLE", help="execution-only profile from configs/hardware/nvidia_profiles.toml")
+     parser.add_argument("--resume", action="store_true", help="resume from the latest valid Trainer checkpoint in output_dir")
+     args = parser.parse_args()
+     if args.dry_run_examples < 1:
+@@ -433,7 +506,13 @@ def main() -> int:
+     config_path = _project_path(args.config)
+     with config_path.open("rb") as handle:
+         config = tomllib.load(handle)
+-    splits, dataset_report = _load_data(config)
++    try:
++        profile = load_hardware_profile(args.hardware_profile, ROOT / "configs" / "hardware" / "nvidia_profiles.toml")
++        config = apply_hardware_profile(config, profile)
++    except (OSError, ValueError) as exc:
++        raise SystemExit(str(exc)) from exc
++    config["_hardware_profile"] = profile
++    splits, dataset_report = _load_data(config, int(profile["world_size"]))
+     if args.dry_run:
+         return _dry_run(config, splits, dataset_report, args.dry_run_examples, args.skip_tokenizer, args.token_stats)
+     return _run_training(config, splits, dataset_report, args.resume)
+diff --git a/src/research_model/training/checkpoints.py b/src/research_model/training/checkpoints.py
+new file mode 100644
+index 0000000..e7cb861
+--- /dev/null
++++ b/src/research_model/training/checkpoints.py
+@@ -0,0 +1,164 @@
++"""Atomic completion markers and conservative resume selection for Trainer checkpoints."""
++
++from __future__ import annotations
++
++import hashlib
++import json
++import os
++import re
++import shutil
++import tempfile
++from datetime import datetime, timezone
++from pathlib import Path
++from typing import Any
++
++
++CHECKPOINT_MARKER = "research_model_checkpoint_complete.json"
++_CHECKPOINT_RE = re.compile(r"^checkpoint-(\d+)$")
++
++
++def _sha256(path: Path) -> str:
++    digest = hashlib.sha256()
++    with path.open("rb") as handle:
++        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
++            digest.update(chunk)
++    return digest.hexdigest()
++
++
++def _checkpoint_step(path: Path) -> int | None:
++    match = _CHECKPOINT_RE.fullmatch(path.name)
++    return int(match.group(1)) if match else None
++
++
++def _checkpoint_payload(path: Path, world_size: int) -> dict[str, Any]:
++    step = _checkpoint_step(path)
++    if step is None or not path.is_dir():
++        raise ValueError(f"not a Trainer checkpoint directory: {path}")
++
++    state_path = path / "trainer_state.json"
++    state = json.loads(state_path.read_text(encoding="utf-8"))
++    if int(state.get("global_step", -1)) != step:
++        raise ValueError(f"checkpoint state step does not match directory name: {path}")
++
++    adapter_weights = sorted(
++        item for pattern in ("adapter_model.safetensors", "adapter_model.bin") for item in path.glob(pattern)
++        if item.is_file() and item.stat().st_size > 0
++    )
++    if not adapter_weights or not (path / "adapter_config.json").is_file():
++        raise ValueError(f"PEFT adapter files are incomplete: {path}")
++
++    required = [path / "trainer_state.json", path / "optimizer.pt", path / "scheduler.pt"]
++    rng_paths = sorted(path.glob("rng_state*.pth"))
++    expected_rng_names = (
++        ["rng_state.pth"] if world_size == 1 else [f"rng_state_{rank}.pth" for rank in range(world_size)]
++    )
++    if sorted(item.name for item in rng_paths) != sorted(expected_rng_names):
++        raise ValueError(f"checkpoint RNG states are incomplete for world size {world_size}: {path}")
++    required.extend(rng_paths)
++    required.append(path / "adapter_config.json")
++    required.extend(adapter_weights)
++    for item in required:
++        if not item.is_file() or item.stat().st_size <= 0:
++            raise ValueError(f"checkpoint file is missing or empty: {item}")
++
++    return {
++        "schema_version": 1,
++        "global_step": step,
++        "world_size": world_size,
++        "created_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
++        "files": {
++            item.name: {
++                "size_bytes": item.stat().st_size,
++                "sha256": _sha256(item) if item.name in {"trainer_state.json", "adapter_config.json"} else None,
++            }
++            for item in required
++        },
++    }
++
++
++def write_checkpoint_complete_marker(checkpoint_dir: str | Path, world_size: int) -> Path:
++    path = Path(checkpoint_dir)
++    payload = _checkpoint_payload(path, world_size)
++    marker = path / CHECKPOINT_MARKER
++    if marker.exists():
++        raise FileExistsError(f"checkpoint completion marker already exists: {marker}")
++
++    fd, raw_temp_path = tempfile.mkstemp(prefix=f".{CHECKPOINT_MARKER}.", suffix=".tmp", dir=path)
++    temp_path = Path(raw_temp_path)
++    try:
++        with os.fdopen(fd, "w", encoding="utf-8") as handle:
++            json.dump(payload, handle, indent=2, ensure_ascii=False)
++            handle.write("\n")
++            handle.flush()
++            os.fsync(handle.fileno())
++        os.replace(temp_path, marker)
++        directory_fd = os.open(path, os.O_RDONLY)
++        try:
++            os.fsync(directory_fd)
++        finally:
++            os.close(directory_fd)
++    finally:
++        if temp_path.exists():
++            temp_path.unlink()
++    return marker
++
++
++def validate_checkpoint(checkpoint_dir: str | Path, expected_world_size: int | None = None) -> dict[str, Any] | None:
++    path = Path(checkpoint_dir)
++    marker_path = path / CHECKPOINT_MARKER
++    try:
++        marker = json.loads(marker_path.read_text(encoding="utf-8"))
++        step = _checkpoint_step(path)
++        world_size = int(marker["world_size"])
++        if marker.get("schema_version") != 1 or step is None or int(marker["global_step"]) != step:
++            return None
++        if expected_world_size is not None and world_size != expected_world_size:
++            return None
++        expected = _checkpoint_payload(path, world_size)
++        if expected["global_step"] != step:
++            return None
++        recorded_files = marker.get("files", {})
++        for name, details in expected["files"].items():
++            recorded = recorded_files.get(name)
++            if not isinstance(recorded, dict) or recorded.get("size_bytes") != details["size_bytes"]:
++                return None
++            if recorded.get("sha256") is not None and recorded.get("sha256") != details.get("sha256"):
++                return None
++        if set(recorded_files) != set(expected["files"]):
++            return None
++        return marker
++    except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError):
++        return None
++
++
++def latest_complete_checkpoint(output_dir: str | Path, expected_world_size: int) -> Path | None:
++    root = Path(output_dir)
++    candidates: list[tuple[int, Path]] = []
++    if not root.is_dir():
++        return None
++    for item in root.iterdir():
++        step = _checkpoint_step(item)
++        if step is not None and validate_checkpoint(item, expected_world_size):
++            candidates.append((step, item))
++    return max(candidates, default=(0, None), key=lambda pair: pair[0])[1]
++
++
++def quarantine_incomplete_checkpoints(output_dir: str | Path, expected_world_size: int) -> list[Path]:
++    """Move incomplete checkpoint folders aside without deleting recovery evidence."""
++
++    root = Path(output_dir)
++    valid = {item.resolve() for item in root.iterdir() if _checkpoint_step(item) is not None and validate_checkpoint(item, expected_world_size)}
++    incomplete = [item for item in root.iterdir() if _checkpoint_step(item) is not None and item.resolve() not in valid]
++    if not incomplete:
++        return []
++    quarantine = root / "incomplete-checkpoints"
++    quarantine.mkdir(exist_ok=True)
++    moved: list[Path] = []
++    for item in incomplete:
++        destination = quarantine / item.name
++        if destination.exists():
++            timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
++            destination = quarantine / f"{item.name}-{timestamp}"
++        shutil.move(str(item), str(destination))
++        moved.append(destination)
++    return moved
+diff --git a/src/research_model/training/profiles.py b/src/research_model/training/profiles.py
+new file mode 100644
+index 0000000..e6b77b4
+--- /dev/null
++++ b/src/research_model/training/profiles.py
+@@ -0,0 +1,85 @@
++"""Execution-only NVIDIA hardware profiles for the frozen training recipe."""
++
++from __future__ import annotations
++
++import tomllib
++from pathlib import Path
++from typing import Any
++
++
++def load_hardware_profile(name: str, path: str | Path) -> dict[str, Any]:
++    with Path(path).open("rb") as handle:
++        document = tomllib.load(handle)
++    profiles = document.get("profiles", {})
++    if name not in profiles:
++        raise ValueError(f"unknown NVIDIA hardware profile {name!r}; choose one of: {', '.join(sorted(profiles))}")
++    profile = dict(profiles[name])
++    profile.update({key: value for key, value in document.items() if key != "profiles"})
++    profile["name"] = name
++    return profile
++
++
++def apply_hardware_profile(config: dict[str, Any], profile: dict[str, Any]) -> dict[str, Any]:
++    """Return runtime overrides while enforcing the preregistered global batch."""
++
++    effective_batch = (
++        int(profile["per_device_train_batch_size"])
++        * int(profile["gradient_accumulation_steps"])
++        * int(profile["world_size"])
++    )
++    expected_batch = int(profile["effective_global_batch_size"])
++    if effective_batch != expected_batch:
++        raise ValueError(
++            f"hardware profile {profile['name']} gives global batch {effective_batch}; expected {expected_batch}"
++        )
++    if int(config["max_seq_length"]) != int(profile["max_sequence_length"]):
++        raise ValueError("hardware profile cannot change the preregistered sequence length")
++    if int(config["per_device_train_batch_size"]) * int(config["gradient_accumulation_steps"]) != expected_batch:
++        raise ValueError("frozen training config does not match the profiles' effective global batch")
++
++    result = dict(config)
++    result["per_device_train_batch_size"] = int(profile["per_device_train_batch_size"])
++    result["gradient_accumulation_steps"] = int(profile["gradient_accumulation_steps"])
++    result["hardware_profile"] = profile["name"]
++    result["execution_world_size"] = int(profile["world_size"])
++    result["effective_global_batch_size"] = effective_batch
++    return result
++
++
++def validate_visible_gpus(torch: Any, profile: dict[str, Any], world_size: int) -> list[dict[str, Any]]:
++    expected_world_size = int(profile["world_size"])
++    visible_count = int(torch.cuda.device_count())
++    if world_size != expected_world_size:
++        raise RuntimeError(
++            f"profile {profile['name']} requires world size {expected_world_size}, got {world_size}; "
++            "use the matching python/torchrun command"
++        )
++    if visible_count != expected_world_size:
++        raise RuntimeError(
++            f"profile {profile['name']} requires exactly {expected_world_size} visible GPU(s), got {visible_count}; "
++            "set CUDA_VISIBLE_DEVICES explicitly if the host has additional devices"
++        )
++    required_name = str(profile["expected_gpu_name_contains"]).casefold()
++    minimum_bytes = float(profile["minimum_vram_gib"]) * (1024**3)
++    devices: list[dict[str, Any]] = []
++    for index in range(visible_count):
++        props = torch.cuda.get_device_properties(index)
++        name = str(props.name)
++        memory_bytes = int(props.total_memory)
++        if required_name not in name.casefold():
++            raise RuntimeError(
++                f"profile {profile['name']} expects GPU name containing {profile['expected_gpu_name_contains']!r}; "
++                f"device {index} is {name!r}"
++            )
++        if memory_bytes < minimum_bytes:
++            raise RuntimeError(
++                f"profile {profile['name']} requires at least {profile['minimum_vram_gib']} GiB per GPU; "
++                f"device {index} exposes {memory_bytes / (1024**3):.2f} GiB"
++            )
++        devices.append({
++            "index": index,
++            "name": name,
++            "vram_bytes": memory_bytes,
++            "compute_capability": list(torch.cuda.get_device_capability(index)),
++        })
++    return devices
+diff --git a/tests/test_hardware_profiles.py b/tests/test_hardware_profiles.py
+new file mode 100644
+index 0000000..3fcd91d
+--- /dev/null
++++ b/tests/test_hardware_profiles.py
+@@ -0,0 +1,85 @@
++from __future__ import annotations
++
++from pathlib import Path
++
++import pytest
++
++from research_model.training.profiles import apply_hardware_profile, load_hardware_profile, validate_visible_gpus
++from research_model.training.config import load_toml
++
++
++ROOT = Path(__file__).resolve().parents[1]
++PROFILE_FILE = ROOT / "configs" / "hardware" / "nvidia_profiles.toml"
++TRAINING_CONFIG = ROOT / "configs" / "training" / "qwen3_8b_v0.1_qlora.toml"
++
++
++@pytest.mark.parametrize(
++    ("profile_name", "world_size", "accumulation"),
++    [
++        ("RTX3090_SINGLE", 1, 16),
++        ("RTX3090_DUAL", 2, 8),
++        ("A100_80GB", 1, 16),
++        ("H100_80GB", 1, 16),
++        ("A100_40GB", 1, 16),
++        ("L40S_48GB", 1, 16),
++        ("RTX6000_ADA_48GB", 1, 16),
++    ],
++)
++def test_profile_preserves_frozen_context_and_global_batch(profile_name: str, world_size: int, accumulation: int) -> None:
++    profile = load_hardware_profile(profile_name, PROFILE_FILE)
++    config = apply_hardware_profile(load_toml(TRAINING_CONFIG), profile)
++    assert config["max_seq_length"] == 4608
++    assert config["per_device_train_batch_size"] == 1
++    assert config["gradient_accumulation_steps"] == accumulation
++    assert config["execution_world_size"] == world_size
++    assert config["effective_global_batch_size"] == 16
++
++
++def test_profile_rejects_a_changed_scientific_batch() -> None:
++    config = load_toml(TRAINING_CONFIG)
++    config["gradient_accumulation_steps"] = 8
++    profile = load_hardware_profile("RTX3090_SINGLE", PROFILE_FILE)
++    with pytest.raises(ValueError, match="frozen training config"):
++        apply_hardware_profile(config, profile)
++
++
++class FakeCuda:
++    def __init__(self, devices: list[tuple[str, int]]) -> None:
++        self.devices = devices
++
++    def device_count(self) -> int:
++        return len(self.devices)
++
++    def get_device_properties(self, index: int):
++        name, memory_bytes = self.devices[index]
++        return type("Properties", (), {"name": name, "total_memory": memory_bytes})()
++
++    def get_device_capability(self, index: int) -> tuple[int, int]:
++        del index
++        return (8, 6)
++
++
++class FakeTorch:
++    def __init__(self, devices: list[tuple[str, int]]) -> None:
++        self.cuda = FakeCuda(devices)
++
++
++def test_single_profile_accepts_matching_gpu_and_memory() -> None:
++    profile = load_hardware_profile("RTX3090_SINGLE", PROFILE_FILE)
++    torch = FakeTorch([("NVIDIA GeForce RTX 3090", 24 * 1024**3)])
++    devices = validate_visible_gpus(torch, profile, 1)
++    assert devices[0]["name"].endswith("RTX 3090")
++
++
++def test_3070_cannot_be_mistaken_for_a_3090_profile() -> None:
++    profile = load_hardware_profile("RTX3090_SINGLE", PROFILE_FILE)
++    torch = FakeTorch([("NVIDIA GeForce RTX 3070", 8 * 1024**3)])
++    with pytest.raises(RuntimeError, match="expects GPU name"):
++        validate_visible_gpus(torch, profile, 1)
++
++
++def test_dual_profile_requires_both_visible_devices() -> None:
++    profile = load_hardware_profile("RTX3090_DUAL", PROFILE_FILE)
++    torch = FakeTorch([("NVIDIA GeForce RTX 3090", 24 * 1024**3)])
++    with pytest.raises(RuntimeError, match="exactly 2 visible GPU"):
++        validate_visible_gpus(torch, profile, 2)
+diff --git a/tests/test_hardware_qualification.py b/tests/test_hardware_qualification.py
+new file mode 100644
+index 0000000..ecc14d1
+--- /dev/null
++++ b/tests/test_hardware_qualification.py
+@@ -0,0 +1,44 @@
++from __future__ import annotations
++
++import sys
++from pathlib import Path
++
++import pytest
++torch = pytest.importorskip("torch")
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
++from qualify_nvidia import _fixed_length_collator
++
++
++class TinyTokenizer:
++    def pad(self, features, *, padding, max_length, return_tensors):
++        assert padding == "max_length"
++        assert return_tensors == "pt"
++        rows = []
++        masks = []
++        for feature in features:
++            ids = list(feature["input_ids"])
++            mask = list(feature.get("attention_mask", [1] * len(ids)))
++            amount = max_length - len(ids)
++            rows.append(ids + [0] * amount)
++            masks.append(mask + [0] * amount)
++        return {"input_ids": torch.tensor(rows), "attention_mask": torch.tensor(masks)}
++
++
++def test_qualification_batches_are_exact_length_with_masked_padding() -> None:
++    collate = _fixed_length_collator(TinyTokenizer(), 8)
++    batch = collate([
++        {"input_ids": [11, 12, 13], "attention_mask": [1, 1, 1], "text": "unused"},
++        {"input_ids": [21, 22], "attention_mask": [1, 1]},
++    ])
++    assert tuple(batch["input_ids"].shape) == (2, 8)
++    assert tuple(batch["labels"].shape) == (2, 8)
++    assert batch["labels"][0, :3].tolist() == [11, 12, 13]
++    assert batch["labels"][0, 3:].tolist() == [-100] * 5
++    assert batch["labels"][1, :2].tolist() == [21, 22]
++
++
++def test_qualification_rejects_sequence_longer_than_profile_cap() -> None:
++    collate = _fixed_length_collator(TinyTokenizer(), 4)
++    with pytest.raises(ValueError, match="exceeds"):
++        collate([{"input_ids": [1, 2, 3, 4, 5], "attention_mask": [1] * 5}])
+diff --git a/tests/test_training_checkpoints.py b/tests/test_training_checkpoints.py
+new file mode 100644
+index 0000000..cf9cf39
+--- /dev/null
++++ b/tests/test_training_checkpoints.py
+@@ -0,0 +1,61 @@
++from __future__ import annotations
++
++import json
++from pathlib import Path
++
++from research_model.training.checkpoints import (
++    latest_complete_checkpoint,
++    quarantine_incomplete_checkpoints,
++    validate_checkpoint,
++    write_checkpoint_complete_marker,
++)
++
++
++def _make_checkpoint(root: Path, step: int, world_size: int = 1, marker: bool = True) -> Path:
++    checkpoint = root / f"checkpoint-{step}"
++    checkpoint.mkdir(parents=True)
++    (checkpoint / "adapter_config.json").write_text("{}\n", encoding="utf-8")
++    (checkpoint / "adapter_model.safetensors").write_bytes(b"adapter-weights")
++    (checkpoint / "optimizer.pt").write_bytes(b"optimizer-state")
++    (checkpoint / "scheduler.pt").write_bytes(b"scheduler-state")
++    (checkpoint / "trainer_state.json").write_text(json.dumps({"global_step": step}) + "\n", encoding="utf-8")
++    rng_names = ["rng_state.pth"] if world_size == 1 else [f"rng_state_{rank}.pth" for rank in range(world_size)]
++    for name in rng_names:
++        (checkpoint / name).write_bytes(b"rng-state")
++    if marker:
++        write_checkpoint_complete_marker(checkpoint, world_size)
++    return checkpoint
++
++
++def test_checkpoint_is_not_resumable_until_complete_marker_is_written(tmp_path: Path) -> None:
++    checkpoint = _make_checkpoint(tmp_path, 5, marker=False)
++    assert validate_checkpoint(checkpoint, 1) is None
++    marker = write_checkpoint_complete_marker(checkpoint, 1)
++    assert marker.is_file()
++    assert validate_checkpoint(checkpoint, 1)["global_step"] == 5
++    assert latest_complete_checkpoint(tmp_path, 1) == checkpoint
++
++
++def test_checkpoint_validation_detects_missing_or_changed_files(tmp_path: Path) -> None:
++    checkpoint = _make_checkpoint(tmp_path, 5)
++    assert validate_checkpoint(checkpoint, 1)
++    with (checkpoint / "optimizer.pt").open("ab") as handle:
++        handle.write(b"truncated-or-changed")
++    assert validate_checkpoint(checkpoint, 1) is None
++
++
++def test_distributed_checkpoint_requires_each_rank_rng_state(tmp_path: Path) -> None:
++    checkpoint = _make_checkpoint(tmp_path, 5, world_size=2)
++    assert validate_checkpoint(checkpoint, 2)
++    assert validate_checkpoint(checkpoint, 1) is None
++
++
++def test_latest_checkpoint_ignores_and_quarantines_partial_checkpoint(tmp_path: Path) -> None:
++    good = _make_checkpoint(tmp_path, 5)
++    partial = _make_checkpoint(tmp_path, 10, marker=False)
++    assert latest_complete_checkpoint(tmp_path, 1) == good
++    moved = quarantine_incomplete_checkpoints(tmp_path, 1)
++    assert len(moved) == 1
++    assert moved[0].name == partial.name
++    assert not partial.exists()
++    assert (moved[0] / "optimizer.pt").is_file()

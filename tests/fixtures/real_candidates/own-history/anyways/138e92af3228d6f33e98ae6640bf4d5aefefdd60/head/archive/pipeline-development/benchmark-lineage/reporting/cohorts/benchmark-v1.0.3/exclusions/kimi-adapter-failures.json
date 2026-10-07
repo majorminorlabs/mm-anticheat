@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0.0",
+  "exclusion_type": "adapter_compatibility_failure",
+  "target_benchmark_version": "1.0.3",
+  "target_manifest_hash": "cff42b1f55185d4f018de99fc3346e33f5d4f1edf7b93ddefadc36b6c8cab99c",
+  "source_exclusion_record": "reporting/cohorts/benchmark-v1.0.2/exclusions/kimi-adapter-failures.json",
+  "source_exclusion_record_sha256": "89f5d3db7336a8693592972da7aff2094d5b11096b62c90b23228facffc5294c",
+  "excluded_from_scoring": true,
+  "excluded_from_import": true,
+  "runs": [
+    {
+      "run_id": "2026-07-31T02-40-43-194Z-ee938a2b",
+      "benchmark_version": "1.0",
+      "benchmark_manifest_hash": "8a9384f44fd26e2f2ff2bb279bec7460801b777a50c6c712bb8699929265b2ae",
+      "run_manifest": "generated/2026-07-31T02-40-43-194Z-ee938a2b/private/run-manifest.json",
+      "run_manifest_sha256": "6e35f150f45ecc23d5967a4c2a235725f1705d21424a4c968f819783e64c7fca",
+      "classification": "adapter_compatibility_failure",
+      "boundary": "cli_invocation",
+      "reason": "The frozen v1.0 adapter constructed an invocation incompatible with Kimi CLI 0.29.2, so generation did not begin."
+    },
+    {
+      "run_id": "2026-07-31T13-24-46-531Z-5a93820a",
+      "benchmark_version": "1.0.1",
+      "benchmark_manifest_hash": "7978cde119b43bb883d6d187aaa55f2b33ca8e3ff0f0b2f9ddde20315623c0b8",
+      "run_manifest": "generated/2026-07-31T13-24-46-531Z-5a93820a/private/run-manifest.json",
+      "run_manifest_sha256": "914fab8551a02b19656f302e122d9ea0b06436e19eb5f6366b509e73afc44fe0",
+      "classification": "adapter_compatibility_failure",
+      "boundary": "adapter_output_decoding",
+      "reason": "The frozen v1.0.1 adapter passed Kimi CLI text-renderer output, including the intentional bullet transcript prefix, to the benchmark parser."
+    }
+  ],
+  "attestation": "Both failed Kimi runs remain immutable historical evidence and excluded from v1.0.3 scoring, adoption, and reporting import."
+}

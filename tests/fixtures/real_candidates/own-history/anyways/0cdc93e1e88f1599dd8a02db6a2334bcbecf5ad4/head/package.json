@@ -1,0 +1,45 @@
+{
+  "name": "anyways",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "npm run build:client && wrangler dev",
+    "build": "npm run build:client && npm run build:worker",
+    "build:client": "node bin/build-public.mjs",
+    "build:worker": "wrangler deploy --dry-run --outdir=dist",
+    "verify:public": "node bin/verify-public-build.mjs",
+    "verify:schema": "node bin/verify-public-schema.mjs",
+    "audit:publication": "node bin/audit-publication.mjs",
+    "test": "NODE_ENV=test node --test test/*.test.mjs",
+    "lint": "node --check bin/anyways-ops.mjs && node --check bin/anyways-pipeline-command.mjs && node --check bin/anyways-editorial-score.mjs && node --check bin/anyways-luna-editorial.mjs && node --check bin/anyways-luna-enrich.mjs && node --check bin/anyways-generate-pitch.mjs && node --check bin/hermes-source-proposals.mjs && node --check bin/build-public.mjs && node --check bin/verify-public-build.mjs && node --check bin/verify-public-schema.mjs && node --check bin/audit-publication.mjs && node --check src/app.mjs && node --check src/public-app.mjs && node --check src/newsroom-entry.mjs && node --check src/public-contract.mjs && node --check src/source-integrity.mjs && node --check src/trust-pages.mjs && node --check src/article-commission.mjs && node --check src/article-renderer.mjs && node --check src/editorial-scoring.mjs && node --check src/editorial-status.mjs && node --check src/homepage-ranking.mjs && node --check src/image-rights-policy.mjs && node --check src/luna-editorial.mjs && node --check src/luna-evidence-enrichment.mjs && node --check src/media-pipeline.mjs && node --check src/newsroom-media.mjs && node --check src/newsroom-pipeline-controls.mjs && node --check src/source-ingestion.mjs && node --check src/story-media-attachment.mjs && node --check src/worker.mjs && node --check src/x-blind-spot-scout.mjs && node --check src/writer-selection.mjs && node --check src/pipeline/codex-cli-compatibility.mjs && node --check src/pipeline/codex-adapter.mjs && node --check src/pipeline/codex-writer.mjs && node --check src/pipeline/hermes-package.mjs && node --check src/pipeline/pitch.mjs && node --check src/pipeline/commission.mjs && node --check src/pipeline/phase2-orchestrator.mjs && node --check src/pipeline/phase2-state.mjs && node --check src/pipeline/phase2-prompts.mjs && node --check src/pipeline/article-markdown.mjs",
+    "pipeline": "node bin/anyways-ops.mjs",
+    "pipeline:legacy-structured": "node bin/anyways-pipeline.mjs",
+    "pipeline:discover": "node bin/anyways-ops.mjs discover",
+    "pipeline:process": "node bin/anyways-ops.mjs process",
+    "pipeline:status": "node bin/anyways-ops.mjs status",
+    "pipeline:sync-supabase": "node bin/pipeline-sync-supabase.mjs",
+    "hermes:source-proposals": "node bin/hermes-source-proposals.mjs",
+    "controller:build": "npm --prefix apps/controller run build",
+    "controller:test": "npm --prefix apps/controller run test",
+    "controller:restart": "npm --prefix apps/controller run launchd -- restart",
+    "controller:health": "/usr/bin/curl -fsS http://127.0.0.1:4317/health",
+    "validate:all": "npm test && npm run lint && npm run build && npm run controller:test && npm run controller:build",
+    "benchmark:validate": "node pipeline-benchmark/src/cli.mjs fixtures validate",
+    "benchmark:package-apple": "node pipeline-benchmark/src/cli.mjs fixtures package-apple",
+    "benchmark:test": "node --test pipeline-benchmark/tests/*.test.mjs",
+    "benchmark:demo": "node pipeline-benchmark/src/cli.mjs demo --stub",
+    "benchmark:safety-demo": "node pipeline-benchmark/src/cli.mjs demo --safety",
+    "benchmark:dry-run": "node pipeline-benchmark/src/cli.mjs run --dry-run"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.110.9"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.1",
+    "wrangler": "4.114.0"
+  }
+}

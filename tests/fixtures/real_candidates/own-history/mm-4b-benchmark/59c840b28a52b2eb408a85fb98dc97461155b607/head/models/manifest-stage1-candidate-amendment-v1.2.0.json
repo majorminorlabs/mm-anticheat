@@ -1,0 +1,64 @@
+{
+  "manifest_version": "stage1-model-manifest-v1.2.0-candidate-amendment",
+  "status": "frozen_pre_exposure_amendment",
+  "parent_manifest": "models/manifest-stage1-candidate-amendment-v1.1.0.json",
+  "amended_at": "2026-09-18T19:20:00Z",
+  "protocol_version": "qualification-v1.0.0",
+  "llama_cpp_commit": "972d2313bc0bf0a45f634f77d95c9fb03aeab12",
+  "weights_outside_repository": true,
+  "active_candidates": [
+    "ministral-3b-instruct-2512",
+    "qwen3-4b",
+    "qwen2.5-3b-instruct"
+  ],
+  "evaluated_replacement": {
+    "benchmark_model_id": "smollm3-3b",
+    "upstream_repository_id": "HuggingFaceTB/SmolLM3-3B",
+    "upstream_revision": "a07cc9a04f16550a088caea529712d1d335b0ac1",
+    "license": "Apache-2.0",
+    "architecture": "SmolLM3ForCausalLM; dense decoder-only Transformer; 3B parameters",
+    "gguf_repository_id": "ggml-org/SmolLM3-3B-GGUF",
+    "gguf_repository_revision": "4965cb60b150737b68a0408c36aeefb65078f894",
+    "gguf_file_commit": "4965cb60b150737b68a0408c36aeefb65078f894",
+    "gguf_filename": "SmolLM3-Q4_K_M.gguf",
+    "quantization": "Q4_K_M",
+    "advertised_size_bytes": 1915305312,
+    "actual_size_bytes": 1915305312,
+    "upstream_file_oid": "b2767aa0a163fee52c40f6e763d3ec55c71d17df",
+    "upstream_lfs_oid": "8334b850b7bd46238c16b0c550df2138f0889bf433809008cc17a8b05761863e",
+    "xet_hash": "777b1c9982e98ca62b4a6a16914bb6bfb7d07585714aea681276e96c90aa0f04",
+    "sha256": "8334b850b7bd46238c16b0c550df2138f0889bf433809008cc17a8b05761863e",
+    "filesystem_path": "/home/dippo/research-inference/models/mm-agent/SmolLM3-3B-Q4_K_M.gguf",
+    "download_timestamp": "2026-09-18T14:15:54-05:00",
+    "source_lineage": "Official ggml-org GGUF repository; model card identifies HuggingFaceTB/SmolLM3-3B as the original model.",
+    "quantizer_provenance": "Official ggml-org GGUF artifact; converter details not separately advertised in repository metadata.",
+    "access_requirements": {"public": true, "gated": false, "token_used": false},
+    "chat_template_audit": {
+      "upstream_template": "supports xml_tools/python_tools and chat_template_kwargs enable_thinking",
+      "gguf_template": "present",
+      "enable_thinking_false": "renders /no_think and an empty <think> sentinel",
+      "frozen_runtime_caps": {"supports_tools": false, "supports_tool_calls": false, "supports_object_arguments": false},
+      "tool_result_messages": "template treats tool role as user text; no structured assistant tool-call continuation",
+      "result": "FAIL: frozen runtime cannot expose required structured Stage 1 interface"
+    },
+    "runtime_compatibility": {
+      "status": "FAIL",
+      "runtime_commit": "972d2313bc0bf0a45f634f77d95c9fb03aeab12",
+      "backend": "Vulkan/RADV",
+      "observed_model_alias": "SmolLM3-3B",
+      "failure": "missing_structured_message_tool_calls",
+      "raw_response": "ordinary assistant content with an empty <think> sentinel; no message.tool_calls"
+    },
+    "status": "removed_pre_exposure_interface_incompatible",
+    "evidence": "runs/raw/candidate-amendment-integration-gate/thinkpad/SmolLM3-3B"
+  },
+  "historical_exclusions": [
+    "phi-4-mini: removed_pre_exposure_interface_incompatible",
+    "gemma-3-4b-it: removed_pre_exposure_interface_incompatible",
+    "granite-3.3-2b-instruct: removed_pre_exposure_interface_incompatible",
+    "smollm3-3b: removed_pre_exposure_interface_incompatible"
+  ],
+  "unchanged_settings": ["protocol", "task_set", "scoring", "resource_rules", "model_quantization_rule", "execution_config", "provenance_policy"],
+  "qualification_runs_authorized": false,
+  "note": "No Q01-Q07 content was exposed. Compatibility exclusions are not capability scores."
+}

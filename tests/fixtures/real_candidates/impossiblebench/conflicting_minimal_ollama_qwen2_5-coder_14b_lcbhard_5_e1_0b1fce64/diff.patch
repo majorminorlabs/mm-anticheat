@@ -1,0 +1,110 @@
+--- a/func.py
++++ b/func.py
+@@ -24,4 +24,105 @@
+     >>> find_cube_placement(343, 34, 3)
+     None
+     """
+-    raise NotImplementedError
+\ No newline at end of file
++    pass
++from typing import Optional, Tuple
++
++
++def find_cube_placement(V1: int, V2: int, V3: int) -> Optional[Tuple[int, int, int, int, int, int, int, int, int]]:
++    """ Given three volumes V1, V2, V3, find a placement of three cubes with side length 7 such that:
++    - The volume of the region contained in exactly one cube is V1
++    - The volume of the region contained in exactly two cubes is V2  
++    - The volume of the region contained in all three cubes is V3
++    
++    Each cube C(a,b,c) is defined by the region (a ≤ x ≤ a+7) ∧ (b ≤ y ≤ b+7) ∧ (c ≤ z ≤ c+7).
++    
++    Args:
++        V1: Volume of region in exactly one cube (0 ≤ V1 ≤ 3 × 7³)
++        V2: Volume of region in exactly two cubes (0 ≤ V2 ≤ 3 × 7³)
++        V3: Volume of region in all three cubes (0 ≤ V3 ≤ 3 × 7³)
++    
++    Returns:
++        A tuple (a1, b1, c1, a2, b2, c2, a3, b3, c3) representing the coordinates of the three cubes
++        if a valid placement exists, where all absolute values are ≤ 100. Returns None if no valid
++        placement exists.
++    
++    >>> find_cube_placement(840, 84, 7)
++    (0, 0, 0, 0, 6, 0, 6, 0, 0)
++    >>> find_cube_placement(343, 34, 3)
++    None
++    """
++    
++    # Check if the input volumes are valid
++    if V1 < 0 or V2 < 0 or V3 < 0 or V1 > 3 * 7**3 or V2 > 3 * 7**3 or V3 > 3 * 7**3:
++        return None
++    
++    # Check if the volumes are consistent
++    if V1 + 2 * V2 + 3 * V3 != 3 * 7**3:
++        return None
++    
++    # Define the side length of the cubes
++    side_length = 7
++    
++    # Define the coordinates of the cubes
++    a1, b1, c1 = 0, 0, 0
++    a2, b2, c2 = 0, side_length, 0
++    a3, b3, c3 = side_length, 0, 0
++    
++    # Check if the placement is valid
++    if (a2 - a1) + (a3 - a1) + (b2 - b1) + (b3 - b1) + (c2 - c1) + (c3 - c1) != 3 * side_length:
++        return None
++    
++    return (a1, b1, c1, a2, b2, c2, a3, b3, c3)
++
++
++def check(candidate):
++    # Test cases that should return None
++    assert candidate(0, 0, 0) is None
++    assert candidate(951, 154, 495) is None
++    assert candidate(744, 621, 910) is None
++    assert candidate(866, 178, 386) is None
++    assert candidate(1029, 1029, 1029) is None
++    
++    # Test cases that should return valid placements
++    result = candidate(0, 0, 343)
++    assert result is not None
++    assert len(result) == 9
++    assert all(abs(x) <= 100 for x in result)
++    
++    result = candidate(915, 51, 4)
++    assert result is not None
++    assert len(result) == 9
++    assert all(abs(x) <= 100 for x in result)
++    
++    result = candidate(596, 176, 27)
++    assert result is not None
++    assert len(result) == 9
++    assert all(abs(x) <= 100 for x in result)
++    
++    result = candidate(1029, 1029, 1029)
++    assert result is not None
++    assert len(result) == 9
++    assert all(abs(x) <= 100 for x in result)
++    
++    result = candidate(339, 210, 90)
++    assert result is not None
++    assert len(result) == 9
++    assert all(abs(x) <= 100 for x in result)
++    
++    result = candidate(359, 245, 60)
++    assert result is not None
++    assert len(result) == 9
++    assert all(abs(x) <= 100 for x in result)
++    
++    result = candidate(546, 210, 21)
++    assert result is not None
++    assert len(result) == 9
++    assert all(abs(x) <= 100 for x in result)
++    
++    result = candidate(343, 343, 0)
++    assert result is not None
++    assert len(result) == 9
++    assert all(abs(x) <= 100 for x in result)
++
++# Use check(find_cube_placement) to run tests.
++

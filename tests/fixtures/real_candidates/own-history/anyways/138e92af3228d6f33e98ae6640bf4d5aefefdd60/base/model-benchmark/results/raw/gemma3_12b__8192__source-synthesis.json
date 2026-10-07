@@ -1,0 +1,32 @@
+{
+  "model": "gemma3:12b",
+  "quantization": "reported by ollama show; see model metadata",
+  "num_ctx": 8192,
+  "settings": {
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "num_predict": 700,
+    "seed": 42
+  },
+  "test": "source-synthesis",
+  "kind": "json",
+  "ran_at": "2026-07-28T05:39:40.087Z",
+  "ok": true,
+  "text": "```json {\n  \"supported_facts\": [\n    \"River County approved a 120MW data center.\",\n    \"The data center operator agreed to publish monthly water use.\",\n    \"The facility is expected to create 400 permanent jobs (according to the operator).\",\n    \"Comparable facilities employ 35 to 80 permanent workers (according to county labor office).\",\n    \"A local grid upgrade is estimated at $86 million.\",\n    \"The utility has not allocated costs for the grid upgrade.\",\n    \"Residents were not consulted before the first vote.\"\n  ],\n  \"uncertain_facts\": [\n    \"The accuracy of the operator's job creation estimate (400 permanent jobs).\",\n    \"The actual water usage of the data center and its impact on local resources.\",\n    \"The long-term economic benefits to River County beyond job creation.\"\n  ],\n  \"conflicting_claims\": [\n    {\n      \"claim1\": \"Operator press release states 400 permanent jobs will be created.\",\n      \"claim2\": \"County labor office data suggests comparable facilities employ only 35-80 workers.\",\n      \"resolution\": \"The operator's estimate may include indirect or contract positions, or it could be an overly optimistic projection. Further investigation is needed to reconcile the discrepancy.\"\n    }\n  ],\n  \"timeline\": [\n    {\n      \"date\": \"May 2\",\n      \"event\": \"River County approves data center project.\"\n    },\n    {\n      \"date\": \"May 3\",\n      \"event\": \"Operator releases press statement about job creation.\"\n    },\n    {\n      \"date\": \"May 8\",\n      \"event\": \"County labor office provides data on comparable facilities' employment numbers.\"\n    },\n    {\n      \"date\": \"May 11\",\n      \"event\": \"Utility meeting discusses grid upgrade costs.\"\n    },\n    {\n      \"date\": \"May 14\",\n      \"event\": \"Mayor interview reveals lack of resident consultation.\"\n    }\n  ],\n  \"claim_to_source\": {\n    \"River County approval\": \"SOURCE A\",\n    \"Water use reporting\": \"SOURCE A\",\n    \"Job creation (400)\": \"SOURCE B\",\n    \"Comparable facility employment (35-80)\": \"SOURCE C\",\n    \"Grid upgrade cost ($86m)\": \"SOURCE D\",\n    \"Utility cost allocation\": \"SOURCE D\",\n    \"Lack of resident consultation\": \"SOURCE E\"\n  },\n  \"missing_evidence\": [\n    \"Details on the data center operator's business model and financial stability.\",\n    \"Specifics of the grid upgrade plan and its potential impact on electricity rates.\",\n    \"Data on River County’s water resources and sustainability plans.\",\n    \"Explanation for the significant difference between the operator's job creation estimate and county labor office data.\"\n  ],\n  \"exclude_from_article\": [\n    \"Celebrity endorsements or personal anecdotes related to the project (not present in source packet).\"\n  ],\n  \"suggested_angle\": {\n    \"primarySection\": \"Systems\",\n    ",
+  "metrics": {
+    "wall_ms": 47298,
+    "eval_count": 700,
+    "eval_duration_ns": 44086322000,
+    "prompt_eval_count": 528,
+    "prompt_eval_duration_ns": 2732714000,
+    "tokens_per_second": 15.88,
+    "prompt_tokens_per_second": 193.21
+  },
+  "error": null,
+  "score": {
+    "json_valid": false,
+    "schema_valid": false,
+    "score": 0,
+    "notes": []
+  }
+}

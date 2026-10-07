@@ -23,6 +23,7 @@ class Token:
 def tokens(text: str) -> tuple[Token, ...]:
     """Lex comments, strings and simple tokens in one forward pass."""
     result = []
+    previous = None
     i, line, size = 0, 1, len(text)
     while i < size:
         char = text[i]
@@ -40,6 +41,29 @@ def tokens(text: str) -> tuple[Token, ...]:
             kind = "comment"
             end = text.find("*/", i + 2)
             i = size if end < 0 else end + 2
+        elif char == "/" and (
+            previous is None
+            or previous.line < row
+            or previous.value
+            in {"(", ",", "=", ":", "[", "!", "&", "|", "?", "{", "}", ";", "return", "=>"}
+        ):
+            kind = "regex"
+            i += 1
+            in_class = False
+            while i < size and text[i] != "\n":
+                if text[i] == "\\":
+                    i = min(size, i + 2)
+                    continue
+                if text[i] == "[":
+                    in_class = True
+                elif text[i] == "]":
+                    in_class = False
+                elif text[i] == "/" and not in_class:
+                    i += 1
+                    while i < size and text[i].isalpha():
+                        i += 1
+                    break
+                i += 1
         elif char in "'\"`":
             kind = "string"
             quote = char
@@ -73,6 +97,8 @@ def tokens(text: str) -> tuple[Token, ...]:
             elif char == "=" and i < size and text[i] == ">":
                 i += 1
         result.append(Token(kind, text[start:i], start, i, row))
+        if kind != "comment":
+            previous = result[-1]
         line += text.count("\n", start, i)
     return tuple(result)
 
@@ -124,7 +150,7 @@ def mask(text: str, *, strings: bool = False) -> str:
     """Mask comments and optionally strings while preserving positions."""
     parts, offset = [], 0
     for token in tokens(text):
-        if token.kind == "comment" or (strings and token.kind == "string"):
+        if token.kind in {"comment", "regex"} or (strings and token.kind == "string"):
             parts.append(text[offset : token.start])
             parts.append("".join("\n" if c == "\n" else " " for c in token.value))
             offset = token.end

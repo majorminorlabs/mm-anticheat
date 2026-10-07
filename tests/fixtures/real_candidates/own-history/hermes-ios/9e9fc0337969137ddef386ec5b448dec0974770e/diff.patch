@@ -1,0 +1,1262 @@
+diff --git a/ATTACHMENTS_AND_VOICE.md b/ATTACHMENTS_AND_VOICE.md
+new file mode 100644
+index 0000000..f4f8e34
+--- /dev/null
++++ b/ATTACHMENTS_AND_VOICE.md
+@@ -0,0 +1,83 @@
++# Attachments and dictation
++
++The existing conversation composer now offers Files, Photo Library and Camera
++when the connected bridge advertises `attachments`; Photo Library and Camera also require `imageUpload`. Voice input is native
++speech-to-text and needs no Hermes audio capability. Keychain pairing is unchanged.
++
++## Upload contract and limits
++
++`POST /mobile/v1/attachments` requires application authentication, `chat.control`,
++an authorized conversation, a simple filename, an allowed MIME type and base64
++bytes. It returns a generated opaque `upload_id` and artifact metadata, never a
++Studio destination path. A run submits up to four distinct IDs using
++`POST /conversations/{id}/runs {text,attachment_ids}`. Files are attached through
++Hermes' `file.attach`, images through `image.attach_bytes`, PDFs through `pdf.attach`.
++Only the selected conversation receives them. A file-only message gets a short
++ordinary inspection prompt.
++
++Supported formats:
++
++- PNG, JPEG, WebP and GIF, with matching magic bytes.
++- PDF, with matching signature; Hermes renders a bounded preview of the first
++  five pages. The prompt identifies that preview limit. Poppler (`pdftoppm`) must
++  be available in Hermes' runtime PATH.
++- UTF-8 text/Markdown/CSV/TSV, JSON (validated), and common code/config files:
++  Python, Swift, JavaScript/TypeScript, C/C++, Rust, Go, Java/Kotlin, Ruby, shells,
++  CSS/HTML/XML, YAML/TOML and SQL. Binary archives/executables are rejected.
++
++Maximum 10 MiB per file (a Studio may configure a smaller limit), four files per
++message, 40 MiB pending per conversation and 256 MiB total bridge staging. Empty
++files, unknown fields/types, invalid base64, control characters, separators and
++path traversal in filenames are rejected. Direct upload MIME and content are
++checked independently of the picker.
++
++Bridge staging is under its private `state/uploads/`: directory `0700`, generated
++filenames, files `0600`. Ready uploads expire after 24 hours. Submitted staging
++expires after seven days. Cleanup runs at startup, during staging and in the
++five-second maintenance loop; it removes staging and its artifact metadata. Hermes'
++canonical attachment copies/history follow Hermes' own retention policy; bridge
++cleanup does not delete that history. There is no arbitrary filesystem browser.
++
++Upload and send operations have independent idempotency keys and never automatically
++retry after an uncertain outcome. A consumed upload cannot be submitted to another
++run or conversation. Attachments stay visible/editable in the composer until a
++confirmed send; removing one before send leaves any previously staged copy to expire.
++Payload bytes are composer-only and excluded from encoded transcripts/checkpoints.
++
++## Native photo and camera behavior
++
++PhotosPicker supports up to four selections without granting broad library access.
++Selected photos and new camera captures become real JPEG bytes with thumbnails and
++remove controls before sending. Images are kept at practical resolution, bounded to
++4096 pixels on the longest edge and JPEG quality 0.9; sources above 30 MiB or encoded
++uploads above 10 MiB fail with a clear error. Files use security-scoped access only
++while copying the selected bytes.
++
++Camera capture uses the native UIImagePickerController preview/Use Photo flow.
++Cancellation adds nothing. Unavailable cameras and denied permission produce a
++Settings guidance error. `NSCameraUsageDescription` is supplied for both app builds.
++
++## Voice input
++
++The microphone control starts/stops `AVAudioEngine` plus `SFSpeechRecognizer`.
++Partial recognized words populate the ordinary composer; Stop preserves that text
++for editing, Cancel restores the pre-dictation draft, and Send uses the normal chat
++path. No microphone audio is uploaded to the bridge. Leaving the conversation or
++backgrounding the app cancels capture and releases the audio session.
++
++The app requests microphone and speech-recognition permission, checks recognizer
++availability, and reports denied or unavailable states. It sets
++`requiresOnDeviceRecognition` when `supportsOnDeviceRecognition` is true. Other
++languages/devices use Apple's network recognition and show that status while
++listening. See [Apple's on-device recognition contract](https://developer.apple.com/documentation/speech/sfspeechrecognizer/supportsondevicerecognition).
++This is short composer dictation, not a voice call or recorded-audio attachment.
++The app supplies `NSMicrophoneUsageDescription` and `NSSpeechRecognitionUsageDescription`.
++
++## Validation
++
++Bridge tests cover staging, actual send attachment routing, images, authentication,
++size/MIME/name/path rejection, cleanup, bridge restart and duplicate/idempotent
++selection. Swift transport tests check upload-to-send ID mapping and excluded
++payload persistence. Installed-Hermes integration uses an isolated home and local
++model. Physical camera/microphone/PhotosPicker validation requires an unlocked
++phone; current results are recorded in BOT_MODE_VALIDATION.md.
+diff --git a/BRIDGE_API.md b/BRIDGE_API.md
+index 5be39e6..3041f05 100644
+--- a/BRIDGE_API.md
++++ b/BRIDGE_API.md
+@@ -11,7 +11,7 @@ Every request requires **Authorization: Bearer <mobile-device-token>**. Mobile a
+ | Scope | Permission |
+ |---|---|
+ | read | Required for all requests; authorized profiles, runs, tasks, events and registered artifacts |
+-| chat.control | Conversations, run controls and attachment uploads |
++| chat.control | Conversations, run controls, attachment uploads and capability-gated bot management |
+ | tasks.manage | Cron/Kanban mutations; assigning another worker requires that worker profile's permission |
+ | approvals.respond | Exact clarifications only; dangerous approvals remain disabled |
+ 
+@@ -65,7 +65,7 @@ Collection/inventory profile query defaults to default. Detail IDs carry their o
+ | POST /kanban/tasks/{id}/reclaim | {reason?} | Acknowledgement; Hermes releases claim/terminates worker/records outcome |
+ | POST /kanban/tasks/{id}/reassign | {profile,reclaim_first?,reason?}; empty profile unassigns | Acknowledgement; refresh canonical state |
+ | GET /kanban/tasks/{id}/attachment?id=<integer> | Must belong to that task | Binary download through restricted Hermes route |
+-| POST /attachments | {conversation_id,name,content_type,content_base64} | 201 {attached:true,artifact?:Artifact,metadata} |
++| POST /attachments | {conversation_id,name,content_type,content_base64} | 201 {staged:true,attached:false,upload_id,artifact} |
+ | GET /conversations/{id}/artifacts | — | {artifacts:[Artifact]} |
+ | GET /artifacts/{id} | — | Artifact metadata |
+ | GET /artifacts/{id}/download | — | Binary download; no path parameter |
+@@ -203,4 +203,29 @@ Statuses: 400 malformed/unsupported fields; 401 invalid/revoked credential; 403
+ 
+ ## Desktop Bot Mode resources
+ 
+-See [Bot Mode source audit](BOT_MODE_AUDIT.md) for `/bots`, `/bots/{id}`, GET `/bots/{id}/conversation` and writable POST `/bots/{id}/conversation` contracts, explicit whole-roster authorization, profile fallback and canonical-title resolution. `features.botMode` is independent from `features.profiles`. POST initializes/opens the source canonical Bot Chat with `chat.control` plus `bot_chat_control:true`. Existing conversation/run/control/history APIs are reused with attached bot identity. Bot create/edit is deferred. Canonical rename/delete is protected.
++See [Bot Mode source audit](BOT_MODE_AUDIT.md) for `/bots`, `/bots/{id}`, GET `/bots/{id}/conversation` and writable POST `/bots/{id}/conversation` contracts, explicit whole-roster authorization, profile fallback and canonical-title resolution. `features.botMode` is independent from `features.profiles`. POST initializes/opens the source canonical Bot Chat with `chat.control` plus `bot_chat_control:true`. Existing conversation/run/control/history APIs are reused with attached bot identity. Native create/edit/hide/duplicate is supported when `bot_mode_management:true` and `chat.control` are granted at the audited 4bb9e57 source. See [Bot management](BOT_MANAGEMENT.md). Canonical rename/delete is protected.
++
++
++### Native bot management and staged media
++
++- `GET /bots/inventory?bot_id=` returns the host/profile model, installed-skill,
++  toolset and configured-MCP selections plus field availability. Credentials,
++  endpoints, commands and environment values are excluded.
++- `POST /bots {name,description,soul?,model?,provider?,skills?,toolsets?,mcp_servers?}`
++  creates a native profile and returns `{bot}`. Model/provider must be selected
++  together from the host inventory. Selection lists are bounded to 512 entries.
++- `PATCH /bots/{id}` changes the same allowlisted fields. Hermes guarded model
++  updates can return `409 bot_model_confirmation_required`; explicit approval
++  resubmits with `confirm_expensive_model:true`.
++- `POST /bots/{id}/hide {hidden:true|false}` changes native visibility and retains
++  history. The default bot is protected. `POST /bots/{id}/duplicate {}` clones
++  configuration through Hermes, with a fresh identity and no copied chat/history.
++- `POST /attachments` stages validated bytes under an opaque generated ID.
++  `POST /conversations/{id}/runs {text,attachment_ids?}` consumes at most four
++  distinct ready IDs owned by that conversation, attaching before prompt submit
++  under the send lock. No upload action executes a file or chooses a Studio path.
++
++Files are bounded to 10 MiB each (or a lower configured limit). Staging, quotas,
++MIME checks, expiration and native photo/camera/dictation behavior are detailed in
++[Attachments and voice](ATTACHMENTS_AND_VOICE.md). A staged artifact has no run ID
++until submit. Canonical upload/run paths retain the native bot profile boundary.
+diff --git a/Hermes.xcodeproj/project.pbxproj b/Hermes.xcodeproj/project.pbxproj
+index 7a01852..697d47c 100644
+--- a/Hermes.xcodeproj/project.pbxproj
++++ b/Hermes.xcodeproj/project.pbxproj
+@@ -375,6 +375,9 @@
+ 				GENERATE_INFOPLIST_FILE = YES;
+ 				INFOPLIST_KEY_CFBundleDisplayName = Hermes;
+ 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Hermes connects to Hermes Agent running on your Mac over your private network.";
++				INFOPLIST_KEY_NSCameraUsageDescription = "Capture a photo to attach to your Hermes conversation.";
++				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Dictate text into the Hermes message composer.";
++				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Convert your speech to editable message text. Apple may process recognition when on-device recognition is unavailable.";
+ 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+ 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+ 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+@@ -410,6 +413,9 @@
+ 				GENERATE_INFOPLIST_FILE = YES;
+ 				INFOPLIST_KEY_CFBundleDisplayName = Hermes;
+ 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Hermes connects to Hermes Agent running on your Mac over your private network.";
++				INFOPLIST_KEY_NSCameraUsageDescription = "Capture a photo to attach to your Hermes conversation.";
++				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Dictate text into the Hermes message composer.";
++				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Convert your speech to editable message text. Apple may process recognition when on-device recognition is unavailable.";
+ 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+ 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+ 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+diff --git a/Hermes/Domain/Conversation.swift b/Hermes/Domain/Conversation.swift
+index d378730..1d06f8a 100644
+--- a/Hermes/Domain/Conversation.swift
++++ b/Hermes/Domain/Conversation.swift
+@@ -133,6 +133,11 @@ nonisolated struct FileAttachment: Identifiable, Hashable, Codable, Sendable {
+     var fileExtension: String
+     var path: String?
+ 
++    /// Composer-only bytes are excluded from persisted transcripts and caches.
++    var data: Data? = nil
++    var contentType: String? = nil
++    enum CodingKeys: String, CodingKey { case id, name, byteCount, fileExtension, path, contentType }
++
+     var symbol: String {
+         switch fileExtension.lowercased() {
+         case "csv", "xlsx", "tsv": "tablecells"
+diff --git a/Hermes/Features/Chat/ComposerMedia.swift b/Hermes/Features/Chat/ComposerMedia.swift
+new file mode 100644
+index 0000000..742055b
+--- /dev/null
++++ b/Hermes/Features/Chat/ComposerMedia.swift
+@@ -0,0 +1,114 @@
++import SwiftUI
++import PhotosUI
++import UniformTypeIdentifiers
++import AVFoundation
++import Speech
++
++@MainActor enum ComposerMedia {
++    static let limit = 10 * 1024 * 1024
++    static let textExtensions: Set<String> = ["txt","md","markdown","json","csv","tsv","py","swift","js","jsx","ts","tsx","c","h","cpp","hpp","rs","go","java","kt","rb","sh","bash","zsh","css","html","xml","yaml","yml","toml","sql","log"]
++    static func file(name: String, data: Data) throws -> FileAttachment {
++        guard !data.isEmpty, data.count <= limit else { throw HermesError.rejected("Choose a nonempty file up to 10 MiB") }
++        let ext = URL(fileURLWithPath: name).pathExtension.lowercased()
++        let mime: String
++        switch ext {
++        case "png": mime = "image/png"
++        case "jpg", "jpeg": mime = "image/jpeg"
++        case "webp": mime = "image/webp"
++        case "gif": mime = "image/gif"
++        case "pdf": mime = "application/pdf"
++        case "json": mime = "application/json"
++        case "csv": mime = "text/csv"
++        case "md", "markdown": mime = "text/markdown"
++        default:
++            guard textExtensions.contains(ext), String(data: data, encoding: .utf8) != nil else { throw HermesError.rejected("Choose an image, PDF, JSON or UTF-8 text/source file") }
++            mime = "text/plain"
++        }
++        return FileAttachment(id: UUID().uuidString, name: name, byteCount: data.count, fileExtension: ext, path: nil, data: data, contentType: mime)
++    }
++    static func photo(_ image: UIImage) throws -> FileAttachment {
++        // Bound image dimensions before encoding (at most 4096px along the longest edge).
++        let scale = min(1, 4096 / max(image.size.width * image.scale, image.size.height * image.scale))
++        let format = UIGraphicsImageRendererFormat(); format.scale = 1
++        let size = CGSize(width: image.size.width * image.scale * scale, height: image.size.height * image.scale * scale)
++        let rendered = UIGraphicsImageRenderer(size: size, format: format).image { _ in image.draw(in: CGRect(origin: .zero, size: size)) }
++        guard let bytes = rendered.jpegData(compressionQuality: 0.9) else { throw HermesError.rejected("The photo could not be prepared") }
++        return try file(name: "Photo-\(UUID().uuidString.prefix(8)).jpg", data: bytes)
++    }
++    static func importFile(_ url: URL) throws -> FileAttachment {
++        let scoped = url.startAccessingSecurityScopedResource()
++        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
++        let values = try url.resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey])
++        guard values.isRegularFile == true, (values.fileSize ?? Int.max) <= limit else { throw HermesError.rejected("Choose a regular file up to 10 MiB") }
++        let handle = try FileHandle(forReadingFrom:url); defer { try? handle.close() }
++        return try file(name: url.lastPathComponent, data: handle.read(upToCount:limit + 1) ?? Data())
++    }
++}
++
++struct CameraCapture: UIViewControllerRepresentable {
++    var completion: (UIImage?) -> Void
++    func makeCoordinator() -> Coordinator { Coordinator(completion) }
++    func makeUIViewController(context: Context) -> UIImagePickerController {
++        let picker = UIImagePickerController(); picker.sourceType = .camera
++        picker.mediaTypes = [UTType.image.identifier]; picker.delegate = context.coordinator
++        return picker
++    }
++    func updateUIViewController(_ controller: UIImagePickerController, context: Context) {}
++    final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
++        let completion: (UIImage?) -> Void
++        init(_ completion: @escaping (UIImage?) -> Void) { self.completion = completion }
++        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) { completion(nil) }
++        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) { completion(info[.originalImage] as? UIImage) }
++    }
++}
++
++@MainActor @Observable final class ComposerDictation {
++    private(set) var isRecording = false
++    private(set) var isStarting = false
++    private(set) var status = ""
++    private let engine = AVAudioEngine()
++    private var request: SFSpeechAudioBufferRecognitionRequest?
++    private var task: SFSpeechRecognitionTask?
++    private var generation = UUID()
++    private var tapped = false
++    private var onWords: ((String) -> Void)?
++    func start(words: @escaping (String) -> Void) async throws {
++        guard !isRecording && !isStarting else { return }
++        isStarting = true; defer { isStarting = false }
++        generation = UUID(); let pending = generation
++        let authorization = await withCheckedContinuation { continuation in SFSpeechRecognizer.requestAuthorization { continuation.resume(returning: $0) } }
++        guard authorization == .authorized else { throw HermesError.rejected("Enable Speech Recognition for Hermes in Settings") }
++        let microphone = await AVAudioApplication.requestRecordPermission()
++        guard microphone else { throw HermesError.rejected("Enable microphone access for Hermes in Settings") }
++        guard generation == pending, !Task.isCancelled else { return }
++        guard let recognizer = SFSpeechRecognizer(locale: .current), recognizer.isAvailable else { throw HermesError.rejected("Speech recognition is currently unavailable") }
++        let session = AVAudioSession.sharedInstance()
++        try session.setCategory(.record, mode: .measurement, options: [.duckOthers]); try session.setActive(true, options: .notifyOthersOnDeactivation)
++        let request = SFSpeechAudioBufferRecognitionRequest(); request.shouldReportPartialResults = true
++        request.requiresOnDeviceRecognition = recognizer.supportsOnDeviceRecognition
++        status = request.requiresOnDeviceRecognition ? "Listening · on device" : "Listening · Apple network recognition"
++        self.request = request; self.onWords = words; generation = UUID(); let current = generation
++        task = recognizer.recognitionTask(with: request) { [weak self] result, error in
++            let text = result?.bestTranscription.formattedString; let finished = result?.isFinal == true
++            Task { @MainActor in
++                guard let self, self.generation == current else { return }
++                if let text { self.onWords?(text) }
++                if finished || error != nil { self.stop(); if error != nil { self.status = "Recognition stopped; your text is editable" } }
++            }
++        }
++        let input = engine.inputNode; let format = input.outputFormat(forBus: 0)
++        guard format.sampleRate > 0, format.channelCount > 0 else { stop(); throw HermesError.rejected("Microphone input is unavailable") }
++        input.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in request.append(buffer) }; tapped = true
++        engine.prepare()
++        do { try engine.start(); isRecording = true } catch { stop(); throw HermesError.rejected("Microphone could not start") }
++    }
++    func stop() {
++        generation = UUID(); task?.cancel(); task = nil
++        engine.stop(); if tapped { engine.inputNode.removeTap(onBus: 0); tapped = false }
++        request?.endAudio(); isRecording = false
++        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
++    }
++    func cancel() {
++        generation = UUID(); stop(); task?.cancel(); task = nil; request = nil; onWords = nil; status = ""
++    }
++}
+diff --git a/Hermes/Features/Chat/ComposerView.swift b/Hermes/Features/Chat/ComposerView.swift
+index bbd9299..6b5a2be 100644
+--- a/Hermes/Features/Chat/ComposerView.swift
++++ b/Hermes/Features/Chat/ComposerView.swift
+@@ -1,6 +1,7 @@
+ import SwiftUI
+ import PhotosUI
+ import UniformTypeIdentifiers
++import AVFoundation
+ 
+ /// Message input. When a run is active, sending steers that run instead of
+ /// starting a new one; Stop is always one tap away.
+@@ -15,12 +16,25 @@ struct ComposerView: View {
+     @State private var showingSettings = false
+     @State private var showingPhotos = false
+     @State private var showingFiles = false
++    @State private var showingCamera = false
++    @State private var loadingMedia = false
++    @State private var dictation = ComposerDictation()
++    @State private var dictationBase = ""
++    @Environment(\.scenePhase) private var scenePhase
+     @State private var photoItems: [PhotosPickerItem] = []
+     @State private var sendCount = 0
+ 
+     var body: some View {
+         VStack(spacing: 8) {
+             contextLine
++            if dictation.isRecording {
++                HStack {
++                    Label(dictation.status, systemImage: "waveform").font(.caption).foregroundStyle(.secondary)
++                    Spacer()
++                    Button("Cancel") { dictation.cancel(); model.draft = dictationBase }
++                }
++            }
++            if loadingMedia || model.isSending { ProgressView(model.isSending ? "Sending…" : "Preparing attachments…").font(.caption) }
+ 
+             if !model.attachments.isEmpty {
+                 attachmentChips
+@@ -34,7 +48,7 @@ struct ComposerView: View {
+                 TextField(placeholder, text: $model.draft, axis: .vertical)
+                     .lineLimit(1...6)
+                     .focused(focus)
+-                    .disabled(model.composerMode == .busy || !connection.connection.isConnected)
++                    .disabled(dictation.isRecording || model.isSending || model.composerMode == .busy || !connection.connection.isConnected)
+                     .padding(.horizontal, 14)
+                     .padding(.vertical, 9)
+                     .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+@@ -45,6 +59,13 @@ struct ComposerView: View {
+                     }
+                     .onSubmit { submit() }
+ 
++                if model.composerMode != .busy {
++                    Button { toggleDictation() } label: {
++                        Image(systemName: dictation.isRecording ? "stop.circle.fill" : "mic")
++                            .frame(width: 32, height: 36).foregroundStyle(dictation.isRecording ? .red : .secondary)
++                    }.accessibilityLabel(dictation.isRecording ? "Stop dictation" : "Voice input")
++                    .disabled(!connection.connection.isConnected || model.isSending || loadingMedia || dictation.isStarting)
++                }
+                 trailingButton
+             }
+         }
+@@ -57,8 +78,20 @@ struct ComposerView: View {
+         }
+         .photosPicker(isPresented: $showingPhotos, selection: $photoItems, maxSelectionCount: 4, matching: .images)
+         .fileImporter(isPresented: $showingFiles, allowedContentTypes: [.item], allowsMultipleSelection: true) { result in
+-            if case .success(let urls) = result { addFiles(urls) }
++            switch result {
++            case .success(let urls): addFiles(urls)
++            case .failure: toasts.show(error: HermesError.rejected("File selection could not be completed"))
++            }
+         }
++        .sheet(isPresented: $showingCamera) {
++            CameraCapture { image in
++                showingCamera = false
++                guard let image else { return }
++                do { try append(ComposerMedia.photo(image)) } catch { toasts.show(error: error) }
++            }.ignoresSafeArea()
++        }
++        .onDisappear { dictation.cancel() }
++        .onChange(of: scenePhase) { _, phase in if phase != .active { dictation.cancel() } }
+         .onChange(of: photoItems) { _, items in
+             addPhotos(items)
+         }
+@@ -115,11 +148,11 @@ struct ComposerView: View {
+ 
+     private var attachMenu: some View {
+         Menu {
+-            Button("Photo Library", systemImage: "photo.on.rectangle") { showingPhotos = true }
++            if connection.supports(.imageUpload) { Button("Photo Library", systemImage: "photo.on.rectangle") { showingPhotos = true } }
+             Button("Files", systemImage: "folder") { showingFiles = true }
+-            Button("Camera", systemImage: "camera") {
+-                toasts.show("Camera capture arrives with attachment upload", symbol: "camera")
+-            }
++            if connection.supports(.imageUpload) { Button("Camera", systemImage: "camera") {
++                Task { await openCamera() }
++            } }
+         } label: {
+             Image(systemName: "plus")
+                 .font(.body.weight(.semibold))
+@@ -149,18 +182,8 @@ struct ComposerView: View {
+                     .symbolRenderingMode(.hierarchical)
+                     .foregroundStyle(model.composerMode == .steer ? Color.indigo : Color.accentColor)
+             }
+-            .disabled(!model.canSend)
++            .disabled(!model.canSend || loadingMedia || dictation.isRecording)
+             .accessibilityLabel(model.composerMode == .steer ? "Send instruction" : "Send")
+-        } else {
+-            Button {
+-                toasts.show("Voice input isn't connected yet — use the keyboard's dictation key", symbol: "mic")
+-            } label: {
+-                Image(systemName: "mic")
+-                    .font(.body.weight(.medium))
+-                    .frame(width: 36, height: 36)
+-                    .foregroundStyle(.secondary)
+-            }
+-            .accessibilityLabel("Voice input")
+         }
+     }
+ 
+@@ -169,7 +192,9 @@ struct ComposerView: View {
+             HStack(spacing: 8) {
+                 ForEach(model.attachments) { file in
+                     HStack(spacing: 6) {
+-                        Image(systemName: file.symbol).foregroundStyle(.secondary)
++                        if let data = file.data, file.contentType?.hasPrefix("image/") == true, let image = UIImage(data: data) {
++                            Image(uiImage: image).resizable().scaledToFill().frame(width: 32, height: 32).clipShape(RoundedRectangle(cornerRadius: 5))
++                        } else { Image(systemName: file.symbol).foregroundStyle(.secondary) }
+                         Text(file.name).lineLimit(1)
+                         Button {
+                             model.attachments.removeAll { $0.id == file.id }
+@@ -201,26 +226,50 @@ struct ComposerView: View {
+     // MARK: Actions
+ 
+     private func submit() {
+-        guard model.canSend else { return }
++        guard model.canSend, !loadingMedia else { return }
++        dictation.cancel()
+         sendCount += 1
+         let steering = model.composerMode == .steer
+         toasts.perform(success: steering ? "Instruction sent" : nil) { try await model.submit() }
+     }
+ 
++    private func append(_ file: FileAttachment) throws {
++        guard model.attachments.count < 4 else { throw HermesError.rejected("Attach up to four files per message") }
++        model.attachments.append(file)
++    }
+     private func addPhotos(_ items: [PhotosPickerItem]) {
+         guard !items.isEmpty else { return }
+-        for (index, _) in items.enumerated() {
+-            model.attachments.append(FileAttachment(id: UUID().uuidString, name: "Photo \(model.attachments.count + index + 1).heic",
+-                                                    byteCount: 1_800_000, fileExtension: "heic", path: nil))
++        loadingMedia = true
++        Task {
++            defer { loadingMedia = false; photoItems = [] }
++            do {
++                for item in items {
++                    guard let data = try await item.loadTransferable(type: Data.self), data.count <= 30 * 1024 * 1024,
++                          let image = UIImage(data: data) else { throw HermesError.rejected("Choose a smaller readable photo") }
++                    try append(ComposerMedia.photo(image))
++                }
++            } catch { toasts.show(error: error) }
+         }
+-        photoItems = []
+     }
+-
+     private func addFiles(_ urls: [URL]) {
+-        for url in urls {
+-            let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+-            model.attachments.append(FileAttachment(id: UUID().uuidString, name: url.lastPathComponent, byteCount: size,
+-                                                    fileExtension: url.pathExtension, path: nil))
++        do { for url in urls { try append(ComposerMedia.importFile(url)) } }
++        catch { toasts.show(error: error) }
++    }
++    private func openCamera() async {
++        guard UIImagePickerController.isSourceTypeAvailable(.camera) else { toasts.show(error: HermesError.rejected("Camera is unavailable on this device")); return }
++        let allowed = await AVCaptureDevice.requestAccess(for: .video)
++        if allowed { showingCamera = true }
++        else { toasts.show(error: HermesError.rejected("Enable camera access for Hermes in Settings")) }
++    }
++    private func toggleDictation() {
++        if dictation.isRecording { dictation.stop(); return }
++        dictationBase = model.draft
++        Task {
++            do {
++                try await dictation.start { words in
++                    model.draft = dictationBase + (dictationBase.isEmpty ? "" : " ") + words
++                }
++            } catch { dictation.cancel(); toasts.show(error: error) }
+         }
+     }
+ }
+diff --git a/Hermes/Services/Bridge/BridgeHermesClient.swift b/Hermes/Services/Bridge/BridgeHermesClient.swift
+index 2541047..1b4dd35 100644
+--- a/Hermes/Services/Bridge/BridgeHermesClient.swift
++++ b/Hermes/Services/Bridge/BridgeHermesClient.swift
+@@ -273,10 +273,25 @@ final class BridgeHermesClient: HostService, HomeService, ConversationService, R
+         defaults.set(Array(pins), forKey: pinKey)
+         if var c = knownConversations[conversationID] { c.isPinned = pinned; knownConversations[c.id] = c; continuation?.yield(.init(cursor: .init(value:""), event:.conversationUpserted(c))) }
+     }
++    private var stagedAttachments: [String: String] = [:]
+     func send(_ message: OutgoingMessage, conversationID: String, configuration: RunConfiguration) async throws -> Run {
+         try check(.runs)
+-        guard message.attachments.isEmpty else { throw HermesError.unsupported(.attachments) }
+-        let j = try await request("/conversations/\(resource(conversationID))/runs", method:"POST", body:.object(["text":.string(message.text)]))
++        var uploaded: [BridgeJSON] = []
++        if !message.attachments.isEmpty { try check(.attachments) }
++        for file in message.attachments {
++            let cacheKey = "\(hostID):\(conversationID):\(file.id)"
++            if let id = stagedAttachments[cacheKey] { uploaded.append(.string(id)); continue }
++            guard let data = file.data, !data.isEmpty, data.count <= 10 * 1024 * 1024,
++                  let mime = file.contentType else { throw HermesError.rejected("Attachment is unavailable or exceeds 10 MiB") }
++            let result = try await request("/attachments", method:"POST", body:.object([
++                "conversation_id":.string(conversationID), "name":.string(file.name),
++                "content_type":.string(mime), "content_base64":.string(data.base64EncodedString())]))
++            guard let id = result["upload_id"].string else { throw HermesError.rejected("Bridge did not confirm the upload") }
++            stagedAttachments[cacheKey] = id; uploaded.append(.string(id))
++        }
++        let j = try await request("/conversations/\(resource(conversationID))/runs", method:"POST", body:.object([
++            "text":.string(message.text.isEmpty ? "Please inspect the attached files." : message.text), "attachment_ids":.array(uploaded)]))
++        for file in message.attachments { stagedAttachments["\(hostID):\(conversationID):\(file.id)"] = nil }
+         let run = materializeSnapshot(j)
+         // Refresh the canonical user row, not an optimistic duplicate.
+         let events: [HermesEvent] = [.runUpserted(run)] + ((try? await messages(conversationID:conversationID)) ?? []).map { .messageUpserted($0) }
+diff --git a/Hermes/Stores/ConversationStores.swift b/Hermes/Stores/ConversationStores.swift
+index 9e7d070..c62206c 100644
+--- a/Hermes/Stores/ConversationStores.swift
++++ b/Hermes/Stores/ConversationStores.swift
+@@ -265,9 +265,9 @@ final class ConversationModel {
+             id = created.id
+         }
+         let outgoing = OutgoingMessage(text: text, attachments: attachments)
++        try await list.send(outgoing, conversationID: id, configuration: configuration)
+         draft = ""
+         attachments = []
+-        try await list.send(outgoing, conversationID: id, configuration: configuration)
+     }
+ 
+     func steer(_ instruction: String) async throws {
+diff --git a/HermesTests/BridgeIntegrationTests.swift b/HermesTests/BridgeIntegrationTests.swift
+index 8017b72..8c6307b 100644
+--- a/HermesTests/BridgeIntegrationTests.swift
++++ b/HermesTests/BridgeIntegrationTests.swift
+@@ -1005,6 +1005,59 @@ struct BridgeIntegrationTests {
+         #expect(mutations.allSatisfy { $0.value(forHTTPHeaderField: "Authorization") == "Bearer token" })
+     }
+ 
++    @Test func attachmentsAreStagedAndLinkedToTheSubmittedConversation() async throws {
++        let hostID = "studio-\(UUID().uuidString)", domain = uniqueBridgeTestHost()
++        let recorder = BridgeRequestRecorder()
++        BridgeStubURLProtocol.register(host: domain) { request in
++            recorder.append(request)
++            if request.url?.path.hasSuffix("/capabilities") == true { return capabilitiesResponse(features: #""sessions":true,"runs":true,"attachments":true"#) }
++            if request.url?.path.hasSuffix("/attachments") == true { return BridgeStubResponse(body: #"{"staged":true,"upload_id":"upload-one"}"#) }
++            if request.url?.path.hasSuffix("/runs") == true { return BridgeStubResponse(body: encodedBridgeJSON(runSnapshot(text:"", cursor:"test-epoch:1"))) }
++            return BridgeStubResponse(status:404)
++        }
++        defer { BridgeStubURLProtocol.unregister(host:domain) }
++        let client = BridgeHermesClient(credentials: BridgeTestCredentialStore(hostID:hostID, token:"token"), session:makeBridgeTestSession(), defaults:UserDefaults(suiteName:UUID().uuidString)!)
++        await client.client.hosts.connect(to:bridgeHost(id:hostID,domain:domain))
++        let file = try ComposerMedia.file(name:"evidence.md",data:Data("# local evidence".utf8))
++        _ = try await client.client.conversations.send(OutgoingMessage(text:"Read it",attachments:[file]),conversationID:"conversation-one",configuration:RunConfiguration(hostID:hostID))
++        let mutations = recorder.requests.filter { $0.httpMethod == "POST" }
++        #expect(mutations.count == 2)
++        let upload = try JSONDecoder().decode(BridgeJSON.self,from:mutations[0].httpBody!)
++        let prompt = try JSONDecoder().decode(BridgeJSON.self,from:mutations[1].httpBody!)
++        #expect(upload["conversation_id"].string == "conversation-one")
++        #expect(upload["content_type"].string == "text/markdown")
++        #expect(prompt["attachment_ids"].array.first?.string == "upload-one")
++        #expect(mutations.allSatisfy { $0.value(forHTTPHeaderField:"Idempotency-Key") != nil })
++        let saved = try JSONEncoder().encode(file)
++        #expect(!String(decoding:saved,as:UTF8.self).contains("local evidence"))
++    }
++
++    @Test func botManagementUsesNormalizedFieldsAndReReadsThePersistedBot() async throws {
++        let hostID = "studio-\(UUID().uuidString)", domain = uniqueBridgeTestHost()
++        let recorder = BridgeRequestRecorder()
++        let bot = #"{"id":"opaque-bot","name":"Updated bot","description":"Read-only helper","profile_id":"native-slug","model":"test","provider":"local","soul":"Use existing records only.","editable_fields":{"name":true,"description":true,"soul":true}}"#
++        BridgeStubURLProtocol.register(host:domain) { request in
++            recorder.append(request)
++            if request.url?.path.hasSuffix("/capabilities") == true { return capabilitiesResponse(features:#""sessions":true,"runs":true,"botMode":true,"botCreate":true,"botEdit":true,"botHide":true,"botInventory":true"#) }
++            if request.httpMethod == "POST" || request.httpMethod == "PATCH" { return BridgeStubResponse(body:"{\"bot\":\(bot)}") }
++            return BridgeStubResponse(status:404)
++        }
++        defer { BridgeStubURLProtocol.unregister(host:domain) }
++        let client = BridgeHermesClient(credentials:BridgeTestCredentialStore(hostID:hostID,token:"token"),session:makeBridgeTestSession(),defaults:UserDefaults(suiteName:UUID().uuidString)!)
++        await client.client.hosts.connect(to:bridgeHost(id:hostID,domain:domain))
++        var fields = ProfileChanges(); fields.name = "Phone bot"; fields.description = "Read-only helper"; fields.soul = "Use existing records only."
++        let created = try await client.client.profiles.createBot(BotDraft(changes:fields))
++        #expect(created.id == "opaque-bot")
++        #expect(created.name == "Updated bot")
++        #expect(created.soul == fields.soul)
++        fields.name = "Edited bot"
++        let edited = try await client.client.profiles.updateProfile(id:created.id,changes:fields)
++        #expect(edited.id == created.id)
++        let mutations = recorder.requests.filter { $0.httpMethod == "POST" || $0.httpMethod == "PATCH" }
++        #expect(mutations.count == 2)
++        #expect(mutations[1].url?.path.hasSuffix("/bots/opaque-bot") == true)
++    }
++
+     @Test func timedOutMutationSurfacesUncertainAndIsNotRetried() async {
+         let hostID = "studio-\(UUID().uuidString)"
+         let domain = uniqueBridgeTestHost()
+@@ -1103,7 +1156,7 @@ struct BridgeIntegrationTests {
+         #expect(!capabilities.contains(.memory))
+         #expect(!capabilities.contains(.integrations))
+         #expect(!capabilities.contains(.logs))
+-        #expect(!capabilities.contains(.attachments))
++        #expect(capabilities.contains(.attachments))
+         var optedIn = json
+         var root = optedIn.object
+         var profiles = root["profiles"]?.object ?? [:]
+diff --git a/HermesUITests/SprintStudioUITests.swift b/HermesUITests/SprintStudioUITests.swift
+new file mode 100644
+index 0000000..38e688c
+--- /dev/null
++++ b/HermesUITests/SprintStudioUITests.swift
+@@ -0,0 +1,91 @@
++import XCTest
++
++/// Explicit physical opt-in. Uses existing Keychain pairing; no fixture credentials.
++final class SprintStudioUITests: XCTestCase {
++    private func studio() throws -> XCUIApplication {
++        guard ProcessInfo.processInfo.environment["HERMES_SPRINT_UI"] == "1" else { throw XCTSkip("Requires unlocked paired iPhone") }
++        continueAfterFailure = false
++        XCUIDevice.shared.orientation = .portrait
++        let app = XCUIApplication(); app.launch()
++        XCTAssertTrue(app.tabBars.buttons["Bots"].waitForExistence(timeout:20)); app.tabBars.buttons["Bots"].tap()
++        return app
++    }
++    private func row(_ name:String,_ app:XCUIApplication)->XCUIElement { app.buttons.matching(NSPredicate(format:"label BEGINSWITH %@",name)).firstMatch }
++    private func input(_ app:XCUIApplication)->XCUIElement { app.textViews.firstMatch.exists ? app.textViews.firstMatch : app.textFields.firstMatch }
++    private func chat(_ app:XCUIApplication) {
++        let chat=app.collectionViews.buttons["Chat"].firstMatch
++        for _ in 0..<20 where !chat.isHittable { app.swipeDown() }
++        XCTAssertTrue(chat.waitForExistence(timeout:20)); chat.tap()
++        XCTAssertTrue(app.textFields.firstMatch.waitForExistence(timeout:20) || app.textViews.firstMatch.exists)
++    }
++    private func evidence(_ name:String,_ app:XCUIApplication) { let a=XCTAttachment(screenshot:app.screenshot());a.name=name;a.lifetime = .keepAlways;add(a) }
++    private func send(_ text:String,_ prefix:String,_ app:XCUIApplication) {
++        let field=input(app);field.tap();field.typeText(text);app.buttons["Send"].tap()
++        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format:"label BEGINSWITH %@",prefix)).firstMatch.waitForExistence(timeout:180));evidence(prefix,app)
++    }
++    func testPostgresSearchInCanonicalOrchestrator() throws {
++        let app=try studio();XCTAssertTrue(row("Research Orchestrator",app).waitForExistence(timeout:30));row("Research Orchestrator",app).tap();chat(app)
++        send("Read the attached research-terminal skill and use only its helper read-only search for Hermes, limit 5, normally with the existing environment. Do not create jobs, change files, export environment variables, inspect credentials, or contact anyone. On successful retrieval begin SPRINT_PHONE_PG_SEARCH_OK and give count, first source title, and its record ID. On failure state the error.","SPRINT_PHONE_PG_SEARCH_OK",app)
++        let result=app.staticTexts.matching(NSPredicate(format:"label BEGINSWITH 'SPRINT_PHONE_PG_SEARCH_OK'")).firstMatch
++        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format:"label CONTAINS 'Memory-Efficient Pipeline'")).firstMatch.waitForExistence(timeout:20))
++        XCUIDevice.shared.press(.home);app.activate();XCTAssertTrue(result.waitForExistence(timeout:20))
++        app.terminate();app.launch();app.tabBars.buttons["Bots"].tap();row("Research Orchestrator",app).tap();chat(app)
++        XCTAssertTrue(result.waitForExistence(timeout:30));evidence("Postgres search after phone relaunch",app)
++    }
++    func testCreateEditAndCanonicalChat() throws {
++        let app=try studio();XCTAssertTrue(app.buttons["Create Bot"].waitForExistence(timeout:30));app.buttons["Create Bot"].tap()
++        let name=app.textFields["bot-name"];XCTAssertTrue(name.waitForExistence(timeout:30));name.tap();name.typeText("Mobile Sprint Probe 20261003C")
++        app.textFields["bot-description"].tap();app.textFields["bot-description"].typeText("Harmless physical phone validation")
++        let soul=app.textViews["bot-soul"];for _ in 0..<5 where !soul.isHittable { app.swipeUp() };soul.tap();soul.typeText("You are a temporary mobile validation bot. Answer briefly. Run no tools unless explicitly requested. Never inspect credentials.")
++        XCTAssertEqual(name.value as? String,"Mobile Sprint Probe 20261003C")
++        XCTAssertTrue((app.textFields["bot-description"].value as? String ?? "").contains("Harmless physical"))
++        evidence("Physical create form before submit",app)
++        XCTAssertTrue(app.buttons["Create"].isEnabled,"Valid native bot draft must be enabled")
++        app.buttons["Create"].tap();XCTAssertTrue(row("Mobile Sprint Probe 20261003C",app).waitForExistence(timeout:30));row("Mobile Sprint Probe 20261003C",app).tap();evidence("Created native phone bot",app)
++        app.buttons["Edit"].tap();let role=app.textFields["bot-description"];XCTAssertTrue(role.waitForExistence(timeout:30));role.tap();role.typeText(". Edited on iPhone")
++        app.buttons["Save"].tap();XCTAssertTrue(app.staticTexts.containing(NSPredicate(format:"label CONTAINS 'Edited on iPhone'")).firstMatch.waitForExistence(timeout:20));evidence("Edited native phone bot",app)
++        chat(app);send("Reply exactly SPRINT_PHONE_NEW_BOT_CHAT_OK. Do not run tools.","SPRINT_PHONE_NEW_BOT_CHAT_OK",app)
++        app.terminate();app.launch();app.tabBars.buttons["Bots"].tap();XCTAssertTrue(row("Mobile Sprint Probe 20261003C",app).waitForExistence(timeout:30));row("Mobile Sprint Probe 20261003C",app).tap();chat(app)
++        XCTAssertTrue(app.staticTexts["SPRINT_PHONE_NEW_BOT_CHAT_OK"].waitForExistence(timeout:30));evidence("Native bot canonical history after relaunch",app)
++    }
++    func testCameraCapturePreviewAndSend() throws {
++        let app=try studio();XCTAssertTrue(row("Mobile Sprint Probe 20261003C",app).waitForExistence(timeout:30));row("Mobile Sprint Probe 20261003C",app).tap();chat(app)
++        app.buttons["Add attachment"].tap();app.buttons["Camera"].tap()
++        let spring=XCUIApplication(bundleIdentifier:"com.apple.springboard")
++        let allow=spring.alerts.buttons["Allow"]
++        if allow.waitForExistence(timeout:5) { allow.tap() }
++        let shutter=app.buttons["Take Picture"]
++        XCTAssertTrue(shutter.waitForExistence(timeout:15));shutter.tap()
++        let use=app.buttons["Use Photo"];XCTAssertTrue(use.waitForExistence(timeout:15));use.tap()
++        XCTAssertTrue(app.buttons.matching(NSPredicate(format:"label BEGINSWITH 'Remove Photo-'")).firstMatch.waitForExistence(timeout:20));evidence("New camera preview attached",app)
++        send("Reply SPRINT_PHONE_CAMERA_OK and describe the newly attached camera photo briefly. Use no tools or other files.","SPRINT_PHONE_CAMERA_OK",app)
++    }
++    func testNativePhotoPickerAndSend() throws {
++        let app=try studio();XCTAssertTrue(row("Mobile Sprint Probe 20261003C",app).waitForExistence(timeout:30));row("Mobile Sprint Probe 20261003C",app).tap();chat(app)
++        app.buttons["Add attachment"].tap();app.buttons["Photo Library"].tap()
++        let photo=app.images.matching(NSPredicate(format:"label CONTAINS 'Photo' OR label CONTAINS 'photo'")).firstMatch
++        XCTAssertTrue(photo.waitForExistence(timeout:15));photo.tap()
++        if app.buttons["Add"].exists { app.buttons["Add"].tap() }
++        XCTAssertTrue(app.buttons.matching(NSPredicate(format:"label BEGINSWITH 'Remove Photo-'")).firstMatch.waitForExistence(timeout:20));evidence("Photo library preview attached",app)
++        send("Reply SPRINT_PHONE_LIBRARY_OK and confirm the attached photo is present. Do not inspect credentials, other files or run tools.","SPRINT_PHONE_LIBRARY_OK",app)
++    }
++    func testVoiceCapturePartialEditAndSend() throws {
++        let app=try studio();XCTAssertTrue(row("Mobile Sprint Probe 20261003C",app).waitForExistence(timeout:30));row("Mobile Sprint Probe 20261003C",app).tap();chat(app)
++        app.buttons["Voice input"].tap()
++        let spring=XCUIApplication(bundleIdentifier:"com.apple.springboard")
++        for _ in 0..<2 {
++            let allow=spring.alerts.buttons["Allow"]
++            if allow.waitForExistence(timeout:5) { allow.tap() }
++        }
++        XCTAssertTrue(app.buttons["Stop dictation"].waitForExistence(timeout:15));evidence("Native voice recording active",app)
++        // A real spoken sentence is needed on the physical microphone. No audio fixtures enter Hermes.
++        let field=input(app)
++        let hasWords=NSPredicate(format:"value CONTAINS[c] 'voice validation' OR value CONTAINS[c] 'Hermes'")
++        let partial=expectation(for:hasWords,evaluatedWith:field)
++        XCTAssertEqual(XCTWaiter.wait(for:[partial],timeout:45),.completed)
++        app.buttons["Stop dictation"].tap();field.tap();field.typeText(". Edited before sending. Reply SPRINT_PHONE_VOICE_OK.")
++        app.buttons["Send"].tap();XCTAssertTrue(app.staticTexts.matching(NSPredicate(format:"label BEGINSWITH 'SPRINT_PHONE_VOICE_OK'")).firstMatch.waitForExistence(timeout:120));evidence("Edited voice text received",app)
++        XCUIDevice.shared.press(.home);app.activate();XCTAssertTrue(app.buttons["Voice input"].waitForExistence(timeout:15))
++    }
++
++}
+diff --git a/INTEGRATION_POINTS.md b/INTEGRATION_POINTS.md
+index d85487e..1c50a78 100644
+--- a/INTEGRATION_POINTS.md
++++ b/INTEGRATION_POINTS.md
+@@ -1,6 +1,6 @@
+ # Swift ↔ bridge integration
+ 
+-Implemented against `/mobile/v1`, bridge 0.1.0 / API version 1, audited Hermes `2a4c9afd7bd`. Production composition is `AppEnvironment.live()` with one `BridgeHermesClient`; previews, unit/UI fixtures and explicit Simulation retain `MockHermesBackend`. No Swift view talks to Hermes desktop RPC.
++Implemented against `/mobile/v1`, bridge 0.1.0 / API version 1, audited Hermes `4bb9e57bfde8a0affb5553eff13ed6e1f14147f1` (legacy `2a4c9afd7bd` remains supported). Production composition is `AppEnvironment.live()` with one `BridgeHermesClient`; previews, unit/UI fixtures and explicit Simulation retain `MockHermesBackend`. No Swift view talks to Hermes desktop RPC.
+ 
+ ## Service mapping
+ 
+@@ -11,11 +11,11 @@ Implemented against `/mobile/v1`, bridge 0.1.0 / API version 1, audited Hermes `
+ | HomeService | GET `/home` | One canonical aggregation request; no independent service fan-out to construct Home. Coverage errors remain attention items. |
+ | ConversationService | GET/POST `/conversations`, GET/PATCH/DELETE `/conversations/{id}`, POST `/conversations/{id}/runs`; explicit resume uses `/resume` | Existing session send is resumed inside bridge start. Local pin preferences are host-scoped. Delete refuses unresolved work rather than implicitly stopping it. Creation model/reasoning/workspace settings are not edits to a resumed session. |
+ | RunService | GET `/runs`, `/runs/{id}`, `/runs/{id}/events`; POST `/stop`, `/steer`, `/retry`; GET `/attention`; POST `/attention/{id}/respond` with answer | Durable bridge IDs only. Unknown maps to disconnected, never completed. Per-run `controls` gate buttons. Stop acknowledgement is not terminal cancellation; steering is queued, not proven consumed. |
+-| ProfileService | GET `/profiles`, `/profiles/{id}`, display-only `/inventory/memory` | Bots are profiles. Configuration/SOUL/skills are read-only; edit control is Simulation-only. Desktop Bot Mode uses `/bots` and per-bot details; no rooms or mentions. |
++| ProfileService | GET `/profiles`, `/profiles/{id}`, display-only `/inventory/memory` | Bots are profiles. Bot Mode adds `POST /bots`, `PATCH /bots/{id}`, hide/duplicate actions, and profile-scoped `/bots/inventory`. Safe configuration/SOUL/installed-capability selections are re-read from native Hermes; management requires its separate grant. Desktop Bot Mode uses `/bots` and per-bot details; no rooms or mentions. |
+ | TaskService | GET/POST `/kanban/tasks?profile=&board=`, GET/PATCH `/kanban/tasks/{id}` | Boards come from discovery. Detail exposes dependencies/activity and conditional `supported_targets`; known dependency guards further restrict ready. Start means queue for Hermes dispatcher, not spawn a run. Canonical task attempts are separate from chat bridge runs. |
+ | ScheduleService | GET `/cron`; POST `/enable`, `/disable`, `/run-now`; PATCH/DELETE `/cron/{id}` | `runNow` now returns Void: acknowledged due-time update requires an existing scheduler. No invented running execution. Delivery/profile edits are not exposed by the contract. |
+ | MemoryService | `/inventory/memory` metadata through profile detail; entry list/delete return unsupported | Contents and entry mutations do not exist. Memory-entry UI stays capability-hidden. |
+-| SkillService | GET `/inventory/skills` | Read-only inventory; enabled toggle is disabled in production. |
++| SkillService | GET `/inventory/skills` | Inventory is read-only here; bot management can select installed skills through the native profile editor. |
+ | ToolService | GET `/inventory/tools`, `/inventory/mcp` | Configured inventory does not prove external health. MCP endpoints/credentials are never requested/exposed. |
+ | IntegrationService | Unsupported | No bridge integrations endpoint; capability-hidden. |
+ | UsageService | GET `/inventory/usage?profile=&days=` | Hermes token totals, daily/model breakdown. Source counts sessions, so labels say sessions. No fabricated run counts, costs or quotas. |
+@@ -33,7 +33,7 @@ Implemented against `/mobile/v1`, bridge 0.1.0 / API version 1, audited Hermes `
+ 
+ ## Remaining placeholders
+ 
+-Attachment upload/photo-byte loading, camera and voice capture remain absent from production capability presentation. Safe artifact download/open is implemented. Profile editing, skill mutation, memory entries/settings, integration status and log access require a real future bridge contract rather than an adapter fiction. APNs is not implemented. Cron and Kanban dispatch must already run on Studio. Physical iPhone installation needs a signing team and a reachable authenticated HTTPS tailnet bridge.
++Files/photos/camera upload and native composer dictation are implemented; bot editing uses the native profile lifecycle. Safe artifact download/open is implemented. Memory entries/settings, standalone skill installation, integration status and log access still need additional contracts. APNs is not implemented. Cron and Kanban dispatch must already run on Studio. Physical iPhone installation needs a signing team and a reachable authenticated HTTPS tailnet bridge.
+ 
+ ## Writable canonical Bot Chat
+ 
+@@ -49,3 +49,20 @@ resources. Main Chat lists canonical resources and opens the same ID as Bots;
+ legacy read-only aliases remain readable. Hidden/deleted membership disappears
+ without deleting stored histories. Source, initialization and shared-client
+ limits are in [BOT_MODE_AUDIT.md](BOT_MODE_AUDIT.md).
++
++## Composer media and bot management
++
++`attachments`/`imageUpload` and `botCreate`/`botEdit`/`botHide`/`botDuplicate`/`botInventory`
++are discovered per source. Missing features hide the controls. `/bots/inventory?bot_id=`
++reads the selected native profile, including profile-local skills. No provider keys,
++base URLs, MCP commands/environments, or arbitrary profile configuration are returned.
++
++Upload IDs are generated by the bridge, scoped to an authorized conversation, and
++consumed once while holding its send lock. Upload and prompt requests use separate
++idempotency receipts; neither is automatically resent after an uncertain response.
++Composer draft bytes never enter persisted transcripts/checkpoints. Confirmed staging
++is reused for an explicit retry within the current client; consumed uploads fail closed.
++
++Camera, microphone and Speech Recognition privacy strings are in app build settings.
++Photo library selection uses PhotosPicker, not broad library access. Dictation starts
++and stops on the phone, supplies partial editable text, and sends no audio to Hermes.
+diff --git a/README.md b/README.md
+index cd9678e..58827ee 100644
+--- a/README.md
++++ b/README.md
+@@ -38,7 +38,7 @@ The app now starts with `BridgeHermesClient`. A fresh install opens unpaired; it
+ 3. Run `scripts/pairing-token.sh --name iPhone`, then `scripts/pairing-token.sh --show` in a private terminal when ready to pair. In More → Hosts → Add Host, enter a display name, the complete HTTPS URL and token. Save authenticates and selects it. Tokens live in device-only Keychain, never host records, UserDefaults, snapshots or logs. Manual pairing is V1; no QR enrollment service is exposed.
+ 4. After successful pairing, run `scripts/pairing-token.sh --forget-transfer`. Pair Again opens the secure editor; an empty token preserves the Keychain item. Remove Local Credential forgets it on the phone. Revoke on Studio with `scripts/pairing-token.sh --revoke DEVICE_ID`; there is no mobile revocation endpoint.
+ 
+-Use `scripts/status-bridge.sh`, `start-bridge.sh`, `stop-bridge.sh`, `update-bridge.sh` and `uninstall-bridge.sh` from `scripts/`. Updates retain credentials and the run journal, refuse active/uncertain chat runs, and roll back unhealthy runtimes. Services recover after crashes and start after login; they stop on logout and do not serve before login. Keep the Studio powered, awake and logged in. Logs contain bounded lifecycle records; raw child output is discarded to avoid leaking tokens or prompts.
++Use `scripts/status-bridge.sh`, `start-bridge.sh`, `stop-bridge.sh`, `update-bridge.sh` and `uninstall-bridge.sh` from `scripts/`. Updates retain credentials and the run journal, refuse active/uncertain chat runs and pending mobile mutations, and roll back unhealthy runtimes. Services recover after crashes and start after login; they stop on logout and do not serve before login. Keep the Studio powered, awake and logged in. Logs contain bounded lifecycle records; raw child output is discarded to avoid leaking tokens or prompts.
+ 
+ See [Studio setup](docs/STUDIO_SETUP.md), [installation](docs/INSTALL.md), [release packaging](RELEASE.md), and [earlier deployment/device evidence](PHYSICAL_DEVICE_TEST_REPORT.md). Current physical-iPhone installation and Bot Mode evidence is recorded in [Bot Mode validation](BOT_MODE_VALIDATION.md). SideStore installation remains unvalidated.
+ 
+@@ -73,7 +73,7 @@ HERMES_BRIDGE_E2E=1 hermes-mobile-bridge/.venv/bin/python -m pytest hermes-mobil
+ 
+ ### Current limitations
+ 
+-Dangerous remote approval responses stay unavailable. Exact fresh clarification questions can be answered through the conversation composer. Stop is cooperative; unknown/lost outcomes remain explicit and never trigger a new execution. Cron Run Now advances due time and needs Hermes's scheduler. Kanban queueing needs its dispatcher. Profiles/skills are read-only; memory contents, integrations, logs, camera, voice and uploads are not exposed in this pass. Artifact metadata/download is restricted to bridge-registered files. APNs is deferred.
++Dangerous remote approval responses stay unavailable. Exact fresh clarification questions can be answered through the conversation composer. Stop is cooperative; unknown/lost outcomes remain explicit and never trigger a new execution. Cron Run Now advances due time and needs Hermes's scheduler. Kanban queueing needs its dispatcher. Native Bot Mode creation/editing/hiding and composer file/photo/camera uploads are available when advertised by the bridge. Voice dictation uses native iOS speech recognition. Memory contents, integrations and logs remain unavailable. Artifact metadata/download is restricted to bridge-registered files. APNs is deferred.
+ 
+ Run configuration is applied only when creating a conversation. Workspaces display administrator-chosen IDs; the phone cannot choose arbitrary Studio paths. Shared control with independent native desktop clients remains an upstream ownership limitation. Cursor retention expiry causes explicit snapshot resync. No physical-iPhone/Tailscale result is implied by loopback simulator testing.
+ 
+@@ -96,4 +96,16 @@ This confirms the iOS networking/Keychain path on Simulator, not physical-phone
+ 
+ ### Desktop Bot Mode
+ 
+-The Bots tab can discover the Studio Desktop roster dynamically, including the default Hermes identity once, and display each bot's actual enabled skills and configuration. Enable the private backend's `bot_mode_roster` grant (or `install-bridge.sh --bot-mode` on a new install). Tap Chat to open a writable persistent canonical Bot Chat; absent chats initialize on that tap. Enable the separate private `bot_chat_control` grant (or `install-bridge.sh --bot-chat` on a new install). Bot identity and native model/SOUL/skills are preserved, and Chat and Bots open the same conversation. Bot creation/editing is deferred. See [source audit](BOT_MODE_AUDIT.md) and [validation evidence](BOT_MODE_VALIDATION.md).
++The Bots tab can discover the Studio Desktop roster dynamically, including the default Hermes identity once, and display each bot's actual enabled skills and configuration. Enable the private backend's `bot_mode_roster` grant (or `install-bridge.sh --bot-mode` on a new install). Tap Chat to open a writable persistent canonical Bot Chat; absent chats initialize on that tap. Enable the separate private `bot_chat_control` grant (or `install-bridge.sh --bot-chat` on a new install). Bot identity and native model/SOUL/skills are preserved, and Chat and Bots open the same conversation. Bot creation/editing/hiding uses the native Desktop lifecycle with an additional `bot_mode_management` grant (`install-bridge.sh --bot-management` for new installs). See [bot management](BOT_MANAGEMENT.md) and [attachments and voice](ATTACHMENTS_AND_VOICE.md). See [source audit](BOT_MODE_AUDIT.md) and [validation evidence](BOT_MODE_VALIDATION.md).
++
++
++Bot Mode now supports native creation, editing, hiding and duplication from the
++phone, with dynamically loaded host options. See [BOT_MANAGEMENT.md](BOT_MANAGEMENT.md).
++Fresh Studio installs can enable it with `--bot-mode --bot-chat --bot-management`;
++existing installations retain their explicit local grants during update.
++
++Files, PhotosPicker, native camera capture and editable speech-to-text are wired
++into the existing composer. See [ATTACHMENTS_AND_VOICE.md](ATTACHMENTS_AND_VOICE.md)
++for limits and permissions. The PostgreSQL Research Terminal search delivery is
++preserved in [the scoped patch bundle](patches/research-terminal-postgres-search/README.md),
++because that separate checkout already had unrelated staged migration work.
+diff --git a/hermes-mobile-bridge/src/hermes_mobile_bridge/api.py b/hermes-mobile-bridge/src/hermes_mobile_bridge/api.py
+index d552ac8..e1aee53 100644
+--- a/hermes-mobile-bridge/src/hermes_mobile_bridge/api.py
++++ b/hermes-mobile-bridge/src/hermes_mobile_bridge/api.py
+@@ -1,6 +1,5 @@
+ """Versioned HTTP/JSON contract and one authenticated SSE stream."""
+ import asyncio
+-import base64
+ import contextlib
+ import json
+ import uuid
+@@ -17,7 +16,7 @@ AUTH = Key("auth", dict)
+ BODY = Key("body", dict)
+ 
+ 
+-def shape(body, fields, required=()):
++def shape(body, fields, required=(), list_limits=None):
+     if not isinstance(body, dict) or set(body) - set(fields):
+         raise Problem(400, "invalid_request", "Unknown fields or invalid JSON object")
+     for key in required:
+@@ -29,7 +28,7 @@ def shape(body, fields, required=()):
+             raise Problem(400, "invalid_request", "Invalid field type", field=key)
+         if isinstance(val, str) and ((len(val) > 200000 and key != "content_base64") or "\x00" in val):
+             raise Problem(400, "invalid_request", "Invalid field size/content", field=key)
+-        if typ == list and (len(val) > 100 or any(not isinstance(v, str) or len(v) > 500 for v in val)):
++        if typ == list and (len(val) > (list_limits or {}).get(key, 100) or any(not isinstance(v, str) or len(v) > 500 for v in val)):
+             raise Problem(400, "invalid_request", "Invalid string list", field=key)
+     return body
+ 
+@@ -62,7 +61,7 @@ async def contract(request, handler):
+                 raise Problem(400, "invalid_request", "JSON object required")
+             # Scope check precedes command journal access; cached mutations also
+             # respect revoked/reduced credentials.
+-            needed = "chat.control" if any(s in request.path for s in ("/conversations", "/runs", "/attachments", "/bots/")) else "approvals.respond" if "/attention" in request.path else "tasks.manage"
++            needed = "chat.control" if any(s in request.path for s in ("/conversations", "/runs", "/attachments", "/bots")) else "approvals.respond" if "/attention" in request.path else "tasks.manage"
+             if needed not in request[AUTH]["scopes"]:
+                 raise Problem(403, "forbidden", "Credential lacks action scope")
+             old = service.store.command_begin(command_id, request[AUTH]["id"], {"method": request.method, "path": request.path, "query": list(request.query.items()), "body": request[BODY]})
+@@ -112,7 +111,8 @@ async def capabilities(request):
+         b = s.backends[p]
+         paths = b.paths
+         available = lambda route: b.connected and route in paths
+-        result[p] = {"health": b.health(), "features": {"sessions": b.connected, "runs": b.connected, "runReplay": True, "stop": b.connected, "steering": b.connected, "approvals": {"observe": b.connected, "respond": False, "reason": "upstream_fifo_without_exact_target", "clarifications": b.connected and (b.server_requests_supported or b.cfg.get("installed_commit") != "4bb9e57bfde8a0affb5553eff13ed6e1f14147f1")}, "profiles": True, "cron": available("/api/cron/jobs"), "kanban": bool(b.cfg["boards"]) and available("/api/plugins/kanban/board"), "usage": available("/api/analytics/usage"), "skills": available("/api/skills"), "tools": available("/api/tools/toolsets"), "mcp": available("/api/mcp/servers"), "artifacts": bool(b.cfg["artifact_roots"]), "botMode": b.connected and b.cfg.get("bot_mode_roster", False) and b.bot_mode_supported, "botChat": b.connected and b.cfg.get("bot_chat_control", False) and b.cfg.get("bot_mode_roster", False) and b.bot_mode_supported, "botRooms": False}, "desktop_contract_audited": 2, "audited_commit": b.cfg.get("installed_commit") or "2a4c9afd7bd", "installed_commit": b.cfg.get("installed_commit"), "boards": b.cfg["boards"], "workspaces": [{"id": k, "name": k} for k in b.cfg["workspaces"]]}
++        result[p] = {"health": b.health(), "features": {"sessions": b.connected, "runs": b.connected, "runReplay": True, "stop": b.connected, "steering": b.connected, "approvals": {"observe": b.connected, "respond": False, "reason": "upstream_fifo_without_exact_target", "clarifications": b.connected and (b.server_requests_supported or b.cfg.get("installed_commit") != "4bb9e57bfde8a0affb5553eff13ed6e1f14147f1")}, "profiles": True, "cron": available("/api/cron/jobs"), "kanban": bool(b.cfg["boards"]) and available("/api/plugins/kanban/board"), "usage": available("/api/analytics/usage"), "skills": available("/api/skills"), "tools": available("/api/tools/toolsets"), "mcp": available("/api/mcp/servers"), "artifacts": bool(b.cfg["artifact_roots"]), "botMode": b.connected and b.cfg.get("bot_mode_roster", False) and b.bot_mode_supported, "botChat": b.connected and b.cfg.get("bot_chat_control", False) and b.cfg.get("bot_mode_roster", False) and b.bot_mode_supported, "botRooms": False, "attachments": b.connected and b.cfg.get("installed_commit") in {"2a4c9afd7bd", "4bb9e57bfde8a0affb5553eff13ed6e1f14147f1"}, "imageUpload": b.connected and b.cfg.get("installed_commit") == "4bb9e57bfde8a0affb5553eff13ed6e1f14147f1"}, "desktop_contract_audited": 2, "audited_commit": b.cfg.get("installed_commit") or "2a4c9afd7bd", "installed_commit": b.cfg.get("installed_commit"), "boards": b.cfg["boards"], "workspaces": [{"id": k, "name": k} for k in b.cfg["workspaces"]]}
++        result[p]["features"].update(BotMode(s, request[AUTH]).capabilities(p))
+     return web.json_response({"api_version": 1, "bridge_version": __version__, "journal_epoch": s.store.epoch, "cursor": s.store.cursor(), "scopes": request[AUTH]["scopes"], "profiles": result, "retention": {"global_events": s.cfg["event_limit"], "per_run_events": s.cfg["run_event_limit"], "days": s.cfg["event_days"]}, "coverage": "Controlled runs are bridge-owned desktop sessions; other-process activity is read-only and incomplete"})
+ 
+ 
+@@ -120,6 +120,34 @@ async def bots(request):
+     return web.json_response({"bots": await BotMode(svc(request), request[AUTH]).list()})
+ 
+ 
++async def bot_inventory(request):
++    return web.json_response(await BotMode(svc(request), request[AUTH]).inventory(request.query.get("profile", "default"), request.query.get("bot_id")))
++
++
++async def bot_create(request):
++    fields = {"name":str,"description":str,"soul":str,"model":str,"provider":str,"skills":list,"toolsets":list,"mcp_servers":list}
++    body = shape(request[BODY], fields, ("name", "description"), {"skills":512,"toolsets":512,"mcp_servers":512})
++    bot = await BotMode(svc(request), request[AUTH]).create(body, request.query.get("profile", "default"))
++    return web.json_response({"bot":bot}, status=201)
++
++
++async def bot_update(request):
++    fields = {"name":str,"description":str,"soul":str,"model":str,"provider":str,"skills":list,"toolsets":list,"mcp_servers":list,"confirm_expensive_model":bool}
++    bot = await BotMode(svc(request), request[AUTH]).update(request.match_info["bid"], shape(request[BODY], fields, list_limits={"skills":512,"toolsets":512,"mcp_servers":512}))
++    return web.json_response({"bot":bot})
++
++
++async def bot_duplicate(request):
++    shape(request[BODY], {})
++    bot = await BotMode(svc(request), request[AUTH]).duplicate(request.match_info["bid"])
++    return web.json_response({"bot":bot},status=201)
++
++
++async def bot_hide(request):
++    body = shape(request[BODY], {"hidden":bool}, ("hidden",))
++    return web.json_response(await BotMode(svc(request), request[AUTH]).hide(request.match_info["bid"], body["hidden"]))
++
++
+ async def bot_detail(request):
+     return web.json_response(await BotMode(svc(request), request[AUTH]).detail(request.match_info["bid"]))
+ 
+@@ -245,12 +273,12 @@ async def resume(request):
+ 
+ 
+ async def run_start(request):
+-    body = shape(request[BODY], {"text": str}, ("text",))
++    body = shape(request[BODY], {"text": str, "attachment_ids": list}, ("text",))
+     if not body["text"].strip() or body["text"].lstrip().startswith("/"):
+         raise Problem(400, "invalid_prompt", "Provide nonempty text; slash administration is outside the mobile contract")
+     s = svc(request)
+     c = s.conversation(request[AUTH], request.match_info["cid"], "chat.control")
+-    return web.json_response(await s.start_run(c, body["text"]), status=202)
++    return web.json_response(await s.start_run(c, body["text"], attachment_ids=body.get("attachment_ids", [])), status=202)
+ 
+ 
+ async def run_list(request):
+@@ -601,34 +629,9 @@ async def attachment_upload(request):
+     s = svc(request)
+     body = shape(request[BODY], {"conversation_id": str, "name": str, "content_type": str, "content_base64": str}, ("conversation_id", "name", "content_type", "content_base64"))
+     c = s.conversation(request[AUTH], body["conversation_id"], "chat.control")
+-    try:
+-        data = base64.b64decode(body["content_base64"], validate=True)
+-    except ValueError:
+-        raise Problem(400, "invalid_request", "Invalid base64 attachment") from None
+-    if not 0 < len(data) <= s.cfg["upload_limit"]:
+-        raise Problem(413, "attachment_too_large", "Attachment exceeds the configured size limit")
+-    name = body["name"]
+-    if not name or len(name) > 200 or name != name.replace("\\", "/").split("/")[-1] or name in {".", ".."}:
+-        raise Problem(400, "invalid_request", "Attachment name must be a filename")
+-    if body["content_type"] not in {"image/png", "image/jpeg", "image/webp", "image/gif", "application/pdf", "text/plain", "text/markdown", "application/json", "application/octet-stream"}:
+-        raise Problem(400, "invalid_request", "Unsupported attachment content type")
+-    lock = s.locks.setdefault(c["id"], asyncio.Lock())
+-    async with lock:
+-        sid = await s.ensure_live(c)
+-        b = s.backends[c["profile"]]
+-        mime = body["content_type"]
+-        if mime.startswith("image/"):
+-            raw = await b.rpc("image.attach_bytes", {"session_id": sid, "content_base64": body["content_base64"], "filename": name})
+-        elif mime == "application/pdf":
+-            raw = await b.rpc("pdf.attach", {"session_id": sid, "content_base64": body["content_base64"], "filename": name})
+-        else:
+-            raw = await b.rpc("file.attach", {"session_id": sid, "data_url": f"data:{mime};base64,{body['content_base64']}", "name": name})
+-        if raw.get("ref_text"):
+-            current = s.store.get("conversations", c["id"])
+-            refs = current["data"].get("pending_file_refs", [])
+-            s.store.save_conversation(c["id"], c["profile"], current["stored_id"], sid, True, {"pending_file_refs": [*refs, raw["ref_text"]]})
+-        artifact = s.register_artifact(c["id"], c["profile"], raw.get("path", ""))
+-        return web.json_response({"attached": True, "artifact": artifact, "metadata": only(raw, "count bytes name width height token_estimate")}, status=201)
++    if c["data"].get("canonical"):
++        await s.refresh_bot_binding(c, control=True)
++    return web.json_response(s.uploads.stage(c, body), status=201)
+ 
+ 
+ async def artifact_list(request):
+@@ -730,7 +733,7 @@ def create_app(cfg):
+     app = web.Application(middlewares=[contract], client_max_size=cfg["upload_limit"] * 2 + 4096)
+     app[SERVICE] = s
+     routes = [
+-        web.get(PREFIX + "/bots", bots), web.get(PREFIX + "/bots/{bid}", bot_detail), web.get(PREFIX + "/bots/{bid}/conversation", bot_conversation), web.post(PREFIX + "/bots/{bid}/conversation", bot_conversation),
++        web.get(PREFIX + "/bots/inventory", bot_inventory), web.post(PREFIX + "/bots", bot_create), web.patch(PREFIX + "/bots/{bid}", bot_update), web.post(PREFIX + "/bots/{bid}/hide", bot_hide), web.post(PREFIX + "/bots/{bid}/duplicate", bot_duplicate), web.get(PREFIX + "/bots", bots), web.get(PREFIX + "/bots/{bid}", bot_detail), web.get(PREFIX + "/bots/{bid}/conversation", bot_conversation), web.post(PREFIX + "/bots/{bid}/conversation", bot_conversation),
+         web.get(PREFIX + "/capabilities", capabilities), web.get(PREFIX + "/home", home), web.get(PREFIX + "/profiles", profiles), web.get(PREFIX + "/profiles/{pid}", profile_detail),
+         web.get(PREFIX + "/conversations", conversations), web.post(PREFIX + "/conversations", conversations),
+         web.get(PREFIX + "/conversations/{cid}", conversation_detail), web.patch(PREFIX + "/conversations/{cid}", conversation_detail), web.delete(PREFIX + "/conversations/{cid}", conversation_detail),
+diff --git a/hermes-mobile-bridge/src/hermes_mobile_bridge/service.py b/hermes-mobile-bridge/src/hermes_mobile_bridge/service.py
+index 09d128a..e463254 100644
+--- a/hermes-mobile-bridge/src/hermes_mobile_bridge/service.py
++++ b/hermes-mobile-bridge/src/hermes_mobile_bridge/service.py
+@@ -18,6 +18,8 @@ class Service:
+         self.cfg = cfg
+         self.store = Store(cfg)
+         self.backends = {name: Backend(name, b, self.event, self.health_changed) for name, b in cfg["backends"].items()}
++        from .uploads import Uploads
++        self.uploads = Uploads(self)
+         self.locks = {}
+         self.changed = asyncio.Condition()
+         self.maintenance = set()
+@@ -341,6 +343,7 @@ class Service:
+     async def monitor(self):
+         while True:
+             await asyncio.sleep(5)
++            self.uploads.cleanup()
+             for profile, backend in self.backends.items():
+                 if backend.connected:
+                     await self.reconcile(profile)
+@@ -401,12 +404,13 @@ class Service:
+         self.store.save_conversation(cid, profile, result["stored_session_id"], result["session_id"], True, only(result.get("info", {}), "model provider reasoning_effort cwd") | only(body, "title"))
+         return self.conversation_view(self.store.get("conversations", cid))
+ 
+-    async def start_run(self, conv, text, parent=None):
++    async def start_run(self, conv, text, parent=None, attachment_ids=()):
+         lock = self.locks.setdefault(conv["id"], asyncio.Lock())
+         async with lock:
+             pending = [r for r in self.store.runs([conv["profile"]]) if r["conversation_id"] == conv["id"] and r["state"] not in TERMINAL]
+             if pending:
+                 raise Problem(409, "conversation_busy", "Existing run is active or has an uncertain outcome", run_id=pending[0]["id"])
++            selected = self.uploads.selected(conv, attachment_ids)
+             sid = await self.ensure_live(conv)
+             current = self.store.get("conversations", conv["id"])
+             refs = current["data"].get("pending_file_refs", [])
+@@ -416,6 +420,9 @@ class Service:
+             run = self.store.run(conv["id"], conv["profile"], sid, text, parent)
+             await self.emit(conv["profile"], "run.started", self.run_view(run), run)
+             try:
++                attached_refs = await self.uploads.attach(conv, sid, run, selected)
++                if attached_refs: text += "\n\n" + "\n".join(attached_refs)
++                self.store.update_run(run["id"], run["state"], prompt=text, attachment_ids=list(attachment_ids))
+                 await self.backends[conv["profile"]].rpc("prompt.submit", {"session_id": sid, "text": text, **({"profile": self.session_profile(current)} if current["data"].get("canonical") else {})})
+             except Problem as err:
+                 state = "unknown" if err.code in {"upstream_uncertain", "upstream_unavailable"} else "failed"
+@@ -474,7 +481,10 @@ class Service:
+         target = Path(path)
+         if not target.is_absolute():
+             raise Problem(403, "artifact_denied", "Artifact must be in a configured root")
+-        for rawroot in self.backends[profile].cfg["artifact_roots"]:
++        roots = list(self.backends[profile].cfg["artifact_roots"])
++        if self.store.db.execute("SELECT 1 FROM uploads WHERE id=? AND json_extract(data, '$.profile')=?", (target.name, profile)).fetchone() and target.parent == self.uploads.root:
++            roots.append(str(self.uploads.root))
++        for rawroot in roots:
+             root = Path(rawroot)
+             try:
+                 relative = target.relative_to(root)
+diff --git a/hermes-mobile-bridge/src/hermes_mobile_bridge/uploads.py b/hermes-mobile-bridge/src/hermes_mobile_bridge/uploads.py
+new file mode 100644
+index 0000000..787b7a5
+--- /dev/null
++++ b/hermes-mobile-bridge/src/hermes_mobile_bridge/uploads.py
+@@ -0,0 +1,104 @@
++"""Bounded, conversation-owned staging. No caller-selected paths or automatic replay."""
++import base64
++import json
++import os
++import stat
++import uuid
++from pathlib import Path
++from .core import Problem, now
++
++TEXT_EXT = {'txt','md','markdown','json','csv','tsv','py','swift','js','jsx','ts','tsx','c','h','cpp','hpp','rs','go','java','kt','rb','sh','bash','zsh','css','html','xml','yaml','yml','toml','sql','log'}
++MIMES = {'image/png','image/jpeg','image/webp','image/gif','application/pdf','text/plain','text/markdown','text/csv','application/json'}
++
++class Uploads:
++    def __init__(self, service):
++        self.s = service
++        self.root = Path(service.cfg['state_dir'])/'uploads'
++        if self.root.is_symlink(): raise ValueError('Unsafe upload root')
++        self.root.mkdir(mode=0o700,exist_ok=True)
++        self.root.chmod(0o700)
++        service.store.db.execute('CREATE TABLE IF NOT EXISTS uploads(id TEXT PRIMARY KEY, conversation_id TEXT, data TEXT)')
++        service.store.db.commit()
++        self.cleanup()
++
++    def cleanup(self):
++        db=self.s.store.db
++        for row in db.execute('SELECT id,data FROM uploads').fetchall():
++            item=json.loads(row[1])
++            if item['expires'] < now():
++                (self.root/item['id']).unlink(missing_ok=True)
++                db.execute('DELETE FROM uploads WHERE id=?',(row[0],))
++                db.execute('DELETE FROM artifacts WHERE id=?',(row[0],))
++        known={r[0] for r in db.execute('SELECT id FROM uploads')}
++        for p in self.root.iterdir():
++            if p.name not in known: p.unlink(missing_ok=True)
++        db.commit()
++
++    def stage(self,c,body):
++        self.cleanup()
++        name=body['name'];mime=body['content_type'];limit=min(self.s.cfg['upload_limit'],10*1024*1024)
++        if not name or len(name)>200 or name in {'.','..'} or '/' in name or '\\' in name or any(ord(x)<32 for x in name):
++            raise Problem(400,'invalid_filename','Attachment must have a simple filename')
++        if mime not in MIMES: raise Problem(415,'unsupported_type','Use an image, PDF, JSON or UTF-8 text/source file')
++        if len(body['content_base64']) > (limit+2)//3*4: raise Problem(413,'attachment_too_large','Attachment exceeds the size limit')
++        try: data=base64.b64decode(body['content_base64'],validate=True)
++        except ValueError: raise Problem(400,'invalid_attachment','Invalid base64 attachment') from None
++        if not 0<len(data)<=limit: raise Problem(413,'attachment_too_large','Attachment exceeds the size limit')
++        ext=Path(name).suffix.lower().lstrip('.')
++        good=True
++        if mime=='image/png': good=data.startswith(b'\x89PNG\r\n\x1a\n')
++        elif mime=='image/jpeg': good=data.startswith(b'\xff\xd8\xff')
++        elif mime=='image/gif': good=data.startswith((b'GIF87a',b'GIF89a'))
++        elif mime=='image/webp': good=data.startswith(b'RIFF') and data[8:12]==b'WEBP'
++        elif mime=='application/pdf': good=data.startswith(b'%PDF-')
++        else:
++            if ext not in TEXT_EXT: good=False
++            try:
++                text=data.decode('utf-8');good=good and '\x00' not in text
++                if mime=='application/json': json.loads(text)
++            except (UnicodeError,ValueError): good=False
++        if not good: raise Problem(415,'content_type_mismatch','Attachment bytes do not match a supported type')
++        rows=[json.loads(r[0]) for r in self.s.store.db.execute('SELECT data FROM uploads')]
++        if sum(r['size'] for r in rows)+len(data)>256*1024*1024 or sum(r['size'] for r in rows if r['conversation_id']==c['id'] and r['state']=='ready')+len(data)>40*1024*1024:
++            raise Problem(413,'upload_quota','Pending attachment storage is full')
++        aid=uuid.uuid4().hex;p=self.root/aid
++        fd=os.open(p,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
++        with os.fdopen(fd,'wb') as f:f.write(data)
++        st=p.stat()
++        item={'id':aid,'conversation_id':c['id'],'profile':c['profile'],'run_id':None,'name':name,'size':len(data),'content_type':mime,'path':str(p),'device':st.st_dev,'inode':st.st_ino,'mtime_ns':st.st_mtime_ns,'state':'ready','expires':now()+86400}
++        db=self.s.store.db
++        db.execute('INSERT INTO uploads VALUES (?,?,?)',(aid,c['id'],json.dumps(item)))
++        db.execute('INSERT INTO artifacts VALUES (?,?,?,?)',(aid,c['id'],c['profile'],json.dumps(item)));db.commit()
++        return {'attached':False,'staged':True,'upload_id':aid,'artifact':self.s.artifact_view(item)}
++
++    def selected(self,c,ids):
++        if any(not isinstance(aid,str) or len(aid)!=32 or not all(ch in '0123456789abcdef' for ch in aid) for aid in ids) or len(ids)>4 or len(ids)!=len(set(ids)):raise Problem(400,'invalid_attachments','Select at most four distinct attachments')
++        items=[]
++        for aid in ids:
++            row=self.s.store.db.execute('SELECT data FROM uploads WHERE id=?',(aid,)).fetchone()
++            if not row:raise Problem(404,'attachment_unavailable','Upload is unavailable or expired')
++            item=json.loads(row[0])
++            if item['conversation_id']!=c['id'] or item['profile']!=c['profile']:raise Problem(403,'attachment_denied','Upload belongs to another conversation')
++            if item['expires']<now() or item['state']!='ready':raise Problem(409,'attachment_consumed','Upload expired or already submitted; never automatically resend')
++            items.append(item)
++        return items
++
++    async def attach(self,c,sid,run,items):
++        refs=[];db=self.s.store.db;b=self.s.backends[c['profile']]
++        for item in items:
++            item.update(state='submitting',run_id=run['id'],expires=now()+7*86400)
++            db.execute('UPDATE uploads SET data=? WHERE id=?',(json.dumps(item),item['id']));db.commit()
++            with self.s.artifact_open(c['profile'],item['path'])[0] as f:data=f.read()
++            encoded=base64.b64encode(data).decode();mime=item['content_type']
++            if mime.startswith('image/'):
++                result=await b.rpc('image.attach_bytes',{'session_id':sid,'content_base64':encoded,'filename':item['name']})
++            elif mime=='application/pdf':
++                result=await b.rpc('pdf.attach',{'session_id':sid,'content_base64':encoded,'first_page':1,'last_page':5})
++                refs.append(f'[Attached PDF {item["name"]}: visual preview limited to the first five pages]')
++            else:
++                result=await b.rpc('file.attach',{'session_id':sid,'data_url':f'data:{mime};base64,{encoded}','name':item['name']})
++            if result.get('ref_text'):refs.append(result['ref_text'])
++            item['state']='consumed'
++            db.execute('UPDATE uploads SET data=? WHERE id=?',(json.dumps(item),item['id']))
++            db.execute('UPDATE artifacts SET data=? WHERE id=?',(json.dumps(item),item['id']));db.commit()
++        return refs
+diff --git a/hermes-mobile-bridge/tests/conftest.py b/hermes-mobile-bridge/tests/conftest.py
+index 7ac2f9f..2242bbf 100644
+--- a/hermes-mobile-bridge/tests/conftest.py
++++ b/hermes-mobile-bridge/tests/conftest.py
+@@ -128,6 +128,11 @@ class FakeHermes:
+                 result = {'closed': True}
+             elif method == 'session.delete':
+                 result = {'deleted': p['session_id']}
++            elif method in {'image.attach_bytes', 'pdf.attach'}:
++                import base64
++                path = self.root / ('upload-' + uuid.uuid4().hex)
++                path.write_bytes(base64.b64decode(p['content_base64']))
++                result = {'path':str(path),'count':1,'bytes':path.stat().st_size}
+             elif method == 'file.attach':
+                 import base64
+                 path = self.root / p['name']
+diff --git a/hermes-mobile-bridge/tests/test_bridge.py b/hermes-mobile-bridge/tests/test_bridge.py
+index 3b3698f..baaa9f7 100644
+--- a/hermes-mobile-bridge/tests/test_bridge.py
++++ b/hermes-mobile-bridge/tests/test_bridge.py
+@@ -1,3 +1,4 @@
++from pathlib import Path
+ import asyncio
+ import base64
+ import json
+@@ -171,7 +172,7 @@ async def test_artifact_upload_download_path_attack(harness, tmp_path):
+     link.symlink_to(outside)
+     assert h.service.register_artifact(c['id'], 'default', str(link)) is None
+     assert h.service.register_artifact(c['id'], 'default', str(h.fake.root / '..' / 'secret')) is None
+-    target = h.fake.root / 'test.txt'
++    target = Path(h.service.store.get('artifacts', aid)['data']['path'])
+     target.unlink()
+     target.symlink_to(outside)
+     await h.request('GET', f'/artifacts/{aid}/download', expected=403)
+diff --git a/hermes-mobile-bridge/tests/test_installed_hermes.py b/hermes-mobile-bridge/tests/test_installed_hermes.py
+index 2ca8f1f..07a999e 100644
+--- a/hermes-mobile-bridge/tests/test_installed_hermes.py
++++ b/hermes-mobile-bridge/tests/test_installed_hermes.py
+@@ -131,7 +131,7 @@ memory:
+                     except aiohttp.ClientError:
+                         pass
+                     await asyncio.sleep(.2)
+-        cfg = {'state_dir': str(tmp_path / 'bridge-state'), 'event_limit': 1000, 'run_event_limit': 500, 'event_days': 7, 'upload_limit': 1024 * 1024, 'artifact_limit': 2 * 1024 * 1024, 'backends': {'default': {'url': f'http://127.0.0.1:{port}', 'token': 'u' * 32, 'boards': ['default'], 'workspaces': {'test': str(work)}, 'artifact_roots': [str(work / '.hermes/desktop-attachments'), str(home / 'attachments')], 'bot_chat_control': True, 'bot_mode_roster': commit == '4bb9e57bfde8a0affb5553eff13ed6e1f14147f1', 'installed_commit': commit}}}
++        cfg = {'state_dir': str(tmp_path / 'bridge-state'), 'event_limit': 1000, 'run_event_limit': 500, 'event_days': 7, 'upload_limit': 1024 * 1024, 'artifact_limit': 2 * 1024 * 1024, 'backends': {'default': {'url': f'http://127.0.0.1:{port}', 'token': 'u' * 32, 'boards': ['default'], 'workspaces': {'test': str(work)}, 'artifact_roots': [str(work / '.hermes/desktop-attachments'), str(home / 'attachments')], 'bot_chat_control': True, 'bot_mode_management': True, 'bot_mode_roster': commit == '4bb9e57bfde8a0affb5553eff13ed6e1f14147f1', 'installed_commit': commit}}}
+         app = create_app(cfg)
+         service = app[SERVICE]
+         _, token = service.store.token('integration', ['read', 'chat.control', 'tasks.manage', 'approvals.respond'], ['default'])
+@@ -146,6 +146,20 @@ memory:
+         if cfg['backends']['default']['bot_mode_roster']:
+             bots = (await request('GET', '/bots'))['bots']
+             assert {b['name'] for b in bots} == {'Hermes', 'Research Orchestrator', 'Research Worker'}
++            created = (await request('POST', '/bots', {'name':'Mobile fixture bot','description':'Read-only integration fixture','soul':'Reply briefly. Do not run tools.'}, 201))['bot']
++            assert created['name'] == 'Mobile fixture bot'
++            assert sum(b['id'] == created['id'] for b in (await request('GET','/bots'))['bots']) == 1
++            edited = (await request('PATCH','/bots/'+created['id'], {'name':'Edited fixture bot','description':'Edited fixture role','soul':'Keep this fixture isolated.'}))['bot']
++            assert edited['id'] == created['id'] and edited['name'] == 'Edited fixture bot'
++            assert edited['description'] == 'Edited fixture role' and edited['soul'] == 'Keep this fixture isolated.'
++            new_chat = (await request('POST','/bots/'+created['id']+'/conversation',{}))['conversation']
++            assert new_chat['read_only'] is False and new_chat['bot_profile'] == created['profile_id']
++            assert (await request('POST','/bots/'+created['id']+'/conversation',{}))['conversation']['id'] == new_chat['id']
++            await request('POST','/bots/'+created['id']+'/hide',{'hidden':True})
++            assert not any(b['id'] == created['id'] for b in (await request('GET','/bots'))['bots'])
++            assert service.store.get('conversations',new_chat['id'])['stored_id']
++            await request('POST','/bots/'+created['id']+'/hide',{'hidden':False})
++            assert (await request('GET','/bots/'+created['id']))['name'] == 'Edited fixture bot'
+             bot = next(b for b in bots if b['name'] == 'Research Orchestrator')
+             detail = await request('GET', '/bots/' + bot['id'])
+             assert {v['name'] for v in detail['skills']} == set(SKILLS)
+@@ -222,7 +236,10 @@ memory:
+         assert (await request('GET', '/conversations?q=local'))['conversations']
+         assert (await request('GET', f"/conversations/{c['id']}/usage"))['tokens']['total'] > 0
+         uploaded = await request('POST', '/attachments', {'conversation_id': c['id'], 'name': 'evidence.txt', 'content_type': 'text/plain', 'content_base64': 'TG9jYWwgZXZpZGVuY2U='}, 201)
+-        assert uploaded['attached'] and uploaded['artifact']
++        assert uploaded['staged'] and uploaded['artifact']
++        attached_run = await request('POST', f"/conversations/{c['id']}/runs", {'text':'Inspect the local evidence file.', 'attachment_ids':[uploaded['upload_id']]}, 202)
++        await eventually(lambda: service.store.get('runs', attached_run['id'])['state'] in {'complete','failed'}, timeout=40)
++        assert service.store.get('runs', attached_run['id'])['state'] == 'complete'
+         job = await request('POST', '/cron', {'prompt': 'Local future work', 'schedule': 'every 1h', 'name': 'isolated-job'}, 201)
+         await request('POST', f"/cron/{job['id']}/disable", {})
+         await request('PATCH', f"/cron/{job['id']}", {'name': 'edited-job'})
+diff --git a/hermes-mobile-bridge/tests/test_uploads.py b/hermes-mobile-bridge/tests/test_uploads.py
+new file mode 100644
+index 0000000..8039417
+--- /dev/null
++++ b/hermes-mobile-bridge/tests/test_uploads.py
+@@ -0,0 +1,57 @@
++import base64
++import json
++import uuid
++import aiohttp
++import pytest
++from hermes_mobile_bridge.core import now
++
++def body(c,name='note.md',data=b'# safe existing evidence',mime='text/markdown'):
++    return {'conversation_id':c['id'],'name':name,'content_type':mime,'content_base64':base64.b64encode(data).decode()}
++
++async def test_stage_then_send_exact_conversation_and_no_duplicate(harness):
++    h=harness;c=await h.request('POST','/conversations',{},expected=201)
++    key=str(uuid.uuid4());out=await h.request('POST','/attachments',body(c),key=key,expected=201)
++    assert out['staged'] and not out['attached'] and 'path' not in out['artifact']
++    assert await h.request('POST','/attachments',body(c),key=key,expected=201)==out
++    assert not any(m=='file.attach' for m in h.fake.methods)
++    r=await h.request('POST',f"/conversations/{c['id']}/runs",{'text':'Read this note','attachment_ids':[out['upload_id']]},expected=202)
++    assert h.fake.methods.count('file.attach')==1
++    assert '@file:' in next(p['text'] for m,p in h.fake.requests if m=='prompt.submit')
++    assert (await h.request('GET',f"/artifacts/{out['upload_id']}"))['run_id']==r['id']
++    # Reuse in another conversation is refused before any native attachment action.
++    other=await h.request('POST','/conversations',{},expected=201)
++    await h.request('POST',f"/conversations/{other['id']}/runs",{'text':'wrong','attachment_ids':[out['upload_id']]},expected=403)
++    assert h.fake.methods.count('file.attach')==1
++
++async def test_image_upload_survives_bridge_restart(harness):
++    h=harness;c=await h.request('POST','/conversations',{},expected=201)
++    png=base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=')
++    out=await h.request('POST','/attachments',body(c,'pixel.png',png,'image/png'),expected=201)
++    await h.client.close();await h.bridge_runner.cleanup();await h.start_bridge()
++    await h.request('POST',f"/conversations/{c['id']}/runs",{'text':'inspect','attachment_ids':[out['upload_id']]},expected=202)
++    assert h.fake.methods.count('image.attach_bytes')==1
++
++async def test_upload_rejects_size_type_traversal_auth_and_unknown_fields(harness):
++    h=harness;c=await h.request('POST','/conversations',{},expected=201)
++    await h.request('POST','/attachments',body(c,data=b'x'*(h.cfg['upload_limit']+1)),expected=413)
++    await h.request('POST','/attachments',body(c,'archive.zip',b'zip','application/zip'),expected=415)
++    await h.request('POST','/attachments',body(c,'fake.png',b'not png','image/png'),expected=415)
++    await h.request('POST','/attachments',body(c,'a.json',b'not json','application/json'),expected=415)
++    for name in ('../escape.txt','..\\escape.txt','/tmp/escape.txt','nul\x00.txt','a\n.txt'):
++        await h.request('POST','/attachments',body(c,name),expected=400)
++    await h.request('POST','/attachments',body(c)|{'path':'/tmp/escape'},expected=400)
++    async with aiohttp.ClientSession() as client:
++        async with client.post(f'http://127.0.0.1:{h.port}/mobile/v1/attachments',json=body(c)) as r:assert r.status==401
++    assert not list(h.service.uploads.root.iterdir())
++
++async def test_expired_upload_cleanup_and_duplicate_selection(harness):
++    h=harness;c=await h.request('POST','/conversations',{},expected=201)
++    out=await h.request('POST','/attachments',body(c),expected=201);aid=out['upload_id']
++    await h.request('POST',f"/conversations/{c['id']}/runs",{'text':'inspect','attachment_ids':[aid,aid]},expected=400)
++    for invalid in ([{}], [42], ['../escape'], [True]):
++        await h.request('POST',f"/conversations/{c['id']}/runs",{'text':'inspect','attachment_ids':invalid},expected=400)
++    row=json.loads(h.service.store.db.execute('SELECT data FROM uploads WHERE id=?',(aid,)).fetchone()[0]);row['expires']=now()-1
++    h.service.store.db.execute('UPDATE uploads SET data=? WHERE id=?',(json.dumps(row),aid));h.service.store.db.commit()
++    h.service.uploads.cleanup();assert not (h.service.uploads.root/aid).exists()
++    assert not h.service.store.db.execute('SELECT 1 FROM artifacts WHERE id=?',(aid,)).fetchone()
++    await h.request('POST',f"/conversations/{c['id']}/runs",{'text':'inspect','attachment_ids':[aid]},expected=404)

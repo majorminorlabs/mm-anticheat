@@ -1,0 +1,32 @@
+{
+  "model": "qwen3:30b",
+  "quantization": "reported by ollama show; see model metadata",
+  "num_ctx": 8192,
+  "settings": {
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "num_predict": 700,
+    "seed": 42
+  },
+  "test": "claim-verification",
+  "kind": "claims",
+  "ran_at": "2026-07-28T06:11:23.211Z",
+  "ok": true,
+  "text": "We are given a source packet with multiple sources (A to E) and a list of claims.\n We must evaluate each claim against the sources and assign a status: \n   supported, partially_supported, unsupported, contradicted, opinion, time_sensitive, requires_human_review.\n\n We are to return ONLY a JSON object with the key \"claims\", which is a list of objects each having \"claim\" and \"status\" and \"evidence\".\n\n Steps:\n 1. For each claim, check the sources to see if it is supported, contradicted, etc.\n 2. The evidence should be a string that references the source(s) that support or contradict the claim.\n\n Important: We can only use the provided source packet.\n\n Let's break down each claim:\n\n Claim 1: \"River County approved a 120MW data center.\"\n   - Source A (city filing, May 2): \"River County approved a 120MW data center\"\n   - This is directly stated. So status: supported.\n   - Evidence: \"SOURCE A\"\n\n Claim 2: \"The operator agreed to publish monthly water use.\"\n   - Source A: \"after the operator agreed to publish monthly water use\"\n   - This is directly stated. So status: supported.\n   - Evidence: \"SOURCE A\"\n\n Claim 3: \"The project will certainly create 400 permanent jobs.\"\n   - Source B (operator press release, May 3): \"the facility will create 400 permanent jobs.\"\n   - However, note that Source C (county labor office, May 8) says: \"comparable facilities employ 35 to 80 permanent workers.\"\n   - The claim says \"certainly\", but Source C suggests that the number might be lower (and 400 is way above the range of 35-80). \n     But note: Source B says the facility will create 400, and Source C says comparable facilities employ 35-80. \n     This does not directly contradict the claim that *this* facility will create 400, but it does cast doubt because the claim says \"certainly\" and Source C suggests that the typical number is much lower. \n     However, the claim is about this specific project (as per Source B) and Source B is the operator's statement. \n     But note: the claim says \"certainly\", which implies absolute certainty. Since Source C provides a range for comparable facilities (which might be a different facility) and does not directly say that this facility won't create 400, we cannot say it's contradicted. \n     However, the word \"certainly\" is strong and Source C might be used to argue that it's not certain (because comparable facilities are much lower). But note: Source B is the operator's claim and Source C is about comparable facilities, not this one. \n     So the claim is supported by Source B, but the word \"certainly\" might be too strong because we don't have absolute certainty (it's a claim by the operator). However, the source says \"will create\", so we have to take it as stated. \n     But note: the claim says \"certainly\", which is a stronger word than the source. The source says \"will\", which is a statement of fact by the operator. \n     However, the evidence from",
+  "metrics": {
+    "wall_ms": 16602,
+    "eval_count": 700,
+    "eval_duration_ns": 15854690000,
+    "prompt_eval_count": 278,
+    "prompt_eval_duration_ns": 595245000,
+    "tokens_per_second": 44.15,
+    "prompt_tokens_per_second": 467.03
+  },
+  "error": null,
+  "score": {
+    "json_valid": false,
+    "schema_valid": false,
+    "score": 0,
+    "notes": []
+  }
+}

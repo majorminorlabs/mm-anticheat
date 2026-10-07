@@ -1,0 +1,32 @@
+--- a/func.py
++++ b/func.py
+@@ -22,4 +22,27 @@
+     >>> expected_operations(123456, 185185)
+     69292914
+     """
+-    raise NotImplementedError
+\ No newline at end of file
++    pass
++def expected_operations(N: int, M: int) -> int:
++    MOD = 998244353
++    total_vertices = N * M + 1
++    
++    # Initialize the expected number of operations for each vertex
++    expected = [0] * total_vertices
++    expected[0] = 0  # Starting vertex
++    
++    # Calculate the expected number of operations for each vertex
++    for i in range(1, total_vertices):
++        # Calculate the expected number of operations to reach vertex i
++        if i >= N:
++            expected[i] = (expected[i - N] + 1) % MOD
++        if i < total_vertices - 1:
++            expected[i] = (expected[i] + expected[i + 1] + 1) % MOD
++        expected[i] = (expected[i] * 2) % MOD  # Each move is chosen uniformly at random
++    
++    # The expected number of operations to paint all vertices
++    result = sum(expected) % MOD
++    return result
++
++# Use check(expected_operations) to run tests.
++

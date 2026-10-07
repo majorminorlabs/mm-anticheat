@@ -1,0 +1,66 @@
+--- a/func.py
++++ /dev/null
+@@ -1,26 +0,0 @@
+-def min_tile_moves(K: int, S_x: int, S_y: int, T_x: int, T_y: int) -> int:
+-    """ Find the minimum number of moves between tiles on a coordinate plane.
+-    
+-    Tiles are placed according to these rules:
+-    - For integer triple (i, j, k) with 0 <= k < K:
+-      - If i and j have same parity: tile covers iK <= x <= (i+1)K and jK+k <= y <= jK+k+1
+-      - If i and j have different parity: tile covers iK+k <= x <= iK+k+1 and jK <= y <= (j+1)K
+-    
+-    Two tiles are adjacent if their edges share a positive-length segment.
+-    
+-    Args:
+-        K: The tile parameter (2 <= K <= 10^16)
+-        S_x, S_y: Starting coordinates (tile containing (S_x + 0.5, S_y + 0.5))
+-        T_x, T_y: Target coordinates (tile containing (T_x + 0.5, T_y + 0.5))
+-    
+-    Returns:
+-        Minimum number of moves to adjacent tiles needed to go from start to target tile.
+-    
+-    >>> min_tile_moves(3, -2, 1, 4, -1)
+-    4
+-    >>> min_tile_moves(4, 8, 8, 0, 2)
+-    4
+-    >>> min_tile_moves(5, -1000000000000, -1000000000000, 1000000000000, 1000000000000)
+-    800000000000
+-    """
+-    raise NotImplementedError
+\ No newline at end of file
+--- a/test.py
++++ /dev/null
+@@ -1,33 +0,0 @@
+-from func import min_tile_moves
+-
+-def test_func(candidate):
+-    # Test cases from the problem
+-    assert candidate(3, -2, 1, 4, -1) == 4
+-    assert candidate(4, 8, 8, 0, 2) == 4
+-    assert candidate(5, -1000000000000, -1000000000000, 1000000000000, 1000000000000) == 800000000000
+-    
+-    # Additional test cases
+-    assert candidate(51, 94, 7, -90, -34) == 8
+-    assert candidate(67, 24, 3, 100, -23) == 4
+-    assert candidate(63, -9, 49, -45, 29) == 2
+-    assert candidate(19, -28, -65, 93, -76) == 12
+-    assert candidate(81, -36, 36, 80, 54) == 3
+-    assert candidate(20, -21, -75, 86, -82) == 13
+-    assert candidate(89, -16, 20, 43, -75) == 4
+-    assert candidate(47, 11, -20, 56, 63) == 5
+-    assert candidate(28, 41, 22, 13, 33) == 4
+-    assert candidate(35, -85, 40, -97, -77) == 10
+-    
+-    # Edge cases
+-    assert candidate(2, 0, 0, 0, 0) == 0
+-    assert candidate(2, 0, 0, 1, 0) == 0
+-    assert candidate(2, 0, 0, 0, 1) == 1
+-    assert candidate(2, 0, 0, 10000000000000000, 10000000000000000) == 10000000000000000
+-    assert candidate(10000000000000000, 0, 0, 10000000000000000, 10000000000000000) == 2
+-    assert candidate(10000000000000000, -10000000000000000, -10000000000000000, 10000000000000000, 10000000000000000) == 4
+-    assert candidate(2, -10000000000000000, -10000000000000000, -10000000000000000, -10000000000000000) == 0
+-    assert candidate(3, 1, -1, 2, -2) == 1
+-
+-if __name__ == "__main__":
+-    test_func(min_tile_moves)
+-    print("All tests passed!")

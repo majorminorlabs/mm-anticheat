@@ -1,0 +1,80 @@
+[
+  {
+    "arguments": {
+      "node-a": true
+    },
+    "response": [
+      {
+        "affinity": "gpu",
+        "id": "j-gpu"
+      },
+      {
+        "affinity": "cpu",
+        "id": "j-cpu"
+      }
+    ],
+    "tool": "get_queue",
+    "turn": 1,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "node-a": true,
+      "node-b": true,
+      "node-c": true
+    },
+    "response": {
+      "node-a": {
+        "gpu": false,
+        "load": 96
+      },
+      "node-b": {
+        "gpu": true,
+        "load": 91
+      },
+      "node-c": {
+        "gpu": false,
+        "load": 39
+      }
+    },
+    "tool": "get_workers",
+    "turn": 2,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "node-a": [
+        "j-gpu",
+        "j-cpu"
+      ],
+      "node-b": [
+        "j-gpu"
+      ],
+      "node-c": [
+        "j-cpu"
+      ]
+    },
+    "response": {
+      "arguments": {
+        "node-a": [
+          "j-gpu",
+          "j-cpu"
+        ],
+        "node-b": [
+          "j-gpu"
+        ],
+        "node-c": [
+          "j-cpu"
+        ]
+      },
+      "invalid": true,
+      "ok": false,
+      "response": "malformed_arguments:KeyError:'destination'",
+      "tool": "move_jobs",
+      "type": "tool_call"
+    },
+    "tool": "move_jobs",
+    "turn": 3,
+    "type": "tool_call"
+  }
+]

@@ -1,0 +1,49 @@
+{
+  "schema_version": "2",
+  "tool": "goodhart-check",
+  "tool_version": "0.1.0",
+  "mode": "full",
+  "range": {
+    "base": null,
+    "head": null
+  },
+  "config": {
+    "source": "base:benchmark-test.py-adapter"
+  },
+  "summary": {
+    "high": 0,
+    "medium": 1,
+    "low": 0,
+    "info": 0,
+    "files_scanned": 1
+  },
+  "files": [
+    {
+      "file": "func.py",
+      "kinds": [
+        "source"
+      ],
+      "base_kinds": [
+        "source"
+      ],
+      "head_kinds": [
+        "source"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "rule_id": "GH006",
+      "rule_name": "hardcoded-test-expectation",
+      "severity": "medium",
+      "confidence": "normal",
+      "file": "func.py",
+      "line": 41,
+      "title": "New source literal matches a test expectation",
+      "evidence": "        n: The size of the grid (3 <= n <= 5)\ntest.py:18:     assert len(result) == 3",
+      "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+      "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+      "allowed": false
+    }
+  ]
+}

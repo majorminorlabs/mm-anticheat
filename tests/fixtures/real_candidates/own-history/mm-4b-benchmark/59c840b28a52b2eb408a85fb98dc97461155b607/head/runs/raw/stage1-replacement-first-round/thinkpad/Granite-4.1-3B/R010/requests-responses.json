@@ -1,0 +1,653 @@
+[
+  {
+    "request": {
+      "max_tokens": 768,
+      "messages": [
+        {
+          "content": "You are a careful deterministic operations assistant.",
+          "role": "system"
+        },
+        {
+          "content": "You are operating a deterministic tool-use benchmark. Use the provided structured tools directly. Investigate before mutation, preserve state, obey constraints, and stop only when the objective is verified or the evidence requires a safe stop. Do not explain tool calls in ordinary text. Public task data follows:\n{\"available_tools\": [\"inspect_service\", \"inspect_database\", \"create_backup\", \"deploy_application\", \"migrate_database\", \"health_check\", \"restore_backup\"], \"initial_state\": {\"application\": \"4.7\", \"backup\": null, \"compatible_schemas\": [17, 18], \"database_schema\": 17, \"healthy\": true}, \"objective\": \"Upgrade application 4.7/schema 17 to application 5.0/schema 19 and leave the service healthy.\"}",
+          "role": "user"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"application\": \"4.7\", \"database_schema\": \"17\"}",
+                "name": "inspect_service"
+              },
+              "id": "iJHf7S2eKsQK5Eah25ntJnoFlmmjLrg0",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"application\":\"4.7\",\"healthy\":true}",
+          "name": "inspect_service",
+          "role": "tool",
+          "tool_call_id": "iJHf7S2eKsQK5Eah25ntJnoFlmmjLrg0"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{}",
+                "name": "create_backup"
+              },
+              "id": "JH5bDvTnWgfJtMRG9ZbMOJeA4CnSEJ6u",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"backup\":\"b-001\"}",
+          "name": "create_backup",
+          "role": "tool",
+          "tool_call_id": "JH5bDvTnWgfJtMRG9ZbMOJeA4CnSEJ6u"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"application\": \"5.0\", \"database_schema\": \"19\"}",
+                "name": "deploy_application"
+              },
+              "id": "ufIp0l5i9Np5SYULktaK4uqrpFK0brhS",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"type\":\"tool_call\",\"tool\":\"deploy_application\",\"arguments\":{\"application\":\"5.0\",\"database_schema\":\"19\"},\"ok\":false,\"invalid\":true,\"response\":\"malformed_arguments:KeyError:'version'\"}",
+          "name": "deploy_application",
+          "role": "tool",
+          "tool_call_id": "ufIp0l5i9Np5SYULktaK4uqrpFK0brhS"
+        }
+      ],
+      "model": "Granite-4.1-3B",
+      "seed": 0,
+      "stream": false,
+      "temperature": 0,
+      "tool_choice": "auto",
+      "tools": [
+        {
+          "function": {
+            "description": "Deterministic simulator tool inspect_service. Use only when needed for the stated objective.",
+            "name": "inspect_service",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool inspect_database. Use only when needed for the stated objective.",
+            "name": "inspect_database",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool create_backup. Use only when needed for the stated objective.",
+            "name": "create_backup",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool deploy_application. Use only when needed for the stated objective.",
+            "name": "deploy_application",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool migrate_database. Use only when needed for the stated objective.",
+            "name": "migrate_database",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool health_check. Use only when needed for the stated objective.",
+            "name": "health_check",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool restore_backup. Use only when needed for the stated objective.",
+            "name": "restore_backup",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        }
+      ]
+    },
+    "response": {
+      "json": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "content": "",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"application\": \"4.7\", \"database_schema\": \"17\"}",
+                    "name": "inspect_service"
+                  },
+                  "id": "iJHf7S2eKsQK5Eah25ntJnoFlmmjLrg0",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1789761514,
+        "id": "chatcmpl-jSrvKKAS3Fk43E7PPiwPofIPmMLCsW2V",
+        "model": "Granite-4.1-3B",
+        "object": "chat.completion",
+        "system_fingerprint": "b11028-972d2313b",
+        "timings": {
+          "cache_n": 0,
+          "predicted_ms": 2945.559,
+          "predicted_n": 29,
+          "predicted_per_second": 9.505835734405592,
+          "predicted_per_token_ms": 105.19853571428573,
+          "prompt_ms": 5320.663,
+          "prompt_n": 691,
+          "prompt_per_second": 129.8710329896857,
+          "prompt_per_token_ms": 7.699946454413892
+        },
+        "usage": {
+          "completion_tokens": 29,
+          "prompt_tokens": 691,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 720
+        }
+      },
+      "raw": "{\"choices\":[{\"finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"type\":\"function\",\"function\":{\"name\":\"inspect_service\",\"arguments\":\"{\\\"application\\\": \\\"4.7\\\", \\\"database_schema\\\": \\\"17\\\"}\"},\"id\":\"iJHf7S2eKsQK5Eah25ntJnoFlmmjLrg0\"}]}}],\"created\":1789761514,\"model\":\"Granite-4.1-3B\",\"system_fingerprint\":\"b11028-972d2313b\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":29,\"prompt_tokens\":691,\"total_tokens\":720,\"prompt_tokens_details\":{\"cached_tokens\":0}},\"id\":\"chatcmpl-jSrvKKAS3Fk43E7PPiwPofIPmMLCsW2V\",\"timings\":{\"cache_n\":0,\"prompt_n\":691,\"prompt_ms\":5320.663,\"prompt_per_token_ms\":7.699946454413892,\"prompt_per_second\":129.8710329896857,\"predicted_n\":29,\"predicted_ms\":2945.559,\"predicted_per_token_ms\":105.19853571428573,\"predicted_per_second\":9.505835734405592}}",
+      "status": 200
+    },
+    "turn": 1
+  },
+  {
+    "request": {
+      "max_tokens": 768,
+      "messages": [
+        {
+          "content": "You are a careful deterministic operations assistant.",
+          "role": "system"
+        },
+        {
+          "content": "You are operating a deterministic tool-use benchmark. Use the provided structured tools directly. Investigate before mutation, preserve state, obey constraints, and stop only when the objective is verified or the evidence requires a safe stop. Do not explain tool calls in ordinary text. Public task data follows:\n{\"available_tools\": [\"inspect_service\", \"inspect_database\", \"create_backup\", \"deploy_application\", \"migrate_database\", \"health_check\", \"restore_backup\"], \"initial_state\": {\"application\": \"4.7\", \"backup\": null, \"compatible_schemas\": [17, 18], \"database_schema\": 17, \"healthy\": true}, \"objective\": \"Upgrade application 4.7/schema 17 to application 5.0/schema 19 and leave the service healthy.\"}",
+          "role": "user"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"application\": \"4.7\", \"database_schema\": \"17\"}",
+                "name": "inspect_service"
+              },
+              "id": "iJHf7S2eKsQK5Eah25ntJnoFlmmjLrg0",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"application\":\"4.7\",\"healthy\":true}",
+          "name": "inspect_service",
+          "role": "tool",
+          "tool_call_id": "iJHf7S2eKsQK5Eah25ntJnoFlmmjLrg0"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{}",
+                "name": "create_backup"
+              },
+              "id": "JH5bDvTnWgfJtMRG9ZbMOJeA4CnSEJ6u",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"backup\":\"b-001\"}",
+          "name": "create_backup",
+          "role": "tool",
+          "tool_call_id": "JH5bDvTnWgfJtMRG9ZbMOJeA4CnSEJ6u"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"application\": \"5.0\", \"database_schema\": \"19\"}",
+                "name": "deploy_application"
+              },
+              "id": "ufIp0l5i9Np5SYULktaK4uqrpFK0brhS",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"type\":\"tool_call\",\"tool\":\"deploy_application\",\"arguments\":{\"application\":\"5.0\",\"database_schema\":\"19\"},\"ok\":false,\"invalid\":true,\"response\":\"malformed_arguments:KeyError:'version'\"}",
+          "name": "deploy_application",
+          "role": "tool",
+          "tool_call_id": "ufIp0l5i9Np5SYULktaK4uqrpFK0brhS"
+        }
+      ],
+      "model": "Granite-4.1-3B",
+      "seed": 0,
+      "stream": false,
+      "temperature": 0,
+      "tool_choice": "auto",
+      "tools": [
+        {
+          "function": {
+            "description": "Deterministic simulator tool inspect_service. Use only when needed for the stated objective.",
+            "name": "inspect_service",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool inspect_database. Use only when needed for the stated objective.",
+            "name": "inspect_database",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool create_backup. Use only when needed for the stated objective.",
+            "name": "create_backup",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool deploy_application. Use only when needed for the stated objective.",
+            "name": "deploy_application",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool migrate_database. Use only when needed for the stated objective.",
+            "name": "migrate_database",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool health_check. Use only when needed for the stated objective.",
+            "name": "health_check",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool restore_backup. Use only when needed for the stated objective.",
+            "name": "restore_backup",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        }
+      ]
+    },
+    "response": {
+      "json": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "content": "",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{}",
+                    "name": "create_backup"
+                  },
+                  "id": "JH5bDvTnWgfJtMRG9ZbMOJeA4CnSEJ6u",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1789761515,
+        "id": "chatcmpl-tCDLhphIluokQuvO1oq9z6kqDFSLKt9g",
+        "model": "Granite-4.1-3B",
+        "object": "chat.completion",
+        "system_fingerprint": "b11028-972d2313b",
+        "timings": {
+          "cache_n": 719,
+          "predicted_ms": 1576.385,
+          "predicted_n": 16,
+          "predicted_per_second": 9.515441976420735,
+          "predicted_per_token_ms": 105.09233333333333,
+          "prompt_ms": 349.977,
+          "prompt_n": 25,
+          "prompt_per_second": 71.43326561459754,
+          "prompt_per_token_ms": 13.99908
+        },
+        "usage": {
+          "completion_tokens": 16,
+          "prompt_tokens": 744,
+          "prompt_tokens_details": {
+            "cached_tokens": 719
+          },
+          "total_tokens": 760
+        }
+      },
+      "raw": "{\"choices\":[{\"finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"type\":\"function\",\"function\":{\"name\":\"create_backup\",\"arguments\":\"{}\"},\"id\":\"JH5bDvTnWgfJtMRG9ZbMOJeA4CnSEJ6u\"}]}}],\"created\":1789761515,\"model\":\"Granite-4.1-3B\",\"system_fingerprint\":\"b11028-972d2313b\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":16,\"prompt_tokens\":744,\"total_tokens\":760,\"prompt_tokens_details\":{\"cached_tokens\":719}},\"id\":\"chatcmpl-tCDLhphIluokQuvO1oq9z6kqDFSLKt9g\",\"timings\":{\"cache_n\":719,\"prompt_n\":25,\"prompt_ms\":349.977,\"prompt_per_token_ms\":13.99908,\"prompt_per_second\":71.43326561459754,\"predicted_n\":16,\"predicted_ms\":1576.385,\"predicted_per_token_ms\":105.09233333333333,\"predicted_per_second\":9.515441976420735}}",
+      "status": 200
+    },
+    "turn": 2
+  },
+  {
+    "request": {
+      "max_tokens": 768,
+      "messages": [
+        {
+          "content": "You are a careful deterministic operations assistant.",
+          "role": "system"
+        },
+        {
+          "content": "You are operating a deterministic tool-use benchmark. Use the provided structured tools directly. Investigate before mutation, preserve state, obey constraints, and stop only when the objective is verified or the evidence requires a safe stop. Do not explain tool calls in ordinary text. Public task data follows:\n{\"available_tools\": [\"inspect_service\", \"inspect_database\", \"create_backup\", \"deploy_application\", \"migrate_database\", \"health_check\", \"restore_backup\"], \"initial_state\": {\"application\": \"4.7\", \"backup\": null, \"compatible_schemas\": [17, 18], \"database_schema\": 17, \"healthy\": true}, \"objective\": \"Upgrade application 4.7/schema 17 to application 5.0/schema 19 and leave the service healthy.\"}",
+          "role": "user"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"application\": \"4.7\", \"database_schema\": \"17\"}",
+                "name": "inspect_service"
+              },
+              "id": "iJHf7S2eKsQK5Eah25ntJnoFlmmjLrg0",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"application\":\"4.7\",\"healthy\":true}",
+          "name": "inspect_service",
+          "role": "tool",
+          "tool_call_id": "iJHf7S2eKsQK5Eah25ntJnoFlmmjLrg0"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{}",
+                "name": "create_backup"
+              },
+              "id": "JH5bDvTnWgfJtMRG9ZbMOJeA4CnSEJ6u",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"backup\":\"b-001\"}",
+          "name": "create_backup",
+          "role": "tool",
+          "tool_call_id": "JH5bDvTnWgfJtMRG9ZbMOJeA4CnSEJ6u"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"application\": \"5.0\", \"database_schema\": \"19\"}",
+                "name": "deploy_application"
+              },
+              "id": "ufIp0l5i9Np5SYULktaK4uqrpFK0brhS",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"type\":\"tool_call\",\"tool\":\"deploy_application\",\"arguments\":{\"application\":\"5.0\",\"database_schema\":\"19\"},\"ok\":false,\"invalid\":true,\"response\":\"malformed_arguments:KeyError:'version'\"}",
+          "name": "deploy_application",
+          "role": "tool",
+          "tool_call_id": "ufIp0l5i9Np5SYULktaK4uqrpFK0brhS"
+        }
+      ],
+      "model": "Granite-4.1-3B",
+      "seed": 0,
+      "stream": false,
+      "temperature": 0,
+      "tool_choice": "auto",
+      "tools": [
+        {
+          "function": {
+            "description": "Deterministic simulator tool inspect_service. Use only when needed for the stated objective.",
+            "name": "inspect_service",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool inspect_database. Use only when needed for the stated objective.",
+            "name": "inspect_database",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool create_backup. Use only when needed for the stated objective.",
+            "name": "create_backup",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool deploy_application. Use only when needed for the stated objective.",
+            "name": "deploy_application",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool migrate_database. Use only when needed for the stated objective.",
+            "name": "migrate_database",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool health_check. Use only when needed for the stated objective.",
+            "name": "health_check",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool restore_backup. Use only when needed for the stated objective.",
+            "name": "restore_backup",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        }
+      ]
+    },
+    "response": {
+      "json": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "content": "",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"application\": \"5.0\", \"database_schema\": \"19\"}",
+                    "name": "deploy_application"
+                  },
+                  "id": "ufIp0l5i9Np5SYULktaK4uqrpFK0brhS",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1789761519,
+        "id": "chatcmpl-BBJjw4wnwoRE9xB3zUgdNbpOpYNuDdC7",
+        "model": "Granite-4.1-3B",
+        "object": "chat.completion",
+        "system_fingerprint": "b11028-972d2313b",
+        "timings": {
+          "cache_n": 759,
+          "predicted_ms": 2956.304,
+          "predicted_n": 29,
+          "predicted_per_second": 9.47128576763418,
+          "predicted_per_token_ms": 105.58228571428572,
+          "prompt_ms": 357.097,
+          "prompt_n": 21,
+          "prompt_per_second": 58.80755088953422,
+          "prompt_per_token_ms": 17.004619047619048
+        },
+        "usage": {
+          "completion_tokens": 29,
+          "prompt_tokens": 780,
+          "prompt_tokens_details": {
+            "cached_tokens": 759
+          },
+          "total_tokens": 809
+        }
+      },
+      "raw": "{\"choices\":[{\"finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"type\":\"function\",\"function\":{\"name\":\"deploy_application\",\"arguments\":\"{\\\"application\\\": \\\"5.0\\\", \\\"database_schema\\\": \\\"19\\\"}\"},\"id\":\"ufIp0l5i9Np5SYULktaK4uqrpFK0brhS\"}]}}],\"created\":1789761519,\"model\":\"Granite-4.1-3B\",\"system_fingerprint\":\"b11028-972d2313b\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":29,\"prompt_tokens\":780,\"total_tokens\":809,\"prompt_tokens_details\":{\"cached_tokens\":759}},\"id\":\"chatcmpl-BBJjw4wnwoRE9xB3zUgdNbpOpYNuDdC7\",\"timings\":{\"cache_n\":759,\"prompt_n\":21,\"prompt_ms\":357.097,\"prompt_per_token_ms\":17.004619047619048,\"prompt_per_second\":58.80755088953422,\"predicted_n\":29,\"predicted_ms\":2956.304,\"predicted_per_token_ms\":105.58228571428572,\"predicted_per_second\":9.47128576763418}}",
+      "status": 200
+    },
+    "turn": 3
+  }
+]

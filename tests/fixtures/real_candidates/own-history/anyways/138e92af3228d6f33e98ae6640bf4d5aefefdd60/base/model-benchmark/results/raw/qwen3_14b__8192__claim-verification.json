@@ -1,0 +1,34 @@
+{
+  "model": "qwen3:14b",
+  "quantization": "reported by ollama show; see model metadata",
+  "num_ctx": 8192,
+  "settings": {
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "num_predict": 700,
+    "seed": 42
+  },
+  "test": "claim-verification",
+  "kind": "claims",
+  "ran_at": "2026-07-28T05:34:26.986Z",
+  "ok": true,
+  "text": "{\n  \"claims\": [\n    {\n      \"claim\": \"River County approved a 120MW data center.\",\n      \"status\": \"supported\",\n      \"evidence\": \"SOURCE A (city filing, May 2): River County approved a 120MW data center after the operator agreed to publish monthly water use.\"\n    },\n    {\n      \"claim\": \"The operator agreed to publish monthly water use.\",\n      \"status\": \"supported\",\n      \"evidence\": \"SOURCE A (city filing, May 2): River County approved a 120MW data center after the operator agreed to publish monthly water use.\"\n    },\n    {\n      \"claim\": \"The project will certainly create 400 permanent jobs.\",\n      \"status\": \"partially_supported\",\n      \"evidence\": \"SOURCE B (operator press release, May 3): the facility will create 400 permanent jobs. SOURCE C (county labor office, May 8): comparable facilities employ 35 to 80 permanent workers.\"\n    },\n    {\n      \"claim\": \"Comparable facilities employ at least 400 permanent workers.\",\n      \"status\": \"contradicted\",\n      \"evidence\": \"SOURCE C (county labor office, May 8): comparable facilities employ 35 to 80 permanent workers.\"\n    },\n    {\n      \"claim\": \"The grid upgrade costs exactly $86m.\",\n      \"status\": \"supported\",\n      \"evidence\": \"SOURCE D (utility meeting transcript, May 11): the local grid upgrade is estimated at $86m and the utility has not allocated costs.\"\n    },\n    {\n      \"claim\": \"The project is obviously a bad deal for residents.\",\n      \"status\": \"opinion\",\n      \"evidence\": \"No direct evidence supports or contradicts this claim as it is subjective.\"\n    },\n    {\n      \"claim\": \"The filing was made last week.\",\n      \"status\": \"time_sensitive\",\n      \"evidence\": \"SOURCE A (city filing, May 2): The filing was made on May 2, which may be considered 'last week' depending on the current date.\"\n    }\n  ]\n}",
+  "metrics": {
+    "wall_ms": 33212,
+    "eval_count": 452,
+    "eval_duration_ns": 31023577000,
+    "prompt_eval_count": 284,
+    "prompt_eval_duration_ns": 2015055000,
+    "tokens_per_second": 14.57,
+    "prompt_tokens_per_second": 140.94
+  },
+  "error": null,
+  "score": {
+    "json_valid": true,
+    "schema_valid": true,
+    "score": 71,
+    "notes": [
+      "5/7 exact claim labels"
+    ]
+  }
+}

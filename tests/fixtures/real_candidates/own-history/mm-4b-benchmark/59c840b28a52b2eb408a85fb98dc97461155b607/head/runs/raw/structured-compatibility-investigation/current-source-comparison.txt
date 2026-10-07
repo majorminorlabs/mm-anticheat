@@ -1,0 +1,24 @@
+Compatibility investigation source evidence
+Captured: 2026-09-18 UTC
+
+Frozen ThinkPad source:
+972d2313bc0bf0a45f634f77d95c9fb03aeab12
+
+Current upstream source:
+ec928150501c2572fec05cb949061672bb424914
+
+Relevant-file SHA-256 comparison (frozen == current):
+4ad7e2bdcdf55eb33c7d8549d7cc76d15d8ccbba33e0f57cff713e14b8e01174  common/jinja/caps.cpp
+a226aa0cbf844490cd480bb805c458df16af8771b1ecb53a8fe608e3b2e60d3c  common/chat.cpp
+5acb9907c78a66685e4f43327e9f700db3325fefb8991c1212d713a412469297  common/chat-diff-analyzer.cpp
+
+Frozen /props capability results:
+Phi-4-mini-instruct: supports_tools=false, supports_tool_calls=false
+Gemma-3-4B-IT: supports_tools=false, supports_tool_calls=false
+
+Current-runtime probe status:
+Not run. The current upstream capability detector and the three relevant
+implementation files are byte-for-byte identical, and the exact GGUF native
+templates are unchanged. A probe would only reproduce the frozen condition
+unless a template override were introduced; that would be a new execution
+condition rather than a runtime-only comparison.

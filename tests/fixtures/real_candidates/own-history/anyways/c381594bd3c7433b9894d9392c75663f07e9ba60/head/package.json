@@ -1,0 +1,32 @@
+{
+  "name": "anyways",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "npm run build:client && wrangler dev",
+    "build": "npm run build:client && npm run build:worker",
+    "build:client": "esbuild src/app.mjs --bundle --minify --outfile=public/app.js",
+    "build:worker": "wrangler deploy --dry-run --outdir=dist",
+    "test": "node --test",
+    "lint": "node --check bin/anyways-ops.mjs && node --check bin/anyways-pipeline-command.mjs && node --check src/app.mjs && node --check src/article-commission.mjs && node --check src/article-renderer.mjs && node --check src/newsroom-media.mjs && node --check src/worker.mjs && node --check src/pipeline/codex-writer.mjs && node --check src/pipeline/commission.mjs && node --check src/pipeline/orchestrator.mjs && node --check src/pipeline/workflow.mjs && node --check src/pipeline/synthesis.mjs && node --check src/pipeline/research-router.mjs",
+    "pipeline": "node bin/anyways-ops.mjs",
+    "pipeline:legacy-structured": "node bin/anyways-pipeline.mjs",
+    "pipeline:discover": "node bin/anyways-ops.mjs discover",
+    "pipeline:research": "node bin/anyways-ops.mjs research",
+    "pipeline:process": "node bin/anyways-ops.mjs process",
+    "pipeline:retry": "node bin/anyways-ops.mjs retry",
+    "pipeline:status": "node bin/anyways-ops.mjs status"
+    ,"pipeline:sync-supabase": "node bin/pipeline-sync-supabase.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.110.9"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.1",
+    "wrangler": "4.114.0"
+  }
+}

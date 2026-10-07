@@ -1,0 +1,67 @@
+[
+  {
+    "rule_id": "GH008",
+    "rule_name": "exception-swallowed",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "archive/pipeline-development/benchmark-lineage/ops/create-benchmark-freeze-v1.0.1.mjs",
+    "line": 32,
+    "title": "Catch handler discards failures",
+    "evidence": "catch {\n    return false;\n  }",
+    "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+    "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH008",
+    "rule_name": "exception-swallowed",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "archive/pipeline-development/benchmark-lineage/ops/create-benchmark-freeze-v1.0.2.mjs",
+    "line": 32,
+    "title": "Catch handler discards failures",
+    "evidence": "catch {\n    return false;\n  }",
+    "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+    "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH008",
+    "rule_name": "exception-swallowed",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "archive/pipeline-development/benchmark-lineage/ops/create-benchmark-freeze-v1.0.3.mjs",
+    "line": 24,
+    "title": "Catch handler discards failures",
+    "evidence": "catch { return false; }",
+    "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+    "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH000",
+    "rule_name": "parse-skipped",
+    "severity": "info",
+    "confidence": "normal",
+    "file": "archive/pipeline-development/model-benchmark/run.json",
+    "line": 1,
+    "title": "Content could not be parsed",
+    "evidence": "Line exceeds the 20,000 character analysis limit",
+    "why_flagged": "This content could not be analyzed completely; review it separately.",
+    "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH000",
+    "rule_name": "parse-skipped",
+    "severity": "info",
+    "confidence": "normal",
+    "file": "model-benchmark/results/raw/qwen3_30b__8192__classification.json",
+    "line": 1,
+    "title": "Content could not be parsed",
+    "evidence": "Line exceeds the 20,000 character analysis limit",
+    "why_flagged": "This content could not be analyzed completely; review it separately.",
+    "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+    "allowed": false
+  }
+]

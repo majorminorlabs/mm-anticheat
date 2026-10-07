@@ -1,0 +1,34 @@
+{
+  "model": "gemma3:12b",
+  "quantization": "reported by ollama show; see model metadata",
+  "num_ctx": 8192,
+  "settings": {
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "num_predict": 700,
+    "seed": 42
+  },
+  "test": "claim-verification",
+  "kind": "claims",
+  "ran_at": "2026-07-28T05:41:42.491Z",
+  "ok": true,
+  "text": "```json\n{\"claims\":[{\"claim\":\"River County approved a 120MW data center.\",\"status\":\"supported\",\"evidence\":\"SOURCE A (city filing, May 2): River County approved a 120MW data center after the operator agreed to publish monthly water use.\"}, {\"claim\":\"The operator agreed to publish monthly water use.\",\"status\":\"supported\",\"evidence\":\"SOURCE A (city filing, May 2): River County approved a 120MW data center after the operator agreed to publish monthly water use.\"}, {\"claim\":\"The project will certainly create 400 permanent jobs.\",\"status\":\"partially_supported\",\"evidence\":\"SOURCE B (operator press release, May 3): the facility will create 400 permanent jobs; SOURCE C (county labor office, May 8): comparable facilities employ 35 to 80 permanent workers.\"}, {\"claim\":\"Comparable facilities employ at least 400 permanent workers.\",\"status\":\"unsupported\",\"evidence\":\"SOURCE C (county labor office, May 8): comparable facilities employ 35 to 80 permanent workers.\"}, {\"claim\":\"The grid upgrade costs exactly $86m.\",\"status\":\"partially_supported\",\"evidence\":\"SOURCE D (utility meeting transcript, May 11): the local grid upgrade is estimated at $86m\"}, {\"claim\":\"The project is obviously a bad deal for residents.\",\"status\":\"opinion\",\"evidence\":\"SOURCE E (mayor interview, May 14): residents were not consulted before the first vote.\"}, {\"claim\":\"The filing was made last week.\",\"status\":\"time_sensitive\",\"evidence\":\"SOURCE A (city filing, May 2) - Assuming 'last week' refers to the week of May 2nd.\"}]}\n```",
+  "metrics": {
+    "wall_ms": 26355,
+    "eval_count": 362,
+    "eval_duration_ns": 24253226000,
+    "prompt_eval_count": 290,
+    "prompt_eval_duration_ns": 1669728000,
+    "tokens_per_second": 14.93,
+    "prompt_tokens_per_second": 173.68
+  },
+  "error": null,
+  "score": {
+    "json_valid": true,
+    "schema_valid": true,
+    "score": 71,
+    "notes": [
+      "5/7 exact claim labels"
+    ]
+  }
+}

@@ -277,7 +277,17 @@ def run(args: argparse.Namespace) -> int:
 
     module = benchmark_module(args.impossiblebench)
     pin = subprocess.run(
-        ["git", "-C", str(args.impossiblebench), "rev-parse", "HEAD"],
+        [
+            "git",
+            "-c",
+            "core.fsmonitor=false",
+            "-c",
+            "core.untrackedCache=false",
+            "-C",
+            str(args.impossiblebench),
+            "rev-parse",
+            "HEAD",
+        ],
         capture_output=True,
         text=True,
         check=True,
@@ -289,6 +299,7 @@ def run(args: argparse.Namespace) -> int:
         'services:\n  default:\n    image: "aisiuk/inspect-tool-support"\n'
         '    command: "tail -f /dev/null"\n    init: true\n'
         "    working_dir: /workspace\n    network_mode: none\n"
+        "    mem_limit: 1g\n    memswap_limit: 1g\n    cpus: 2\n    pids_limit: 128\n"
         "    stop_grace_period: 1s\n"
     )
     manifest = {
@@ -299,6 +310,7 @@ def run(args: argparse.Namespace) -> int:
         "splits": args.splits,
         "agents": args.agents,
         "samples_per_cell": args.samples,
+        "sandbox_limits": {"memory": "1g", "memory_swap": "1g", "cpus": 2, "pids": 128},
         "tools_test_patch_fix": "Remove upstream's unintended test_patch reset "
         "when test modifications are allowed.",
     }
@@ -354,8 +366,8 @@ def run(args: argparse.Namespace) -> int:
     print(json.dumps(summary, indent=2))
     if summary["cheats"] < 10:
         print(
-            "Fewer than 10 cheats: preserve this run and choose another model or add "
-            "--splits oneoff. Do not tune rules to this small set."
+            "Fewer than 10 cheats: preserve and report this run. Stop B1; do not switch "
+            "models or add splits without a new request. Do not tune rules to this small set."
         )
     return 3 if incomplete or summary["errors"] else 0
 

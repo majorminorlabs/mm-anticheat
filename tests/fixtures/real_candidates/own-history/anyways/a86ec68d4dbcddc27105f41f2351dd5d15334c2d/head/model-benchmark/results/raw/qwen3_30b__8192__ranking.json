@@ -1,0 +1,32 @@
+{
+  "model": "qwen3:30b",
+  "quantization": "reported by ollama show; see model metadata",
+  "num_ctx": 8192,
+  "settings": {
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "num_predict": 700,
+    "seed": 42
+  },
+  "test": "ranking",
+  "kind": "json",
+  "ran_at": "2026-07-28T06:09:56.834Z",
+  "ok": true,
+  "text": "Okay, let me tackle this query step by step. The user wants me to rank the strongest five pitches from a given list based on specific editorial criteria. First, I need to fully understand the requirements.\n\nThe key points are:\n- Each story must have exactly one primary section (Internet, Taste, Systems, Modern Life, Builders, Media)\n- Recurring beats can be zero or more (like AI, music, fashion, etc.)\n- Must satisfy at least two \"strong angle\" tests (changes what people can do, want, power; reveals hidden systems; etc.)\n- Reject commodity announcements, press releases, trend filler, celebrity updates, generic news\n\nI'll go through each pitch one by one, checking against the criteria. Let me start with c01: \"A city requires data centers to publish neighborhood water use before permits are renewed\". \n\nPrimary section is Systems. This seems to reveal a hidden system (water usage transparency) and changes who has power (data centers must disclose). It satisfies \"reveals a hidden system\" and \"changes who has power\". Beats include \"ai\" but that seems mismatched - water usage data isn't primarily about AI. Still, the core idea is strong. I'll note it as a candidate.\n\nc02: \"Video platform changes recommendation system to privilege group chats\". Primary section Internet. This changes what people can do (prioritize private interactions) and how attention moves. It's not just a feature change - it's a systemic shift in platform design. Strong candidate.\n\nc03: Musician selling tickets via fan cooperative sharing resale profits. Primary Media. This changes how fans engage with artists (collective ownership) and reveals a hidden system in ticketing. Satisfies \"changes what people want\" (community over individual tickets) and \"reveals a hidden system\". Beats: music - perfect fit.\n\nc04: Repair collective mapping apartment bans on heat pumps. Primary Modern Life. This changes what people can do (install sustainable tech) and reveals hidden barriers. Strong angle - \"changes what people can do\" and \"reveals hidden system\". Beats: cities - accurate.\n\nc05: Fashion label using preorders for customer voting on silhouettes. Primary Builders. This shows a new way to build (co-creation) without founder worship. Satisfies \"explains how to build something\" and \"changes what people want\" (customers co-design). Beats: fashion - correct.\n\nc06: Grocery app adding dark mode. Reject - it's a commodity feature, no deeper significance. Fails all strong angle tests.\n\nc07: Phone maker announcing faster processor. Reject - generic tech news, no human impact explained.\n\nc08: Celebrity album teaser. Reject - celebrity gossip, violates music coverage rules.\n\nc09: Sports league shoe deal with no changes. Reject - \"no change\" makes it trivial, fails to change anything.\n\nc10: Game studio letting players train NPCs with saved history. Primary Modern Life. This changes what people can do (personalize AI) and reveals how attention moves (player data usage). Beats: gaming and AI - strong fit. Satisfies \"changes what people can do\" and \"reveals hidden system\" (data usage in games).\n\nc11: City removing parking minimums near libraries. Primary Systems. Changes what people can do (small businesses thrive) and reveals hidden urban planning systems. Beats: cities",
+  "metrics": {
+    "wall_ms": 22143,
+    "eval_count": 700,
+    "eval_duration_ns": 18944965000,
+    "prompt_eval_count": 1645,
+    "prompt_eval_duration_ns": 3021068000,
+    "tokens_per_second": 36.95,
+    "prompt_tokens_per_second": 544.51
+  },
+  "error": null,
+  "score": {
+    "json_valid": false,
+    "schema_valid": false,
+    "score": 0,
+    "notes": []
+  }
+}

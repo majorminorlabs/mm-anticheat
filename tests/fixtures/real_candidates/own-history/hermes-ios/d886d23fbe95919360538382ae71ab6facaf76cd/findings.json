@@ -1,0 +1,54 @@
+[
+  {
+    "rule_id": "GH006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "scripts/local_integration_stack.py",
+    "line": 109,
+    "title": "New source literal matches a test expectation",
+    "evidence": "            for name,title in [('research-orchestrator','Research Orchestrator'),('research-worker','Research Worker')]:\nhermes-mobile-bridge/tests/test_installed_hermes.py:221:             assert resumed['info']['profile_name'] == 'research-orchestrator'",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "low",
+    "confidence": "normal",
+    "file": "hermes-mobile-bridge/src/hermes_mobile_bridge/api.py",
+    "line": 168,
+    "title": "New source literal matches a test expectation",
+    "evidence": "    if not row: return web.json_response({'state': 'not_received'})\nhermes-mobile-bridge/tests/test_vnext.py:67:     assert (await h.request('GET','/commands/'+str(uuid.uuid4())))['state'] == 'not_received'",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "low",
+    "confidence": "normal",
+    "file": "hermes-mobile-bridge/src/hermes_mobile_bridge/captures.py",
+    "line": 62,
+    "title": "New source literal matches a test expectation",
+    "evidence": "        if mime not in MIMES | {'audio/mp4'}:\nhermes-mobile-bridge/tests/test_vnext.py:53:     assert json.loads(next(root.rglob('*.json')).read_text())['attachments'][0]['content_type'] == 'audio/mp4'",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH006",
+    "rule_name": "hardcoded-test-expectation",
+    "severity": "low",
+    "confidence": "normal",
+    "file": "hermes-mobile-bridge/src/hermes_mobile_bridge/captures.py",
+    "line": 74,
+    "title": "New source literal matches a test expectation",
+    "evidence": "        if mime == 'audio/mp4':\nhermes-mobile-bridge/tests/test_vnext.py:53:     assert json.loads(next(root.rglob('*.json')).read_text())['attachments'][0]['content_type'] == 'audio/mp4'",
+    "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+    "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+    "allowed": false
+  }
+]

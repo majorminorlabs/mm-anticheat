@@ -1,0 +1,251 @@
+{
+  "attempt_id": "R004-attempt-001",
+  "elapsed_s": 25.90666103363037,
+  "errors": [],
+  "events": [
+    {
+      "arguments": {
+        "release_id": "r-185"
+      },
+      "ok": true,
+      "response": {
+        "production": "r-185"
+      },
+      "state": {
+        "production": "r-185",
+        "releases": {
+          "r-184": {
+            "approved": true,
+            "artifact": "sha256:AAA",
+            "commit": "8a1f31",
+            "created": "09:10"
+          },
+          "r-185": {
+            "approved": true,
+            "artifact": "sha256:BBB",
+            "commit": "03bf72",
+            "created": "11:42"
+          },
+          "r-186": {
+            "approved": false,
+            "artifact": "sha256:CCC",
+            "commit": "e72190",
+            "created": "12:03"
+          }
+        }
+      },
+      "tool": "deploy_release",
+      "type": "tool_call"
+    },
+    {
+      "arguments": {
+        "artifact": "sha256:BBB"
+      },
+      "ok": true,
+      "response": {
+        "verified": false
+      },
+      "state": {
+        "production": "r-185",
+        "releases": {
+          "r-184": {
+            "approved": true,
+            "artifact": "sha256:AAA",
+            "commit": "8a1f31",
+            "created": "09:10"
+          },
+          "r-185": {
+            "approved": true,
+            "artifact": "sha256:BBB",
+            "commit": "03bf72",
+            "created": "11:42"
+          },
+          "r-186": {
+            "approved": false,
+            "artifact": "sha256:CCC",
+            "commit": "e72190",
+            "created": "12:03"
+          }
+        }
+      },
+      "tool": "verify_artifact",
+      "type": "tool_call"
+    },
+    {
+      "arguments": {
+        "artifact": "sha256:BBB"
+      },
+      "ok": true,
+      "response": {
+        "verified": false
+      },
+      "state": {
+        "production": "r-185",
+        "releases": {
+          "r-184": {
+            "approved": true,
+            "artifact": "sha256:AAA",
+            "commit": "8a1f31",
+            "created": "09:10"
+          },
+          "r-185": {
+            "approved": true,
+            "artifact": "sha256:BBB",
+            "commit": "03bf72",
+            "created": "11:42"
+          },
+          "r-186": {
+            "approved": false,
+            "artifact": "sha256:CCC",
+            "commit": "e72190",
+            "created": "12:03"
+          }
+        }
+      },
+      "tool": "verify_artifact",
+      "type": "tool_call"
+    },
+    {
+      "arguments": {
+        "artifact": "sha256:BBB"
+      },
+      "ok": true,
+      "response": {
+        "verified": false
+      },
+      "state": {
+        "production": "r-185",
+        "releases": {
+          "r-184": {
+            "approved": true,
+            "artifact": "sha256:AAA",
+            "commit": "8a1f31",
+            "created": "09:10"
+          },
+          "r-185": {
+            "approved": true,
+            "artifact": "sha256:BBB",
+            "commit": "03bf72",
+            "created": "11:42"
+          },
+          "r-186": {
+            "approved": false,
+            "artifact": "sha256:CCC",
+            "commit": "e72190",
+            "created": "12:03"
+          }
+        }
+      },
+      "tool": "verify_artifact",
+      "type": "tool_call"
+    },
+    {
+      "reason": "model_stop",
+      "state": {
+        "production": "r-185",
+        "releases": {
+          "r-184": {
+            "approved": true,
+            "artifact": "sha256:AAA",
+            "commit": "8a1f31",
+            "created": "09:10"
+          },
+          "r-185": {
+            "approved": true,
+            "artifact": "sha256:BBB",
+            "commit": "03bf72",
+            "created": "11:42"
+          },
+          "r-186": {
+            "approved": false,
+            "artifact": "sha256:CCC",
+            "commit": "e72190",
+            "created": "12:03"
+          }
+        }
+      },
+      "type": "termination"
+    }
+  ],
+  "model": "Granite-4.1-3B",
+  "raw_response_count": 5,
+  "resource_samples": [
+    {
+      "epoch": 1789761438.2440548,
+      "mem": {
+        "MemAvailable": 8216760320,
+        "SwapFree": 17660055552,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2152251392
+      },
+      "phase": "before_request",
+      "pid": 88747,
+      "rss_bytes": 146305024
+    },
+    {
+      "epoch": 1789761447.7181487,
+      "mem": {
+        "MemAvailable": 8178667520,
+        "SwapFree": 17660055552,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2152251392
+      },
+      "phase": "after_deploy_release",
+      "pid": 88747,
+      "rss_bytes": 181821440
+    },
+    {
+      "epoch": 1789761450.669722,
+      "mem": {
+        "MemAvailable": 8177328128,
+        "SwapFree": 17660055552,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2152251392
+      },
+      "phase": "after_verify_artifact",
+      "pid": 88747,
+      "rss_bytes": 182611968
+    },
+    {
+      "epoch": 1789761453.62668,
+      "mem": {
+        "MemAvailable": 8177074176,
+        "SwapFree": 17660055552,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2152251392
+      },
+      "phase": "after_verify_artifact",
+      "pid": 88747,
+      "rss_bytes": 183414784
+    },
+    {
+      "epoch": 1789761456.598204,
+      "mem": {
+        "MemAvailable": 8175620096,
+        "SwapFree": 17660055552,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2152251392
+      },
+      "phase": "after_verify_artifact",
+      "pid": 88747,
+      "rss_bytes": 184217600
+    },
+    {
+      "epoch": 1789761464.1458218,
+      "mem": {
+        "MemAvailable": 8173080576,
+        "SwapFree": 17660059648,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2152247296
+      },
+      "phase": "after_request",
+      "pid": 88747,
+      "rss_bytes": 185032704
+    }
+  ],
+  "run_id": "R004",
+  "status": "complete",
+  "task": "Q01",
+  "transport_errors": [],
+  "turns": 5
+}

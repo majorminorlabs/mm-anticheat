@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "research-model"
+version = "0.1.0"
+description = "A provenance-aware open research-behavior model pipeline"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {file = "LICENSE"}
+authors = [{name = "Research Model Contributors"}]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+ml = [
+  "torch>=2.6",
+  "transformers>=4.51",
+  "datasets>=3.0",
+  "peft>=0.14",
+  "accelerate>=1.0",
+  "trl>=0.15",
+  "bitsandbytes>=0.45",
+]
+mlx = ["mlx>=0.22", "mlx-lm>=0.21"]
+
+[project.scripts]
+research-model = "research_model.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/research_model"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

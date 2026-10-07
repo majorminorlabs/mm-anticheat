@@ -1,0 +1,7 @@
+import assert from 'node:assert/strict'; import test from 'node:test';
+import { canonicalFromHtml, clusterCandidates, detectPaywall, normalizeUrl, parseFeed, parseSitemap } from '../src/pipeline/acquisition.mjs';
+import { transition } from '../src/pipeline/state.mjs';
+test('normalizes URLs and blocks private hosts', () => { assert.equal(normalizeUrl('https://EXAMPLE.com/a/?utm_source=x&b=1#x'), 'https://example.com/a?b=1'); assert.throws(() => normalizeUrl('http://127.0.0.1/a'), /blocked/); });
+test('parses RSS and Atom-like entries deterministically', () => { assert.equal(parseFeed('<rss><item><title>A</title><link>https://example.test/a</link></item></rss>', 's').length, 1); assert.equal(parseSitemap('<urlset><url><loc>https://example.test/a</loc><lastmod>2026-01-01</lastmod></url></urlset>', 's').length, 1); });
+test('uses canonical URLs and clusters exact duplicate evidence', () => { const canonical = canonicalFromHtml('<link rel="canonical" href="/story?utm_source=x">', 'https://example.test/a'); assert.equal(canonical, 'https://example.test/story'); assert.equal(clusterCandidates([{url:'https://example.test/a',source_id:'a',title:'One'},{url:'https://example.test/a',source_id:'b',title:'One'}])[0].candidates.length, 2); });
+test('marks paywalls and records auditable transitions', () => { assert.equal(detectPaywall('Subscribe to continue reading', 200), true); const item={status:'discovered'}; transition(item,'watching','editor','thin evidence'); assert.equal(item.history.length,1); });

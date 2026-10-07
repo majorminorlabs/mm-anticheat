@@ -1,0 +1,1410 @@
+diff --git a/bin/anyways-ops.mjs b/bin/anyways-ops.mjs
+index 14e9f84..65b51c1 100644
+--- a/bin/anyways-ops.mjs
++++ b/bin/anyways-ops.mjs
+@@ -1,5 +1,6 @@
+ #!/usr/bin/env node
+ import fs from 'node:fs/promises';
++import crypto from 'node:crypto';
+ import path from 'node:path';
+ import { parseFeed, parseSitemap, extractLinks, fetchDocument, clusterCandidates } from '../src/pipeline/acquisition.mjs';
+ import { loadState, saveState, transition } from '../src/pipeline/state.mjs';
+@@ -252,7 +253,8 @@ async function main() {
+       await saveState(stateFile, state);
+       return { candidate_id: id, status: result.candidate?.status || 'unknown', pipeline_version: 'legacy', run_id: result.run?.id || null, review_id: result.review?.id || null, error: result.error || null, v1_requested: v1Job, v1_enabled: pipelineV1Enabled(process.env) };
+     }
+-    const resumable = local && ['research_blocked','verification_failed'].includes(local.status);
++    const hasPreparedFrozenPacket = local && (state.research_packets || []).some(item => item.candidate_id === id && item.packet?.supersedes_frozen_evidence_packet_sha256);
++    const resumable = local && (['research_blocked','verification_failed'].includes(local.status) || (local.status === 'failed' && hasPreparedFrozenPacket));
+     const eligible = resumable || local?.status === 'pitch_ready';
+     if (!local || !eligible || local.classification?.editorial_pitch?.accepted !== true || !local.commission) throw Object.assign(new Error('Only an editor-approved pitch can begin reporting.'), { code: 'PITCH_NOT_COMMISSIONABLE' });
+     if (researchAuthorization && local.status !== 'research_blocked') throw Object.assign(new Error('Research again requires a research-blocked Phase 2 candidate.'), { code: 'PHASE2_ACTION_NOT_ALLOWED' });
+@@ -269,6 +271,27 @@ async function main() {
+       ...(local.commission?.assignment_checksum || local.commission?.readiness_inventory?.assignment_checksum ? { assignment_checksum: local.commission.assignment_checksum || local.commission.readiness_inventory.assignment_checksum } : {}),
+       ...(local.commission?.required_claims ? { required_claims: local.commission.required_claims } : {})
+     };
++    const previousRun = [...(state.phase2_runs || [])].reverse().find(item => item.candidate_id === id && item.status === 'failed');
++    const previousPacketRecord = previousRun
++      ? [...(state.research_packets || [])].reverse().find(item => item.processing_run_id === previousRun.id && item.frozen_evidence_packet_sha256 === previousRun.frozen_evidence_packet_sha256)
++      : null;
++    const correctedPacketRecord = previousRun
++      ? [...(state.research_packets || [])].reverse().find(item => item.candidate_id === id && item.packet?.supersedes_frozen_evidence_packet_sha256 === previousRun.frozen_evidence_packet_sha256)
++      : null;
++    const frozenPacketRecord = correctedPacketRecord || previousPacketRecord;
++    const frozenPacket = frozenPacketRecord?.packet || null;
++    if (['verification_failed', 'failed'].includes(local.status) && frozenPacket?.frozen_evidence_packet_sha256) {
++      authorization.reuse_frozen_evidence_packet = true;
++      authorization.frozen_evidence_packet = frozenPacket;
++      authorization.frozen_evidence_packet_sha256 = frozenPacket.frozen_evidence_packet_sha256;
++      authorization.case_run_id = crypto.randomUUID();
++      authorization.readiness_inventory_sha256 = frozenPacketRecord.corrected_inventory_sha256 || previousRun.readiness_inventory_sha256 || null;
++      authorization.runtime_inventory_sha256 = frozenPacketRecord.corrected_inventory_sha256 || previousRun.runtime_inventory_sha256 || null;
++      authorization.terra_input_packet_sha256 = previousRun.terra_input_packet_sha256 || null;
++      authorization.corrected_source_gate = frozenPacketRecord.source_gate || null;
++      authorization.parent_frozen_evidence_packet_sha256 = frozenPacket.supersedes_frozen_evidence_packet_sha256 || null;
++      authorization.classification_changes = frozenPacket.classification_changes || [];
++    }
+     if (!authorization.job_id) throw Object.assign(new Error('A controller job ID is required for this Phase 2 action.'), { code: 'PHASE2_ACTION_NOT_ALLOWED' });
+     try {
+       const orchestrator = new Phase2Orchestrator({ persistence: createSupabasePhase2Persistence({ client }), checkpoint: nextState => saveState(stateFile, nextState) });
+diff --git a/bin/complete-offline-ai-review.mjs b/bin/complete-offline-ai-review.mjs
+new file mode 100644
+index 0000000..3bd219d
+--- /dev/null
++++ b/bin/complete-offline-ai-review.mjs
+@@ -0,0 +1,73 @@
++#!/usr/bin/env node
++import fs from 'node:fs/promises';
++import path from 'node:path';
++import { spawnSync } from 'node:child_process';
++import { createClient } from '@supabase/supabase-js';
++import { normalizePipelineOwnership } from '../src/pipeline/state.mjs';
++import { phase2PersistencePayload, createSupabasePhase2Persistence } from '../src/pipeline/phase2-persistence.mjs';
++import { materializeOfflineReview } from '../src/pipeline/offline-review-materialization.mjs';
++import { ensurePhase2State } from '../src/pipeline/phase2-state.mjs';
++
++const candidateId = process.argv[2];
++const stateFile = process.env.ANYWAYS_PIPELINE_STATE_FILE || path.join(process.env.ANYWAYS_PIPELINE_STATE_DIR || 'pipeline-state', 'state.json');
++if (!candidateId) throw new Error('Usage: node bin/complete-offline-ai-review.mjs <candidate-external-id>');
++const state = normalizePipelineOwnership(JSON.parse(await fs.readFile(stateFile, 'utf8')));
++ensurePhase2State(state);
++const candidate = state.candidates.find(item => item.id === candidateId);
++const run = [...state.runs].reverse().find(item => item.candidate_id === candidateId && item.commission_job_id === 'fb25e44d-51f7-4105-bfaa-665b2862b649');
++if (!candidate || !run) throw new Error('The existing failed Draft run was not found.');
++const packetRecord = [...(state.research_packets || [])].reverse().find(item => item.processing_run_id === run.id && item.packet?.frozen_evidence_packet_sha256 === '85c43bcc0fdc7b90820ac47ffb0063b0601917122be39607dad5e90b5762adaa');
++const draftArtifact = state.phase2_persistence.find(item => item.case_run_id === run.id && item.stage === 'draft');
++const draftReviewArtifact = state.phase2_persistence.find(item => item.case_run_id === run.id && item.stage === 'draft_review');
++if (!packetRecord?.packet || !draftArtifact?.payload?.draft) throw new Error('Existing frozen packet or Draft artifact is missing.');
++const packet = packetRecord.packet;
++const oldDocuments = state.documents.filter(document => document.candidate_id === candidateId && document.processing_run_id !== run.id && packet.sources.some(source => source.source_id === document.id));
++const previousFailure = { code: run.error?.code || 'REVIEW_PACKAGE_INTEGRITY_FAILED', message: run.error?.message || 'Prior package materialization failed.' };
++const materialized = materializeOfflineReview({ candidate, run, packet, draft: draftArtifact.payload.draft, retainedDocuments: oldDocuments, existingDraftReview: draftReviewArtifact?.payload?.review?.deterministic_review || null, previousFailure });
++
++// Replace only the failed run's local review projection. The frozen packet,
++// Draft, claims, constraints, and usage are copied unchanged.
++state.documents = state.documents.filter(document => !(document.candidate_id === candidateId && document.processing_run_id === run.id));
++state.documents.push(...materialized.documents);
++state.reviews ||= [];
++state.reviews = state.reviews.filter(review => !(review.candidate_id === candidateId && review.processing_run_id === run.id));
++state.reviews.push(materialized.review);
++state.phase2_reviews = state.phase2_reviews.filter(review => !(review.candidate_id === candidateId && review.processing_run_id === run.id));
++state.phase2_reviews.push(materialized.review);
++run.previous_terminal_error = previousFailure;
++run.error = null;
++run.status = 'complete';
++run.state = 'ai_review_ready';
++run.finished_at = new Date().toISOString();
++run.review_id = materialized.review.id;
++run.events.push({ type: 'offline_ai_review_materialized', materialization_revision: materialized.materialization, preserved_failure: previousFailure, at: run.finished_at });
++candidate.status = 'ready_for_review';
++candidate.phase2_state = 'ai_review_ready';
++candidate.phase2_review_id = materialized.review.id;
++candidate.phase2_frozen_evidence_packet_sha256 = packet.frozen_evidence_packet_sha256;
++candidate.classification = { ...(candidate.classification || {}), phase2_state: 'ai_review_ready', pipeline_version: 'pipeline-v1', frozen_evidence_packet_sha256: packet.frozen_evidence_packet_sha256 };
++candidate.history ||= [];
++candidate.history.push({ at: run.finished_at, actor: 'offline_package_materializer', status: 'ready_for_review', note: 'AI Review materialized from the existing validated Draft after frozen URL binding repair.' });
++
++const url = process.env.SUPABASE_URL, serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
++if (!url || !serviceKey) throw new Error('Supabase service credentials are required for durable offline package completion.');
++const client = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
++const persistence = createSupabasePhase2Persistence({ client });
++const payload = phase2PersistencePayload({ run, stage: 'ai_review', packet, draft: materialized.review.draft, review: materialized.review, claims: materialized.review.claims, blockers: materialized.review.deterministic_review.blocking_factual_errors, usage: run.model_usage, cost: run.estimated_cost_usd, materialization: materialized.materialization });
++const phase2Record = { holdout_run_id: run.holdout_run_id || null, case_run_id: run.id, candidate_id: candidateId, pipeline_version: 'pipeline-v1', terra_evidence_contract_version: materialized.review.terra_evidence_contract_version, phase2_inventory_contract_version: materialized.review.phase2_inventory_contract_version, stage: 'ai_review', readiness_inventory_sha256: run.readiness_inventory_sha256, runtime_inventory_sha256: run.runtime_inventory_sha256, terra_input_packet_sha256: run.terra_input_packet_sha256, frozen_evidence_packet_sha256: packet.frozen_evidence_packet_sha256, draft_input_sha256: run.draft_input_sha256, revision_input_sha256: null, payload, claims: materialized.review.claims, usage: run.model_usage, cost: { credits: run.model_usage.reduce((sum, item) => sum + (Number.isFinite(item.credits) ? item.credits : 0), 0), estimated_cost_usd: null } };
++await persistence.persistStage(phase2Record);
++
++const { data: job, error: jobError } = await client.from('pipeline_jobs').select('id,result').eq('id', run.commission_job_id).maybeSingle();
++if (jobError) throw jobError;
++if (!job) throw new Error(`Commission job ${run.commission_job_id} was not found.`);
++const jobResult = { ...(job?.result || {}), offline_ai_review_materialized: materialized.materialization, review_id: materialized.review.id, frozen_evidence_packet_sha256: packet.frozen_evidence_packet_sha256, draft_input_sha256: run.draft_input_sha256, source_links: materialized.source_links.length };
++const { error: updateJobError } = await client.from('pipeline_jobs').update({ result: jobResult }).eq('id', run.commission_job_id);
++if (updateJobError) throw updateJobError;
++
++state.phase2_persistence = state.phase2_persistence.filter(item => !(item.case_run_id === run.id && item.stage === 'ai_review'));
++state.phase2_persistence.push({ ...phase2Record, persisted_at: new Date().toISOString() });
++await fs.writeFile(stateFile, JSON.stringify(state, null, 2));
++const sync = spawnSync(process.execPath, ['bin/pipeline-sync-supabase.mjs', candidateId], { encoding: 'utf8', maxBuffer: 20_000_000, env: process.env });
++if (sync.status !== 0) throw new Error(`Offline AI Review legacy projection sync failed: ${(sync.stderr || '').trim()} ${(sync.stdout || '').trim()}`.trim());
++
++console.log(JSON.stringify({ ok: true, candidate_id: candidateId, job_id: run.commission_job_id, run_id: run.id, review_id: materialized.review.id, review_status: materialized.review.status, deterministic_review: materialized.review.deterministic_review, source_links: materialized.source_links.length, provider_calls_added: 0, packet_checksum: packet.frozen_evidence_packet_sha256, draft_input_sha256: run.draft_input_sha256, materialization: materialized.materialization, legacy_projection_sync: JSON.parse(sync.stdout || '{}') }, null, 2));
+diff --git a/bin/pipeline-sync-supabase.mjs b/bin/pipeline-sync-supabase.mjs
+index a654c9f..3dd3764 100644
+--- a/bin/pipeline-sync-supabase.mjs
++++ b/bin/pipeline-sync-supabase.mjs
+@@ -33,7 +33,7 @@ const cid = uuid(`candidate:${candidate.id}`);
+ const candidateRef = `(select id from public.candidate_stories where external_id = ${quote(candidate.id)})`;
+ const run = [...state.runs].reverse().find(item => item.review_id === review.id && item.candidate_id === candidate.id) || {};
+ const docs = documentsForCandidateRun(state, candidate.id, run.id);
+-for (const doc of docs) doc.retention ||= { score: 100, reason: 'legacy_candidate_document' };
++for (const doc of docs) doc.retention ||= { score: 100, reason: 'pipeline_v1_candidate_document' };
+ review.processing_run_id ||= run.id;
+ review.document_ids ||= docs.map(doc => doc.id);
+ review.claims = (review.claims || []).map(claim => ({ ...claim, candidate_id: candidate.id, processing_run_id: run.id }));
+@@ -46,8 +46,8 @@ const statements = [];
+ // Keep the candidate out of AI Review until every required artifact has
+ // synchronized. If a later batch fails, a retry can resume idempotently
+ // without leaving a visible card that has no draft body.
+-statements.push(`insert into public.candidate_stories(id,external_id,cluster_key,title,canonical_url,status,classification,model,prompt_version,created_at,updated_at) values (${quote(cid)}::uuid,${quote(candidate.id)},${quote(candidate.id)},${quote(review.headline || candidate.title)},${quote(candidate.url)},'drafting',${json(review.classification || candidate.classification)},${quote(review.model || 'qwen3:14b')},${quote(review.prompt_version || 'editorial-doctrine-v1')},${quote(candidate.history?.[0]?.at || new Date().toISOString())},now()) on conflict (external_id) where external_id is not null do update set title=excluded.title,canonical_url=excluded.canonical_url,status='drafting',classification=excluded.classification,model=excluded.model,prompt_version=excluded.prompt_version,updated_at=now();`);
+-statements.push(`insert into public.pipeline_runs(id,candidate_id,model,status,started_at,finished_at,artifact_path,error,fingerprint,reused) values (${quote(runId)}::uuid,${candidateRef},${quote(review.model || 'qwen3:14b')},'running',${quote(run.started_at || review.created_at)},null,${quote(run.pipeline_run_id || '')},null,${quote(`${run.pipeline_run_id || review.id}:owned-v1`)},true) on conflict (id) do update set status='running',finished_at=null,artifact_path=excluded.artifact_path,reused=true;`);
++statements.push(`insert into public.candidate_stories(id,external_id,cluster_key,title,canonical_url,status,classification,model,prompt_version,created_at,updated_at) values (${quote(cid)}::uuid,${quote(candidate.id)},${quote(candidate.id)},${quote(review.headline || candidate.title)},${quote(candidate.url)},'drafting',${json(review.classification || candidate.classification)},${quote(review.model || 'gpt-5.6-luna')},${quote(review.prompt_version || 'pipeline-v1-terra-offsets-luna-evidence-refs-v1')},${quote(candidate.history?.[0]?.at || new Date().toISOString())},now()) on conflict (external_id) where external_id is not null do update set title=excluded.title,canonical_url=excluded.canonical_url,status='drafting',classification=excluded.classification,model=excluded.model,prompt_version=excluded.prompt_version,updated_at=now();`);
++statements.push(`insert into public.pipeline_runs(id,candidate_id,model,status,started_at,finished_at,artifact_path,error,fingerprint,reused) values (${quote(runId)}::uuid,${candidateRef},${quote(review.model || 'gpt-5.6-luna')},'running',${quote(run.started_at || review.created_at)},null,${quote(run.pipeline_run_id || '')},null,${quote(`${run.pipeline_run_id || review.id}:owned-v1`)},true) on conflict (id) do update set status='running',finished_at=null,artifact_path=excluded.artifact_path,reused=true;`);
+ statements.push(`insert into public.research_packets(candidate_id,pipeline_run_id,iteration,packet,sufficiency) values (${candidateRef},${quote(runId)}::uuid,1,${json(review.research)},${json({ status: review.synthesis?.research_sufficiency || 'sufficient' })}) on conflict (candidate_id,pipeline_run_id,iteration) do update set packet=excluded.packet,sufficiency=excluded.sufficiency;`);
+ for (const [stage, detail] of Object.entries(review.logs || {})) for (const attempt of detail.attempts || []) statements.push(`insert into public.pipeline_stage_attempts(pipeline_run_id,stage,attempt,raw_response,validation_errors,metrics) values (${quote(runId)}::uuid,${quote(stage)},${Number(attempt.attempt || 1)},${quote(attempt.raw_response || '')},${json(attempt.validation_errors || [])},${json(attempt.metrics || {})}) on conflict (pipeline_run_id,stage,attempt) do update set raw_response=excluded.raw_response,validation_errors=excluded.validation_errors,metrics=excluded.metrics;`);
+ statements.push(`insert into public.pipeline_drafts(id,candidate_id,pipeline_run_id,version,headline,dek,body_markdown,prior_draft_id,created_at) values (${quote(prior)}::uuid,${candidateRef},${quote(runId)}::uuid,1,${quote(review.headline)},${quote(review.dek)},${quote(review.previous_draft)},null,now()) on conflict (candidate_id,pipeline_run_id,version) do update set body_markdown=excluded.body_markdown;`);
+diff --git a/src/pipeline/frozen-document-binder.mjs b/src/pipeline/frozen-document-binder.mjs
+new file mode 100644
+index 0000000..6f219bd
+--- /dev/null
++++ b/src/pipeline/frozen-document-binder.mjs
+@@ -0,0 +1,104 @@
++import { normalizeUrl } from './acquisition.mjs';
++
++const clean = value => String(value ?? '').trim();
++
++function packetUrl(source) {
++  return clean(source?.url || source?.canonical_url || source?.requested_url);
++}
++
++function normalizedPacketUrl(value) {
++  try { return normalizeUrl(value); } catch { return clean(value); }
++}
++
++function duplicateIsExplicitlyCollapsed(source, previous) {
++  const duplicateOf = clean(source?.duplicate_of || source?.duplicate_source_id);
++  return Boolean(duplicateOf && previous?.source_id === duplicateOf);
++}
++
++/**
++ * Bind review documents exclusively from a frozen packet. The packet URL is
++ * authoritative for display and identity; retained documents only contribute
++ * already-persisted text and provenance metadata. This function never fetches.
++ */
++export function bindFrozenPacketDocuments({ candidate, run, packet, retainedDocuments = [], requireContent = true } = {}) {
++  if (!candidate?.id || !run?.id || !packet || !Array.isArray(packet.sources)) {
++    throw new Error('Frozen packet, candidate, and run are required to bind review documents.');
++  }
++  const retainedById = new Map(retainedDocuments.map(document => [document.id, document]));
++  const documents = [];
++  const seenUrls = new Map();
++  const collapsedSourceIds = [];
++
++  for (const source of packet.sources) {
++    const sourceId = clean(source?.source_id || source?.id);
++    const displayUrl = packetUrl(source);
++    if (!sourceId) throw new Error('Frozen packet source is missing source_id.');
++    if (!displayUrl) throw new Error(`Frozen packet source ${sourceId} is missing a URL.`);
++    const normalizedUrl = normalizedPacketUrl(displayUrl);
++    const previous = seenUrls.get(normalizedUrl);
++    if (previous) {
++      if (duplicateIsExplicitlyCollapsed(source, previous)) {
++        collapsedSourceIds.push(sourceId);
++        continue;
++      }
++      throw new Error(`Frozen packet contains duplicate normalized URL ${normalizedUrl}.`);
++    }
++    seenUrls.set(normalizedUrl, source);
++    const retained = retainedById.get(sourceId) || {};
++    const content = clean(retained.content ?? retained.extraction?.text ?? retained.text);
++    const accessible = source.accessible !== false && source.ok !== false;
++    if (!accessible || (requireContent && !content)) throw new Error(`Frozen packet source ${sourceId} has no retained accessible text.`);
++    const document = {
++      id: sourceId,
++      candidate_id: candidate.id,
++      processing_run_id: run.id,
++      discovery_id: retained.discovery_id || sourceId,
++      // Keep the exact packet URL for displayed source links. The normalized
++      // value is only used for duplicate detection and persistence matching.
++      requested_url: displayUrl,
++      url: displayUrl,
++      canonical_url: displayUrl,
++      normalized_url: normalizedUrl,
++      title: source.title || retained.title || candidate.title || '',
++      description: source.description || retained.description || '',
++      author: source.author || retained.author || null,
++      published_at: source.published_at || retained.published_at || null,
++      publisher: source.publisher || retained.publisher || null,
++      content,
++      source_type: source.classification || source.source_type || retained.source_type || 'original_reporting',
++      classification: source.classification || source.source_type || retained.classification || null,
++      independence_key: source.independence_key || retained.independence_key || null,
++      primary_source: source.primary_source === true,
++      accessible: true,
++      ok: true,
++      raw_sha256: source.raw_sha256 || retained.raw_sha256 || null,
++      retained_text_sha256: source.retained_text_sha256 || retained.retained_text_sha256 || null,
++      retained_from_full_text_sha256: source.retained_from_full_text_sha256 || retained.retained_from_full_text_sha256 || null,
++      retrieval_diagnostics: source.retrieval_diagnostics || retained.retrieval_diagnostics || null,
++      capture_mode: source.capture_mode || 'frozen_evidence_packet',
++      retrieval_timestamp: source.retrieval_diagnostics?.captured_at || retained.retrieval_timestamp || null,
++      provenance: { ...(retained.provenance || {}), retrieval: 'frozen_evidence_packet', source_id: sourceId },
++      extraction: retained.extraction || { ok: true, text: content, source: 'frozen_evidence_packet' },
++      retention: { score: 1, reason: 'frozen_packet_source_identity' }
++    };
++    documents.push(document);
++  }
++  return { documents, collapsed_source_ids: collapsedSourceIds };
++}
++
++export function frozenPacketSourceLinks(packet = {}, documents = []) {
++  const byId = new Map(documents.map(document => [document.id, document]));
++  return (packet.sources || []).map(source => {
++    const sourceId = clean(source?.source_id || source?.id);
++    const document = byId.get(sourceId);
++    return {
++      source_id: sourceId,
++      url: packetUrl(source),
++      title: source.title || document?.title || sourceId,
++      publisher: source.publisher || document?.publisher || null,
++      classification: source.classification || source.source_type || document?.classification || null,
++      claim_ids: [...new Set((packet.claims || []).filter(claim => (claim.source_ids || []).includes(sourceId)).map(claim => claim.claim_id))],
++      evidence_ids: [...new Set((packet.claims || []).flatMap(claim => (claim.evidence || []).filter(evidence => evidence.source_id === sourceId).map(evidence => evidence.evidence_id)))]
++    };
++  });
++}
+diff --git a/src/pipeline/frozen-packet-correction.mjs b/src/pipeline/frozen-packet-correction.mjs
+new file mode 100644
+index 0000000..8922bcb
+--- /dev/null
++++ b/src/pipeline/frozen-packet-correction.mjs
+@@ -0,0 +1,115 @@
++import crypto from 'node:crypto';
++import { EVIDENCE_PACKET_LIMITS, stableJson } from './evidence-packet.mjs';
++import { sourceSufficiencyGate } from './phase2-source-gate.mjs';
++import { hashPhase2Inventory } from './phase2-inventory.mjs';
++
++export const FROZEN_PACKET_CORRECTION_VERSION = 'source-classification-correction-v1';
++export const CORRECTED_PACKET_VERSION = 'pipeline-v1-evidence-packet-offsets-v2';
++
++const sha256 = value => crypto.createHash('sha256').update(String(value ?? ''), 'utf8').digest('hex');
++const clean = value => String(value ?? '').trim();
++
++function sourceClassification(source = {}) {
++  const url = clean(source.url || source.canonical_url).toLowerCase();
++  const title = clean(source.title).toLowerCase();
++  if (url.includes('reddit.com/')) return { classification: 'commentary', primary_source: false, reason: 'Reddit community discussion is user-generated commentary.' };
++  if (url.includes('facebook.com/')) return { classification: 'commentary', primary_source: false, reason: 'Facebook post is social-platform material, not reported journalism.' };
++  if (url.includes('discussions.apple.com/')) return { classification: 'commentary', primary_source: false, reason: 'Apple Community thread is community/support discussion.' };
++  if (url.includes('tenorshare.com/')) return { classification: 'commentary', primary_source: false, reason: 'Tenorshare page is commercial/vendor guidance.' };
++  if (url.includes('protectyoungeyes.com/')) return { classification: 'commentary', primary_source: false, reason: 'Protect Young Eyes page is advocacy/advice commentary.' };
++  if (url.includes('mindgems.com/products/boss-key/')) return { classification: 'primary', primary_source: true, reason: 'Boss Key page is the official product documentation identified by the product URL.' };
++  if (url.includes('password-locker.com/')) return { classification: 'commentary', primary_source: false, reason: 'Password Locker page is vendor/consumer guidance rather than independent reporting.' };
++  if (url.includes('techcrunch.com/')) return { classification: 'original_reporting', primary_source: false, reason: 'TechCrunch URL is retained editorial reporting.' };
++  return { classification: source.classification || 'commentary', primary_source: source.primary_source === true, reason: 'Existing classification preserved because no deterministic correction rule applies.' };
++}
++
++function evidenceClaims(packet, sourceId) {
++  return (packet.claims || []).filter(claim => (claim.evidence || []).some(evidence => evidence.source_id === sourceId)).map(claim => claim.claim_id).filter(Boolean);
++}
++
++function packetChecksum(packet) {
++  const { checksum: _checksum, frozen_evidence_packet_sha256: _frozenChecksum, ...payload } = packet;
++  return sha256(stableJson(payload));
++}
++
++function correctedDocument(document, correction) {
++  return {
++    ...document,
++    classification: correction.classification,
++    source_type: correction.classification,
++    primary_source: correction.primary_source
++  };
++}
++
++export function refreezeCorrectedFrozenPacket({ packet, candidate, documents = [], fetchDiagnostics = [], assignmentSha256 = null } = {}) {
++  if (!packet?.frozen_evidence_packet_sha256) throw new Error('A frozen packet checksum is required.');
++  const documentById = new Map(documents.map(document => [document.id || document.source_id, document]));
++  const changes = [];
++  const correctedSources = (packet.sources || []).map(source => {
++    const document = documentById.get(source.source_id) || {};
++    const correction = sourceClassification({ ...source, ...document });
++    const previous = source.classification || source.source_type || null;
++    const previousPrimary = source.primary_source === true;
++    if (previous !== correction.classification || previousPrimary !== correction.primary_source) {
++      changes.push({
++        source_id: source.source_id,
++        url: source.url || source.canonical_url || null,
++        previous_classification: previous,
++        corrected_classification: correction.classification,
++        primary_source: correction.primary_source,
++        independence_key: document.independence_key || source.independence_key || null,
++        counts_toward_independent_minimum: Boolean(document.independence_key || source.independence_key),
++        supported_claim_ids: evidenceClaims(packet, source.source_id),
++        reason: correction.reason
++      });
++    }
++    return { ...source, classification: correction.classification, primary_source: correction.primary_source };
++  });
++  const correctedById = new Map(correctedSources.map(source => [source.source_id, source]));
++  const correctedDocuments = documents.map(document => correctedDocument(document, correctedById.get(document.id || document.source_id) || sourceClassification(document)));
++  const sourceGate = sourceSufficiencyGate({ candidate, documents: correctedDocuments, fetchDiagnostics });
++  const requiredClaimIds = packet.claim_targets?.length ? packet.claim_targets : (packet.claims || []).map(claim => claim.claim_id);
++  const coveredClaimIds = new Set((packet.claims || []).filter(claim => (claim.evidence || []).length).map(claim => claim.claim_id));
++  const missingClaims = requiredClaimIds.filter(claimId => !coveredClaimIds.has(claimId));
++  const evidenceErrors = [];
++  for (const claim of packet.claims || []) for (const evidence of claim.evidence || []) {
++    const document = documentById.get(evidence.source_id);
++    const start = evidence.start ?? evidence.start_offset;
++    const end = evidence.end ?? evidence.end_offset;
++    if (!document) evidenceErrors.push(`${claim.claim_id}:${evidence.evidence_id || 'evidence'} references an unknown source.`);
++    else if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end < start || end > String(document.content || '').length) evidenceErrors.push(`${claim.claim_id}:${evidence.evidence_id || 'evidence'} has an invalid retained-text range.`);
++  }
++  const assignmentChecksum = assignmentSha256 || sha256(stableJson(candidate?.commission || {}));
++  const correctedInventorySha256 = hashPhase2Inventory({ candidateId: candidate?.id, assignmentSha256: assignmentChecksum, sources: correctedDocuments });
++  const classificationChanges = changes.sort((left, right) => left.source_id.localeCompare(right.source_id));
++  const correctedPacket = {
++    ...packet,
++    sources: correctedSources,
++    version: CORRECTED_PACKET_VERSION,
++    packet_revision: 2,
++    supersedes_frozen_evidence_packet_sha256: packet.frozen_evidence_packet_sha256,
++    classification_correction_version: FROZEN_PACKET_CORRECTION_VERSION,
++    classification_changes: classificationChanges,
++    corrected_inventory_sha256: correctedInventorySha256
++  };
++  correctedPacket.frozen_evidence_packet_sha256 = packetChecksum(correctedPacket);
++  const packetCharacters = stableJson(correctedPacket).length;
++  const gateErrors = [
++    ...(sourceGate.ok ? [] : ['corrected source inventory failed the deterministic source gate']),
++    ...(missingClaims.length ? [`missing required claims: ${missingClaims.join(', ')}`] : []),
++    ...evidenceErrors,
++    ...(packetCharacters > EVIDENCE_PACKET_LIMITS.maxPacketCharacters ? [`packet size ${packetCharacters} exceeds ${EVIDENCE_PACKET_LIMITS.maxPacketCharacters}`] : [])
++  ];
++  return {
++    packet: correctedPacket,
++    correctedDocuments,
++    classificationChanges,
++    correctedInventorySha256,
++    sourceGate,
++    missingClaims,
++    evidenceErrors,
++    packetCharacters,
++    ok: gateErrors.length === 0,
++    errors: gateErrors
++  };
++}
+diff --git a/src/pipeline/luna-claim-contract.mjs b/src/pipeline/luna-claim-contract.mjs
+new file mode 100644
+index 0000000..7a1ba2a
+--- /dev/null
++++ b/src/pipeline/luna-claim-contract.mjs
+@@ -0,0 +1,24 @@
++export const LUNA_TREATMENT_TYPES = Object.freeze(['paraphrase', 'direct_quote', 'context']);
++
++const treatmentSet = new Set(LUNA_TREATMENT_TYPES);
++
++/**
++ * Older frozen packets do not carry treatment assignments. Their deterministic
++ * production default is paraphrase. A packet may explicitly assign another
++ * treatment without changing model output at validation time.
++ */
++export function requiredTreatmentForClaim(packet = {}, claimId) {
++  const declared = packet.claim_treatments?.[claimId] || packet.claims?.find(claim => claim.claim_id === claimId)?.required_treatment;
++  return declared || 'paraphrase';
++}
++
++export function isLunaTreatment(value) {
++  return treatmentSet.has(value);
++}
++
++export function lunaTreatmentContract(packet = {}, supportMatrix = {}) {
++  return Object.fromEntries(Object.keys(supportMatrix).sort().map(claimId => [claimId, {
++    allowed_evidence_ids: [...(supportMatrix[claimId] || [])],
++    required_treatment: requiredTreatmentForClaim(packet, claimId)
++  }]));
++}
+diff --git a/src/pipeline/luna-support.mjs b/src/pipeline/luna-support.mjs
+index 0b66ed2..184aefa 100644
+--- a/src/pipeline/luna-support.mjs
++++ b/src/pipeline/luna-support.mjs
+@@ -1,4 +1,5 @@
+ import { stableJson } from './evidence-packet.mjs';
++import { lunaTreatmentContract } from './luna-claim-contract.mjs';
+ 
+ const clean = value => String(value ?? '').trim();
+ 
+@@ -34,13 +35,23 @@ export function serializedClaimEvidenceSupportMatrix(packet = {}) {
+   return stableJson(deterministicClaimEvidenceSupportMatrix(packet));
+ }
+ 
++export function deterministicClaimSupportContract(packet = {}) {
++  return lunaTreatmentContract(packet, deterministicClaimEvidenceSupportMatrix(packet));
++}
++
+ export function supportMatrixExamples(matrix = {}) {
+   const claimIds = Object.keys(matrix).sort();
+-  const validClaimId = claimIds.find(claimId => matrix[claimId]?.length) || claimIds[0] || 'claim-001';
+-  const validEvidenceId = matrix[validClaimId]?.[0] || 'evidence-001';
+-  const invalidClaimId = claimIds.find(claimId => claimId !== validClaimId && !matrix[claimId]?.includes(validEvidenceId));
++  const validClaimId = claimIds.find(claimId => (matrix[claimId]?.allowed_evidence_ids || matrix[claimId] || []).length) || claimIds[0] || 'claim-001';
++  const validEvidenceId = (matrix[validClaimId]?.allowed_evidence_ids || matrix[validClaimId] || [])[0] || 'evidence-001';
++  const requiredTreatment = matrix[validClaimId]?.required_treatment || 'paraphrase';
+   return {
+-    valid: { claim_id: validClaimId, evidence_ids: [validEvidenceId], article_anchor: 'paragraph-1', treatment: 'paraphrase' },
+-    invalid: { claim_id: invalidClaimId || validClaimId, evidence_ids: [invalidClaimId ? validEvidenceId : 'evidence-not-allowed'], article_anchor: 'paragraph-2', treatment: 'paraphrase' }
++    valid: [
++      { claim_id: validClaimId, evidence_ids: [validEvidenceId], article_anchor: 'paragraph-1', treatment: requiredTreatment },
++      { claim_id: validClaimId, evidence_ids: [validEvidenceId], article_anchor: 'paragraph-2', treatment: requiredTreatment }
++    ],
++    invalid: [
++      { claim_id: validClaimId, evidence_ids: [validEvidenceId], article_anchor: 'paragraph-1', treatment: requiredTreatment },
++      { claim_id: validClaimId, evidence_ids: [validEvidenceId], article_anchor: 'paragraph-2', treatment: requiredTreatment === 'paraphrase' ? 'context' : 'paraphrase' }
++    ]
+   };
+ }
+diff --git a/src/pipeline/offline-review-materialization.mjs b/src/pipeline/offline-review-materialization.mjs
+new file mode 100644
+index 0000000..ecfb483
+--- /dev/null
++++ b/src/pipeline/offline-review-materialization.mjs
+@@ -0,0 +1,105 @@
++import crypto from 'node:crypto';
++import { assertPhase1Schema } from './phase1-schemas.mjs';
++import { deterministicReview } from './deterministic-review.mjs';
++import { validateReviewPackage } from './integrity.mjs';
++import { parseArticleMarkdown } from './article-markdown.mjs';
++import { bindFrozenPacketDocuments, frozenPacketSourceLinks } from './frozen-document-binder.mjs';
++import { validateLunaEvidenceReferences } from './phase2-orchestrator.mjs';
++import { PHASE2_VERSION, caseRunIdFor } from './phase2-state.mjs';
++import { TERRA_EVIDENCE_CONTRACT_VERSION } from './phase1-schemas.mjs';
++import { PHASE2_INVENTORY_CONTRACT_VERSION } from './phase2-inventory.mjs';
++import { STORY_FORM_BY_ID } from '../editorial.mjs';
++
++const now = () => new Date().toISOString();
++
++export const OFFLINE_PACKAGE_MATERIALIZATION_VERSION = 'pipeline-v1-ai-review-url-preservation-v1';
++
++export function materializeOfflineReview({ candidate, run, packet, draft, retainedDocuments = [], existingDraftReview = null, previousFailure = null } = {}) {
++  const draftCopy = structuredClone(draft);
++  // Persistence wraps the raw model output with its input checksum. The
++  // checksum is retained on the run, but is not part of Luna's output schema.
++  delete draftCopy.draft_input_sha256;
++  assertPhase1Schema('luna_draft', draftCopy);
++  validateLunaEvidenceReferences(draftCopy, packet, candidate, 'Stored Luna draft');
++  const bound = bindFrozenPacketDocuments({ candidate, run, packet, retainedDocuments, requireContent: true });
++  const form = candidate.commission?.story_form || candidate.classification?.story_form || 'meanwhile';
++  const draftReview = existingDraftReview || deterministicReview({ candidate, draft: draftCopy, packet, form: STORY_FORM_BY_ID[form] || STORY_FORM_BY_ID.meanwhile });
++  const article = parseArticleMarkdown(draftCopy.body_markdown, candidate);
++  const claims = (draftCopy.claims || []).map(claim => ({
++    ...claim,
++    holdout_run_id: run.holdout_run_id || null,
++    case_run_id: caseRunIdFor(run),
++    candidate_id: candidate.id,
++    processing_run_id: run.id,
++    status: draftReview.blocking_factual_errors?.length ? 'needs_review' : 'supported',
++    note: claim.qualification_note || ''
++  }));
++  const finalReview = draftReview;
++  const materialization = {
++    version: OFFLINE_PACKAGE_MATERIALIZATION_VERSION,
++    materialized_at: now(),
++    linked_job_id: run.commission_job_id || null,
++    linked_pipeline_run_id: run.id,
++    previous_failure: previousFailure || null,
++    source_binding: 'frozen_packet_url_authoritative',
++    provider_calls_added: 0
++  };
++  const review = {
++    id: crypto.randomUUID(),
++    holdout_run_id: run.holdout_run_id || null,
++    case_run_id: caseRunIdFor(run),
++    candidate_id: candidate.id,
++    processing_run_id: run.id,
++    pipeline_version: PHASE2_VERSION,
++    terra_evidence_contract_version: TERRA_EVIDENCE_CONTRACT_VERSION,
++    phase2_inventory_contract_version: PHASE2_INVENTORY_CONTRACT_VERSION,
++    packet_version: packet.version,
++    readiness_inventory_sha256: run.readiness_inventory_sha256 || null,
++    runtime_inventory_sha256: run.runtime_inventory_sha256 || null,
++    terra_input_packet_sha256: run.terra_input_packet_sha256 || null,
++    frozen_evidence_packet_sha256: packet.frozen_evidence_packet_sha256,
++    draft_input_sha256: run.draft_input_sha256 || draftCopy.draft_input_sha256 || null,
++    document_ids: bound.documents.map(document => document.id),
++    status: finalReview.blocking_factual_errors?.length ? 'blocked' : 'ready_for_review',
++    created_at: now(),
++    model: 'gpt-5.6-luna',
++    prompt_version: 'pipeline-v1-luna-draft-deterministic-review-v1',
++    headline: draftCopy.headline || article.headline,
++    dek: draftCopy.dek || article.dek,
++    article: draftCopy.body_markdown,
++    previous_draft: null,
++    section: draftCopy.section || candidate.commission?.section_id || candidate.classification?.primary_section,
++    lens: draftCopy.lens || candidate.classification?.editorial_pitch?.lens || candidate.commission?.brief || candidate.title,
++    beats: draftCopy.beats || candidate.commission?.beats || candidate.classification?.recurring_beats || [],
++    source_ids: draftCopy.source_ids || [],
++    classification: { ...(candidate.classification || {}), phase2_state: 'ai_review_ready', pipeline_version: PHASE2_VERSION, frozen_evidence_packet_sha256: packet.frozen_evidence_packet_sha256 },
++    research: { pipeline_version: PHASE2_VERSION, terra_evidence_contract_version: TERRA_EVIDENCE_CONTRACT_VERSION, phase2_inventory_contract_version: PHASE2_INVENTORY_CONTRACT_VERSION, packet, research_requirement: run.research_requirement, blockers: [], draft_constraints: packet.draft_constraints || [], frozen: true },
++    evidence_packet: packet,
++    terra_summary: { selected_source_ids: packet.sources.map(source => source.source_id), optional_source_ids: [], excluded_sources: packet.excluded_sources || [], contradictions: packet.terra_summary?.contradictions || [], freshness_risks: packet.terra_summary?.freshness_risks || [], missing_evidence: packet.terra_summary?.missing_evidence || [], blockers: [], draft_constraints: packet.draft_constraints || [] },
++    draft: draftCopy,
++    revision: null,
++    claim_support: draftCopy.claim_support || [],
++    cited_evidence_ids: [...new Set((draftCopy.claim_support || []).flatMap(mapping => mapping.evidence_ids || []))],
++    deterministic_review: finalReview,
++    draft_findings: draftReview,
++    revision_findings: null,
++    diff: [],
++    claims,
++    unresolved_claims: finalReview.blocking_factual_errors.map(message => ({ claim: message, status: 'needs_review' })),
++    images: [],
++    model_usage: run.model_usage || [],
++    estimated_cost_usd: run.estimated_cost_usd ?? null,
++    source_links: frozenPacketSourceLinks(packet, bound.documents),
++    package_materialization_revision: materialization,
++    logs: {},
++    validation_history: { draft: draftReview }
++  };
++  const integrity = validateReviewPackage({ candidate, run, documents: bound.documents, review });
++  if (!integrity.ok) {
++    const error = new Error(integrity.errors.join('; '));
++    error.code = 'REVIEW_PACKAGE_INTEGRITY_FAILED';
++    error.details = integrity;
++    throw error;
++  }
++  return { review, documents: bound.documents, source_links: review.source_links, materialization, draftReview };
++}
+diff --git a/src/pipeline/phase1-schemas.mjs b/src/pipeline/phase1-schemas.mjs
+index 8f25ec7..06d5ae0 100644
+--- a/src/pipeline/phase1-schemas.mjs
++++ b/src/pipeline/phase1-schemas.mjs
+@@ -1,3 +1,5 @@
++import { LUNA_TREATMENT_TYPES } from './luna-claim-contract.mjs';
++
+ export const PHASE1_SOURCE_ID_MAX_LENGTH = 160;
+ export const TERRA_EVIDENCE_CONTRACT_VERSION = 'terra-evidence-offsets-v1';
+ export const TERRA_EVIDENCE_MAX_RANGE_CHARACTERS = 4_000;
+@@ -196,7 +198,7 @@ export const PHASE1_SCHEMAS = Object.freeze({
+       claim_id: id,
+       evidence_ids: ids(32, 1),
+       article_anchor: text(200),
+-      treatment: { type: 'string', enum: ['paraphrase', 'direct_quote', 'attributed_claim', 'context'] }
++      treatment: { type: 'string', enum: [...LUNA_TREATMENT_TYPES] }
+     }
+   },
+ 
+diff --git a/src/pipeline/phase2-orchestrator.mjs b/src/pipeline/phase2-orchestrator.mjs
+index b7a8c4c..e8bae40 100644
+--- a/src/pipeline/phase2-orchestrator.mjs
++++ b/src/pipeline/phase2-orchestrator.mjs
+@@ -1,12 +1,12 @@
+ import crypto from 'node:crypto';
+-import { fetchDocument } from './acquisition.mjs';
++import { fetchDocument, normalizeUrl } from './acquisition.mjs';
+ import { sourceRetention, validateReviewPackage } from './integrity.mjs';
+ import { buildEvidencePacket, preflightEvidencePacket, stableJson, EVIDENCE_PACKET_LIMITS } from './evidence-packet.mjs';
+ import { assertPhase1Schema } from './phase1-schemas.mjs';
+ import { TERRA_EVIDENCE_CONTRACT_VERSION, validateTerraEvidenceOffsets } from './phase2-evidence.mjs';
+ import { createProductionCodexAdapter } from './codex-adapter.mjs';
+ import { calculateCodexUsage } from './cost.mjs';
+-import { PRODUCTION_MODELS } from './config.mjs';
++import { PRODUCTION_MODELS, RESEARCH_CONFIG } from './config.mjs';
+ import { STORY_FORM_BY_ID } from '../editorial.mjs';
+ import { parseArticleMarkdown } from './article-markdown.mjs';
+ import { transition } from './state.mjs';
+@@ -14,21 +14,23 @@ import { deterministicReview } from './deterministic-review.mjs';
+ import { lunaDraftPrompt, lunaRevisionPrompt, parseStrictJson, terraPrompt } from './phase2-prompts.mjs';
+ import { PHASE2_VERSION, beginStage, caseRunIdFor, completeStage, createPhase2Run, ensurePhase2State, failStage, holdoutRunIdFor, markProviderCallStarted, phase2RunFor, phase2TerminalInvariant, recordStageParse, recordStageResponse, recordStageSchema, stageArtifact, transitionPhase2 } from './phase2-state.mjs';
+ import { phase2PersistencePayload, persistPhase2Stage } from './phase2-persistence.mjs';
+-import { sourceGateBlockers, sourceSufficiencyGate } from './phase2-source-gate.mjs';
++import { PHASE2_SOURCE_REQUIREMENTS, sourceGateBlockers, sourceSufficiencyGate } from './phase2-source-gate.mjs';
+ import { PHASE2_INVENTORY_CONTRACT_VERSION, assertInventoryChecksum, hashPhase2Inventory } from './phase2-inventory.mjs';
+-import { deterministicClaimEvidenceSupportMatrix } from './luna-support.mjs';
++import { deterministicClaimSupportContract } from './luna-support.mjs';
++import { isLunaTreatment } from './luna-claim-contract.mjs';
++import { ResearchRouter } from './research-router.mjs';
++import { deriveResearchDecision } from './research-decision.mjs';
++import { bindFrozenPacketDocuments } from './frozen-document-binder.mjs';
+ 
+-export const PHASE2_RETRIEVAL_LIMITS = Object.freeze({ maxSources: 12, sourceChars: 5_000, maxTotalExcerptCharacters: 48_000 });
++export const PHASE2_RETRIEVAL_LIMITS = Object.freeze({ maxSources: 12, maxSearchQueries: 3, sourceChars: 5_000, maxTotalExcerptCharacters: 48_000 });
+ 
+ const now = () => new Date().toISOString();
+ const clean = value => String(value ?? '').replace(/\s+/g, ' ').trim();
+ const unique = values => [...new Set(values.filter(Boolean))];
+ const hash = value => crypto.createHash('sha256').update(String(value || '')).digest('hex');
+ const formFor = candidate => STORY_FORM_BY_ID[candidate.commission?.story_form || candidate.classification?.story_form] || STORY_FORM_BY_ID.meanwhile;
+-const researchRequirementFor = candidate => {
+-  const value = candidate?.classification?.editorial_pitch?.research_requirement || candidate?.commission?.research_requirement;
+-  return ['none', 'required'].includes(value) ? value : 'required';
+-};
++const researchDecisionFor = candidate => deriveResearchDecision(candidate);
++const researchRequirementFor = candidate => researchDecisionFor(candidate).research_requirement;
+ 
+ function deterministicRetainedClaims(candidate, documents) {
+   const plan = candidate?.commission?.evidence_plan || candidate?.classification?.editorial_pitch?.evidence_plan || [];
+@@ -156,8 +158,6 @@ function sourceRecords(candidate, docs) {
+   }));
+ }
+ 
+-const LUNA_TREATMENTS = new Set(['paraphrase', 'direct_quote', 'attributed_claim', 'context']);
+-
+ function derivedClaimsFromSupport(packet, support) {
+   const evidenceById = new Map((packet.claims || []).flatMap(claim => (claim.evidence || []).map(evidence => [evidence.evidence_id, evidence])));
+   const claimsById = new Map((packet.claims || []).map(claim => [claim.claim_id, claim]));
+@@ -183,35 +183,41 @@ export function validateLunaEvidenceReferences(output, packet, candidate, stage
+   const evidenceById = new Map((packet.claims || []).flatMap(claim => (claim.evidence || []).map(evidence => [evidence.evidence_id, evidence])));
+   const validClaims = new Set((packet.claims || []).map(claim => claim.claim_id));
+   const requiredClaims = unique(packet.claim_targets?.length ? packet.claim_targets : (packet.claims || []).map(claim => claim.claim_id));
+-  const supportMatrix = deterministicClaimEvidenceSupportMatrix(packet);
++  const supportContract = deterministicClaimSupportContract(packet);
+   const mappings = output.claim_support || [];
+   const seenClaims = new Map();
++  const seenMappings = new Set();
+   for (const mapping of mappings) {
+     if (!validClaims.has(mapping.claim_id)) throw phase2Error(`${stage} selected unknown claim ID: ${mapping.claim_id}.`, 'PHASE2_SCHEMA_INVALID');
++    const mappingKey = stableJson({ claim_id: mapping.claim_id, evidence_ids: [...(mapping.evidence_ids || [])].sort(), article_anchor: mapping.article_anchor, treatment: mapping.treatment });
++    if (seenMappings.has(mappingKey)) throw phase2Error(`${stage} repeated an identical claim-support mapping for ${mapping.claim_id} at ${mapping.article_anchor}.`, 'PHASE2_SCHEMA_INVALID');
++    seenMappings.add(mappingKey);
+     if (seenClaims.has(mapping.claim_id) && seenClaims.get(mapping.claim_id) !== mapping.treatment) throw phase2Error(`${stage} contains contradictory treatment for ${mapping.claim_id}.`, 'PHASE2_SCHEMA_INVALID');
+     seenClaims.set(mapping.claim_id, mapping.treatment);
+-    if (!LUNA_TREATMENTS.has(mapping.treatment)) throw phase2Error(`${stage} uses an invalid treatment for ${mapping.claim_id}.`, 'PHASE2_SCHEMA_INVALID');
++    if (!isLunaTreatment(mapping.treatment)) throw phase2Error(`${stage} uses an invalid treatment for ${mapping.claim_id}.`, 'PHASE2_SCHEMA_INVALID');
++    const contract = supportContract[mapping.claim_id];
++    if (!contract || mapping.treatment !== contract.required_treatment) throw phase2Error(`${stage} uses treatment ${mapping.treatment} for ${mapping.claim_id}; the canonical treatment is ${contract?.required_treatment || '(none)'}.`, 'PHASE2_SCHEMA_INVALID');
+     for (const evidenceId of mapping.evidence_ids || []) {
+       const evidence = evidenceById.get(evidenceId);
+       if (!evidence) {
+-        throw phase2Error(`${stage} selected unknown evidence ID: ${evidenceId} for claim ${mapping.claim_id}. Allowed evidence IDs: ${supportMatrix[mapping.claim_id]?.join(', ') || '(none)'}.`, 'PHASE2_SCHEMA_INVALID', {
++        throw phase2Error(`${stage} selected unknown evidence ID: ${evidenceId} for claim ${mapping.claim_id}. Allowed evidence IDs: ${supportContract[mapping.claim_id]?.allowed_evidence_ids?.join(', ') || '(none)'}.`, 'PHASE2_SCHEMA_INVALID', {
+           claim_id: mapping.claim_id,
+           invalid_evidence_id: evidenceId,
+-          allowed_evidence_ids: supportMatrix[mapping.claim_id] || []
++          allowed_evidence_ids: supportContract[mapping.claim_id]?.allowed_evidence_ids || []
+         });
+       }
+       if (!evidence.claim_ids?.includes(mapping.claim_id)) {
+-        throw phase2Error(`${stage} evidence ${evidenceId} does not support claim ${mapping.claim_id}. Allowed evidence IDs: ${supportMatrix[mapping.claim_id]?.join(', ') || '(none)'}.`, 'PHASE2_SCHEMA_INVALID', {
++        throw phase2Error(`${stage} evidence ${evidenceId} does not support claim ${mapping.claim_id}. Allowed evidence IDs: ${supportContract[mapping.claim_id]?.allowed_evidence_ids?.join(', ') || '(none)'}.`, 'PHASE2_SCHEMA_INVALID', {
+           claim_id: mapping.claim_id,
+           invalid_evidence_id: evidenceId,
+-          allowed_evidence_ids: supportMatrix[mapping.claim_id] || []
++          allowed_evidence_ids: supportContract[mapping.claim_id]?.allowed_evidence_ids || []
+         });
+       }
+       if (!validSources.has(evidence.source_id)) throw phase2Error(`${stage} evidence ${evidenceId} names an unknown source ID.`, 'PHASE2_SCHEMA_INVALID');
+     }
+   }
+   const missing = requiredClaims.filter(claimId => !seenClaims.has(claimId));
+-  if (missing.length) throw phase2Error(`${stage} omitted required claim support: ${missing.join(', ')}.`, 'PHASE2_SCHEMA_INVALID', { missing_claim_ids: missing, support_matrix: supportMatrix });
++  if (missing.length) throw phase2Error(`${stage} omitted required claim support: ${missing.join(', ')}.`, 'PHASE2_SCHEMA_INVALID', { missing_claim_ids: missing, support_contract: supportContract });
+   const derivedSourceIds = unique(mappings.flatMap(mapping => mapping.evidence_ids.map(id => evidenceById.get(id)?.source_id)));
+   if (output.source_ids && output.source_ids.some(sourceId => !validSources.has(sourceId))) throw phase2Error(`${stage} selected an unknown source ID.`, 'PHASE2_SCHEMA_INVALID');
+   const expectedSection = candidate.commission?.section_id || candidate.classification?.primary_section;
+@@ -245,7 +251,7 @@ function reviewClassification(candidate, form, review) {
+ }
+ 
+ export class Phase2Orchestrator {
+-  constructor({ fetcher = fetchDocument, terraAdapter = null, draftAdapter = null, revisionAdapter = null, persistence = null, checkpoint = async () => {}, retrievalLimits = PHASE2_RETRIEVAL_LIMITS } = {}) {
++  constructor({ fetcher = fetchDocument, terraAdapter = null, draftAdapter = null, revisionAdapter = null, persistence = null, checkpoint = async () => {}, retrievalLimits = PHASE2_RETRIEVAL_LIMITS, researchRouter = null } = {}) {
+     this.fetcher = fetcher;
+     this.terraAdapter = terraAdapter;
+     this.draftAdapter = draftAdapter;
+@@ -253,6 +259,16 @@ export class Phase2Orchestrator {
+     this.persistence = persistence;
+     this.checkpoint = checkpoint;
+     this.retrievalLimits = { ...PHASE2_RETRIEVAL_LIMITS, ...retrievalLimits };
++    const testMode = process.argv.includes('--test') || process.env.NODE_ENV === 'test';
++    this.researchRouter = researchRouter || new ResearchRouter({
++      config: {
++        ...RESEARCH_CONFIG,
++        ...(testMode ? { browserSearchEnabled: false } : {}),
++        maxSearchRequestsPerArticle: this.retrievalLimits.maxSearchQueries,
++        maxSearchRequestsPerQuery: this.retrievalLimits.maxSearchQueries,
++        maxSourcePagesPerArticle: this.retrievalLimits.maxSources
++      }
++    });
+   }
+ 
+   async checkpointState(state) { await this.checkpoint(state); }
+@@ -436,16 +452,143 @@ export class Phase2Orchestrator {
+       }
+       documents.push(document);
+     }
++    // Commissioning starts with the pitch's seed URLs, then performs a bounded
++    // search expansion before the deterministic source gate runs. Search and
++    // fetch diagnostics remain separate from model-provider calls.
++    run.source_searches ||= [];
++    run.source_acquisition = {
++      limits: { max_search_queries: this.retrievalLimits.maxSearchQueries, max_retained_sources: this.retrievalLimits.maxSources },
++      started_at: run.source_acquisition?.started_at || now(),
++      queries: run.source_searches,
++      retained_seed_sources: documents.length,
++      retained_search_sources: 0,
++      inaccessible_sources: 0,
++      completed_at: null
++    };
++    const requirements = PHASE2_SOURCE_REQUIREMENTS[formFor(candidate).id] || PHASE2_SOURCE_REQUIREMENTS.meanwhile;
++    const knownCoverage = new Set(documents.map(document => document.independence_key || document.canonical_url || document.url).filter(Boolean));
++    const needsExpansion = documents.length < requirements.minimumAccessibleSources || knownCoverage.size < requirements.minimumIndependentSources;
++    let fetchedResearch = { pages: [], warnings: [] };
++    if (needsExpansion) {
++    const directResults = requested.filter(source => source?.url).map(source => ({
++      title: source.title || candidate.title,
++      url: source.url,
++      snippet: source.description || '',
++      provider: 'direct'
++    }));
++    const pitch = candidate.classification?.editorial_pitch || {};
++    const queryTexts = unique([
++      candidate.title,
++      pitch.lens,
++      ...(Array.isArray(pitch.evidence_plan) ? pitch.evidence_plan.slice(0, 2) : []),
++      `${candidate.title} official record`
++    ].map(clean)).slice(0, this.retrievalLimits.maxSearchQueries);
++    const searched = [];
++    for (const queryText of queryTexts) {
++      if (documents.length >= this.retrievalLimits.maxSources) break;
++      const searchResult = await this.researchRouter.search(
++        { text: queryText, type: /official|record|data|filing/i.test(queryText) ? 'primary' : 'news', maxResults: this.retrievalLimits.maxSources },
++        { storyId: candidate.id, runId: run.id, purpose: 'commission-source-acquisition', directResults }
++      );
++      run.source_searches.push({ query: searchResult.query, coverage: searchResult.coverage, warnings: searchResult.warnings, usage: searchResult.usage, at: now() });
++      searched.push(...searchResult.results);
++    }
++    const unseenResults = searched.filter(result => {
++      try { return !seen.has(normalizeUrl(result.url)); } catch { return false; }
++    });
++    fetchedResearch = await this.researchRouter.fetchPages(unseenResults, {
++      runId: run.id,
++      fetcher: this.fetcher,
++      maxPages: Math.max(0, this.retrievalLimits.maxSources - documents.length)
++    });
++    const fetchedByUrl = new Map(fetchedResearch.pages.map(page => {
++      try { return [normalizeUrl(page.canonical_url || page.url), page]; } catch { return [page.url, page]; }
++    }));
++    for (const result of unseenResults) {
++      let normalized = null;
++      try { normalized = normalizeUrl(result.url); } catch { continue; }
++      const fetched = fetchedByUrl.get(normalized);
++      const canonical = fetched?.canonical_url || fetched?.url || normalized;
++      const content = String(fetched?.text || '');
++      const sourceId = `source:${candidate.id}:${hash(canonical).slice(0, 24)}`;
++      const diagnostic = {
++        source_id: sourceId,
++        url: result.url,
++        canonical_url: canonical,
++        ok: Boolean(fetched?.ok),
++        accessible: Boolean(fetched?.ok && content.trim()),
++        status: fetched?.status ?? null,
++        error: fetched?.error || (fetched ? (!content.trim() ? 'empty_extracted_text' : null) : 'search_result_not_fetched'),
++        extraction_status: fetched?.ok && content.trim() ? 'extracted' : 'failed',
++        access_mode: fetched?.ok && content.trim() ? 'bounded_search_fetch' : 'unavailable',
++        snapshot_used: false,
++        source_classification: result.sourceType || null,
++        acquisition: 'bounded_search',
++        search_provider: result.provider || null,
++        search_rank: result.rank || null,
++        mandatory: false
++      };
++      run.source_fetches.push(diagnostic);
++      run.events.push({ type: 'source_fetch', ...diagnostic, at: now() });
++      if (!fetched?.ok || !content.trim() || documents.length >= this.retrievalLimits.maxSources) continue;
++      if (seen.has(canonical)) continue;
++      seen.set(canonical, sourceId);
++      const sourceType = result.sourceType || (/\.(gov|edu)(?:$|\/)/i.test(new URL(canonical).hostname) ? 'primary' : 'original_reporting');
++      const publisher = (() => { try { return new URL(canonical).hostname.replace(/^www\./, ''); } catch { return null; } })();
++      const independenceKey = `content:${hash(content.replace(/\s+/g, ' ').trim().toLowerCase()).slice(0, 24)}`;
++      const document = {
++        id: sourceId,
++        candidate_id: candidate.id,
++        processing_run_id: run.id,
++        discovery_id: null,
++        url: canonical,
++        canonical_url: canonical,
++        title: fetched.title || result.title || candidate.title || '',
++        publisher,
++        description: result.snippet || '',
++        author: fetched.author || null,
++        published_at: fetched.published_at || result.publishedAt || null,
++        content: content.slice(0, this.retrievalLimits.sourceChars),
++        source_type: sourceType,
++        independence_key: independenceKey,
++        primary_source: sourceType === 'primary',
++        accessible: true,
++        ok: true,
++        retrieval_timestamp: fetched.fetched_at || now(),
++        provenance: { retrieval: 'bounded_search', fetched_url: result.url, search_provider: result.provider || null, search_query: run.source_searches.at(-1)?.query || null, independence_key: independenceKey },
++        extraction: fetched
++      };
++      document.retention = sourceRetention(candidate, document);
++      if (document.retention.score <= 0) {
++        diagnostic.accessible = false;
++        diagnostic.error = `retention_rejected:${document.retention.reason}`;
++        continue;
++      }
++      documents.push(document);
++      run.source_acquisition.retained_search_sources++;
++    }
++    }
++    run.source_acquisition.inaccessible_sources = run.source_fetches.filter(item => item.accessible === false && item.acquisition === 'bounded_search').length;
++    run.source_acquisition.search_warnings = fetchedResearch.warnings;
++    run.source_acquisition.completed_at = now();
+     run.events.push(...events);
+     return documents;
+   }
+ 
+-  frozenReadinessDocuments({ candidate, run, inventory }) {
++  frozenReadinessDocuments({ candidate, run, inventory, metadataOnly = false }) {
++    if (metadataOnly) {
++      const bound = bindFrozenPacketDocuments({ candidate, run, packet: { sources: inventory.sources || [] }, retainedDocuments: [], requireContent: false });
++      run.events.push(...bound.documents.map(document => ({ type: 'frozen_source_bound', source_id: document.id, url: document.url, canonical_url: document.canonical_url, ok: true, accessible: true, access_mode: 'approved_frozen_readiness_inventory', snapshot_used: true, at: now() })));
++      run.source_fetches.push(...bound.documents.map(document => ({ source_id: document.id, url: document.url, canonical_url: document.canonical_url, ok: true, accessible: true, error: null, extraction_status: 'frozen_retained_text', access_mode: 'approved_frozen_readiness_inventory', snapshot_used: true, source_classification: document.classification })));
++      return bound.documents;
++    }
+     const documents = [];
+     const events = [];
+     for (const source of inventory.sources || []) {
+       const content = String(source.text ?? source.retained_text ?? '');
+-      const accessible = source.accessible !== false && source.ok !== false && Boolean(content.trim());
++      const accessible = metadataOnly
++        ? source.accessible !== false && source.ok !== false
++        : source.accessible !== false && source.ok !== false && Boolean(content.trim());
+       const diagnostic = { source_id: source.source_id, url: source.requested_url || source.canonical_url, canonical_url: source.canonical_url || source.requested_url, ok: source.ok !== false, accessible, status: source.retrieval_diagnostics?.status ?? null, error: accessible ? null : 'frozen_source_inaccessible', extraction_status: accessible ? 'frozen_retained_text' : 'unavailable', access_mode: 'approved_frozen_readiness_inventory', snapshot_used: true, source_classification: source.source_type || source.classification || null };
+       run.source_fetches.push(diagnostic); events.push({ type: 'frozen_source_bound', ...diagnostic, at: now() });
+       if (!accessible) continue;
+@@ -478,8 +621,10 @@ export class Phase2Orchestrator {
+         provenance: { retrieval: 'approved_frozen_readiness_inventory', source_id: source.source_id },
+         extraction: { ok: true, text: content, source: 'approved_frozen_readiness_inventory' }
+       };
+-      document.retention = sourceRetention(candidate, document);
+-      if (document.retention.score > 0) documents.push(document);
++      document.retention = metadataOnly
++        ? { score: 1, reason: 'frozen_packet_source_identity' }
++        : sourceRetention(candidate, document);
++      if (metadataOnly || document.retention.score > 0) documents.push(document);
+     }
+     run.events.push(...events);
+     return documents;
+@@ -494,7 +639,10 @@ export class Phase2Orchestrator {
+     revisionInstructions ||= commissionAuthorization.revision_instructions || '';
+     const researchAgain = authorizedAction === 'research_again';
+     const runRevision = authorizedAction === 'run_revision';
+-    const researchRequirement = researchRequirementFor(candidate);
++    const reuseFrozenPacket = commissionAuthorization.reuse_frozen_evidence_packet === true;
++    const frozenPacketForReuse = commissionAuthorization.frozen_evidence_packet || null;
++    const researchDecision = researchDecisionFor(candidate);
++    const researchRequirement = researchDecision.research_requirement;
+     if (runRevision) throw phase2Error('Automatic Luna Revision is disabled in the approved V1 production path. Use the manual Sol polish action.', 'PHASE2_REVISION_DISABLED');
+     if (researchAgain && researchRequirement !== 'required') throw phase2Error('Research again is not authorized for a commission whose research requirement is none.', 'PHASE2_RESEARCH_NOT_AUTHORIZED');
+     let run = phase2RunFor(state, candidateId);
+@@ -510,32 +658,72 @@ export class Phase2Orchestrator {
+       const review = [...state.reviews].reverse().find(item => item.candidate_id === candidateId && item.pipeline_version === PHASE2_VERSION);
+       return { candidate, run, review: review || null, error: run.error || null, research_again_required: run.state === 'research_blocked', action_required: run.state === 'research_blocked' ? 'research_again' : null, resumed: true };
+     }
+-    if (run?.status === 'failed' && !researchAgain && !runRevision) {
++    if (run?.status === 'failed' && !researchAgain && !runRevision && !reuseFrozenPacket) {
+       return { candidate, run, review: null, error: run.error || null, resumed: true };
+     }
+-    if (!run || (researchAgain && ['failed', 'blocked'].includes(run.status))) {
+-      run = createPhase2Run(candidateId, commissionAuthorization, { holdout_run_id: commissionAuthorization?.holdout_run_id, case_run_id: commissionAuthorization?.case_run_id });
++    if (!run || (researchAgain && ['failed', 'blocked'].includes(run.status)) || reuseFrozenPacket) {
++      const previousRun = run;
++      run = createPhase2Run(candidateId, commissionAuthorization, {
++        holdout_run_id: commissionAuthorization?.holdout_run_id,
++        case_run_id: commissionAuthorization?.case_run_id || (reuseFrozenPacket ? crypto.randomUUID() : null)
++      });
++      if (reuseFrozenPacket) {
++        if (!frozenPacketForReuse || frozenPacketForReuse.frozen_evidence_packet_sha256 !== commissionAuthorization.frozen_evidence_packet_sha256 || evidencePacketSha256(frozenPacketForReuse) !== commissionAuthorization.frozen_evidence_packet_sha256) {
++          throw phase2Error('The supplied frozen evidence packet failed its identity check.', 'PHASE2_FROZEN_PACKET_IDENTITY_MISMATCH');
++        }
++        run.reused_frozen_evidence_packet = true;
++        run.previous_run_id = previousRun?.id || null;
++        run.frozen_evidence_packet_sha256 = commissionAuthorization.frozen_evidence_packet_sha256;
++        run.readiness_inventory_sha256 = commissionAuthorization.readiness_inventory_sha256 || previousRun?.readiness_inventory_sha256 || null;
++        run.runtime_inventory_sha256 = commissionAuthorization.runtime_inventory_sha256 || previousRun?.runtime_inventory_sha256 || null;
++        run.terra_input_packet_sha256 = commissionAuthorization.terra_input_packet_sha256 || previousRun?.terra_input_packet_sha256 || null;
++        // A frozen-packet rerun is a new Draft attempt, not a new acquisition.
++        // Preserve the already-passed deterministic source gate and never
++        // re-count the packet's intentionally metadata-only source records.
++        run.source_gate = commissionAuthorization.corrected_source_gate || previousRun?.source_gate || null;
++        run.parent_frozen_evidence_packet_sha256 = commissionAuthorization.parent_frozen_evidence_packet_sha256 || null;
++        run.classification_changes = commissionAuthorization.classification_changes || [];
++      }
+       run.research_requirement = researchRequirement;
++      run.research_requirement_reason = commissionAuthorization.research_requirement_reason || researchDecision.reason;
+       state.phase2_runs.push(run);
+       state.runs.push(run);
+       transitionPhase2(candidate, 'commissioned', actor, 'Editor commission accepted for pipeline-v1.');
+       await this.checkpointState(state);
+     }
+     run.research_requirement ||= researchRequirement;
++    run.research_requirement_reason ||= commissionAuthorization.research_requirement_reason || researchDecision.reason;
+     const forceRevision = runRevision;
+     if (forceRevision) run.events.push({ type: 'revision_authorized', instructions: revisionInstructions, at: now() });
+     const form = formFor(candidate);
+     let documents = state.documents.filter(document => document.candidate_id === candidateId && document.processing_run_id === run.id);
+     if (!forceRevision && !documents.length) {
+-      transitionPhase2(candidate, 'researching', actor, 'Bounded commission-source retrieval started.');
+-      documents = commissionAuthorization.readiness_inventory?.sources
++      transitionPhase2(candidate, 'acquiring_sources', actor, 'Bounded source acquisition started from the approved pitch and seed URLs.');
++      documents = reuseFrozenPacket
++        ? this.frozenReadinessDocuments({ candidate, run, inventory: { sources: frozenPacketForReuse.sources || [] }, metadataOnly: true })
++        : commissionAuthorization.readiness_inventory?.sources
+         ? this.frozenReadinessDocuments({ candidate, run, inventory: commissionAuthorization.readiness_inventory })
+         : await this.retrieveSources({ state, candidate, run });
++      if (reuseFrozenPacket) {
++        run.source_acquisition = {
++          limits: { max_search_queries: 0, max_retained_sources: frozenPacketForReuse.sources?.length || 0 },
++          started_at: now(),
++          queries: [],
++          retained_seed_sources: (frozenPacketForReuse.sources || []).length,
++          retained_search_sources: 0,
++          inaccessible_sources: 0,
++          reused_frozen_packet: true,
++          completed_at: now()
++        };
++        run.events.push({ type: 'frozen_packet_reused', frozen_evidence_packet_sha256: frozenPacketForReuse.frozen_evidence_packet_sha256, source_searches: 0, source_refetches: 0, at: now() });
++      }
+       if (documents.length) state.documents.push(...documents);
+       await this.checkpointState(state);
+     }
+     if (forceRevision && !documents.length) throw phase2Error('A revision authorization requires retained source documents.', 'PHASE2_REVISION_NOT_RESUMABLE');
+ 
++    if (!forceRevision) transitionPhase2(candidate, 'research_ready', actor, `${documents.length} retained source document(s) are ready for deterministic evidence gates.`);
++
+     if (!forceRevision && !run.source_gate) {
+       const sourceGate = sourceSufficiencyGate({
+         candidate,
+@@ -561,6 +749,20 @@ export class Phase2Orchestrator {
+     }
+ 
+     let inventory = stageArtifact(state, run.id, 'source_inventory')?.payload;
++    if (reuseFrozenPacket && !inventory) {
++      inventory = {
++        version: 'pipeline-v1-source-inventory-offsets-v1',
++        sources: frozenPacketForReuse.sources || [],
++        claims: frozenPacketForReuse.claims || [],
++        claim_targets: frozenPacketForReuse.claim_targets || [],
++        readiness_inventory_sha256: run.readiness_inventory_sha256,
++        runtime_inventory_sha256: run.runtime_inventory_sha256
++      };
++      beginStage(state, run, 'source_inventory');
++      completeStage(state, run, 'source_inventory', inventory);
++      await persistPhase2Stage({ state, run, stage: 'source_inventory', payload: phase2PersistencePayload({ run, stage: 'source_inventory', packet: inventory, claims: [], usage: [], cost: null }), persistence: this.persistence });
++      await this.checkpointState(state);
++    }
+     if (!inventory) {
+       transitionPhase2(candidate, 'preparing_evidence', actor, 'Deterministic evidence-input preflight started.');
+       beginStage(state, run, 'source_inventory');
+@@ -592,6 +794,34 @@ export class Phase2Orchestrator {
+     }
+ 
+     let terra = stageArtifact(state, run.id, 'research')?.payload;
++    if (reuseFrozenPacket && !terra) {
++      terra = {
++        research_requirement: 'none',
++        research_questions: frozenPacketForReuse.terra_summary?.research_questions || [],
++        selected_source_ids: frozenPacketForReuse.terra_summary?.selected_source_ids || (frozenPacketForReuse.sources || []).map(source => source.source_id),
++        optional_source_ids: frozenPacketForReuse.terra_summary?.optional_source_ids || [],
++        excluded_sources: frozenPacketForReuse.terra_summary?.excluded_sources || [],
++        claims: frozenPacketForReuse.claims || [],
++        required_facts: frozenPacketForReuse.required_facts || [],
++        prohibited_claims: frozenPacketForReuse.prohibited_claims || [],
++        ledgers: frozenPacketForReuse.ledgers || { quotations: [], proper_names: [], numbers: [] },
++        claim_targets: frozenPacketForReuse.claim_targets || [],
++        unresolved_research_questions: frozenPacketForReuse.unresolved_research_questions || [],
++        contradictions: frozenPacketForReuse.terra_summary?.contradictions || [],
++        freshness_risks: frozenPacketForReuse.terra_summary?.freshness_risks || [],
++        missing_evidence: frozenPacketForReuse.terra_summary?.missing_evidence || [],
++        blockers: frozenPacketForReuse.blockers || [],
++        draft_constraints: frozenPacketForReuse.draft_constraints || [],
++        ready_to_draft: true,
++        deterministic: true,
++        reused_frozen_packet: true
++      };
++      beginStage(state, run, 'research', { metadata: { research_requirement: 'none' } });
++      completeStage(state, run, 'research', terra);
++      run.events.push({ type: 'research_reused_frozen_packet', research_requirement: 'none', provider_call_count: run.provider_call_count, at: now() });
++      await persistPhase2Stage({ state, run, stage: 'research', payload: phase2PersistencePayload({ run, stage: 'research', packet: inventory, claims: terra.claims, blockers: [], usage: [], cost: null }), claims: terra.claims, blockers: [], usage: [], cost: null, persistence: this.persistence });
++      await this.checkpointState(state);
++    }
+     if (researchRequirement === 'required' && !terra) {
+       transitionPhase2(candidate, 'researching', actor, 'Terra High evidence selection started.');
+       const prompt = terraPrompt({ candidate, sourceInventory: inventory, researchQuestions: assignmentQuestions(candidate) });
+@@ -654,6 +884,14 @@ export class Phase2Orchestrator {
+     }
+ 
+     let packet = stageArtifact(state, run.id, 'evidence_packet')?.payload;
++    if (reuseFrozenPacket && !packet) {
++      packet = deepFreeze(frozenPacketForReuse);
++      beginStage(state, run, 'evidence_packet');
++      completeStage(state, run, 'evidence_packet', packet);
++      state.research_packets.push({ id: crypto.randomUUID(), holdout_run_id: holdoutRunIdFor(run), case_run_id: caseRunIdFor(run), candidate_id: candidateId, processing_run_id: run.id, iteration: 1, pipeline_version: PHASE2_VERSION, terra_evidence_contract_version: TERRA_EVIDENCE_CONTRACT_VERSION, packet, frozen_evidence_packet_sha256: packet.frozen_evidence_packet_sha256, created_at: now(), terra_summary: { selected_source_ids: terra.selected_source_ids, optional_source_ids: terra.optional_source_ids, contradictions: terra.contradictions, freshness_risks: terra.freshness_risks, missing_evidence: terra.missing_evidence, blockers: terra.blockers || [], draft_constraints: terra.draft_constraints || [] } });
++      await persistPhase2Stage({ state, run, stage: 'evidence_packet', payload: phase2PersistencePayload({ run, stage: 'evidence_packet', packet, claims: terra.claims, blockers: [], contradictions: terra.contradictions, usage: [], cost: null }), persistence: this.persistence });
++      await this.checkpointState(state);
++    }
+     if (!packet) {
+       const selectedIds = unique([...(terra.selected_source_ids || []), ...(terra.optional_source_ids || [])]);
+       const selected = sourceRecords(candidate, documents).filter(source => selectedIds.includes(source.id));
+diff --git a/src/pipeline/phase2-persistence.mjs b/src/pipeline/phase2-persistence.mjs
+index 8302443..ed6c6cc 100644
+--- a/src/pipeline/phase2-persistence.mjs
++++ b/src/pipeline/phase2-persistence.mjs
+@@ -8,7 +8,7 @@ export function phase2CostRecord({ usage = [], cost = null } = {}) {
+   return { credits, estimated_cost_usd: estimatedCostUsd };
+ }
+ 
+-export function phase2PersistencePayload({ run, stage, packet = null, draft = null, revision = null, review = null, claims = [], blockers = [], contradictions = [], usage = [], cost = null } = {}) {
++export function phase2PersistencePayload({ run, stage, packet = null, draft = null, revision = null, review = null, claims = [], blockers = [], contradictions = [], usage = [], cost = null, materialization = null } = {}) {
+   return {
+     pipeline_version: PHASE2_VERSION,
+     terra_evidence_contract_version: TERRA_EVIDENCE_CONTRACT_VERSION,
+@@ -24,6 +24,7 @@ export function phase2PersistencePayload({ run, stage, packet = null, draft = nu
+     draft_input_sha256: run.draft_input_sha256 || null,
+     revision_input_sha256: run.revision_input_sha256 || null,
+     research_requirement: run.research_requirement || null,
++    research_requirement_reason: run.research_requirement_reason || null,
+     assignment_checksum: run.assignment_sha256 || null,
+     evidence_preflight: run.evidence_preflight || null,
+     evidence_packet: packet || null,
+@@ -34,7 +35,7 @@ export function phase2PersistencePayload({ run, stage, packet = null, draft = nu
+     draft_constraints: packet?.draft_constraints || run.error?.draft_constraints || [],
+     draft: draft ? { headline: draft.headline, dek: draft.dek, body_markdown: draft.body_markdown, claim_support: draft.claim_support || [], warnings: draft.warnings || [], draft_input_sha256: run.draft_input_sha256 || null } : null,
+     revision: revision ? { changed_claim_ids: revision.changed_claim_ids || [], revision_notes: revision.revision_notes || [], body_markdown: revision.body_markdown, claim_support: revision.claim_support || [], warnings: revision.warnings || [], revision_input_sha256: run.revision_input_sha256 || null } : null,
+-    review: review ? { status: review.status, terra_summary: review.terra_summary || null, contradictions: review.terra_summary?.contradictions || contradictions, deterministic_review: review.deterministic_review, revision_findings: review.revision_findings || null, revision_changes: { changed_claim_ids: revision?.changed_claim_ids || [], revision_notes: revision?.revision_notes || [] }, diff: review.diff || [] } : null,
++    review: review ? { status: review.status, terra_summary: review.terra_summary || null, contradictions: review.terra_summary?.contradictions || contradictions, deterministic_review: review.deterministic_review, revision_findings: review.revision_findings || null, revision_changes: { changed_claim_ids: revision?.changed_claim_ids || [], revision_notes: revision?.revision_notes || [] }, diff: review.diff || [], source_links: review.source_links || [], materialization_revision: review.package_materialization_revision || materialization || null } : null,
+     usage,
+     cost: phase2CostRecord({ usage, cost }),
+     candidate_id: run.candidate_id,
+@@ -46,8 +47,11 @@ export function phase2PersistencePayload({ run, stage, packet = null, draft = nu
+     retry_count: run.retry_count || 0,
+     run_events: run.events || [],
+     source_fetches: run.source_fetches || [],
++    source_searches: run.source_searches || [],
++    source_acquisition: run.source_acquisition || null,
+     source_gate: run.source_gate || null,
+-    phase2_attempts: run.attempts || []
++    phase2_attempts: run.attempts || [],
++    package_materialization_revision: materialization || review?.package_materialization_revision || null
+   };
+ }
+ 
+diff --git a/src/pipeline/phase2-prompts.mjs b/src/pipeline/phase2-prompts.mjs
+index 8745c55..fef34b0 100644
+--- a/src/pipeline/phase2-prompts.mjs
++++ b/src/pipeline/phase2-prompts.mjs
+@@ -1,6 +1,7 @@
+ import { stableJson } from './evidence-packet.mjs';
+ import { PHASE1_SOURCE_ID_MAX_LENGTH, TERRA_EVIDENCE_CONTRACT_VERSION, TERRA_EVIDENCE_MAX_RANGE_CHARACTERS, TERRA_OUTPUT_EXAMPLE, TERRA_PROMPT_SCHEMA_CONTRACT } from './phase1-schemas.mjs';
+-import { deterministicClaimEvidenceSupportMatrix, supportMatrixExamples } from './luna-support.mjs';
++import { deterministicClaimSupportContract, supportMatrixExamples } from './luna-support.mjs';
++import { LUNA_TREATMENT_TYPES } from './luna-claim-contract.mjs';
+ 
+ const clean = value => String(value ?? '').trim();
+ const assignmentFor = candidate => ({
+@@ -52,42 +53,44 @@ export function terraPrompt({ candidate, sourceInventory, researchQuestions = []
+ 
+ export function lunaDraftPrompt({ candidate, packet } = {}) {
+   const assignment = assignmentFor(candidate);
+-  const supportMatrix = deterministicClaimEvidenceSupportMatrix(packet);
+-  const examples = supportMatrixExamples(supportMatrix);
++  const supportContract = deterministicClaimSupportContract(packet);
++  const examples = supportMatrixExamples(supportContract);
+   return [
+     'You are Luna High, the drafting stage for an editorial pipeline.',
+     'Return one JSON object only. Do not use Markdown fences. Write a complete article in body_markdown.',
+     'Use only the frozen evidence packet below. Do not browse, call tools, use outside references, or rely on a prior draft.',
+     'Every material claim must map to a claim record and evidence_id from this packet. Do not add unsupported names, numbers, or quotations.',
+     'The packet excerpts are authoritative and already frozen. Cite them with evidence_id only; never return excerpt text, source_text, excerpt checksums, or copied evidence objects.',
+-    'Do not infer claim coverage from excerpt prose. Use the support matrix below as the complete allow-list. For each claim_support entry, every evidence_id must be a subset of the listed evidence IDs for that exact claim. Evidence listed for another claim cannot be reused.',
+-    'Use treatment only as paraphrase, direct_quote, attributed_claim, or context. For direct_quote, reproduce only an exact contiguous substring of the cited packet excerpt. Do not use ellipses, HTML entity decoding, whitespace normalization, or punctuation repair.',
++    'Do not infer claim coverage from excerpt prose. Use the claim-support contract below as the complete allow-list. For each claim_support entry, every evidence_id must be a subset of allowed_evidence_ids for that exact claim. Evidence listed for another claim cannot be reused.',
++    `The treatment enum is exactly ${JSON.stringify(LUNA_TREATMENT_TYPES)}. A paraphrase restates supported evidence in the article writer's words. A direct_quote reproduces an exact contiguous packet excerpt. Context is limited to non-substantive framing around a claim. Use only the required_treatment assigned by the contract; never invent a treatment label.`,
++    'Every occurrence of one claim in the article must use one canonical treatment for the complete article. Emit one claim-support record for each article anchor. Multiple anchors are valid only when they use the same canonical treatment and permitted evidence subset. Do not repeat an identical claim, anchor, treatment, and evidence mapping.',
+     'ASSIGNMENT', stableJson(assignment),
+     'FROZEN EVIDENCE PACKET', stableJson(packetForModel(packet)),
+-    'CLAIM-TO-EVIDENCE SUPPORT MATRIX (authoritative; required claims only)', stableJson(supportMatrix),
+-    'VALID MAPPING EXAMPLE', stableJson(examples.valid),
+-    'INVALID MAPPING EXAMPLE (evidence belongs to another claim and must be rejected)', stableJson(examples.invalid),
++    'CLAIM-SUPPORT CONTRACT (authoritative; required claims only)', stableJson(supportContract),
++    'VALID MULTI-ANCHOR MAPPING EXAMPLE', stableJson(examples.valid),
++    'INVALID CONTRADICTORY-TREATMENT EXAMPLE', stableJson(examples.invalid),
+     'Draft constraints are part of the frozen packet. Obey every constraint and do not expand beyond the maximum defensible scope.',
+     'OUTPUT SCHEMA', stableJson({ headline: 'string', dek: 'string', body_markdown: '# Headline\n\n*Dek*\n\nArticle body.', section: assignment.section, lens: 'string', beats: assignment.beats, claim_support: [{ claim_id: 'claim-1', evidence_ids: ['evidence-001'], article_anchor: 'paragraph-1', treatment: 'paraphrase' }], warnings: [] })
+   ].join('\n\n');
+ }
+ 
+ export function lunaRevisionPrompt({ candidate, packet, draft, findings, instructions = '' } = {}) {
+-  const supportMatrix = deterministicClaimEvidenceSupportMatrix(packet);
+-  const examples = supportMatrixExamples(supportMatrix);
++  const supportContract = deterministicClaimSupportContract(packet);
++  const examples = supportMatrixExamples(supportContract);
+   return [
+     'You are Luna High revising a source-backed article after deterministic review.',
+     'Return one JSON object only. Do not use Markdown fences. Return the complete revised article, not a patch.',
+     'Use the same frozen evidence packet. Do not browse, call tools, add unsupported material, or change unaffected content.',
+     'Correct blocking factual findings first, then required editorial fixes. Preserve accurate claims and retain source-backed claim_support mappings.',
+     'Return only evidence_id references. Never return excerpt text, source_text, excerpt checksums, or copied evidence objects.',
+-    'Do not infer claim coverage from excerpt prose. Use the support matrix below as the complete allow-list. For each claim_support entry, every evidence_id must be a subset of the listed evidence IDs for that exact claim. Evidence listed for another claim cannot be reused.',
++    'Do not infer claim coverage from excerpt prose. Use the claim-support contract below as the complete allow-list. For each claim_support entry, every evidence_id must be a subset of allowed_evidence_ids for that exact claim. Evidence listed for another claim cannot be reused.',
++    `The treatment enum is exactly ${JSON.stringify(LUNA_TREATMENT_TYPES)}. Use only the required_treatment assigned by the contract. Every occurrence of one claim must use one canonical treatment for the complete article. Emit one record per article anchor and never repeat an identical mapping.`,
+     'Use the exact same frozen_evidence_packet_sha256, evidence IDs, claim ledger, and draft constraints supplied to Draft.',
+     'ASSIGNMENT', stableJson(assignmentFor(candidate)),
+     'FROZEN EVIDENCE PACKET', stableJson(packetForModel(packet)),
+-    'CLAIM-TO-EVIDENCE SUPPORT MATRIX (authoritative; required claims only)', stableJson(supportMatrix),
+-    'VALID MAPPING EXAMPLE', stableJson(examples.valid),
+-    'INVALID MAPPING EXAMPLE (evidence belongs to another claim and must be rejected)', stableJson(examples.invalid),
++    'CLAIM-SUPPORT CONTRACT (authoritative; required claims only)', stableJson(supportContract),
++    'VALID MULTI-ANCHOR MAPPING EXAMPLE', stableJson(examples.valid),
++    'INVALID CONTRADICTORY-TREATMENT EXAMPLE', stableJson(examples.invalid),
+     'Draft constraints are identical to the Draft stage. Preserve them and do not expand beyond the maximum defensible scope.',
+     'DRAFT TO REVISE', stableJson(draft),
+     'DETERMINISTIC FINDINGS', stableJson(findings),
+diff --git a/test/frozen-document-binder.test.mjs b/test/frozen-document-binder.test.mjs
+new file mode 100644
+index 0000000..d94d729
+--- /dev/null
++++ b/test/frozen-document-binder.test.mjs
+@@ -0,0 +1,26 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { bindFrozenPacketDocuments, frozenPacketSourceLinks } from '../src/pipeline/frozen-document-binder.mjs';
++
++const candidate = { id: 'candidate-1', title: 'A story' };
++const run = { id: 'run-1' };
++const source = { source_id: 'source-1', url: 'https://example.test/story', title: 'Source', classification: 'original_reporting', primary_source: false };
++
++test('frozen binder preserves packet url and retained metadata', () => {
++  const { documents } = bindFrozenPacketDocuments({ candidate, run, packet: { sources: [source], claims: [] }, retainedDocuments: [{ id: 'source-1', content: 'retained text', publisher: 'Example' }] });
++  assert.equal(documents[0].url, source.url);
++  assert.equal(documents[0].canonical_url, source.url);
++  assert.equal(documents[0].publisher, 'Example');
++  assert.equal(documents[0].processing_run_id, run.id);
++});
++
++test('frozen binder fails closed on missing urls', () => {
++  assert.throws(() => bindFrozenPacketDocuments({ candidate, run, packet: { sources: [{ source_id: 'source-1' }] }, retainedDocuments: [{ id: 'source-1', content: 'text' }] }), /missing a URL/);
++});
++
++test('frozen binder rejects duplicate urls and source links keep displayed urls', () => {
++  assert.throws(() => bindFrozenPacketDocuments({ candidate, run, packet: { sources: [source, { ...source, source_id: 'source-2' }] }, retainedDocuments: [{ id: 'source-1', content: 'one' }, { id: 'source-2', content: 'two' }] }), /duplicate normalized URL/);
++  const links = frozenPacketSourceLinks({ sources: [source], claims: [{ claim_id: 'claim-1', source_ids: ['source-1'], evidence: [{ evidence_id: 'evidence-1', source_id: 'source-1' }] }] }, [{ id: 'source-1', title: 'Source' }]);
++  assert.equal(links[0].url, source.url);
++  assert.deepEqual(links[0].evidence_ids, ['evidence-1']);
++});
+diff --git a/test/frozen-packet-correction.test.mjs b/test/frozen-packet-correction.test.mjs
+new file mode 100644
+index 0000000..deb77fe
+--- /dev/null
++++ b/test/frozen-packet-correction.test.mjs
+@@ -0,0 +1,35 @@
++import assert from 'node:assert/strict';
++import crypto from 'node:crypto';
++import test from 'node:test';
++import { stableJson } from '../src/pipeline/evidence-packet.mjs';
++import { refreezeCorrectedFrozenPacket } from '../src/pipeline/frozen-packet-correction.mjs';
++
++const candidate = { id: 'classification-candidate', title: 'A retained source story', description: 'A retained source story.', commission: { story_form: 'meanwhile', section_id: 'internet' }, classification: { story_form: 'meanwhile', primary_section: 'internet' } };
++const sources = [
++  ['source-techcrunch', 'https://techcrunch.com/story', 'TechCrunch', 'text-techcrunch'],
++  ['source-reddit', 'https://www.reddit.com/r/example/comments/1/post', 'Reddit discussion', 'text-reddit'],
++  ['source-boss', 'https://www.mindgems.com/products/Boss-Key/boss-key.htm', 'Boss Key', 'text-boss']
++].map(([id, url, title, content], index) => ({ id, source_id: id, url, canonical_url: url, title, publisher: 'Example', source_type: 'original_reporting', classification: 'original_reporting', independence_key: `group-${index}`, primary_source: false, accessible: true, ok: true, content }));
++const packetPayload = { version: 'pipeline-v1-evidence-packet-offsets-v1', sources: sources.map(source => ({ source_id: source.id, classification: source.classification, title: source.title, url: source.url })), claims: [{ claim_id: 'claim-1', claim: 'The retained source supports the story.', evidence: [{ evidence_id: 'evidence-1', source_id: 'source-techcrunch', start: 0, end: 14, claim_ids: ['claim-1'] }] }], claim_targets: ['claim-1'], required_facts: [], prohibited_claims: [], ledgers: { quotations: [], proper_names: [], numbers: [] }, unresolved_research_questions: [], blockers: [], draft_constraints: ['Keep the retained claim qualified.'] };
++const oldChecksum = crypto.createHash('sha256').update(stableJson(packetPayload)).digest('hex');
++
++test('refreezing corrects source classifications without changing retained evidence inputs', () => {
++  const result = refreezeCorrectedFrozenPacket({ packet: { ...packetPayload, frozen_evidence_packet_sha256: oldChecksum }, candidate, documents: sources });
++  assert.equal(result.ok, true, JSON.stringify(result.errors));
++  assert.notEqual(result.packet.frozen_evidence_packet_sha256, oldChecksum);
++  assert.equal(result.packet.supersedes_frozen_evidence_packet_sha256, oldChecksum);
++  assert.equal(result.packet.claims[0].evidence[0].start, 0);
++  assert.equal(result.packet.claims[0].evidence[0].end, 14);
++  assert.equal(result.packet.draft_constraints[0], packetPayload.draft_constraints[0]);
++  assert.deepEqual(result.packet.sources.map(source => [source.source_id, source.classification, source.primary_source]), [
++    ['source-techcrunch', 'original_reporting', false],
++    ['source-reddit', 'commentary', false],
++    ['source-boss', 'primary', true]
++  ]);
++  assert.equal(result.sourceGate.ok, true);
++  assert.equal(result.sourceGate.counts.accessible, 3);
++  assert.equal(result.sourceGate.counts.independent, 3);
++  assert.equal(result.sourceGate.counts.primary, 1);
++  assert.equal(result.classificationChanges.length, 2);
++  assert.equal(result.correctedDocuments[1].content, sources[1].content);
++});
+diff --git a/test/luna-claim-contract.test.mjs b/test/luna-claim-contract.test.mjs
+new file mode 100644
+index 0000000..7a2cb16
+--- /dev/null
++++ b/test/luna-claim-contract.test.mjs
+@@ -0,0 +1,62 @@
++import assert from 'node:assert/strict';
++import test from 'node:test';
++import { validateLunaEvidenceReferences } from '../src/pipeline/phase2-orchestrator.mjs';
++import { lunaDraftPrompt } from '../src/pipeline/phase2-prompts.mjs';
++import { validatePhase1Schema } from '../src/pipeline/phase1-schemas.mjs';
++
++const packet = {
++  sources: [{ source_id: 'source-001', text: 'A retained fact.', url: 'https://example.com/fact' }],
++  claims: [{
++    claim_id: 'claim-retained-002',
++    claim: 'The retained fact is true.',
++    source_ids: ['source-001'],
++    evidence: [
++      { evidence_id: 'evidence-002', source_id: 'source-001', excerpt: 'A retained fact.', claim_ids: ['claim-retained-002'] },
++      { evidence_id: 'evidence-003', source_id: 'source-001', excerpt: 'A second retained fact.', claim_ids: ['claim-retained-002'] }
++    ]
++  }],
++  claim_targets: ['claim-retained-002'],
++  required_facts: [],
++  prohibited_claims: [],
++  ledgers: { quotations: [], proper_names: [], numbers: [] },
++  draft_constraints: ['Stay within the retained evidence.'],
++  version: 'pipeline-v1-evidence-packet-offsets-v1',
++  frozen_evidence_packet_sha256: 'packet-checksum'
++};
++
++const candidate = { title: 'A retained story', commission: { section_id: 'internet', story_form: 'meanwhile' }, classification: { primary_section: 'internet', editorial_pitch: { accepted: true, lens: 'The retained fact matters.' } } };
++const mapping = (overrides = {}) => ({ claim_id: 'claim-retained-002', evidence_ids: ['evidence-002'], article_anchor: 'paragraph-1', treatment: 'paraphrase', ...overrides });
++
++test('same claim at multiple anchors with the same treatment passes', () => {
++  const output = { claim_support: [mapping(), mapping({ article_anchor: 'paragraph-2', evidence_ids: ['evidence-003'] })] };
++  assert.doesNotThrow(() => validateLunaEvidenceReferences(output, packet, candidate));
++});
++
++test('same claim at multiple anchors with different treatments fails', () => {
++  const output = { claim_support: [mapping(), mapping({ article_anchor: 'paragraph-2', treatment: 'context' })] };
++  assert.throws(() => validateLunaEvidenceReferences(output, packet, candidate), /contradictory treatment/);
++});
++
++test('unknown treatment fails schema validation', () => {
++  const errors = validatePhase1Schema('luna_draft', { headline: 'H', dek: 'D', body_markdown: 'B', claim_support: [mapping({ treatment: 'attributed_claim' })], warnings: [] });
++  assert.ok(errors.some(error => /treatment.*not permitted/.test(error)));
++});
++
++test('duplicate identical mapping fails', () => {
++  const output = { claim_support: [mapping(), mapping()] };
++  assert.throws(() => validateLunaEvidenceReferences(output, packet, candidate), /repeated an identical claim-support mapping/);
++});
++
++test('allowed evidence subsets pass and unknown evidence fails', () => {
++  assert.doesNotThrow(() => validateLunaEvidenceReferences({ claim_support: [mapping({ evidence_ids: ['evidence-003'] })] }, packet, candidate));
++  assert.throws(() => validateLunaEvidenceReferences({ claim_support: [mapping({ evidence_ids: ['evidence-unknown'] })] }, packet, candidate), /unknown evidence ID/);
++});
++
++test('prompt treatment contract matches the validator', () => {
++  const prompt = lunaDraftPrompt({ candidate, packet });
++  assert.match(prompt, /exactly \["paraphrase","direct_quote","context"\]/);
++  assert.match(prompt, /required_treatment/);
++  assert.match(prompt, /VALID MULTI-ANCHOR MAPPING EXAMPLE/);
++  assert.match(prompt, /INVALID CONTRADICTORY-TREATMENT EXAMPLE/);
++  assert.doesNotMatch(prompt, /attributed_claim/);
++});
+diff --git a/test/offline-review-materialization.test.mjs b/test/offline-review-materialization.test.mjs
+new file mode 100644
+index 0000000..29f655c
+--- /dev/null
++++ b/test/offline-review-materialization.test.mjs
+@@ -0,0 +1,15 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { materializeOfflineReview } from '../src/pipeline/offline-review-materialization.mjs';
++
++const candidate = { id: 'candidate-1', title: 'A story', commission: { story_form: 'meanwhile', section_id: 'internet', beats: [] }, classification: { primary_section: 'internet', editorial_pitch: { accepted: true, lens: 'A lens' } } };
++const run = { id: 'run-1', candidate_id: candidate.id, research_requirement: 'none', model_usage: [{ stage: 'draft', credits: 1 }], estimated_cost_usd: null };
++const packet = { version: 'packet-v1', frozen_evidence_packet_sha256: 'packet-sha', sources: [{ source_id: 'source-1', url: 'https://example.test/story', title: 'Source', classification: 'original_reporting', primary_source: false }], claim_targets: ['claim-1'], claims: [{ claim_id: 'claim-1', claim: 'A supported fact', source_ids: ['source-1'], evidence: [{ evidence_id: 'evidence-1', source_id: 'source-1', claim_ids: ['claim-1'], excerpt: 'A supported fact.' }] }], draft_constraints: [], required_facts: [], prohibited_claims: [] };
++const draft = { headline: 'A story', dek: 'A dek', body_markdown: '# A story\n\n*A dek*\n\nA supported fact.', claim_support: [{ claim_id: 'claim-1', evidence_ids: ['evidence-1'], article_anchor: 'paragraph-1', treatment: 'paraphrase' }], warnings: [] };
++
++test('offline materialization validates the existing Draft without provider construction', () => {
++  const result = materializeOfflineReview({ candidate, run, packet, draft, retainedDocuments: [{ id: 'source-1', content: 'A supported fact.', title: 'Source' }] });
++  assert.equal(result.review.frozen_evidence_packet_sha256, packet.frozen_evidence_packet_sha256);
++  assert.equal(result.review.source_links[0].url, 'https://example.test/story');
++  assert.equal(result.materialization.provider_calls_added, 0);
++});
+diff --git a/test/phase2-orchestrator.test.mjs b/test/phase2-orchestrator.test.mjs
+index dc9b117..aee40cc 100644
+--- a/test/phase2-orchestrator.test.mjs
++++ b/test/phase2-orchestrator.test.mjs
+@@ -4,6 +4,7 @@ import test from 'node:test';
+ 
+ const { Phase2Orchestrator } = await import('../src/pipeline/phase2-orchestrator.mjs');
+ const { PHASE2_VERSION } = await import('../src/pipeline/phase2-state.mjs');
++const { stableJson } = await import('../src/pipeline/evidence-packet.mjs');
+ 
+ const candidate = () => ({
+   id: 'candidate-1', title: 'The local record changed the workflow', url: 'https://example.com/report', description: 'The local record changed the workflow.', status: 'pitch_ready',
+@@ -109,3 +110,85 @@ test('automatic Luna Revision is rejected even when a revision authorization is
+   assert.equal(calls.draft, 0);
+   assert.equal(calls.revision, 0);
+ });
++
++test('bounded V1 acquisition expands a seed pitch before the source gate', async () => {
++  const acquisitionCandidate = {
++    ...candidate(),
++    id: 'acquisition-candidate',
++    title: 'The local record changed the workflow',
++    commission: { ...candidate().commission, story_form: 'while-youre-here', source_urls: ['https://example.com/report'] },
++    classification: { ...candidate().classification, story_form: 'while-youre-here', editorial_pitch: { accepted: true, research_requirement: 'none', lens: 'A practical explanation of how the record changed the workflow for readers.', evidence_plan: ['Explain the documented workflow change for readers.', 'Describe the practical effect in context.'] } }
++  };
++  const state = { candidates: [acquisitionCandidate], documents: [], research_packets: [], reviews: [], review_actions: [], runs: [] };
++  const fetcher = async url => ({ ok: true, canonical_url: url, fetched_at: new Date().toISOString(), text: `The local record changed the workflow. Independent reporting about ${url} explains the practical effect for readers.` });
++  const results = [2, 3, 4, 5].map(index => ({ title: `Independent report ${index}`, url: `https://independent-${index}.example/report`, snippet: 'local record workflow readers', provider: 'test', rank: index }));
++  const researchRouter = {
++    async search(input) { return { query: input.text, results, coverage: { shouldEscalate: false }, warnings: [], usage: { searchRequests: 1, pagesFetched: 0, entries: [] } }; },
++    async fetchPages(items, { fetcher: fetchPage }) { return { pages: await Promise.all(items.map(async item => ({ ...(await fetchPage(item.url)), search_result: item }))), warnings: [] }; }
++  };
++  const run = { id: 'acquisition-run', source_fetches: [], events: [] };
++  const documents = await new Phase2Orchestrator({ fetcher, researchRouter }).retrieveSources({ state, candidate: acquisitionCandidate, run });
++  assert.equal(documents.length, 5);
++  assert.equal(run.source_searches.length, 3);
++  assert.equal(run.source_acquisition.limits.max_search_queries, 3);
++  assert.equal(run.source_acquisition.limits.max_retained_sources, 12);
++  assert.equal(run.source_acquisition.retained_search_sources, 4);
++  assert.ok(run.source_fetches.some(item => item.acquisition === 'bounded_search'));
++});
++
++test('a frozen-packet Draft rerun skips acquisition and Terra while preserving the packet identity', async () => {
++  const sourceId = 'source:candidate-frozen:source-1';
++  const evidenceText = 'The retained source documents the physical friction created by the key.';
++  const packetPayload = {
++    version: 'pipeline-v1-evidence-packet-offsets-v1',
++    terra_evidence_contract_version: 'terra-evidence-offsets-v1',
++    phase2_inventory_contract_version: 'phase2-inventory-v1',
++    sources: [{ source_id: sourceId, canonical_url: 'https://example.com/retained', title: 'Retained source', publisher: 'Example', source_type: 'original_reporting', classification: 'original_reporting', independence_key: 'group:retained', accessible: true, ok: true }],
++    claims: [{ claim_id: 'claim-1', claim: 'The key creates physical friction.', source_ids: [sourceId], evidence: [{ evidence_id: 'evidence-001', source_id: sourceId, excerpt: evidenceText, start_offset: 0, end_offset: evidenceText.length, claim_ids: ['claim-1'], evidence_role: 'must_use', reason: 'Supports the claim.' }], confidence: 'high' }],
++    claim_targets: ['claim-1'],
++    required_facts: [],
++    prohibited_claims: [],
++    ledgers: { quotations: [], proper_names: [], numbers: [] },
++    unresolved_research_questions: [],
++    blockers: [],
++    draft_constraints: [],
++    totals: {},
++    diagnostics: {},
++    terra_summary: { selected_source_ids: [sourceId], optional_source_ids: [], contradictions: [], freshness_risks: [], missing_evidence: [], blockers: [], draft_constraints: [] },
++    terra_usage: null,
++    terra_cost: null
++  };
++  const frozenChecksum = crypto.createHash('sha256').update(stableJson(packetPayload)).digest('hex');
++  const packet = { ...packetPayload, frozen_evidence_packet_sha256: frozenChecksum };
++  const reuseCandidate = {
++    ...candidate(), id: 'candidate-frozen', status: 'verification_failed', phase2_state: 'failed',
++    classification: { ...candidate().classification, editorial_pitch: { ...candidate().classification.editorial_pitch, research_requirement: 'none' } }
++  };
++  const oldRun = {
++    id: 'old-failed-run', case_run_id: 'old-failed-run', candidate_id: reuseCandidate.id, pipeline_version: PHASE2_VERSION,
++    terra_evidence_contract_version: 'terra-evidence-offsets-v1', status: 'failed', state: 'failed', frozen_evidence_packet_sha256: frozenChecksum,
++    source_gate: { ok: true, counts: { accessible: 1, independent: 1, primary: 0 }, requirements: { minimumAccessibleSources: 1, minimumIndependentSources: 1, minimumPrimarySources: 0 } },
++    provider_call_count: 1, provider_calls: [{ stage: 'draft', started: true }], model_usage: [], estimated_cost_usd: null, attempts: [], events: [], source_fetches: [], source_searches: []
++  };
++  const state = {
++    candidates: [reuseCandidate], documents: [], research_packets: [{ id: 'old-packet', candidate_id: reuseCandidate.id, processing_run_id: oldRun.id, packet, frozen_evidence_packet_sha256: frozenChecksum }],
++    phase2_runs: [oldRun], phase2_attempts: [], phase2_artifacts: [], phase2_reviews: [], phase2_persistence: [], reviews: [], review_actions: [], runs: []
++  };
++  const body = `# The local record changed the workflow\n\n*What the record means for the people using the system.*\n\n${Array.from({ length: 260 }, (_, index) => `token${index}`).join(' ')}`;
++  const draftResponse = { raw: JSON.stringify({ headline: reuseCandidate.title, dek: 'The physical key creates a deliberate delay.', body_markdown: body, section: 'systems', lens: 'Physical friction changes the workflow.', beats: ['cities'], claim_support: [{ claim_id: 'claim-1', evidence_ids: ['evidence-001'], article_anchor: 'paragraph-1', treatment: 'paraphrase' }], warnings: [] }), metrics: { model_usage: { provider: 'codex', model: 'test-model', reasoning: 'high', input_tokens: 1, cached_input_tokens: 0, output_tokens: 1, reasoning_output_tokens: 0, credits: 0, estimated_cost_usd: 0, wall_ms: 1 } } };
++  const calls = { terra: 0, draft: 0 };
++  const result = await new Phase2Orchestrator({
++    fetcher: async () => { throw new Error('frozen-packet rerun must not refetch'); },
++    terraAdapter: { async generate() { calls.terra++; throw new Error('frozen-packet rerun must not call Terra'); } },
++    draftAdapter: { async generate({ onProviderStart }) { calls.draft++; onProviderStart?.(); return draftResponse; } },
++    revisionAdapter: { async generate() { throw new Error('Revision must not run'); } }
++  }).process({ state, candidateId: reuseCandidate.id, commissionAuthorization: { job_id: 'new-draft-job', case_run_id: 'new-run', pipeline_version: 'v1', research_requirement: 'none', reuse_frozen_evidence_packet: true, frozen_evidence_packet: packet, frozen_evidence_packet_sha256: frozenChecksum } });
++  assert.equal(result.candidate.status, 'ready_for_review', JSON.stringify(result));
++  assert.equal(result.review.frozen_evidence_packet_sha256, frozenChecksum);
++  assert.equal(result.run.previous_run_id, oldRun.id);
++  assert.equal(result.run.reused_frozen_evidence_packet, true);
++  assert.equal(calls.terra, 0);
++  assert.equal(calls.draft, 1);
++  assert.equal(result.run.source_searches.length, 0);
++  assert.equal(result.run.events.some(event => event.type === 'frozen_packet_reused'), true);
++});

@@ -1,0 +1,167 @@
+[
+  {
+    "request": {
+      "max_tokens": 768,
+      "messages": [
+        {
+          "content": "You are a careful deterministic operations assistant.",
+          "role": "system"
+        },
+        {
+          "content": "You are operating a deterministic tool-use benchmark. Use the provided structured tools directly. Investigate before mutation, preserve state, obey constraints, and stop only when the objective is verified or the evidence requires a safe stop. Do not explain tool calls in ordinary text. Public task data follows:\n{\"available_tools\": [\"get_workers\", \"get_queue\", \"pause_queue\", \"resume_queue\", \"move_jobs\", \"get_job\"], \"initial_state\": {\"queues\": {\"node-a\": [{\"affinity\": \"gpu\", \"id\": \"j-gpu\"}, {\"affinity\": \"cpu\", \"id\": \"j-cpu\"}]}, \"workers\": {\"node-a\": {\"gpu\": false, \"load\": 96}, \"node-b\": {\"gpu\": true, \"load\": 31}, \"node-c\": {\"gpu\": false, \"load\": 42}}}, \"objective\": \"Move queued workload away from overloaded node-a to available workers while respecting GPU affinity.\"}",
+          "role": "user"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"source_queue\": \"node-a\", \"destination_worker\": \"node-b\", \"affinity\": \"gpu\"}",
+                "name": "move_jobs"
+              },
+              "id": "qv5QrFQVC8WbzBFWeJbhUSLcmA4c5ADf",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"type\":\"tool_call\",\"tool\":\"move_jobs\",\"arguments\":{\"source_queue\":\"node-a\",\"destination_worker\":\"node-b\",\"affinity\":\"gpu\"},\"ok\":false,\"invalid\":true,\"response\":\"malformed_arguments:KeyError:'destination'\"}",
+          "name": "move_jobs",
+          "role": "tool",
+          "tool_call_id": "qv5QrFQVC8WbzBFWeJbhUSLcmA4c5ADf"
+        }
+      ],
+      "model": "Granite-4.1-3B",
+      "seed": 0,
+      "stream": false,
+      "temperature": 0,
+      "tool_choice": "auto",
+      "tools": [
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_workers. Use only when needed for the stated objective.",
+            "name": "get_workers",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_queue. Use only when needed for the stated objective.",
+            "name": "get_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool pause_queue. Use only when needed for the stated objective.",
+            "name": "pause_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool resume_queue. Use only when needed for the stated objective.",
+            "name": "resume_queue",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool move_jobs. Use only when needed for the stated objective.",
+            "name": "move_jobs",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_job. Use only when needed for the stated objective.",
+            "name": "get_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        }
+      ]
+    },
+    "response": {
+      "json": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "content": "",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"source_queue\": \"node-a\", \"destination_worker\": \"node-b\", \"affinity\": \"gpu\"}",
+                    "name": "move_jobs"
+                  },
+                  "id": "qv5QrFQVC8WbzBFWeJbhUSLcmA4c5ADf",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1789761558,
+        "id": "chatcmpl-AuzCRK59ACtk0OQalyYOTkrXwAyIiWQH",
+        "model": "Granite-4.1-3B",
+        "object": "chat.completion",
+        "system_fingerprint": "b11028-972d2313b",
+        "timings": {
+          "cache_n": 0,
+          "predicted_ms": 3807.437,
+          "predicted_n": 37,
+          "predicted_per_second": 9.45517942910152,
+          "predicted_per_token_ms": 105.76213888888888,
+          "prompt_ms": 5248.307,
+          "prompt_n": 671,
+          "prompt_per_second": 127.85075263318248,
+          "prompt_per_token_ms": 7.821619970193741
+        },
+        "usage": {
+          "completion_tokens": 37,
+          "prompt_tokens": 671,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "total_tokens": 708
+        }
+      },
+      "raw": "{\"choices\":[{\"finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"type\":\"function\",\"function\":{\"name\":\"move_jobs\",\"arguments\":\"{\\\"source_queue\\\": \\\"node-a\\\", \\\"destination_worker\\\": \\\"node-b\\\", \\\"affinity\\\": \\\"gpu\\\"}\"},\"id\":\"qv5QrFQVC8WbzBFWeJbhUSLcmA4c5ADf\"}]}}],\"created\":1789761558,\"model\":\"Granite-4.1-3B\",\"system_fingerprint\":\"b11028-972d2313b\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":37,\"prompt_tokens\":671,\"total_tokens\":708,\"prompt_tokens_details\":{\"cached_tokens\":0}},\"id\":\"chatcmpl-AuzCRK59ACtk0OQalyYOTkrXwAyIiWQH\",\"timings\":{\"cache_n\":0,\"prompt_n\":671,\"prompt_ms\":5248.307,\"prompt_per_token_ms\":7.8216199701937406,\"prompt_per_second\":127.85075263318248,\"predicted_n\":37,\"predicted_ms\":3807.437,\"predicted_per_token_ms\":105.76213888888888,\"predicted_per_second\":9.45517942910152}}",
+      "status": 200
+    },
+    "turn": 1
+  }
+]

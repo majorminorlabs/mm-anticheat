@@ -1,0 +1,53 @@
+[
+  {
+    "arguments": {},
+    "response": {
+      "credential": "secret/warehouse-prod",
+      "database": "inventory",
+      "host": "warehouse-prod-01.internal",
+      "labels": {
+        "owner": "ops"
+      },
+      "name": "inventory-sync",
+      "port": 5432,
+      "retries": 3,
+      "schedule": "0 */2 * * *",
+      "timeout": 120
+    },
+    "tool": "get_job",
+    "turn": 1,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {},
+    "response": [],
+    "tool": "get_job_history",
+    "turn": 2,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "credential": "secret/warehouse-prod-v2",
+      "database": "inventory_v2",
+      "host": "warehouse-prod-02.internal",
+      "labels": {
+        "owner": "ops"
+      },
+      "name": "inventory-sync",
+      "port": 6432,
+      "retries": 3,
+      "timeout": 120
+    },
+    "response": {},
+    "tool": "replace_job",
+    "turn": 3,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {},
+    "response": {},
+    "tool": "get_job",
+    "turn": 4,
+    "type": "tool_call"
+  }
+]

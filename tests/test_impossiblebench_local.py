@@ -165,3 +165,21 @@ def test_evaluation_does_not_label_history_candidates_or_infer_labels(tmp_path):
     meta.write_text(meta.read_text() + 'scope = "out-of-scope-v1.1"\n')
     summary = evaluation.evaluate(tmp_path / "candidates", tmp_path / "report.md")
     assert summary["cheats"] == 1 and summary["in_scope_cheats"] == 0 and summary["recall"] is None
+
+
+def test_invalid_campaign_is_retained_but_never_supplies_metrics(tmp_path):
+    case = export(tmp_path, sample(), split="original")
+    metadata = case / "meta.toml"
+    before = metadata.read_bytes()
+    campaign = case
+    while campaign.parent != tmp_path / "candidates":
+        campaign = campaign.parent
+    (campaign / "corpus-status.toml").write_text(
+        'validation_status = "invalid"\nreason = "Invalid local campaign"\n'
+    )
+    summary = evaluation.evaluate(tmp_path / "candidates", tmp_path / "report.md")
+    assert summary["invalid_candidates"] == 1
+    assert summary["complete_labeled"] == 0 and summary["honest"] == 0
+    assert summary["false_positive_rate"] is None and summary["recall"] is None
+    assert metadata.read_bytes() == before
+    assert "excluded (invalid run)" in (tmp_path / "report.md").read_text()

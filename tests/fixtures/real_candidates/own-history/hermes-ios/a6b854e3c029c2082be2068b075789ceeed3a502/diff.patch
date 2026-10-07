@@ -1,0 +1,2116 @@
+diff --git a/BOT_MODE_AUDIT.md b/BOT_MODE_AUDIT.md
+index e13adee..46ff436 100644
+--- a/BOT_MODE_AUDIT.md
++++ b/BOT_MODE_AUDIT.md
+@@ -38,7 +38,7 @@ server metadata, not Electron local storage. Hidden bots (`hermes-bots.hidden`)
+ are omitted. Deleted/tombstoned/non-live profiles disappear with the next roster
+ read. Archiving a chat is different from hiding/deleting its bot; it does not
+ remove the profile. Hermes may repair accidentally archived canonical chats as
+-part of its own lookup; the bridge adds no repair/creation operation.
++part of its own lookup; the bridge follows exact-title resolution and adds the audited initialization path below.
+ 
+ The default profile and the Hermes roster entry are the same identity. It is
+ included once in Bots, with no separate Default Profile section. Two distinct
+@@ -51,12 +51,13 @@ profiles with the same display name remain distinct; names are not identity keys
+ - `GET /mobile/v1/bots/{id}`: fresh per-bot detail/configuration inventory.
+ - `GET /mobile/v1/bots/{id}/conversation`: resolve the canonical title on every
+   request and return its current real transcript. Stable mobile routing ID
+-  `botchat.<bot-id>` identifies the relationship, not a pinned Hermes session ID.
++  `botchat.<bot-id>` identifies the relationship, not a pinned Hermes session ID. An existing mobile alias is reused when already bound to the same canonical transcript.
++- `POST /mobile/v1/bots/{id}/conversation`: initialize if absent, then attach/resume and return the same normalized conversation/history envelope.
+ - Existing `/profiles`, conversation/run controls, authentication and profile
+   allowlists remain compatible.
+ - `features.profiles` and `features.botMode` are separate. A backend advertises
+   Bot Mode only after its RPC handshake verifies `bot_mode_protocol:true`.
+-  Older backends fall back to generic profiles.
++  Older backends fall back to generic profiles. `features.botChat` additionally requires the explicit writable grant.
+ 
+ Opt in with `backends.<source>.bot_mode_roster: true` in the private bridge config,
+ or `install-bridge.sh --bot-mode` for a new installation. This explicitly grants
+@@ -80,12 +81,74 @@ and removed/hidden profiles disappear without rebuilding. Detail refreshes every
+ fresh detail response replaces them. Refresh remains request-based; V1 does not
+ claim full Desktop change-event coverage.
+ 
+-Chat opens the existing canonical transcript in the normal Conversation view,
+-read-only, with manual refresh. It does not `session.resume`, rebind a Desktop
+-session event sink, run an intro, or create any conversation. No canonical row →
+-Chat is disabled with a Studio-initialization explanation. Composition, rename,
+-delete and run controls are not offered for imported Bot Chats. Ordinary
+-bridge-owned conversations retain their existing controls.
++Chat uses the normal ConversationView and composer. One tap initializes an absent
++canonical chat or opens the existing one; a short opening state prevents duplicate
++taps. Main Chat lists the same mobile conversation ID and bot identity. Rename and
++delete are unavailable for canonical chats; changing their title would break identity.
++Hidden/removed bots disappear from lists; opening their old resource fails safely,
++while stored history and mobile run records are retained.
++
++## Canonical initialization, execution and persistence
++
++Desktop source: `apps/desktop/src/plugins/hermes-bots/canonical-chat.ts`,
++`findExisting` (around line 271) and `openCanonicalBotChat` initialization (around
++line 453). On an ordinary bot click, exact native-profile/title lookup precedes
++creation. The bridge uses `session.create {profile,title:"Bot Chat",hidden:true,
++follow_profile_config:true,close_on_disconnect:false,idempotency_key:<stable bot key>}`,
++then `session.title` to persist the empty hidden row eagerly. It sends no intro
++or model prompt. A title conflict adopts a freshly confirmed winner and closes
++only the bridge's unused candidate. The source's unique title index is the
++cross-process persistent duplicate guard. Lookup failure, inconsistent positive
++roster identity, or unconfirmed title persistence fails closed without a default
++profile fallback. Bridge locks serialize opens; a stable source create key also
++protects retries after a lost reply.
++
++`session.list` returns lineage root `id` and compression tip `resolved_id`.
++Fresh roster root and indexed lookup must agree. Resume/history use the current
++tip and exact native `profile`, while the mobile relationship ID stays stable.
++The existing mobile conversation, run, stream/replay and stop/steer resources
++are reused. Native `prompt.submit` receives the resumed runtime handle and bot
++profile. Hermes's profile runtime binds model/provider, SOUL, skills, toolsets
++and MCP; `follow_profile_config` survives resume and tracks native defaults.
++Mobile does not supply a generic model override or copy personality into prompts.
++User/assistant history belongs to the profile's Hermes database, not a parallel
++mobile chat store. The bridge journal stores aliases, run projections and replay.
++GET binds observed aliases locally but does not create/resume an upstream chat.
++
++Source anchors: `tui_gateway/methods_session.py` create around 352, exact lookup
++540, resume context 644, live attach 875; `methods_prompt.py` submit around 657;
++`hermes_state_schema.py` unique title index around 134. The installed lazy live
++resume payload (`server.py::_fallback_session_info`, around 3081) omits
++`profile_name`: only that explicit `lazy:true` omission is accepted after exact
++profile-scoped resolution. A reported profile mismatch is always rejected.
++
++Resume attaches another transport alongside existing clients. `owned` means a
++bridge-attached handle, not exclusive Desktop ownership. Native prompt submission
++claims an engine process/session writer lease; it is not per-client exclusivity.
++The bridge rejects a busy native session before allocating a new run and controls
++only its own recorded runs, revalidating canonical identity and native handle.
++Cross-process lease refusal or a lost send reply is surfaced, never retried as a
++fresh message automatically. Independent Desktop clients may still share a
++session; mobile does not claim universal observation/control of their runs.
++
++Modern clarification (`server_requests.py`, `contracts/server_requests.py`) is an
++ID-bearing JSON-RPC server request, not the older notification/`clarify.respond`
++protocol. The bridge opts into `client.capabilities`, stores exact request/qids,
++replays `open_requests` snapshots after reconnect, handles cancellation and
++answers via `clarify.lock`. Mobile answers are serialized per attention item;
++accepted Desktop answers in a fresh snapshot are rejected as stale. Hermes can
++still permit competing clients to overwrite a qid before a batch completes, so
++this is not an atomic cross-client answer lease. Unsupported approval/secret/sudo
++requests receive `-32601`; no approval or empty credential is invented. True
++window requests receive `4404` only with negotiated `declines_not_shown`, allowing
++shown Desktop peers to answer. Socket-reader handlers never wait on their own RPC.
++
++For new installs, `install-bridge.sh --bot-chat` enables both roster and canonical
++chat access. Existing installs explicitly set `backends.<source>.bot_chat_control:
++true` alongside `bot_mode_roster:true`, then use the guarded updater. It grants
++`chat.control` credentials access to every visible local bot including future
++bots; opaque bot IDs do not introduce per-bot authorization. Read-only roster
++access remains available without the writable grant.
+ 
+ ## Later create/edit work
+ 
+@@ -97,8 +160,8 @@ minting exact-title chat flow, hidden initialization and intro behavior. Editing
+ requires safe handling of `applied` partial successes, model-cost confirmation,
+ and `ui_meta_expected_revisions` compare-and-swap. Delete/archive must distinguish
+ profile deletion from hidden roster metadata and chat archival, protect active
+-turns and preserve history intentionally. Sending into Desktop Bot Chats needs a
+-separately audited shared-ownership or delivery protocol. None is added in V1.
++turns and preserve history intentionally. Canonical Bot Chat delivery is now implemented with the shared-client limits
++described above. Bot creation/configuration remains deferred.
+ 
+ ## Verification and Studio/device evidence
+ 
+diff --git a/BOT_MODE_VALIDATION.md b/BOT_MODE_VALIDATION.md
+index 9b83d37..26b4df9 100644
+--- a/BOT_MODE_VALIDATION.md
++++ b/BOT_MODE_VALIDATION.md
+@@ -1,104 +1,137 @@
+-# Bot Mode validation — 2026-10-03
+-
+-Source audit and API/authorization details: [BOT_MODE_AUDIT.md](BOT_MODE_AUDIT.md).
+-This milestone is on `codex/bot-mode-milestone`. Nothing was pushed or published.
+-Pre-existing Xcode project/scheme signing changes are excluded from the milestone.
+-
+-## Studio deployment and actual data
+-
+-The dedicated bridge backend now runs installed Hermes commit
+-`4bb9e57bfde8a0affb5553eff13ed6e1f14147f1` using Hermes's managed runtime,
+-not the stale legacy venv. Both that commit and the previous audited commit
+-`2a4c9afd7bd` are accepted. The bridge was updated through the existing guarded
+-update script. Private configuration and SQLite databases were backed up via
+-SQLite's backup API before deployment. Device credentials, the bridge journal,
+-and the existing Tailscale HTTPS route were preserved.
+-
+-The default source is explicitly opted into read-only whole-roster Bot Mode.
+-Authenticated live API checks returned these three identities:
+-
+-| Bot | Profile identity | Model/provider | Canonical Bot Chat |
++# Writable Bot Chat validation — 2026-10-03
++
++This milestone continues `28a5f59` on `codex/bot-mode-milestone`. Nothing was
++pushed or published. Canonical lifecycle/source details are in
++[BOT_MODE_AUDIT.md](BOT_MODE_AUDIT.md).
++
++## Result and Studio deployment
++
++One Chat tap on a visible bot now opens a writable persistent native canonical
++`Bot Chat`, initializing a missing row with Hermes Desktop's hidden,
++profile-following, eager-title lifecycle. No intro/model turn is sent during
++initialization. Both Bots and main Chat return the same mobile conversation ID;
++no generic default-profile chat is created as a fallback.
++
++The existing guarded updater deployed the bridge after isolated validation.
++Private configuration and existing SQLite databases were backed up using SQLite's
++backup API under the private installation root's `bot-chat-backups/20261003-152906`.
++The `default` source now explicitly grants `bot_mode_roster:true` and
++`bot_chat_control:true`. Credentials, journal and the existing private Tailscale
++HTTPS route were preserved. Both dedicated services are healthy and advertise
++Bot Mode, writable Bot Chat and modern clarifications. Installed Hermes remains
++`4bb9e57bfde8a0affb5553eff13ed6e1f14147f1`.
++
++| Bot | Native profile | Actual model/provider | Canonical result |
+ | --- | --- | --- | --- |
+-| Hermes | `default` | `gpt-5.6-luna` / `openai-codex` | Not initialized |
+-| Research Orchestrator | `research-orchestrator` | `gpt-6.1-sol` / `openai-codex` | Not initialized |
+-| Research Worker | `research-worker` | `gpt-5.6-luna` / `openai-codex` | Not initialized |
+-
+-Live detail requests returned SOUL and avatars, enabled skills, memory/plugin
+-metadata, and empty routine lists. The Orchestrator's enabled skill inventory
+-contains all six requested names: `research-terminal`, `arxiv`,
+-`hermes-bluebubbles-operations`, `llama-cpp`, `llm-wiki`, and
+-`online-price-comparison`. Its live inventory contains many additional skills;
+-the six-item fixture is a sanitized test sample, not the complete live inventory.
+-The Worker includes `research-terminal-worker`. Cross-process live working/idle
+-state remains unobserved; persisted last-active times are displayed.
+-
+-No canonical chat was created, resumed or rebound in the production profiles.
+-Chat remains disabled until the Studio initializes its canonical Bot Chat.
+-Existing canonical history and exact-title lookup are validated in an isolated
+-actual-Hermes fixture with a temporary home and local model, without production
+-profiles or provider keys. Moving compressed tips are covered by the bridge wire
+-fixture and verified against the installed lookup implementation. Imported Bot Chats are
+-read-only; composition requires a later shared-ownership audit.
+-
+-## Dynamic discovery
+-
+-On the running Studio, a uniquely named temporary profile displayed as
+-`Mobile Refresh Probe` was added using the source's profile storage contract.
+-A fresh authenticated bridge request immediately returned four bots. Setting
+-its persisted Bot Mode `hidden` metadata removed it from the roster. The owned
+-temporary directory was then deleted, and the next request returned exactly the
+-original three bots. No service restart or app rebuild was involved. No model
+-execution, provider credential, routine or canonical conversation was created.
+-Cleanup succeeded; no probe remains.
+-
+-The phone fetches on opening Bots, foreground, reconnect and pull to refresh,
+-plus every 15 seconds while the view is active. Each result replaces membership;
+-details refresh on the same interval. Automated Swift and bridge fixtures cover
+-new identities, removal/hiding, reconnect, legacy-profile fallback, duplicate
+-Hermes/default prevention and production data isolation.
+-
+-## Physical iPhone
+-
+-The signed app was built and installed successfully on the connected iPhone 15
+-Pro Max (`Scott’s iPhone`, bundle `com.dippo.hermes`), using the existing local
+-signing configuration. No signing material is committed.
+-
+-The initial physical UI run confirmed all three names in Bots and no separate
+-Default Profile section. It opened Research Orchestrator and loaded its actual
+-Studio skill inventory. A screenshot of the three-bot roster is retained locally
+-under ignored `build/bot-mode-validation/iphone-bots.png`.
+-
+-That run failed its `research-terminal` assertion because eight scrolls did not
+-reach the skill in the large live list. The failure's accessibility hierarchy
+-contains real skill rows through the middle of that inventory. The test was
+-corrected to allow thirty scrolls and to select the detail Chat button explicitly.
+-Subsequent physical runs could not start because the iPhone was locked.
+-Consequently, **physical confirmation of the specific `research-terminal` row
+-and temporary-bot appearance/removal remains unverified**. The bridge API and
+-isolated tests confirm those data/discovery paths, but they do not substitute for
+-on-device evidence. Canonical Chat cannot be opened on this Studio snapshot
+-because no canonical row exists; the app deliberately does not create one.
+-
+-## Automated checks
+-
+-- Bridge suite with installed-Hermes integration enabled: **32 passed**.
+-- Studio service lifecycle/configuration suite: **8 passed**.
+-- Full Swift unit/UI suite: **44 passed, 7 explicitly skipped, 0 failed**
+-  (`/tmp/hermes-bots-tests-final-source.xcresult`, 51 total).
+-- After the final canonical-chat model-label correction, the complete unit suite
+-  was rerun: **39 passed, 3 explicitly skipped, 0 failed**
+-  (`/tmp/hermes-bots-unit-final.xcresult`, 42 total).
+-- Signed physical `build-for-testing`: succeeded; final app installation succeeded.
+-- `git diff --check`: passed.
+-
+-Local test logs and result bundles live under `/tmp/hermes-bots-*`; credentials
+-and private configuration are excluded. Optional physical/local-stack tests are
+-explicitly skipped in the normal simulator suite, rather than counted as passes.
+-
+-## Deferred controls
+-
+-Bot creation/editing, SOUL changes, model/provider changes, skill toggles and
+-profile deletion/archive are intentionally not added. The source RPCs and their
+-required concurrency, partial-success, cost and canonical-chat initialization
+-handling are documented in the source audit. Older generic profile APIs remain
+-available; unavailable fields receive no fabricated values.
++| Hermes | `default` | `gpt-5.6-luna` / `openai-codex` | Initialized from phone; message completed |
++| Research Orchestrator | `research-orchestrator` | `gpt-6.1-sol` / `openai-codex` | Initialized from phone; message/tools completed; history reopened |
++| Research Worker | `research-worker` | `gpt-5.6-luna` / `openai-codex` | Initialized/opened from phone; no production message requested |
++
++Authenticated HTTPS reads and direct read-only source database checks confirmed
++exactly one hidden `Bot Chat` row per profile and matching Bots/Chat IDs. All three
++retain separate canonical identities and persistent source transcripts.
++Live bridge records show one canonical mobile relationship for each. Exact-title
++lookup is refreshed on opens/reads; the source root/tip relationship is checked.
++Hidden/removed membership fails safely without deleting history or minting a
++replacement. Source profile configuration remains native; no bot names/models
++are hardcoded in production code.
++
++## Physical iPhone results
++
++The signed app was installed on the connected iPhone 15 Pro Max using local
++signing settings and the phone's existing pairing. Actual XCTest actions exercised:
++
++- **Research Orchestrator:** Bot detail, visibly hittable `research-terminal` skill
++  row, enabled Chat, initialization/open, send, streamed response and tool activity.
++  The run completed with 71 `assistant.delta` events and two started/completed
++  tools: `skill_view` for the attached native-profile skill, then the Research
++  Terminal helper's read-only `search "Hermes"`. The skill result identifies the
++  actual `research-orchestrator` skill directory; this is source execution evidence,
++  not a UI identity label. Actual session metadata retained `gpt-6.1-sol` and
++  `openai-codex`.
++- **Recovery:** background/home and foreground, termination/relaunch, reopen via
++  Bots, then open from main Chat with the same response/history. Screenshots retain
++  the streaming/tool panel and the reopened transcript. The live bridge relationship
++  and stable conversation ID were independently checked.
++- **Hermes:** initialize/open, safe identity-only send, streamed assistant response
++  and completion (16 deltas). No tools were requested.
++- **Research Worker:** initialize/open writable canonical chat, screenshot; no
++  production model execution was requested for this bot.
++
++All three distinct physical tests passed across the initial Hermes/Worker run and
++corrected Orchestrator rerun. The first Orchestrator attempt failed only its skill
++traversal assertion: full-page swipes skipped the row and reached the long SOUL
++section. Short overlapping collection-view drags corrected the test. No message
++was sent in that failed attempt. Initial lock/toolchain readiness and a test-target
++signing-team requirement were resolved before execution; they are not app defects.
++
++**Research Terminal environment limitation:** the read-only helper returned exit
++code 1, `RESEARCH_TERMINAL_API_TOKEN_FILE is required`. The assistant accurately
++reported that no search results/source title were returned. The chat, native skill
++access, tool invocation and streaming paths succeeded, but successful Research
++Terminal retrieval is not claimed. No credential inspection, research job creation,
++publication, external message or destructive research operation was performed.
++The missing Research Terminal authentication reference was not changed in this pass.
++
++Ignored local evidence: `build/bot-chat-validation/` contains sanitized live run
++metadata and phone screenshots, including `attached-research-terminal-on-iphone.png`,
++`mobile_research_check_done.png`, `research-orchestrator-history-after-relaunch.png`
++and `same-bot-chat-opened-from-chat-tab.png`. Result bundles:
++
++- `/tmp/hermes-botchat-device/Logs/Test/Test-Hermes-2026.10.03_15-31-15--0500.xcresult`
++  (Hermes/Worker passed; initial skill traversal failed).
++- `/tmp/hermes-botchat-device/Logs/Test/Test-Hermes-2026.10.03_15-36-00--0500.xcresult`
++  (corrected Orchestrator, passed).
++
++## Automated validation
++
++- **Bridge: 42 passed, 0 skipped/failed**, with `HERMES_BRIDGE_E2E=1`.
++  Ten new canonical lifecycle/protocol regressions cover absence, reuse, concurrent
++  taps, eager title failure/retry, native send/profile identity, same CID in main
++  Chat, hidden/removed history retention, authorization/configuration gates,
++  mismatched registry roots/profiles, busy native turns and modern clarification.
++- **Installed-source end-to-end:** an isolated Hermes home and deterministic local
++  model, with no production provider credentials. Concurrent initialization of all
++  three identities, distinct native model/SOUL/skills, source history, same-CID list,
++  tools, stop/steer, two-question clarification after transport reconnect, replay,
++  bridge restart and cold Hermes restart all passed. Cold Orchestrator execution
++  again proved its native model/SOUL/skill context. Process loss leaves the interrupted
++  generic run unknown and never resends its prompt.
++- **Studio lifecycle/configuration: 8 passed.**
++- **Full Swift unit/UI: 46 passed, 10 explicitly skipped, 0 failed; 56 total.**
++  Optional physical/isolated-stack/Studio tests are skipped unless explicitly enabled.
++  Includes 26 BridgeIntegrationTests and existing simulation UI coverage. Result:
++  `/tmp/hermes-botchat-final/Logs/Test/Test-Hermes-2026.10.03_15-26-31--0500.xcresult`.
++- Signed physical build/install succeeded. `git diff --check` passed.
++
++Logs: `/tmp/hermes-botchat-bridge-all.log`, `/tmp/hermes-botchat-service.log`,
++`/tmp/hermes-botchat-swift-all.log`, `/tmp/hermes-botchat-device-orchestrator.log`.
++No token/configuration/signing material is added to repository artifacts.
++
++## Dynamic discovery and deliberately deferred work
++
++Existing fresh roster/15-second visible refresh/foreground/reconnect behavior is
++preserved. Automated tests exercise new membership, hidden/removed membership and
++preserved historical rows without an app rebuild. The earlier read-only milestone's
++Studio-owned temporary probe discovery/removal evidence remains historical; it was
++not repeated with a production probe in this pass.
++
++Bot creation/editing, profile deletion/archive, model/SOUL/skill configuration UI,
++rooms and destructive approval responses remain deferred. Independent Desktop
++clients can attach to the same source session; the bridge does not claim exclusive
++per-client ownership or full observation of Desktop-created runs. Modern source
++clarification locks still permit cross-client races before the batch settles.
++Phone stop/steer and clarification actions were not physically exercised here;
++they passed bridge, Swift and actual installed-Hermes isolated tests.
++
++## Signing reconciliation
++
++The pre-existing project/scheme changes were inspected and kept unchanged locally,
++excluded from this milestone. Parsing the project as property-list objects confirms
++its only semantic changes are personal `DEVELOPMENT_TEAM` assignments in the app's
++Debug and Release settings; the remaining diff is serializer ordering. The shared
++scheme's existing removal of UI-test `parallelizable="NO"` is also left uncommitted.
++Test-target signing was supplied via a local `xcodebuild DEVELOPMENT_TEAM=…` override.
++No personal team assignment, device ID, certificate, provisioning profile, Apple
++credential or secret is committed. This preserves the user's existing local signing
++work while keeping the shared project portable.
+diff --git a/BRIDGE_API.md b/BRIDGE_API.md
+index be293d1..5be39e6 100644
+--- a/BRIDGE_API.md
++++ b/BRIDGE_API.md
+@@ -190,7 +190,7 @@ A stop records durable intent. If Hermes enqueues a prompt after interrupt clear
+ 
+ ## Capabilities, inventory and errors
+ 
+-Capabilities include current socket health, discovered route availability, configured boards/roots/workspaces (each profile includes its boards allowlist), audited/installed commit metadata, scopes and retention. Sessions/runs/stop/steering require a usable structured socket; replay remains available offline. Inventory route discovery uses OpenAPI rather than API-server capability flags. Permission scopes are an additional check. Bot Mode/rooms are false; dangerous approval response is false. CLI source verification when source_dir is configured does not attest a running HTTP binary launched elsewhere.
++Capabilities include current socket health, discovered route availability, configured boards/roots/workspaces (each profile includes its boards allowlist), audited/installed commit metadata, scopes and retention. Sessions/runs/stop/steering require a usable structured socket; replay remains available offline. Inventory route discovery uses OpenAPI rather than API-server capability flags. Permission scopes are an additional check. Bot Mode and writable Bot Chat require explicit source grants and an audited Bot Mode handshake; rooms are false; dangerous approval response is false. CLI source verification when source_dir is configured does not attest a running HTTP binary launched elsewhere.
+ 
+ Inventory includes skills metadata, CLI-default toolsets, credential-free provider/model metadata/capabilities, MCP name/transport/enabled/tool selection, Hermes usage analytics, host metrics and memory provider/file-size metadata. It excludes raw config, MCP commands/env/auth/URLs, memory contents, logs, billing changes and global settings. Configured MCP/tool availability does not prove external service health.
+ 
+@@ -198,9 +198,9 @@ Inventory includes skills metadata, CLI-default toolsets, credential-free provid
+ {"error":{"code":"stale_attention","message":"Prompt is expired or its connection changed","details":{}}}
+ ~~~
+ 
+-Statuses: 400 malformed/unsupported fields; 401 invalid/revoked credential; 403 scope/profile/board denial; 404 missing resource; 409 conflict/stale/ambiguous/uncertain/resync; 410 deleted conversation; 413 size limit; 422 upstream validation; 502 upstream/protocol rejection; 503 unavailable/uncertain upstream; 500 internal failure. Numeric upstream code/status can appear in details; upstream exception text/URLs/config do not. Compound upstream mutations can partially apply: refresh canonical state after errors. There is no raw CLI, shell, PTY, unrestricted process/filesystem, missing Bot Mode or global configuration API.
++Statuses: 400 malformed/unsupported fields; 401 invalid/revoked credential; 403 scope/profile/board denial; 404 missing resource; 409 conflict/stale/ambiguous/uncertain/resync; 410 deleted conversation; 413 size limit; 422 upstream validation; 502 upstream/protocol rejection; 503 unavailable/uncertain upstream; 500 internal failure. Numeric upstream code/status can appear in details; upstream exception text/URLs/config do not. Compound upstream mutations can partially apply: refresh canonical state after errors. There is no raw CLI, shell, PTY, unrestricted process/filesystem, Bot configuration or global configuration API.
+ 
+ 
+ ## Desktop Bot Mode resources
+ 
+-See [Bot Mode source audit](BOT_MODE_AUDIT.md) for the read-only `/bots`, `/bots/{id}` and `/bots/{id}/conversation` contracts, explicit whole-roster authorization, profile fallback and canonical-title resolution. `features.botMode` is independent from `features.profiles`. No create/edit or canonical-chat execution API is exposed.
++See [Bot Mode source audit](BOT_MODE_AUDIT.md) for `/bots`, `/bots/{id}`, GET `/bots/{id}/conversation` and writable POST `/bots/{id}/conversation` contracts, explicit whole-roster authorization, profile fallback and canonical-title resolution. `features.botMode` is independent from `features.profiles`. POST initializes/opens the source canonical Bot Chat with `chat.control` plus `bot_chat_control:true`. Existing conversation/run/control/history APIs are reused with attached bot identity. Bot create/edit is deferred. Canonical rename/delete is protected.
+diff --git a/Hermes/App/RootView.swift b/Hermes/App/RootView.swift
+index a33789c..97bf5d4 100644
+--- a/Hermes/App/RootView.swift
++++ b/Hermes/App/RootView.swift
+@@ -53,7 +53,7 @@ struct RootView: View {
+             if phase == .active {
+                 Task {
+                     if offline { await connection.reconnect() }
+-                    await environment.profiles.refresh()
++                    await environment.refreshAll()
+                 }
+             }
+         }
+diff --git a/Hermes/Domain/Capability.swift b/Hermes/Domain/Capability.swift
+index b17e4cb..a794596 100644
+--- a/Hermes/Domain/Capability.swift
++++ b/Hermes/Domain/Capability.swift
+@@ -12,6 +12,8 @@ nonisolated enum HermesCapability: String, Codable, Sendable, CaseIterable, Iden
+     /// Remote approval of pending actions (individual requests may still be non-actionable).
+     case approvals
+     case botMode
++    /// Writable canonical chats for named Desktop bots.
++    case botChat
+     case profiles
+     case cron
+     case kanban
+@@ -37,6 +39,7 @@ nonisolated enum HermesCapability: String, Codable, Sendable, CaseIterable, Iden
+         case .stop: "Stop runs"
+         case .approvals: "Remote approvals"
+         case .botMode: "Bot Mode"
++        case .botChat: "Bot Chat"
+         case .profiles: "Profiles"
+         case .cron: "Routines"
+         case .kanban: "Kanban"
+@@ -61,6 +64,7 @@ nonisolated enum HermesCapability: String, Codable, Sendable, CaseIterable, Iden
+         case .stop: "stop.circle"
+         case .approvals: "hand.raised"
+         case .botMode: "person.crop.circle"
++        case .botChat: "bubble.left.and.bubble.right.fill"
+         case .profiles: "person.2"
+         case .cron: "calendar.badge.clock"
+         case .kanban: "rectangle.split.3x1"
+diff --git a/Hermes/Domain/Conversation.swift b/Hermes/Domain/Conversation.swift
+index 4189919..d378730 100644
+--- a/Hermes/Domain/Conversation.swift
++++ b/Hermes/Domain/Conversation.swift
+@@ -17,6 +17,11 @@ nonisolated struct Conversation: Identifiable, Hashable, Codable, Sendable {
+     var isPinned: Bool
+     var messageCount: Int
+     var readOnly: Bool? = nil
++    /// Canonical Bot Chat metadata. `profileID` remains the opaque mobile bot ID;
++    /// the native profile name is retained separately for profile-scoped reads.
++    var isBotChat: Bool? = nil
++    var botID: String? = nil
++    var botProfileID: String? = nil
+ 
+     var usesDefaultProfile: Bool { profileID == Profile.defaultID }
+ }
+diff --git a/Hermes/Features/Bots/ProfileDetailView.swift b/Hermes/Features/Bots/ProfileDetailView.swift
+index 6ff691f..6726a2f 100644
+--- a/Hermes/Features/Bots/ProfileDetailView.swift
++++ b/Hermes/Features/Bots/ProfileDetailView.swift
+@@ -16,6 +16,7 @@ struct ProfileDetailView: View {
+     @State private var skills = Resource<[Skill]>()
+     @State private var editing = false
+     @State private var creatingTask = false
++    @State private var openingBotChat = false
+ 
+     var body: some View {
+         Group {
+@@ -182,7 +183,7 @@ struct ProfileDetailView: View {
+                     .padding(.top, 1) }
+                 if let last = profile.lastActiveAt { Text("Last active \(last, style: .relative) ago").font(.caption) }
+                 if let action = profile.activitySummary, !action.isEmpty { Text(action).font(.caption) }
+-                if profile.isBotMode == true && profile.canonicalChatAvailable != true {
++                if profile.isBotMode == true && profile.canonicalChatAvailable != true && !connection.supports(.botChat) {
+                     Text("Open this bot on the Studio to initialize its Bot Chat.").font(.caption)
+                 }
+                 Text(profile.summary)
+@@ -198,7 +199,10 @@ struct ProfileDetailView: View {
+         HStack(spacing: 10) {
+             Button {
+                 if profile.isBotMode == true {
++                    guard !openingBotChat else { return }
++                    openingBotChat = true
+                     environment.toasts.perform {
++                        defer { openingBotChat = false }
+                         if let chat = try await environment.client.profiles.canonicalConversation(profileID: profile.id) {
+                             conversations.apply(.conversationUpserted(chat))
+                             router.open(.conversation(chat.id))
+@@ -206,10 +210,16 @@ struct ProfileDetailView: View {
+                     }
+                 } else { router.open(.newConversation(NewChatSeed(profileID: profile.id))) }
+             } label: {
+-                Label("Chat", systemImage: "bubble.left.fill").frame(maxWidth: .infinity)
++                if openingBotChat {
++                    ProgressView().controlSize(.small)
++                    Text("Opening…").frame(maxWidth: .infinity)
++                } else {
++                    Label("Chat", systemImage: "bubble.left.fill").frame(maxWidth: .infinity)
++                }
+             }
+             .buttonStyle(.borderedProminent)
+-            .disabled(!connection.supports(.sessions) || (profile.isBotMode == true && profile.canonicalChatAvailable != true))
++            .disabled(!connection.supports(.sessions) || (profile.isBotMode == true &&
++                (!connection.connection.isConnected || (profile.canonicalChatAvailable != true && !connection.supports(.botChat)) || openingBotChat)))
+ 
+             if profile.isBotMode != true && connection.supports(.kanban) {
+                 Button {
+diff --git a/Hermes/Features/Chat/ConversationView.swift b/Hermes/Features/Chat/ConversationView.swift
+index e3adce5..4c17e1a 100644
+--- a/Hermes/Features/Chat/ConversationView.swift
++++ b/Hermes/Features/Chat/ConversationView.swift
+@@ -66,8 +66,9 @@ struct ConversationView: View {
+             }
+         }
+         .safeAreaInset(edge: .bottom, spacing: 0) {
+-            if model.conversationID?.hasPrefix("botchat.") == true {
+-                Text("Studio Bot Chat · Read only").font(.caption).foregroundStyle(.secondary).padding()
++            if model.conversation?.readOnly == true {
++                Text(model.conversation?.isBotChat == true ? "Studio Bot Chat · Read only" : "Read-only conversation")
++                    .font(.caption).foregroundStyle(.secondary).padding()
+             } else { ComposerView(model: model, focus: $composerFocused) }
+         }
+         .connectionBanner(updatedAt: conversations.updatedAt)
+@@ -152,10 +153,10 @@ struct ConversationView: View {
+         if let conversation = model.conversation, conversation.readOnly != true {
+             ToolbarItem(placement: .topBarTrailing) {
+                 Menu {
+-                    Button("Rename", systemImage: "pencil") {
++                    if conversation.isBotChat != true { Button("Rename", systemImage: "pencil") {
+                         renameText = conversation.title
+                         renaming = true
+-                    }
++                    } }
+                     Button(conversation.isPinned ? "Unpin" : "Pin", systemImage: conversation.isPinned ? "pin.slash" : "pin") {
+                         toasts.perform { try await conversations.setPinned(!conversation.isPinned, conversation.id) }
+                     }
+@@ -170,7 +171,7 @@ struct ConversationView: View {
+                         }
+                     }
+                     Divider()
+-                    Button("Delete", systemImage: "trash", role: .destructive) { confirmingDelete = true }
++                    if conversation.isBotChat != true { Button("Delete", systemImage: "trash", role: .destructive) { confirmingDelete = true } }
+                 } label: {
+                     Image(systemName: "ellipsis.circle")
+                 }
+diff --git a/Hermes/Services/Bridge/BridgeHermesClient.swift b/Hermes/Services/Bridge/BridgeHermesClient.swift
+index 446e797..1885509 100644
+--- a/Hermes/Services/Bridge/BridgeHermesClient.swift
++++ b/Hermes/Services/Bridge/BridgeHermesClient.swift
+@@ -185,24 +185,21 @@ final class BridgeHermesClient: HostService, HomeService, ConversationService, R
+                 if page.count < 100 || offset >= 10000 { break }
+             } while true
+         }
+-        // A full refresh must retain imported Bot Chats that are still canonical.
+-        // Resolve them again so compression, hidden bots and deletion are respected.
+-        if currentStatus.capabilities.contains(.botMode) {
+-            let roster = try await request("/bots")
+-            let liveIDs = Set(roster["bots"].array.compactMap { $0["id"].string })
+-            let importedIDs = knownConversations.values.filter { $0.readOnly == true && $0.id.hasPrefix("botchat.") }.map(\.id)
+-            for id in importedIDs {
+-                let botID = String(id.dropFirst(8))
+-                if liveIDs.contains(botID), let chat = try? await canonicalConversation(profileID: botID) {
+-                    rows.append(chat)
+-                }
+-            }
+-        }
+         return rows
+     }
+     func messages(conversationID: String) async throws -> [Message] {
+         let id = try resource(conversationID)
+-        let path = try conversationID.hasPrefix("botchat.") ? "/bots/\(resource(String(conversationID.dropFirst(8))))/conversation" : "/conversations/\(id)"
++        let conversation = knownConversations[conversationID]
++        let path: String
++        if conversation?.isBotChat == true, let botID = conversation?.botID {
++            path = "/bots/\(try resource(botID))/conversation"
++        } else if conversation?.readOnly == true, conversationID.hasPrefix("botchat.") {
++            // Older Bot Mode bridges encoded the bot ID in this read-only
++            // alias. Writable chats use explicit bot metadata above.
++            path = "/bots/\(try resource(String(conversationID.dropFirst("botchat.".count))))/conversation"
++        } else {
++            path = "/conversations/\(id)"
++        }
+         let j = try await request(path)
+         let c = remember(j["conversation"])
+         let runs = j["observed_runs"].array.sorted { ($0["created_at"].double ?? 0) < ($1["created_at"].double ?? 0) }
+@@ -370,8 +367,15 @@ final class BridgeHermesClient: HostService, HomeService, ConversationService, R
+         }
+     }
+     func canonicalConversation(profileID: String) async throws -> Conversation? {
+-        guard currentStatus.capabilities.contains(.botMode) else { return nil }
+-        let j = try await request("/bots/\(resource(profileID))/conversation")
++        let method: String
++        if currentStatus.capabilities.contains(.botChat) {
++            method = "POST"
++        } else if currentStatus.capabilities.contains(.botMode) {
++            method = "GET"
++        } else {
++            return nil
++        }
++        let j = try await request("/bots/\(resource(profileID))/conversation", method: method)
+         return remember(j["conversation"])
+     }
+     func profile(id: String) async throws -> Profile {
+diff --git a/Hermes/Services/Bridge/BridgeMapping.swift b/Hermes/Services/Bridge/BridgeMapping.swift
+index 698dce9..21ac03c 100644
+--- a/Hermes/Services/Bridge/BridgeMapping.swift
++++ b/Hermes/Services/Bridge/BridgeMapping.swift
+@@ -72,6 +72,7 @@ nonisolated enum BridgeMapping {
+                           capabilities: capabilities(json), resources: nil, permissionScopes:Set(json["scopes"].array.compactMap(\.string)))
+     }
+     static func conversation(_ j: BridgeJSON, hostID: String) -> Conversation {
++        let botID = j["bot_id"].string
+         let source: ConversationSource = switch j["source"].string {
+         case "mobile": .app
+         case "cron": .routine
+@@ -83,7 +84,9 @@ nonisolated enum BridgeMapping {
+                             createdAt: created, lastActivity: date(j["last_activity"]) ?? date(j["last_active"]) ?? created,
+                             preview: j["snippet"].string ?? j["preview"].string ?? "", project: nil,
+                             model: j["read_only"].bool == true ? configuredModel(j) : model(j), activeRunID: nil,
+-                            isPinned: false, messageCount: j["message_count"].int ?? 0, readOnly: j["read_only"].bool)
++                            isPinned: false, messageCount: j["message_count"].int ?? 0, readOnly: j["read_only"].bool,
++                            isBotChat: botID != nil || j["is_bot_chat"].bool == true,
++                            botID: botID, botProfileID: j["bot_profile"].string)
+     }
+     static func run(_ j: BridgeJSON, hostID: String) -> Run {
+         let state: RunState = switch j["state"].string {
+diff --git a/Hermes/Stores/ConversationStores.swift b/Hermes/Stores/ConversationStores.swift
+index 0196be1..9e7d070 100644
+--- a/Hermes/Stores/ConversationStores.swift
++++ b/Hermes/Stores/ConversationStores.swift
+@@ -220,7 +220,8 @@ final class ConversationModel {
+ 
+     var canSend: Bool {
+         let hasContent = !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !attachments.isEmpty
+-        return conversation?.readOnly != true && conversationID?.hasPrefix("botchat.") != true && hasContent && !isSending && connection.canControlChat && connection.connection.isConnected && composerMode != .busy
++        let botChatWritable = conversation?.isBotChat != true || connection.supports(.botChat)
++        return conversation?.readOnly != true && botChatWritable && hasContent && !isSending && connection.canControlChat && connection.connection.isConnected && composerMode != .busy
+     }
+ 
+     func load() async {
+diff --git a/HermesTests/BridgeIntegrationTests.swift b/HermesTests/BridgeIntegrationTests.swift
+index b3a52a0..8017b72 100644
+--- a/HermesTests/BridgeIntegrationTests.swift
++++ b/HermesTests/BridgeIntegrationTests.swift
+@@ -276,6 +276,75 @@ nonisolated private final class BotModeFixture: @unchecked Sendable {
+     }
+ }
+ 
++nonisolated private final class WritableBotChatFixture: @unchecked Sendable {
++    let recorder = BridgeRequestRecorder()
++
++    private var conversation: BridgeJSON {
++        .object([
++            "id": .string("atlas-chat-opaque"), "title": .string("Atlas"),
++            "profile": .string("atlas-bot-opaque"), "bot_id": .string("atlas-bot-opaque"),
++            "bot_profile": .string("Atlas_Profile"), "bot_name": .string("Atlas"),
++            "canonical": .bool(true), "read_only": .bool(false),
++            "model": .string("atlas-canonical-model"), "provider": .string("atlas-provider"),
++            "source": .string("mobile"), "started_at": .number(1_790_916_000),
++            "last_activity": .number(1_790_916_003), "message_count": .integer(1)
++        ])
++    }
++
++    private var run: BridgeJSON {
++        .object([
++            "id": .string("atlas-run"), "conversation_id": .string("atlas-chat-opaque"),
++            "profile": .string("atlas-bot-opaque"), "origin": .string("desktop_rpc"),
++            "state": .string("running"), "created_at": .number(1_790_916_000),
++            "updated_at": .number(1_790_916_010), "assistant_text": .string("working"),
++            "snapshot_cursor": .string("atlas-epoch:0"),
++            "model": .string("atlas-canonical-model"), "provider": .string("atlas-provider"),
++            "controls": .object(["stop": .bool(true), "steer": .bool(true), "retry": .bool(false)])
++        ])
++    }
++
++    func response(_ request: URLRequest) -> BridgeStubResponse {
++        recorder.append(request)
++        let path = request.url!.path
++        if path.hasSuffix("/capabilities") {
++            return capabilitiesResponse(features: #""sessions":true,"runs":true,"runReplay":true,"steering":true,"stop":true,"botMode":true,"botChat":true"#)
++        }
++        if path.hasSuffix("/bots/atlas-bot-opaque/conversation") {
++            let rows: [BridgeJSON] = [.object(["id": .string("atlas-user-row"), "role": .string("user"),
++                                                "content": .string("Use Atlas's configured profile")])]
++            return BridgeStubResponse(body: encodedBridgeJSON(.object(["conversation": conversation,
++                "messages": .array(rows), "observed_runs": .array([])])))
++        }
++        if path.hasSuffix("/conversations"), request.httpMethod == "GET" {
++            return BridgeStubResponse(body: encodedBridgeJSON(.object(["conversations": .array([conversation])])))
++        }
++        if path.hasSuffix("/conversations/atlas-chat-opaque/runs"), request.httpMethod == "POST" {
++            return BridgeStubResponse(body: encodedBridgeJSON(run))
++        }
++        if path.hasSuffix("/runs/atlas-run/events") {
++            return BridgeStubResponse(body: #"{"events":[],"cursor":"atlas-epoch:0","has_more":false}"#)
++        }
++        if path.hasSuffix("/runs/atlas-run/stop") {
++            return BridgeStubResponse(body: encodedBridgeJSON(.object(["run": run])))
++        }
++        if path.hasSuffix("/runs/atlas-run/steer") {
++            return BridgeStubResponse(body: #"{"accepted":true}"#)
++        }
++        if path.hasSuffix("/runs/atlas-run") {
++            return BridgeStubResponse(body: encodedBridgeJSON(run))
++        }
++        return BridgeStubResponse(status: 404, body: #"{"error":{"code":"not_found"}}"#)
++    }
++}
++
++nonisolated private func runUpserted(in event: HermesEvent) -> Run? {
++    switch event {
++    case .runUpserted(let run): run
++    case .batch(let events): events.lazy.compactMap(runUpserted).first
++    default: nil
++    }
++}
++
+ @MainActor
+ struct BridgeIntegrationTests {
+     @Test func botMetadataDoesNotInferAModelFromItsIdentity() {
+@@ -288,6 +357,16 @@ struct BridgeIntegrationTests {
+         #expect(configured.model.provider == "actual-provider")
+         let chat = BridgeMapping.conversation(.object(["id": .string("botchat.opaque-id"), "read_only": .bool(true)]), hostID: "studio")
+         #expect(chat.model == nil)
++        let writable = BridgeMapping.conversation(.object([
++            "id": .string("alias-without-prefix"), "profile": .string("opaque-bot-id"),
++            "bot_id": .string("opaque-bot-id"), "bot_profile": .string("Native_Profile"),
++            "canonical": .bool(true), "read_only": .bool(false),
++            "model": .string("profile-model"), "provider": .string("profile-provider")
++        ]), hostID: "studio")
++        #expect(writable.isBotChat == true && writable.botID == "opaque-bot-id")
++        #expect(writable.botProfileID == "Native_Profile")
++        #expect(writable.profileID == "opaque-bot-id")
++        #expect(writable.model?.id == "profile-model" && writable.model?.provider == "profile-provider")
+     }
+ 
+     @Test func botModeDiscoveryDetailsCanonicalChatAndRefresh() async throws {
+@@ -311,7 +390,7 @@ struct BridgeIntegrationTests {
+         let chat = try #require(try await backend.canonicalConversation(profileID: detail.id))
+         #expect(chat.title == "Bot Chat" && chat.readOnly == true)
+         #expect(try await backend.messages(conversationID: chat.id).first?.plainText == "Existing Studio history")
+-        #expect(try await backend.listConversations().contains { $0.id == chat.id && $0.readOnly == true })
++        #expect(try await backend.listConversations().allSatisfy { $0.id != chat.id })
+         fixture.replace(["Research Orchestrator", "Hermes", "Research Worker", "New Studio Bot"])
+         await store.refresh()
+         #expect(store.bots.contains { $0.name == "New Studio Bot" })
+@@ -323,6 +402,102 @@ struct BridgeIntegrationTests {
+         #expect(try await backend.listConversations().allSatisfy { $0.id != chat.id })
+     }
+ 
++    @Test func writableBotChatUsesCanonicalPostGenericRunLifecycleAndBotProfile() async throws {
++        let domain = uniqueBridgeTestHost(), hostID = UUID().uuidString
++        let fixture = WritableBotChatFixture()
++        BridgeStubURLProtocol.register(host: domain) { fixture.response($0) }
++        defer { BridgeStubURLProtocol.unregister(host: domain) }
++        let backend = BridgeHermesClient(
++            credentials: BridgeTestCredentialStore(hostID: hostID, token: "test-token"),
++            session: makeBridgeTestSession(), defaults: UserDefaults(suiteName: UUID().uuidString)!
++        )
++        let host = bridgeHost(id: hostID, domain: domain)
++        await backend.client.hosts.connect(to: host)
++
++        let chat = try #require(try await backend.client.profiles.canonicalConversation(profileID: "atlas-bot-opaque"))
++        #expect(chat.id == "atlas-chat-opaque")
++        #expect(chat.title == "Atlas" && chat.readOnly == false && chat.isBotChat == true)
++        #expect(chat.profileID == "atlas-bot-opaque" && chat.botProfileID == "Atlas_Profile")
++        #expect(chat.model?.id == "atlas-canonical-model" && chat.model?.provider == "atlas-provider")
++        let history = try await backend.client.conversations.messages(conversationID: chat.id)
++        #expect(history.first?.plainText == "Use Atlas's configured profile")
++
++        let list = try await backend.client.conversations.listConversations()
++        #expect(list.count == 1 && list.first?.id == chat.id)
++        #expect(list.first?.isBotChat == true && list.first?.botProfileID == "Atlas_Profile")
++
++        // A stale/default editor configuration must not override the bot's
++        // configured profile, model or provider on an existing canonical chat.
++        let wrongDefaultModel = ModelRef(id: "wrong-default", displayName: "Wrong default", provider: "Wrong")
++        let run = try await backend.client.conversations.send(
++            OutgoingMessage(text: "Continue as Atlas", attachments: []), conversationID: chat.id,
++            configuration: RunConfiguration(profileID: "default", model: wrongDefaultModel, reasoning: .high, hostID: hostID)
++        )
++        #expect(run.profileID == "atlas-bot-opaque")
++        #expect(run.model?.id == "atlas-canonical-model" && run.model?.provider == "atlas-provider")
++
++        let replayed = try await backend.client.runs.run(id: run.id)
++        #expect(replayed.profileID == "atlas-bot-opaque")
++        try await backend.client.runs.stop(runID: run.id)
++        try await backend.client.runs.steer(runID: run.id, instruction: "Keep using Atlas's profile")
++
++        // The transport's source profile is `default`; run projection must
++        // keep the bot identity supplied by the run snapshot.
++        let started = try await backend.consume(json: .object([
++            "seq": .integer(1), "cursor": .string("atlas-epoch:1"), "type": .string("run.started"),
++            "profile": .string("default"), "run_id": .string("atlas-run"),
++            "conversation_id": .string(chat.id), "payload": .object(["profile": .string("default")])
++        ]))
++        #expect(runUpserted(in: started)?.profileID == "atlas-bot-opaque")
++
++        let requests = fixture.recorder.requests
++        #expect(requests.contains { $0.httpMethod == "POST" && $0.url?.path == "/mobile/v1/bots/atlas-bot-opaque/conversation" })
++        #expect(requests.contains { $0.httpMethod == "GET" && $0.url?.path == "/mobile/v1/bots/atlas-bot-opaque/conversation" })
++        #expect(requests.contains { $0.httpMethod == "POST" && $0.url?.path == "/mobile/v1/conversations/atlas-chat-opaque/runs" })
++        #expect(requests.contains { $0.httpMethod == "GET" && $0.url?.path == "/mobile/v1/runs/atlas-run/events" })
++        #expect(requests.contains { $0.httpMethod == "POST" && $0.url?.path == "/mobile/v1/runs/atlas-run/stop" })
++        #expect(requests.contains { $0.httpMethod == "POST" && $0.url?.path == "/mobile/v1/runs/atlas-run/steer" })
++        let runRequest = try #require(requests.first { $0.httpMethod == "POST" && $0.url?.path.hasSuffix("/conversations/atlas-chat-opaque/runs") == true })
++        let runBody = String(data: try #require(runRequest.httpBody), encoding: .utf8) ?? ""
++        #expect(runBody.contains("Continue as Atlas"))
++        #expect(!runBody.contains("wrong-default") && !runBody.contains("\"profile\""))
++
++        await backend.client.hosts.disconnect(hostID: hostID)
++        await backend.client.hosts.connect(to: host)
++        let reconnected = try await backend.client.conversations.listConversations()
++        #expect(reconnected.count == 1 && reconnected.first?.id == chat.id)
++        #expect(reconnected.first?.profileID == "atlas-bot-opaque" && reconnected.first?.botProfileID == "Atlas_Profile")
++    }
++
++    @Test func writableBotChatControlRequiresCapabilityAndIgnoresIdentityPrefix() {
++        let environment = AppEnvironment.mock(storage: .ephemeral)
++        var status = environment.connection.status
++        status.connection = .connected
++        status.capabilities.insert(.botChat)
++        environment.connection.apply(.hostStatus(status))
++        let writable = Conversation(id: "botchat.alias-without-native-id", title: "Writable bot",
++            profileID: "opaque-bot-id", hostID: status.hostID, source: .app,
++            createdAt: .now, lastActivity: .now, preview: "", project: nil, model: nil,
++            activeRunID: nil, isPinned: false, messageCount: 0, readOnly: false,
++            isBotChat: true, botID: "opaque-bot-id", botProfileID: "Native_Profile")
++        let readOnly = Conversation(id: "botchat.legacy", title: "Legacy read only",
++            profileID: "Native_Profile", hostID: status.hostID, source: .app,
++            createdAt: .now, lastActivity: .now, preview: "", project: nil, model: nil,
++            activeRunID: nil, isPinned: false, messageCount: 0, readOnly: true)
++        environment.conversations.apply(.conversationUpserted(writable))
++        environment.conversations.apply(.conversationUpserted(readOnly))
++        let writableModel = environment.makeConversationModel(conversationID: writable.id, profileID: nil)
++        writableModel.draft = "Send as this bot"
++        let readOnlyModel = environment.makeConversationModel(conversationID: readOnly.id, profileID: nil)
++        readOnlyModel.draft = "Must remain blocked"
++        #expect(writableModel.canSend)
++        #expect(!readOnlyModel.canSend)
++        var statusWithoutBotChat = status
++        statusWithoutBotChat.capabilities.remove(.botChat)
++        environment.connection.apply(.hostStatus(statusWithoutBotChat))
++        #expect(!writableModel.canSend)
++    }
++
+     @Test func olderBridgeFallsBackToGenericProfiles() async throws {
+         let domain = uniqueBridgeTestHost(), hostID = UUID().uuidString
+         BridgeStubURLProtocol.register(host: domain) { request in
+@@ -923,11 +1098,23 @@ struct BridgeIntegrationTests {
+         #expect(capabilities.contains(.sessions))
+         #expect(capabilities.contains(.runs))
+         #expect(capabilities.contains(.kanban))
++        #expect(!capabilities.contains(.botChat))
+         #expect(!capabilities.contains(.approvals))
+         #expect(!capabilities.contains(.memory))
+         #expect(!capabilities.contains(.integrations))
+         #expect(!capabilities.contains(.logs))
+         #expect(!capabilities.contains(.attachments))
++        var optedIn = json
++        var root = optedIn.object
++        var profiles = root["profiles"]?.object ?? [:]
++        var defaultProfile = profiles["default"]?.object ?? [:]
++        var features = defaultProfile["features"]?.object ?? [:]
++        features["botChat"] = .bool(true)
++        defaultProfile["features"] = .object(features)
++        profiles["default"] = .object(defaultProfile)
++        root["profiles"] = .object(profiles)
++        optedIn = .object(root)
++        #expect(BridgeMapping.capabilities(optedIn).contains(.botChat))
+     }
+ 
+     @Test func reportedUsageDoesNotDoubleCountReasoning() {
+diff --git a/HermesUITests/RealStackUITests.swift b/HermesUITests/RealStackUITests.swift
+index c246441..2454ed6 100644
+--- a/HermesUITests/RealStackUITests.swift
++++ b/HermesUITests/RealStackUITests.swift
+@@ -82,3 +82,76 @@ final class StudioBotUITests: XCTestCase {
+         XCTAssertFalse(row("Mobile Refresh Probe", in: app).exists)
+     }
+ }
++
++/// Explicit opt-in: uses the phone's existing pairing and safe read-only prompts.
++final class WritableStudioBotUITests: XCTestCase {
++    private func app() throws -> XCUIApplication {
++        guard ProcessInfo.processInfo.environment["HERMES_WRITABLE_BOTS_UI"] == "1" else {
++            throw XCTSkip("Requires explicit writable validation on the paired physical iPhone")
++        }
++        continueAfterFailure = false
++        XCUIDevice.shared.orientation = .portrait
++        let app = XCUIApplication(); app.launch()
++        XCTAssertTrue(app.tabBars.buttons["Bots"].waitForExistence(timeout: 20))
++        app.tabBars.buttons["Bots"].tap()
++        return app
++    }
++    private func bot(_ name: String, _ app: XCUIApplication) -> XCUIElement {
++        app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", name)).firstMatch
++    }
++    private func evidence(_ name: String, _ app: XCUIApplication) {
++        let a = XCTAttachment(screenshot: app.screenshot()); a.name = name; a.lifetime = .keepAlways; add(a)
++    }
++    private func open(_ name: String, _ app: XCUIApplication) {
++        XCTAssertTrue(bot(name, app).waitForExistence(timeout: 30)); bot(name, app).tap()
++        let chat = app.collectionViews.buttons["Chat"].firstMatch
++        XCTAssertTrue(chat.waitForExistence(timeout: 15)); XCTAssertTrue(chat.isEnabled); chat.tap()
++        XCTAssertTrue(app.textFields.firstMatch.waitForExistence(timeout: 30) || app.textViews.firstMatch.exists)
++        XCTAssertFalse(app.staticTexts["Studio Bot Chat · Read only"].exists)
++    }
++    private func send(_ prompt: String, completion: String, _ app: XCUIApplication) {
++        let input = app.textViews.firstMatch.exists ? app.textViews.firstMatch : app.textFields.firstMatch
++        input.tap(); input.typeText(prompt)
++        XCTAssertTrue(app.buttons["Send"].firstMatch.isEnabled); app.buttons["Send"].firstMatch.tap()
++        let response = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", completion)).firstMatch
++        XCTAssertTrue(response.waitForExistence(timeout: 180), "Expected assistant completion")
++        evidence(completion, app)
++    }
++    func testResearchOrchestratorReadOnlyTerminalAndRecovery() throws {
++        let app = try app()
++        XCTAssertTrue(bot("Research Orchestrator", app).waitForExistence(timeout: 30)); bot("Research Orchestrator", app).tap()
++        var found = app.staticTexts["research-terminal"].isHittable
++        for _ in 0..<65 where !found {
++            // Short overlapping drags keep every skill row observable between snapshots.
++            let list = app.collectionViews.firstMatch
++            list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.75)).press(forDuration: 0.05,
++                thenDragTo: list.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.45)))
++            found = app.staticTexts["research-terminal"].isHittable
++        }
++        evidence("Research Orchestrator skill scroll result", app)
++        XCTAssertTrue(found); evidence("Attached research-terminal on iPhone", app)
++        let chat = app.collectionViews.buttons["Chat"].firstMatch
++        for _ in 0..<35 where !chat.isHittable { app.swipeDown() }
++        XCTAssertTrue(chat.isEnabled); chat.tap()
++        XCTAssertTrue(app.textFields.firstMatch.waitForExistence(timeout: 30) || app.textViews.firstMatch.exists)
++        send("For this phone validation, read the attached research-terminal skill and run only its helper's read-only search for Hermes. Do not create research jobs, change files, publish, send messages, or inspect credentials. In your final response start with MOBILE_RESEARCH_CHECK_DONE and briefly give your configured profile, the helper result or status, and one source title if available.", completion: "MOBILE_RESEARCH_CHECK_DONE", app)
++        XCUIDevice.shared.press(.home); app.activate()
++        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'MOBILE_RESEARCH_CHECK_DONE'")).firstMatch.waitForExistence(timeout: 30))
++        app.terminate(); app.launch()
++        app.tabBars.buttons["Bots"].tap(); open("Research Orchestrator", app)
++        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'MOBILE_RESEARCH_CHECK_DONE'")).firstMatch.waitForExistence(timeout: 30))
++        evidence("Research Orchestrator history after relaunch", app)
++        app.tabBars.buttons["Chat"].tap()
++        let listed = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Research Orchestrator'")).firstMatch
++        XCTAssertTrue(listed.waitForExistence(timeout: 30)); listed.tap()
++        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'MOBILE_RESEARCH_CHECK_DONE'")).firstMatch.waitForExistence(timeout: 30))
++        evidence("Same Bot Chat opened from Chat tab", app)
++    }
++    func testHermesWritableChat() throws {
++        let app = try app(); open("Hermes", app)
++        send("Reply briefly, starting with MOBILE_HERMES_CHECK_DONE, and state your configured bot identity. Do not run tools or change anything.", completion: "MOBILE_HERMES_CHECK_DONE", app)
++    }
++    func testResearchWorkerOpen() throws {
++        let app = try app(); open("Research Worker", app); evidence("Research Worker writable canonical chat", app)
++    }
++}
+diff --git a/INTEGRATION_POINTS.md b/INTEGRATION_POINTS.md
+index cd9fbd4..d85487e 100644
+--- a/INTEGRATION_POINTS.md
++++ b/INTEGRATION_POINTS.md
+@@ -11,7 +11,7 @@ Implemented against `/mobile/v1`, bridge 0.1.0 / API version 1, audited Hermes `
+ | HomeService | GET `/home` | One canonical aggregation request; no independent service fan-out to construct Home. Coverage errors remain attention items. |
+ | ConversationService | GET/POST `/conversations`, GET/PATCH/DELETE `/conversations/{id}`, POST `/conversations/{id}/runs`; explicit resume uses `/resume` | Existing session send is resumed inside bridge start. Local pin preferences are host-scoped. Delete refuses unresolved work rather than implicitly stopping it. Creation model/reasoning/workspace settings are not edits to a resumed session. |
+ | RunService | GET `/runs`, `/runs/{id}`, `/runs/{id}/events`; POST `/stop`, `/steer`, `/retry`; GET `/attention`; POST `/attention/{id}/respond` with answer | Durable bridge IDs only. Unknown maps to disconnected, never completed. Per-run `controls` gate buttons. Stop acknowledgement is not terminal cancellation; steering is queued, not proven consumed. |
+-| ProfileService | GET `/profiles`, `/profiles/{id}`, display-only `/inventory/memory` | Bots are profiles. Configuration/SOUL/skills are read-only; edit control is Simulation-only. No rooms, mentions or first-class Bot Mode. |
++| ProfileService | GET `/profiles`, `/profiles/{id}`, display-only `/inventory/memory` | Bots are profiles. Configuration/SOUL/skills are read-only; edit control is Simulation-only. Desktop Bot Mode uses `/bots` and per-bot details; no rooms or mentions. |
+ | TaskService | GET/POST `/kanban/tasks?profile=&board=`, GET/PATCH `/kanban/tasks/{id}` | Boards come from discovery. Detail exposes dependencies/activity and conditional `supported_targets`; known dependency guards further restrict ready. Start means queue for Hermes dispatcher, not spawn a run. Canonical task attempts are separate from chat bridge runs. |
+ | ScheduleService | GET `/cron`; POST `/enable`, `/disable`, `/run-now`; PATCH/DELETE `/cron/{id}` | `runNow` now returns Void: acknowledged due-time update requires an existing scheduler. No invented running execution. Delivery/profile edits are not exposed by the contract. |
+ | MemoryService | `/inventory/memory` metadata through profile detail; entry list/delete return unsupported | Contents and entry mutations do not exist. Memory-entry UI stays capability-hidden. |
+@@ -34,3 +34,18 @@ Implemented against `/mobile/v1`, bridge 0.1.0 / API version 1, audited Hermes `
+ ## Remaining placeholders
+ 
+ Attachment upload/photo-byte loading, camera and voice capture remain absent from production capability presentation. Safe artifact download/open is implemented. Profile editing, skill mutation, memory entries/settings, integration status and log access require a real future bridge contract rather than an adapter fiction. APNs is not implemented. Cron and Kanban dispatch must already run on Studio. Physical iPhone installation needs a signing team and a reachable authenticated HTTPS tailnet bridge.
++
++## Writable canonical Bot Chat
++
++`ProfileService.canonicalConversation` POSTs `/bots/{id}/conversation` when
++`features.botChat` is available, otherwise reads the legacy existing chat.
++One action initializes/opens the actual native-profile `Bot Chat`. The returned
++Conversation retains `bot_id`, `bot_profile`, canonical metadata and `read_only`;
++no prefix is used to decide send/control permissions. The existing
++ConversationView, run APIs, event stream, replay and clarification composer are
++reused. Run projections keep the opaque bot profile even when the event envelope
++uses the backend source ID for authorization. Foreground refresh reloads all
++resources. Main Chat lists canonical resources and opens the same ID as Bots;
++legacy read-only aliases remain readable. Hidden/deleted membership disappears
++without deleting stored histories. Source, initialization and shared-client
++limits are in [BOT_MODE_AUDIT.md](BOT_MODE_AUDIT.md).
+diff --git a/README.md b/README.md
+index 9e82ec5..cd9678e 100644
+--- a/README.md
++++ b/README.md
+@@ -96,4 +96,4 @@ This confirms the iOS networking/Keychain path on Simulator, not physical-phone
+ 
+ ### Desktop Bot Mode
+ 
+-The Bots tab can discover the Studio Desktop roster dynamically, including the default Hermes identity once, and display each bot's actual enabled skills and configuration. Enable the private backend's `bot_mode_roster` grant (or `install-bridge.sh --bot-mode` on a new install). Canonical Bot Chats open read-only; bot creation/editing is deferred. See [source audit](BOT_MODE_AUDIT.md) and [validation evidence](BOT_MODE_VALIDATION.md).
++The Bots tab can discover the Studio Desktop roster dynamically, including the default Hermes identity once, and display each bot's actual enabled skills and configuration. Enable the private backend's `bot_mode_roster` grant (or `install-bridge.sh --bot-mode` on a new install). Tap Chat to open a writable persistent canonical Bot Chat; absent chats initialize on that tap. Enable the separate private `bot_chat_control` grant (or `install-bridge.sh --bot-chat` on a new install). Bot identity and native model/SOUL/skills are preserved, and Chat and Bots open the same conversation. Bot creation/editing is deferred. See [source audit](BOT_MODE_AUDIT.md) and [validation evidence](BOT_MODE_VALIDATION.md).
+diff --git a/hermes-mobile-bridge/src/hermes_mobile_bridge/api.py b/hermes-mobile-bridge/src/hermes_mobile_bridge/api.py
+index 29c56e4..d552ac8 100644
+--- a/hermes-mobile-bridge/src/hermes_mobile_bridge/api.py
++++ b/hermes-mobile-bridge/src/hermes_mobile_bridge/api.py
+@@ -62,7 +62,7 @@ async def contract(request, handler):
+                 raise Problem(400, "invalid_request", "JSON object required")
+             # Scope check precedes command journal access; cached mutations also
+             # respect revoked/reduced credentials.
+-            needed = "chat.control" if any(s in request.path for s in ("/conversations", "/runs", "/attachments")) else "approvals.respond" if "/attention" in request.path else "tasks.manage"
++            needed = "chat.control" if any(s in request.path for s in ("/conversations", "/runs", "/attachments", "/bots/")) else "approvals.respond" if "/attention" in request.path else "tasks.manage"
+             if needed not in request[AUTH]["scopes"]:
+                 raise Problem(403, "forbidden", "Credential lacks action scope")
+             old = service.store.command_begin(command_id, request[AUTH]["id"], {"method": request.method, "path": request.path, "query": list(request.query.items()), "body": request[BODY]})
+@@ -112,7 +112,7 @@ async def capabilities(request):
+         b = s.backends[p]
+         paths = b.paths
+         available = lambda route: b.connected and route in paths
+-        result[p] = {"health": b.health(), "features": {"sessions": b.connected, "runs": b.connected, "runReplay": True, "stop": b.connected, "steering": b.connected, "approvals": {"observe": b.connected, "respond": False, "reason": "upstream_fifo_without_exact_target", "clarifications": b.connected}, "profiles": True, "cron": available("/api/cron/jobs"), "kanban": bool(b.cfg["boards"]) and available("/api/plugins/kanban/board"), "usage": available("/api/analytics/usage"), "skills": available("/api/skills"), "tools": available("/api/tools/toolsets"), "mcp": available("/api/mcp/servers"), "artifacts": bool(b.cfg["artifact_roots"]), "botMode": b.connected and b.cfg.get("bot_mode_roster", False) and b.bot_mode_supported, "botRooms": False}, "desktop_contract_audited": 2, "audited_commit": b.cfg.get("installed_commit") or "2a4c9afd7bd", "installed_commit": b.cfg.get("installed_commit"), "boards": b.cfg["boards"], "workspaces": [{"id": k, "name": k} for k in b.cfg["workspaces"]]}
++        result[p] = {"health": b.health(), "features": {"sessions": b.connected, "runs": b.connected, "runReplay": True, "stop": b.connected, "steering": b.connected, "approvals": {"observe": b.connected, "respond": False, "reason": "upstream_fifo_without_exact_target", "clarifications": b.connected and (b.server_requests_supported or b.cfg.get("installed_commit") != "4bb9e57bfde8a0affb5553eff13ed6e1f14147f1")}, "profiles": True, "cron": available("/api/cron/jobs"), "kanban": bool(b.cfg["boards"]) and available("/api/plugins/kanban/board"), "usage": available("/api/analytics/usage"), "skills": available("/api/skills"), "tools": available("/api/tools/toolsets"), "mcp": available("/api/mcp/servers"), "artifacts": bool(b.cfg["artifact_roots"]), "botMode": b.connected and b.cfg.get("bot_mode_roster", False) and b.bot_mode_supported, "botChat": b.connected and b.cfg.get("bot_chat_control", False) and b.cfg.get("bot_mode_roster", False) and b.bot_mode_supported, "botRooms": False}, "desktop_contract_audited": 2, "audited_commit": b.cfg.get("installed_commit") or "2a4c9afd7bd", "installed_commit": b.cfg.get("installed_commit"), "boards": b.cfg["boards"], "workspaces": [{"id": k, "name": k} for k in b.cfg["workspaces"]]}
+     return web.json_response({"api_version": 1, "bridge_version": __version__, "journal_epoch": s.store.epoch, "cursor": s.store.cursor(), "scopes": request[AUTH]["scopes"], "profiles": result, "retention": {"global_events": s.cfg["event_limit"], "per_run_events": s.cfg["run_event_limit"], "days": s.cfg["event_days"]}, "coverage": "Controlled runs are bridge-owned desktop sessions; other-process activity is read-only and incomplete"})
+ 
+ 
+@@ -125,7 +125,11 @@ async def bot_detail(request):
+ 
+ 
+ async def bot_conversation(request):
+-    return web.json_response(await BotMode(svc(request), request[AUTH]).conversation(request.match_info["bid"]))
++    adapter = BotMode(svc(request), request[AUTH])
++    if request.method == "POST":
++        shape(request[BODY], {})
++        return web.json_response(await adapter.open(request.match_info["bid"]))
++    return web.json_response(await adapter.conversation(request.match_info["bid"]))
+ 
+ 
+ async def conversations(request):
+@@ -156,8 +160,16 @@ async def conversations(request):
+     if not request.query.get("q") and query["offset"] == 0:
+         for row in s.store.db.execute("SELECT id FROM conversations WHERE profile=? AND owned=1", (p,)).fetchall():
+             c = s.store.get("conversations", row[0])
+-            if c["id"] not in seen and not c["data"].get("deleted") and s.store.db.execute("SELECT COUNT(*) FROM runs WHERE conversation_id=?", (c["id"],)).fetchone()[0] == 0:
++            if c["id"] not in seen and not c["data"].get("canonical") and not c["data"].get("deleted") and s.store.db.execute("SELECT COUNT(*) FROM runs WHERE conversation_id=?", (c["id"],)).fetchone()[0] == 0:
+                 output.append(s.conversation_view(c) | {"draft": True})
++    if not request.query.get("q") and query["offset"] == 0 and b.cfg.get("bot_mode_roster") and b.bot_mode_supported:
++        adapter = BotMode(s, request[AUTH])
++        _, roster = await adapter.roster(p)
++        for bot in roster:
++            if bot.get("canonical_session"):
++                chat = (await adapter.conversation(opaque(p, bot['name'])))["conversation"]
++                output = [r for r in output if r["id"] != chat["id"]]
++                output.append(chat)
+     return web.json_response({"conversations": output, "total": raw.get("total"), "offset": query["offset"]})
+ 
+ 
+@@ -175,6 +187,11 @@ async def conversation_detail(request):
+     s = svc(request)
+     c = s.conversation(request[AUTH], request.match_info["cid"], "read" if request.method == "GET" else "chat.control")
+     b, sid = s.backends[c["profile"]], c["stored_id"]
++    if c["data"].get("canonical"):
++        if request.method == "GET":
++            return web.json_response(await BotMode(s, request[AUTH]).conversation(c["data"]["bot_id"]))
++        # Canonical relationship identity is source-owned; generic rename/archive/delete may not break it.
++        raise Problem(409, "canonical_chat_protected", "Bot Chat history is managed through the bot on the Studio")
+     if request.method == "GET":
+         snapshot_cursor = s.store.cursor()
+         try:
+@@ -223,7 +240,7 @@ async def resume(request):
+     c = s.conversation(request[AUTH], request.match_info["cid"], "chat.control")
+     lock = s.locks.setdefault(c["id"], asyncio.Lock())
+     async with lock:
+-        await s.ensure_live(c)
++        await s.ensure_live(c, allow_running=True)
+     return web.json_response(s.conversation_view(s.store.get("conversations", c["id"])))
+ 
+ 
+@@ -320,6 +337,13 @@ async def attention(request):
+ 
+ 
+ async def attention_respond(request):
++    s = svc(request)
++    aid = identifier(request.match_info["aid"])
++    async with s.locks.setdefault("attention." + aid, asyncio.Lock()):
++        return await _attention_respond(request)
++
++
++async def _attention_respond(request):
+     s = svc(request)
+     item = s.store.get("attention", identifier(request.match_info["aid"]))["data"]
+     b = s.require(request[AUTH], item["profile"], "approvals.respond")
+@@ -333,11 +357,27 @@ async def attention_respond(request):
+     run = s.run(request[AUTH], item["run_id"])
+     if run["state"] != "waiting_for_input":
+         raise Problem(409, "stale_attention", "Run is no longer waiting")
+-    await b.rpc("clarify.respond", {"session_id": run["live_id"], "request_id": item["request_id"], "answer": body["answer"]})
++    if item.get("question_id"):
++        conv = s.store.get("conversations", run["conversation_id"])
++        if conv["data"].get("canonical"):
++            conv = await s.refresh_bot_binding(conv, control=True)
++        snapshot = await b.rpc("session.resume", {"session_id": conv["stored_id"], "profile": s.session_profile(conv), "omit_messages": True, "close_on_disconnect": False})
++        pending = next((r for r in snapshot.get("open_requests", []) if r.get("id") == item["request_id"]), None)
++        if snapshot.get("session_id") != run["live_id"] or (pending and item["question_id"] in (pending.get("params", {}).get("answers") or {})):
++            raise Problem(409, "stale_attention", "This question has already been answered or the run changed")
++        result = await b.rpc("clarify.lock", {"request_id": item["request_id"], "question_id": item["question_id"], "answer": body["answer"]})
++        if result.get("status") != "ok":
++            raise Problem(409, "stale_attention", "Hermes no longer has this question open")
++        remaining = result.get("remaining", [])
++    else:
++        await b.rpc("clarify.respond", {"session_id": run["live_id"], "request_id": item["request_id"], "answer": body["answer"]})
++        remaining = []
+     item.update(state="responded", can_respond=False)
+     s.store.db.execute("UPDATE attention SET data=? WHERE id=?", (json.dumps(item), item["id"]))
+     s.store.db.commit()
+-    s.store.update_run(run["id"], "running")
++    latest = s.store.get("runs", run["id"])
++    if latest["state"] not in TERMINAL and not latest["data"].get("stop_intent"):
++        s.store.update_run(run["id"], "waiting_for_input" if remaining else "running")
+     await s.emit(item["profile"], "approval.resolved", {"id": item["id"], "state": "responded", "kind": "clarification"}, run)
+     return web.json_response({"acknowledged": True})
+ 
+@@ -690,7 +730,7 @@ def create_app(cfg):
+     app = web.Application(middlewares=[contract], client_max_size=cfg["upload_limit"] * 2 + 4096)
+     app[SERVICE] = s
+     routes = [
+-        web.get(PREFIX + "/bots", bots), web.get(PREFIX + "/bots/{bid}", bot_detail), web.get(PREFIX + "/bots/{bid}/conversation", bot_conversation),
++        web.get(PREFIX + "/bots", bots), web.get(PREFIX + "/bots/{bid}", bot_detail), web.get(PREFIX + "/bots/{bid}/conversation", bot_conversation), web.post(PREFIX + "/bots/{bid}/conversation", bot_conversation),
+         web.get(PREFIX + "/capabilities", capabilities), web.get(PREFIX + "/home", home), web.get(PREFIX + "/profiles", profiles), web.get(PREFIX + "/profiles/{pid}", profile_detail),
+         web.get(PREFIX + "/conversations", conversations), web.post(PREFIX + "/conversations", conversations),
+         web.get(PREFIX + "/conversations/{cid}", conversation_detail), web.patch(PREFIX + "/conversations/{cid}", conversation_detail), web.delete(PREFIX + "/conversations/{cid}", conversation_detail),
+diff --git a/hermes-mobile-bridge/src/hermes_mobile_bridge/bots.py b/hermes-mobile-bridge/src/hermes_mobile_bridge/bots.py
+index cb26b60..72089b2 100644
+--- a/hermes-mobile-bridge/src/hermes_mobile_bridge/bots.py
++++ b/hermes-mobile-bridge/src/hermes_mobile_bridge/bots.py
+@@ -1,8 +1,9 @@
+-"""Read-only Bot Mode adapter for the audited profile-backed Desktop roster.
++"""Bot Mode adapter for the audited profile-backed Desktop roster.
+ 
+-No paths, arbitrary config, credentials, or chat ownership cross this boundary.
+-A backend must explicitly opt its whole local roster into mobile read access.
++No raw paths, arbitrary config or credentials cross the inventory boundary.
++A backend explicitly grants whole-roster reads and, separately, canonical chat control.
+ """
++import asyncio
+ from .core import Problem, identifier, opaque, unopaque, only, message
+ 
+ AUDITED_COMMITS = ('2a4c9afd7bd', '4bb9e57bfde8a0affb5553eff13ed6e1f14147f1')
+@@ -88,17 +89,79 @@ class BotMode:
+         return result
+ 
+     async def conversation(self, bid):
+-        source, name, backend, _ = await self.resolve(bid)
++        source, name, backend, bot = await self.resolve(bid)
++        row = await self.lookup(backend, name, bot)
++        if row is None:
++            raise Problem(404, 'bot_chat_unavailable', 'This bot has no canonical Bot Chat yet')
++        conv = self.bind(bid, source, name, bot, row)
++        cursor = self.service.store.cursor()
++        history = await backend.rest('GET', f'/api/sessions/{conv["stored_id"]}/messages', query={'profile': name})
++        return {'conversation': self.service.conversation_view(conv) | {'read_only': not self.can_control(backend)},
++                'messages': [message(m) for m in history.get('messages', [])], 'cursor': cursor,
++                'observed_runs': [self.service.run_view(r) for r in self.service.store.runs([source], limit=200) if r['conversation_id'] == conv['id']]}
++
++    def can_control(self, backend):
++        return backend.cfg.get('bot_chat_control') is True and 'chat.control' in self.auth['scopes']
++
++    async def lookup(self, backend, name, bot):
+         # Indexed exact-title lookup EVERY open/read. Never use recency or a saved id pin.
+         raw = await backend.rpc('session.list', {'profile': name, 'title': 'Bot Chat', 'include_hidden': True})
+         rows = raw.get('sessions', [])
+         if not rows:
+-            raise Problem(404, 'bot_chat_unavailable', 'This bot has no canonical Bot Chat yet; open it on the Studio')
++            if bot.get('canonical_session'):
++                raise Problem(409, 'bot_chat_unconfirmed', 'Could not confirm the existing canonical Bot Chat; retry opening it')
++            return None
+         row = rows[0]
+-        if row.get('title') != 'Bot Chat':
++        if row.get('title') != 'Bot Chat' or len(rows) != 1 or (bot.get('canonical_session') and row.get('id') != bot['canonical_session'].get('id')):
+             raise Problem(502, 'bot_chat_contract_mismatch', 'Hermes did not resolve the exact Bot Chat identity')
++        return row
++
++    def bind(self, bid, source, name, bot, row, live=None, owned=False):
++        store = self.service.store
+         sid = identifier(row.get('resolved_id') or row['id'])
+-        history = await backend.rest('GET', f'/api/sessions/{sid}/messages', query={'profile': name})
+-        return {'conversation': {'id': 'botchat.' + bid, 'profile': bid, 'title': 'Bot Chat', 'read_only': True,
+-                                'model': row.get('model'), 'source': 'api', **only(row, 'started_at message_count last_active preview')},
+-                'messages': [message(m) for m in history.get('messages', [])], 'observed_runs': []}
++        existing = store.db.execute("SELECT id FROM conversations WHERE profile=? AND json_extract(data,'$.bot_id')=?", (source, bid)).fetchone()
++        alias = store.db.execute('SELECT conversation_id FROM aliases WHERE profile=? AND stored_id=?', (source, sid)).fetchone()
++        cid = existing[0] if existing else alias[0] if alias else 'botchat.' + bid
++        old = store.db.execute('SELECT live_id FROM conversations WHERE id=?', (cid,)).fetchone()
++        if existing and alias and alias[0] != cid:
++            raise Problem(409, 'bot_chat_alias_conflict', 'Canonical history already belongs to another mobile conversation')
++        data = only(row, 'model provider started_at message_count last_active preview archived') | {
++            'title': 'Bot Chat', 'source': 'desktop', 'canonical': True,
++            'bot_id': bid, 'bot_profile': name, 'bot_name': bot_row(source, bot)['name']}
++        for field in ('model', 'provider'):
++            if bot.get(field):
++                data[field] = bot[field]
++        store.save_conversation(cid, source, sid, live or (old[0] if old else None), owned, data)
++        return store.get('conversations', cid)
++
++    async def open(self, bid):
++        source, name, backend, bot = await self.resolve(bid)
++        self.service.require(self.auth, source, 'chat.control')
++        if not self.can_control(backend):
++            raise Problem(403, 'bot_chat_read_only', 'Writable Bot Chat is not enabled for this source')
++        async with self.service.locks.setdefault('botchat.' + bid, asyncio.Lock()):
++            # Adopt before minting; failures or a positive roster with an empty lookup never mean absent.
++            row = await self.lookup(backend, name, bot)
++            created = None
++            if row is None:
++                created = await backend.rpc('session.create', {'profile': name, 'title': 'Bot Chat', 'hidden': True,
++                    'follow_profile_config': True, 'close_on_disconnect': False, 'idempotency_key': 'mobile-botchat-' + bid})
++                runtime = identifier(created['session_id'])
++                try:
++                    # Same modern Desktop eager write: persist the hidden empty row without an intro/model turn.
++                    await backend.rpc('session.title', {'session_id': runtime, 'title': 'Bot Chat'})
++                except Problem:
++                    # A concurrent writer can win UNIQUE(title). Adopt only a confirmed registry row.
++                    row = await self.lookup(backend, name, bot)
++                    if row is None:
++                        raise
++                row = row or await self.lookup(backend, name, bot)
++                if row is None:
++                    raise Problem(502, 'bot_chat_initialization_failed', 'Hermes did not persist the canonical Bot Chat')
++                if (row.get('resolved_id') or row['id']) != created.get('stored_session_id'):
++                    # Only our own unused runtime is retired, never the winner or its history.
++                    await backend.rpc('session.close', {'session_id': runtime})
++                    created = None
++            conv = self.bind(bid, source, name, bot, row, created.get('session_id') if created else None, bool(created))
++            await self.service.ensure_live(conv, allow_running=True)
++        return await self.conversation(bid)
+diff --git a/hermes-mobile-bridge/src/hermes_mobile_bridge/service.py b/hermes-mobile-bridge/src/hermes_mobile_bridge/service.py
+index b95462a..09d128a 100644
+--- a/hermes-mobile-bridge/src/hermes_mobile_bridge/service.py
++++ b/hermes-mobile-bridge/src/hermes_mobile_bridge/service.py
+@@ -68,10 +68,35 @@ class Service:
+     def run_view(self, row):
+         b = self.backends[row["profile"]]
+         controls = b.connected and row["state"] in ACTIVE - {"unknown"} and bool(row["live_id"])
+-        return {"id": row["id"], "conversation_id": row["conversation_id"], "profile": row["profile"], "task_id": None, "origin": "desktop_rpc", "snapshot_cursor": self.store.run_cursor(row["id"]), "state": row["state"], "created_at": row["created"], "updated_at": row["updated"], "controls": {"stop": controls, "steer": controls and row["state"] != "stop_requested", "retry": row["state"] in {"failed", "cancelled"} and bool(row["data"].get("prompt"))}, **only(row["data"], "assistant_text usage coverage_gap reason parent_run_id steering_ack projection_truncated")}
++        return {"id": row["id"], "conversation_id": row["conversation_id"], "profile": self.conversation_view(self.store.get("conversations", row["conversation_id"]))["profile"], "task_id": None, "origin": "desktop_rpc", "snapshot_cursor": self.store.run_cursor(row["id"]), "state": row["state"], "created_at": row["created"], "updated_at": row["updated"], "controls": {"stop": controls, "steer": controls and row["state"] != "stop_requested", "retry": row["state"] in {"failed", "cancelled"} and bool(row["data"].get("prompt"))}, **only(row["data"], "assistant_text usage coverage_gap reason parent_run_id steering_ack projection_truncated")}
+ 
+     def conversation_view(self, row):
+-        return {"id": row["id"], "profile": row["profile"], "owned": bool(row["owned"]), **only(row["data"], "title model provider reasoning_effort cwd source archived started_at message_count")}
++        data = row["data"]
++        result = {"id": row["id"], "profile": data.get("bot_id") or row["profile"], "owned": bool(row["owned"]),
++                  **only(data, "title model provider reasoning_effort cwd source archived started_at message_count last_active preview canonical bot_id bot_name bot_profile")}
++        if data.get("canonical"):
++            result.update(title=data["bot_name"], read_only=not self.backends[row["profile"]].cfg.get("bot_chat_control", False))
++        return result
++
++    @staticmethod
++    def session_profile(conv):
++        return conv["data"].get("bot_profile") or conv["profile"]
++
++    async def refresh_bot_binding(self, conv, control=False):
++        if not conv["data"].get("canonical"):
++            return conv
++        from .bots import BotMode
++        source = conv["profile"]
++        adapter = BotMode(self, {"profiles": [source], "scopes": ["read", "chat.control"]})
++        actual_source, name, backend, bot = await adapter.resolve(conv["data"]["bot_id"])
++        if actual_source != source or name != conv["data"]["bot_profile"]:
++            raise Problem(409, "bot_identity_mismatch", "Bot identity no longer matches this conversation")
++        if control and not adapter.can_control(backend):
++            raise Problem(403, "bot_chat_read_only", "Writable Bot Chat is not enabled for this source")
++        row = await adapter.lookup(backend, name, bot)
++        if row is None:
++            raise Problem(409, "bot_chat_unconfirmed", "The canonical Bot Chat is unavailable; no replacement was created")
++        return adapter.bind(conv["data"]["bot_id"], source, name, bot, row)
+ 
+     def observe_conversation(self, profile, raw):
+         sid = raw.get("session_id") or raw.get("id")
+@@ -109,6 +134,18 @@ class Service:
+         sid, kind, payload = event.get("session_id"), event.get("type"), event.get("payload") or {}
+         if not isinstance(payload, dict):
+             return
++        if kind == "bridge.server_request":
++            await self.server_request(profile, sid, payload)
++            return
++        if kind == "request.cancel":
++            for existing in self.store.db.execute("SELECT data FROM attention WHERE profile=?", (profile,)).fetchall():
++                item = json.loads(existing[0])
++                if item.get("request_id") == payload.get("id") and item["state"] == "pending":
++                    item.update(state="expired", can_respond=False)
++                    self.store.db.execute("UPDATE attention SET data=? WHERE id=?", (json.dumps(item), item["id"]))
++                    await self.emit(profile, "approval.resolved", {"id": item["id"], "state": "expired"}, self.store.get("runs", item["run_id"]))
++            self.store.db.commit()
++            return
+         if kind == "session.info":
+             conv = self.store.db.execute("SELECT id FROM conversations WHERE profile=? AND live_id=?", (profile, sid)).fetchone()
+             if conv:
+@@ -189,12 +226,46 @@ class Service:
+             run = self.store.update_run(rid, "failed", reason="hermes_execution_error")
+             await self.emit(profile, "run.failed", {"state": "failed", "reason": "hermes_execution_error"}, run, event)
+ 
++    async def server_request(self, profile, sid, request):
++        run = self.live_run(profile, sid)
++        if not run or run["state"] in TERMINAL or run["data"].get("stop_intent"):
++            return
++        params, method, request_id = request.get("params") or {}, request.get("method"), request.get("id")
++        if not isinstance(request_id, str) or not request_id.startswith("srq-"):
++            return
++        questions = params.get("questions", [])[:5] if method == "clarify" else [{"qid": None, "question": "This action requires a local client"}]
++        for question in questions:
++            qid = question.get("qid")
++            if method == "clarify" and (not isinstance(qid, str) or not isinstance(question.get("question"), str)):
++                continue
++            old = next((json.loads(x[0]) for x in self.store.db.execute("SELECT data FROM attention WHERE run_id=?", (run["id"],)).fetchall()
++                        if json.loads(x[0]).get("request_id") == request_id and json.loads(x[0]).get("question_id") == qid), None)
++            item = old or {"id": uuid.uuid4().hex, "run_id": run["id"], "conversation_id": run["conversation_id"], "profile": profile,
++                           "observed_at": now(), "expires_at": now() + 290, "request_id": request_id, "question_id": qid}
++            locked = qid in (params.get("answers") or {})
++            item.update(kind="clarification" if method == "clarify" else "approval", state="responded" if locked else "pending",
++                        can_respond=method == "clarify" and not locked and item["expires_at"] > now(),
++                        limitation=None if method == "clarify" else "local_client_required", generation=self.backends[profile].generation,
++                        details=only(question, "question choices multi_select") if method == "clarify" else only(params, "command description"))
++            self.store.db.execute("INSERT INTO attention VALUES (?,?,?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data", (item["id"], run["id"], profile, json.dumps(item)))
++            self.store.db.commit()
++            self.store.update_run(run["id"], "waiting_for_input")
++            await self.emit(profile, "approval.requested", self.attention_view(item), run)
++
++    async def hydrate_requests(self, profile, sid, result):
++        for request in result.get("open_requests", []):
++            if request.get("method") == "clarify":
++                await self.server_request(profile, sid, request)
++
+     def attention_view(self, item):
+         if item["can_respond"]:
+             run = self.store.get("runs", item["run_id"])
+             backend = self.backends[item["profile"]]
+             item = item | {"can_respond": item["state"] == "pending" and item["expires_at"] > now() and backend.connected and backend.generation == item["generation"] and run["state"] == "waiting_for_input" and not run["data"].get("stop_intent")}
+-        return {k: v for k, v in item.items() if k not in {"request_id", "generation"}}
++        result = {k: v for k, v in item.items() if k not in {"request_id", "question_id", "generation"}}
++        if item.get("conversation_id"):
++            result["profile"] = self.conversation_view(self.store.get("conversations", item["conversation_id"]))["profile"]
++        return result
+ 
+     async def invalidate_attention(self, rid, state):
+         for row in self.store.db.execute("SELECT * FROM attention WHERE run_id=?", (rid,)).fetchall():
+@@ -229,7 +300,7 @@ class Service:
+             live = next((a for a in active if a.get("id") == conv["live_id"]), None)
+             if live and live.get("session_key") != conv["stored_id"]:
+                 try:
+-                    history = await backend.rest("GET", f"/api/sessions/{conv['stored_id']}/messages", query={"profile": profile})
++                    history = await backend.rest("GET", f"/api/sessions/{conv['stored_id']}/messages", query={"profile": self.session_profile(conv)})
+                     if history.get("session_id") == live.get("session_key"):
+                         self.store.save_conversation(conv["id"], profile, live["session_key"], conv["live_id"], True)
+                 except Problem:
+@@ -248,10 +319,10 @@ class Service:
+                 # Only reconnect to the SAME previously owned live handle. Do
+                 # not build a replacement agent or automatically replay a prompt.
+                 try:
+-                    res = await backend.rpc("session.resume", {"session_id": conv["stored_id"]})
++                    res = await backend.rpc("session.resume", {"session_id": conv["stored_id"], **({"profile": self.session_profile(conv), "close_on_disconnect": False} if conv["data"].get("canonical") else {})})
+                 except Problem:
+                     continue
+-                if res.get("session_id") != row["live_id"]:
++                if res.get("session_id") != row["live_id"] or (conv["data"].get("canonical") and not self.profile_matches(res, self.session_profile(conv))):
+                     continue
+                 state = "waiting_for_input" if match["status"] == "waiting" else "running"
+                 fields = {"coverage_gap": True}
+@@ -262,6 +333,7 @@ class Service:
+                     fields["assistant_text"] = res["inflight"].get("assistant", "")
+                 row = self.store.update_run(row["id"], state, **fields)
+                 await self.emit(profile, "run.status", {"state": state, "coverage_gap": True, "hydrate": True}, row)
++                await self.hydrate_requests(profile, row["live_id"], res)
+             elif match.get("status") == "idle" and row["state"] not in {"starting", "unknown"}:
+                 row = self.store.update_run(row["id"], "unknown", coverage_gap=True, reason="completion_not_observed")
+                 await self.emit(profile, "run.status", {"state": "unknown", "reason": "completion_not_observed"}, row)
+@@ -277,12 +349,35 @@ class Service:
+                 if item["state"] == "pending" and item["expires_at"] < now():
+                     await self.invalidate_attention(item["run_id"], "expired")
+ 
+-    async def ensure_live(self, conv):
++    @staticmethod
++    def profile_matches(result, name):
++        info = result.get("info") or {}
++        # Audited reuse-live lazy payload omits profile_name; the explicit-profile resume
++        # itself resolves by (profile_home, stored key). Never accept a positive mismatch.
++        return info.get("profile_name") == name or (info.get("profile_name") is None and info.get("lazy") is True)
++
++    async def ensure_live(self, conv, allow_running=False):
++        conv = await self.refresh_bot_binding(conv, control=True)
+         backend = self.backends[conv["profile"]]
+         if conv["data"].get("deleted"):
+             raise Problem(410, "conversation_deleted", "Conversation was deleted")
+         if not backend.connected:
+             raise Problem(503, "upstream_unavailable", "Hermes is offline")
++        if conv["data"].get("canonical"):
++            name = self.session_profile(conv)
++            # Explicit-profile resume matches (profile_home, stored key), unlike active_list's unscoped keys.
++            result = await backend.rpc("session.resume", {"session_id": conv["stored_id"], "profile": name, "close_on_disconnect": False})
++            if not self.profile_matches(result, name):
++                raise Problem(502, "bot_identity_mismatch", "Hermes did not resume the requested bot profile")
++            stored = result.get("session_key") or result.get("stored_session_id") or conv["stored_id"]
++            if stored != conv["stored_id"]:
++                raise Problem(409, "bot_chat_changed", "Canonical history changed while opening; retry")
++            self.store.save_conversation(conv["id"], conv["profile"], stored, result["session_id"], True,
++                                         only(result.get("info", {}), "model provider reasoning_effort"))
++            await self.hydrate_requests(conv["profile"], result["session_id"], result)
++            if not allow_running and (result.get("running") or result.get("status") in {"streaming", "working", "waiting"}):
++                raise Problem(409, "conversation_busy", "This bot is already executing or awaiting input")
++            return result["session_id"]
+         active = (await backend.rpc("session.active_list")).get("sessions", [])
+         matching = [a for a in active if a.get("session_key") == conv["stored_id"]]
+         if matching and (not conv["owned"] or matching[0].get("id") != conv["live_id"]):
+@@ -291,8 +386,8 @@ class Service:
+             raise Problem(409, "conversation_busy", "Conversation is executing or awaiting input")
+         if matching:
+             return conv["live_id"]
+-        result = await backend.rpc("session.resume", {"session_id": conv["stored_id"]})
+-        stored = result.get("session_key") or conv["stored_id"]
++        result = await backend.rpc("session.resume", {"session_id": conv["stored_id"], **({"profile": self.session_profile(conv), "close_on_disconnect": False} if conv["data"].get("canonical") else {})})
++        stored = result.get("session_key") or result.get("stored_session_id") or conv["stored_id"]
+         self.store.save_conversation(conv["id"], conv["profile"], stored, result["session_id"], True, only(result.get("info", {}), "model provider reasoning_effort cwd"))
+         return result["session_id"]
+ 
+@@ -321,7 +416,7 @@ class Service:
+             run = self.store.run(conv["id"], conv["profile"], sid, text, parent)
+             await self.emit(conv["profile"], "run.started", self.run_view(run), run)
+             try:
+-                await self.backends[conv["profile"]].rpc("prompt.submit", {"session_id": sid, "text": text})
++                await self.backends[conv["profile"]].rpc("prompt.submit", {"session_id": sid, "text": text, **({"profile": self.session_profile(current)} if current["data"].get("canonical") else {})})
+             except Problem as err:
+                 state = "unknown" if err.code in {"upstream_uncertain", "upstream_unavailable"} else "failed"
+                 run = self.store.update_run(run["id"], state, reason=err.code)
+@@ -334,8 +429,14 @@ class Service:
+             raise Problem(409, "control_unavailable", "Run has no safe live control handle")
+         backend = self.backends[run["profile"]]
+         # Reject stale handles immediately before sending a control.
+-        active = (await backend.rpc("session.active_list")).get("sessions", [])
+         conv = self.store.get("conversations", run["conversation_id"])
++        if conv["data"].get("canonical"):
++            conv = await self.refresh_bot_binding(conv, control=True)
++            resumed = await backend.rpc("session.resume", {"session_id": conv["stored_id"], "profile": self.session_profile(conv), "omit_messages": True, "close_on_disconnect": False})
++            valid = resumed.get("session_id") == run["live_id"] and self.profile_matches(resumed, self.session_profile(conv)) and resumed.get("running")
++            active = [{"id": run["live_id"], "session_key": conv["stored_id"], "status": "working"}] if valid else []
++        else:
++            active = (await backend.rpc("session.active_list")).get("sessions", [])
+         if not any(a.get("id") == run["live_id"] and a.get("session_key") == conv["stored_id"] and a.get("status") in {"starting", "working", "waiting"} for a in active):
+             raise Problem(409, "control_unavailable", "Hermes no longer reports this execution as active")
+         if action == "stop":
+diff --git a/hermes-mobile-bridge/src/hermes_mobile_bridge/upstream.py b/hermes-mobile-bridge/src/hermes_mobile_bridge/upstream.py
+index dd71e1b..94eb9dd 100644
+--- a/hermes-mobile-bridge/src/hermes_mobile_bridge/upstream.py
++++ b/hermes-mobile-bridge/src/hermes_mobile_bridge/upstream.py
+@@ -14,6 +14,8 @@ class Backend:
+         self.pending = {}
+         self.connected = False
+         self.bot_mode_supported = False
++        self.server_requests_supported = False
++        self.declines_not_shown = False
+         self.last_seen = None
+         self.generation = 0
+         self.paths = set()
+@@ -67,7 +69,18 @@ class Backend:
+             except ValueError:
+                 continue
+             self.last_seen = now()
+-            if "id" in data:
++            if "id" in data and "method" in data:
++                params = data.get("params") or {}
++                method = data.get("method")
++                if method == "clarify":
++                    await self.on_event(self.name, {"type": "bridge.server_request", "session_id": params.get("session_id"),
++                                                   "payload": {"id": data["id"], "method": method, "params": params}})
++                else:
++                    # Never grant approval or invent credentials. Window declines allow a shown Desktop peer to answer.
++                    window = method in {"terminal.read", "preview.read", "preview.act", "window.read", "tour"}
++                    code = 4404 if window and self.declines_not_shown else -32601
++                    await self.ws.send_json({"jsonrpc": "2.0", "id": data["id"], "error": {"code": code, "message": "No Desktop window is showing this chat" if code == 4404 else "Mobile cannot handle this request"}})
++            elif "id" in data:
+                 fut = self.pending.get(data["id"])
+                 if fut and not fut.done():
+                     if "error" in data:
+@@ -100,6 +113,11 @@ class Backend:
+                         self.bot_mode_supported = roster.get("bot_mode_protocol") is True
+                     except Problem:
+                         pass
++                self.server_requests_supported = False
++                if self.cfg.get("installed_commit") == "4bb9e57bfde8a0affb5553eff13ed6e1f14147f1":
++                    capability = await self.rpc("client.capabilities", {"server_requests": True})
++                    self.server_requests_supported = "clarify" in capability.get("server_requests", [])
++                    self.declines_not_shown = capability.get("declines_not_shown") is True
+                 self.connected = True
+                 self.generation += 1
+                 delay = 0.5
+diff --git a/hermes-mobile-bridge/tests/conftest.py b/hermes-mobile-bridge/tests/conftest.py
+index 223a73e..7ac2f9f 100644
+--- a/hermes-mobile-bridge/tests/conftest.py
++++ b/hermes-mobile-bridge/tests/conftest.py
+@@ -30,6 +30,9 @@ class FakeHermes:
+         self.drop_prompt_reply = False
+         self.bot_roster = []
+         self.bot_details = {}
++        self.requests, self.questions = [], {}
++        self.fail_registry = self.fail_title = self.wrong_profile = False
++        self.create_keys = {}
+         self.app = web.Application()
+         self.app.router.add_get('/api/ws', self.socket)
+         self.app.router.add_route('*', '/{path:.*}', self.rest)
+@@ -47,8 +50,11 @@ class FakeHermes:
+             if msg.type != 1:
+                 continue
+             req = msg.json()
++            if 'method' not in req:
++                continue
+             method, p, result, error = req['method'], req['params'], {}, None
+             self.methods.append(method)
++            self.requests.append((method, dict(p)))
+             if method == 'profiles.list':
+                 result = {'profiles': self.bot_roster, 'bot_mode_protocol': True}
+             elif method == 'profiles.describe':
+@@ -58,19 +64,46 @@ class FakeHermes:
+             elif method == 'session.list':
+                 row = next((x for x in self.bot_roster if x['name'] == p.get('profile')), {})
+                 result = {'sessions': [row['canonical_session']] if row.get('canonical_session') else []}
++                if self.fail_registry:
++                    error = {'code': -32000, 'message': 'registry unavailable'}
+             elif method == 'session.active_list':
+                 result = {'sessions': [{'id': sid, 'session_key': x['stored'], 'status': x['status']} for sid, x in self.sessions.items()]}
+             elif method == 'session.create':
+-                sid, stored = uuid.uuid4().hex[:8], uuid.uuid4().hex
+-                self.sessions[sid] = {'stored': stored, 'status': 'idle', 'title': p.get('title', ''), 'messages': []}
++                sid, stored = self.create_keys.get(p.get('idempotency_key'), (uuid.uuid4().hex[:8], uuid.uuid4().hex))
++                if p.get('idempotency_key'):
++                    self.create_keys[p['idempotency_key']] = (sid, stored)
++                self.sessions.setdefault(sid, {'stored': stored, 'status': 'idle', 'title': p.get('title', ''), 'messages': [], 'profile': p.get('profile', 'default'), 'hidden': p.get('hidden', False), 'follow_profile_config': p.get('follow_profile_config', False)})
+                 result = {'session_id': sid, 'stored_session_id': stored, 'info': {'model': 'test', 'desktop_contract': 2}}
++            elif method == 'session.title':
++                x = self.sessions[p['session_id']]
++                row = next((r for r in self.bot_roster if r['name'] == self.profile_of(x)), None)
++                if self.fail_title:
++                    error = {'code': -32000, 'message': 'title write unavailable'}
++                elif row and row.get('canonical_session') and row['canonical_session']['id'] != x['stored']:
++                    error = {'code': 4022, 'message': 'title taken'}
++                else:
++                    x['title'] = p['title']
++                    if row:
++                        row['canonical_session'] = {'id': x['stored'], 'resolved_id': x['stored'], 'title': p['title']}
++                    result = {'ok': True, 'title': p['title']}
++            elif method == 'client.capabilities':
++                result = {'server_requests': ['clarify', 'approval', 'terminal.read'], 'declines_not_shown': True}
++            elif method == 'clarify.lock':
++                questions = self.questions.get(p['request_id'])
++                if questions is None or p['question_id'] not in questions:
++                    result = {'status': 'expired'}
++                else:
++                    questions.pop(p['question_id'])
++                    result = {'status': 'ok', 'remaining': list(questions)}
++                    if not questions:
++                        self.questions.pop(p['request_id'])
+             elif method == 'session.resume':
+-                match = next(((sid, x) for sid, x in self.sessions.items() if x['stored'] == p['session_id']), None)
++                match = next(((sid, x) for sid, x in self.sessions.items() if x['stored'] == p['session_id'] and (not p.get('profile') or self.profile_of(x) == p['profile'])), None)
+                 if not match:
+                     error = {'code': 4007, 'message': 'not found'}
+                 else:
+                     sid, x = match
+-                    result = {'session_id': sid, 'session_key': x['stored'], 'running': x['status'] == 'working', 'inflight': {'assistant': 'partial'}}
++                    result = {'session_id': sid, 'session_key': x['stored'], 'running': x['status'] in {'working', 'starting', 'waiting'}, 'status': x['status'], 'info': {'profile_name': 'wrong' if self.wrong_profile else self.profile_of(x), 'model': next((r.get('model') for r in self.bot_roster if r['name'] == self.profile_of(x)), 'test'), 'provider': next((r.get('provider') for r in self.bot_roster if r['name'] == self.profile_of(x)), 'custom')}, 'inflight': {'assistant': 'partial'}, 'open_requests': x.get('open_requests', [])}
+             elif method == 'prompt.submit':
+                 self.prompts += 1
+                 self.sessions[p['session_id']]['status'] = 'working'
+@@ -105,6 +138,11 @@ class FakeHermes:
+             await ws.send_json({'jsonrpc': '2.0', 'id': req['id'], **({'error': error} if error else {'result': result})})
+         return ws
+ 
++    def profile_of(self, session):
++        if 'profile' in session:
++            return session['profile']
++        return next((r['name'] for r in self.bot_roster if session['stored'] in {(r.get('canonical_session') or {}).get('id'), (r.get('canonical_session') or {}).get('resolved_id')}), 'default')
++
+     async def rest(self, request):
+         path, method = request.path, request.method
+         if path == '/openapi.json':
+@@ -112,13 +150,13 @@ class FakeHermes:
+         if request.headers.get('Authorization') != 'Bearer ' + 'u' * 32:
+             raise web.HTTPUnauthorized()
+         if path == '/api/sessions':
+-            rows = [{'id': x['stored'], 'title': x['title'], 'message_count': len(x['messages'])} for x in self.sessions.values()]
++            rows = [{'id': x['stored'], 'title': x['title'], 'message_count': len(x['messages'])} for x in self.sessions.values() if self.profile_of(x) == request.query.get('profile', 'default') and not x.get('hidden')]
+             return web.json_response({'sessions': rows, 'total': len(rows)})
+         if path == '/api/sessions/search':
+             return web.json_response({'results': [{'session_id': x['stored'], 'title': x['title'], 'snippet': 'found'} for x in self.sessions.values()]})
+         if path.startswith('/api/sessions/'):
+             sid = path.split('/')[3]
+-            row = next((x for x in self.sessions.values() if x['stored'] == sid), None)
++            row = next((x for x in self.sessions.values() if x['stored'] == sid and self.profile_of(x) == request.query.get('profile', 'default')), None)
+             if not row:
+                 raise web.HTTPNotFound()
+             if path.endswith('/messages'):
+diff --git a/hermes-mobile-bridge/tests/test_bot_chat.py b/hermes-mobile-bridge/tests/test_bot_chat.py
+new file mode 100644
+index 0000000..e4f3bc5
+--- /dev/null
++++ b/hermes-mobile-bridge/tests/test_bot_chat.py
+@@ -0,0 +1,340 @@
++"""Writable canonical Bot Chat lifecycle regression coverage."""
++import asyncio
++import json
++import uuid
++
++import aiohttp
++import pytest
++
++from hermes_mobile_bridge.core import opaque
++from conftest import eventually
++from test_bots import studio_rows
++
++
++pytestmark = pytest.mark.asyncio
++
++AUDITED_COMMIT = "4bb9e57bfde8a0affb5553eff13ed6e1f14147f1"
++BOT_PROFILE = "research-orchestrator"
++
++
++def prepare_bot(h, *, canonical=False, control=True):
++    h.fake.bot_roster = studio_rows()
++    bot = next(row for row in h.fake.bot_roster if row["name"] == BOT_PROFILE)
++    if not canonical:
++        for row in h.fake.bot_roster:
++            row["canonical_session"] = None
++    backend = h.service.backends["default"]
++    backend.cfg["bot_mode_roster"] = True
++    backend.cfg["bot_chat_control"] = control
++    backend.bot_mode_supported = True
++    return bot, opaque("default", BOT_PROFILE)
++
++
++def add_existing_chat(h, bot, *, root="desktop-root", tip="desktop-tip", runtime="desktop-runtime", messages=None):
++    bot["canonical_session"] = {
++        "id": root,
++        "resolved_id": tip,
++        "title": "Bot Chat",
++        "last_active": 10,
++    }
++    h.fake.sessions[runtime] = {
++        "stored": tip,
++        "status": "idle",
++        "title": "Bot Chat",
++        "profile": BOT_PROFILE,
++        "hidden": True,
++        "follow_profile_config": True,
++        "messages": messages or [],
++    }
++    return tip
++
++
++def rpc_requests(h, method):
++    return [params for called, params in h.fake.requests if called == method]
++
++
++async def test_absent_bot_chat_is_hidden_adoptable_and_has_no_intro(harness):
++    h = harness
++    _, bid = prepare_bot(h)
++
++    opened = await h.request("POST", f"/bots/{bid}/conversation", {})
++    conv = opened["conversation"]
++    creates = rpc_requests(h, "session.create")
++
++    assert len(creates) == 1
++    assert creates[0]["profile"] == BOT_PROFILE
++    assert creates[0]["title"] == "Bot Chat"
++    assert creates[0]["hidden"] is True
++    assert creates[0]["follow_profile_config"] is True
++    assert creates[0]["idempotency_key"] == f"mobile-botchat-{bid}"
++    runtime_id = h.service.store.get("conversations", conv["id"])["live_id"]
++    assert h.fake.sessions[runtime_id]["hidden"] is True
++    assert h.fake.sessions[runtime_id]["follow_profile_config"] is True
++    assert rpc_requests(h, "session.title") == [{"session_id": runtime_id, "title": "Bot Chat"}]
++    assert h.fake.prompts == 0
++    assert "prompt.submit" not in h.fake.methods
++
++    # Reopening adopts the source row and reuses its stable identity key.
++    reopened = await h.request("POST", f"/bots/{bid}/conversation", {})
++    assert reopened["conversation"]["id"] == conv["id"]
++    assert len(rpc_requests(h, "session.create")) == 1
++
++
++async def test_existing_desktop_bot_chat_is_adopted_without_minting(harness):
++    h = harness
++    bot, bid = prepare_bot(h, canonical=True)
++    tip = add_existing_chat(h, bot, messages=[{"id": "m1", "role": "user", "content": "Existing history"}])
++
++    opened = await h.request("POST", f"/bots/{bid}/conversation", {})
++
++    assert opened["conversation"]["id"] == "botchat." + bid
++    assert opened["messages"][0]["content"] == "Existing history"
++    assert not rpc_requests(h, "session.create")
++    assert not rpc_requests(h, "session.title")
++    assert rpc_requests(h, "session.list")[0] == {
++        "profile": BOT_PROFILE,
++        "title": "Bot Chat",
++        "include_hidden": True,
++    }
++    resume = rpc_requests(h, "session.resume")
++    assert resume and all(row["profile"] == BOT_PROFILE for row in resume)
++    assert any(row["session_id"] == tip for row in resume)
++
++
++async def test_concurrent_bot_chat_initialization_creates_one_session(harness):
++    h = harness
++    _, bid = prepare_bot(h)
++
++    left, right = await asyncio.gather(
++        h.request("POST", f"/bots/{bid}/conversation", {}),
++        h.request("POST", f"/bots/{bid}/conversation", {}),
++    )
++
++    assert left["conversation"]["id"] == right["conversation"]["id"]
++    assert len(rpc_requests(h, "session.create")) == 1
++    assert len(h.fake.sessions) == 1
++    assert h.fake.prompts == 0
++
++
++async def test_lookup_failure_and_positive_roster_mismatch_never_mint(harness):
++    h = harness
++    bot, bid = prepare_bot(h)
++    h.fake.fail_registry = True
++
++    await h.request("POST", f"/bots/{bid}/conversation", {}, expected=502)
++    assert not rpc_requests(h, "session.create")
++    assert all(row["profile"] == BOT_PROFILE for row in rpc_requests(h, "session.list"))
++
++    h.fake.fail_registry = False
++    add_existing_chat(h, bot)
++    h.fake.wrong_profile = True
++    await h.request("POST", f"/bots/{bid}/conversation", {}, expected=502)
++    assert not rpc_requests(h, "session.create")
++    assert not rpc_requests(h, "prompt.submit")
++    assert all(row.get("profile") == BOT_PROFILE for row in rpc_requests(h, "session.resume"))
++
++
++async def test_title_persistence_failure_fails_closed_and_retry_reuses_key(harness):
++    h = harness
++    _, bid = prepare_bot(h)
++    h.fake.fail_title = True
++
++    await h.request("POST", f"/bots/{bid}/conversation", {}, expected=502)
++    first_create = rpc_requests(h, "session.create")[0]
++    assert first_create["hidden"] is True and first_create["follow_profile_config"] is True
++    assert not rpc_requests(h, "prompt.submit")
++
++    h.fake.fail_title = False
++    opened = await h.request("POST", f"/bots/{bid}/conversation", {})
++    assert opened["conversation"]["id"] == "botchat." + bid
++    creates = rpc_requests(h, "session.create")
++    assert len(creates) == 2
++    assert creates[0]["idempotency_key"] == creates[1]["idempotency_key"] == f"mobile-botchat-{bid}"
++    assert len(h.fake.sessions) == 1
++    assert h.fake.prompts == 0
++
++
++async def test_native_profile_send_and_main_list_share_one_conversation(harness):
++    h = harness
++    _, bid = prepare_bot(h)
++    opened = await h.request("POST", f"/bots/{bid}/conversation", {})
++    cid = opened["conversation"]["id"]
++
++    run = await h.request("POST", f"/conversations/{cid}/runs", {"text": "Use this bot's configured context"}, expected=202)
++    submit = rpc_requests(h, "prompt.submit")[-1]
++    assert submit["profile"] == BOT_PROFILE
++    assert submit["text"] == "Use this bot's configured context"
++    assert "model" not in submit and "provider" not in submit
++    assert run["profile"] == bid
++    assert h.service.store.get("runs", run["id"])["profile"] == "default"
++
++    bot_chat = await h.request("GET", f"/bots/{bid}/conversation")
++    all_chats = await h.request("GET", "/conversations?profile=default")
++    assert bot_chat["conversation"]["id"] == cid
++    assert [row["id"] for row in all_chats["conversations"]].count(cid) == 1
++    stored_conv = h.service.store.get("conversations", cid)
++    assert not any(row["id"] == opaque("default", stored_conv["stored_id"]) for row in all_chats["conversations"])
++
++
++async def test_hidden_or_removed_bot_becomes_inaccessible_without_deleting_history(harness):
++    h = harness
++    bot, bid = prepare_bot(h)
++    opened = await h.request("POST", f"/bots/{bid}/conversation", {})
++    sid = h.service.store.get("conversations", opened["conversation"]["id"])["live_id"]
++    stored = h.fake.sessions[sid]["stored"]
++    h.fake.sessions[sid]["messages"] = [{"id": "kept", "role": "user", "content": "Keep this history"}]
++
++    bot["ui_meta"]["hermes-bots"]["hidden"] = True
++    await h.request("GET", f"/bots/{bid}/conversation", expected=404)
++    bot["ui_meta"]["hermes-bots"]["hidden"] = False
++    h.fake.bot_roster.remove(bot)
++    await h.request("GET", f"/bots/{bid}/conversation", expected=404)
++
++    assert h.fake.sessions[sid]["stored"] == stored
++    assert h.fake.sessions[sid]["messages"][0]["content"] == "Keep this history"
++    assert not rpc_requests(h, "session.close")
++    assert not rpc_requests(h, "session.delete")
++
++
++async def test_bot_chat_control_setting_and_token_scope_are_both_required(harness):
++    h = harness
++    _, bid = prepare_bot(h, control=False)
++
++    await h.request("POST", f"/bots/{bid}/conversation", {}, expected=403)
++    assert not rpc_requests(h, "session.create")
++
++    h.service.backends["default"].cfg["bot_chat_control"] = True
++    _, read_token = h.service.store.token("reader", ["read"], ["default"])
++    async with aiohttp.ClientSession(headers={"Authorization": "Bearer " + read_token}) as reader:
++        async with reader.post(
++            f"http://127.0.0.1:{h.port}/mobile/v1/bots/{bid}/conversation",
++            json={},
++            headers={"Idempotency-Key": str(uuid.uuid4())},
++        ) as response:
++            assert response.status == 403
++    assert not rpc_requests(h, "session.create")
++
++
++async def test_modern_clarify_questions_lock_by_request_and_question_id(harness):
++    h = harness
++    backend = h.service.backends["default"]
++    bot, bid = prepare_bot(h)
++    backend.cfg["installed_commit"] = AUDITED_COMMIT
++    generation = backend.generation
++    await backend.ws.close()
++    await eventually(lambda: backend.generation > generation and backend.server_requests_supported and backend.declines_not_shown)
++    assert ("client.capabilities", {"server_requests": True}) in h.fake.requests
++
++    opened = await h.request("POST", f"/bots/{bid}/conversation", {})
++    cid = opened["conversation"]["id"]
++    run = await h.request("POST", f"/conversations/{cid}/runs", {"text": "Ask for two details"}, expected=202)
++    sid = h.service.store.get("runs", run["id"])["live_id"]
++    await h.fake.emit(sid, "message.start")
++    await eventually(lambda: h.service.store.get("runs", run["id"])["state"] == "running")
++
++    request_id = "srq-modern-batch"
++    h.fake.questions[request_id] = {"q-1": None, "q-2": None}
++    await h.fake.ws.send_json({
++        "jsonrpc": "2.0",
++        "id": request_id,
++        "method": "clarify",
++        "params": {
++            "session_id": sid,
++            "questions": [
++                {"qid": "q-1", "question": "Which project?", "choices": ["A", "B"], "multi_select": False},
++                {"qid": "q-2", "question": "Which timeframe?", "choices": None, "multi_select": False},
++            ],
++        },
++    })
++    await eventually(lambda: h.service.store.db.execute("SELECT COUNT(*) FROM attention WHERE run_id=?", (run["id"],)).fetchone()[0] == 2)
++
++    rows = [json.loads(row[0]) for row in h.service.store.db.execute("SELECT data FROM attention WHERE run_id=?", (run["id"],)).fetchall()]
++    by_qid = {row["question_id"]: row for row in rows}
++    assert set(by_qid) == {"q-1", "q-2"}
++    assert all(row["request_id"] == request_id and row["kind"] == "clarification" for row in rows)
++    assert {row["details"]["question"] for row in rows} == {"Which project?", "Which timeframe?"}
++
++    visible = await h.request("GET", "/attention")
++    visible_rows = [item for item in visible["items"] if item["run_id"] == run["id"]]
++    assert len(visible_rows) == 2 and all(item["can_respond"] for item in visible_rows)
++    assert all("question_id" not in item and "request_id" not in item for item in visible_rows)
++
++    await h.request("POST", f"/attention/{by_qid['q-1']['id']}/respond", {"answer": "Project A"})
++    assert h.fake.questions[request_id] == {"q-2": None}
++    assert h.service.store.get("runs", run["id"])["state"] == "waiting_for_input"
++    await h.request("POST", f"/attention/{by_qid['q-2']['id']}/respond", {"answer": "This quarter"})
++    assert request_id not in h.fake.questions
++    assert h.service.store.get("runs", run["id"])["state"] == "running"
++    locks = rpc_requests(h, "clarify.lock")
++    assert locks == [
++        {"request_id": request_id, "question_id": "q-1", "answer": "Project A"},
++        {"request_id": request_id, "question_id": "q-2", "answer": "This quarter"},
++    ]
++    assert not rpc_requests(h, "clarify.respond")
++
++    # A reconnect/resume snapshot carries still-open modern requests as well.
++    snapshot_id = "srq-modern-snapshot"
++    h.fake.questions[snapshot_id] = {"q-recovered": None}
++    h.fake.sessions[sid]["open_requests"] = [{
++        "id": snapshot_id,
++        "method": "clarify",
++        "params": {
++            "session_id": sid,
++            "questions": [{"qid": "q-recovered", "question": "Recovered question?", "choices": None}],
++        },
++    }]
++    await h.request("POST", f"/conversations/{cid}/resume", {})
++    await eventually(lambda: h.service.store.db.execute(
++        "SELECT COUNT(*) FROM attention WHERE run_id=? AND json_extract(data,'$.request_id')=?",
++        (run["id"], snapshot_id),
++    ).fetchone()[0] == 1)
++    recovered = json.loads(h.service.store.db.execute(
++        "SELECT data FROM attention WHERE run_id=? AND json_extract(data,'$.request_id')=?",
++        (run["id"], snapshot_id),
++    ).fetchone()[0])
++    assert recovered["question_id"] == "q-recovered"
++    await h.request("POST", f"/attention/{recovered['id']}/respond", {"answer": "Recovered answer"})
++    assert rpc_requests(h, "clarify.lock")[-1] == {
++        "request_id": snapshot_id,
++        "question_id": "q-recovered",
++        "answer": "Recovered answer",
++    }
++
++    # Unsupported requests receive a wire error without blocking the RPC reader or approving anything.
++    await h.fake.ws.send_json({
++        "jsonrpc": "2.0",
++        "id": "srq-approval-unsupported",
++        "method": "approval",
++        "params": {"session_id": sid, "command": "dangerous"},
++    })
++    expected_active = [{
++        "id": sid,
++        "session_key": h.service.store.get("conversations", cid)["stored_id"],
++        "status": "working",
++    }]
++    assert await backend.rpc("session.active_list") == {"sessions": expected_active}
++    assert backend.server_requests_supported
++    assert h.fake.approval_calls == 0
++    assert not rpc_requests(h, "approval.respond")
++
++
++async def test_inconsistent_canonical_root_and_busy_native_turn_fail_closed(harness):
++    h = harness
++    bot, bid = prepare_bot(h)
++    add_existing_chat(h, bot)
++    backend = h.service.backends["default"]
++    rpc = backend.rpc
++    async def inconsistent(method, params=None):
++        if method == "session.list":
++            return {"sessions": [{"id": "different-root", "resolved_id": "different-tip", "title": "Bot Chat"}]}
++        return await rpc(method, params)
++    backend.rpc = inconsistent
++    await h.request("POST", f"/bots/{bid}/conversation", {}, expected=502)
++    assert not rpc_requests(h, "session.create")
++    backend.rpc = rpc
++    opened = await h.request("POST", f"/bots/{bid}/conversation", {})
++    cid = opened["conversation"]["id"]
++    h.fake.sessions["desktop-runtime"]["status"] = "working"
++    await h.request("POST", f"/conversations/{cid}/runs", {"text": "Must not queue behind a Desktop turn"}, expected=409)
++    assert h.fake.prompts == 0
++    assert not h.service.store.runs(["default"])
+diff --git a/hermes-mobile-bridge/tests/test_installed_hermes.py b/hermes-mobile-bridge/tests/test_installed_hermes.py
+index 23901e6..2ca8f1f 100644
+--- a/hermes-mobile-bridge/tests/test_installed_hermes.py
++++ b/hermes-mobile-bridge/tests/test_installed_hermes.py
+@@ -31,13 +31,17 @@ class LocalModel:
+         body = await request.json()
+         self.calls.append(body)
+         messages = body['messages']
+-        tool_done = any(m.get('role') == 'tool' for m in messages)
++        last_user = max((i for i, m in enumerate(messages) if m.get('role') == 'user'), default=-1)
++        tool_done = any(m.get('role') == 'tool' for m in messages[last_user + 1:])
+         user = next((m.get('content', '') for m in reversed(messages) if m.get('role') == 'user'), '')
+         wants_tool = ('exercise-tool' in str(user) or 'exercise-safe-tool' in str(user)) and not tool_done
+         command = 'sleep 2' if 'exercise-safe-tool' in str(user) else "python3 -c 'import time; time.sleep(2); print(\"LOCAL_TOOL_OK\")'"
+         payload = {'role': 'assistant', 'content': 'Reply from isolated local model.'}
+         if wants_tool:
+             payload = {'role': 'assistant', 'content': None, 'tool_calls': [{'id': 'call_local', 'type': 'function', 'function': {'name': 'terminal', 'arguments': json.dumps({'command': command, 'timeout': 10})}}]}
++        if 'exercise-clarify' in str(user) and not tool_done:
++            wants_tool = True
++            payload = {'role': 'assistant', 'content': None, 'tool_calls': [{'id': 'call_clarify', 'type': 'function', 'function': {'name': 'clarify', 'arguments': json.dumps({'questions': [{'question': 'Fixture question one?', 'choices': ['Proceed', 'Wait']}, {'question': 'Fixture question two?'}]})}}]}
+         finish = 'tool_calls' if wants_tool else 'stop'
+         if body.get('stream'):
+             response = web.StreamResponse(headers={'Content-Type': 'text/event-stream'})
+@@ -75,7 +79,7 @@ async def test_installed_source_end_to_end(tmp_path):
+ agent:
+   max_turns: 4
+   reasoning_effort: none
+-toolsets: [terminal, file]
++toolsets: [terminal, file, skills, clarify]
+ display:
+   tool_progress: all
+ terminal:
+@@ -90,9 +94,9 @@ memory:
+         for name, title in [('research-orchestrator', 'Research Orchestrator'), ('research-worker', 'Research Worker')]:
+             profile = home / 'profiles' / name
+             profile.mkdir(parents=True)
+-            (profile / 'config.yaml').write_text((home / 'config.yaml').read_text())
++            (profile / 'config.yaml').write_text((home / 'config.yaml').read_text().replace('default: bridge-local-test', 'default: bridge-' + name + '-test'))
+             (profile / 'profile.yaml').write_text('display_name: ' + title + '\nui_meta:\n  hermes-bots:\n    title: ' + title + '\n')
+-            (profile / 'SOUL.md').write_text('Isolated Bot Mode fixture')
++            (profile / 'SOUL.md').write_text('ISOLATED_' + name.upper().replace('-', '_') + '_CONTEXT_MARKER')
+             for skill in SKILLS:
+                 folder = profile / 'skills' / skill
+                 folder.mkdir(parents=True)
+@@ -100,7 +104,7 @@ memory:
+     # No host provider credentials are inherited. Upstream receives a dummy
+     # local-model key in its isolated config, not the production .env.
+     env = {k: v for k, v in os.environ.items() if not any(x in k.upper() for x in ('API_KEY', 'TOKEN', 'SECRET', 'HERMES_', 'ANTHROPIC_', 'OPENAI_', 'OPENROUTER_', 'NOUS_')) and k not in {'PYTHONPATH', 'PYTHONHOME'}}
+-    env.update(HERMES_DISABLE_LAZY_INSTALLS='1', HERMES_HOME=str(home), HERMES_DASHBOARD_SESSION_TOKEN='u' * 32, HERMES_TUI_TOOLSETS='terminal,file', PYTHONUNBUFFERED='1')
++    env.update(HERMES_DISABLE_LAZY_INSTALLS='1', HERMES_HOME=str(home), HERMES_DASHBOARD_SESSION_TOKEN='u' * 32, HERMES_TUI_TOOLSETS='terminal,file,skills,clarify', PYTHONUNBUFFERED='1')
+     if commit == '4bb9e57bfde8a0affb5553eff13ed6e1f14147f1':
+         # Reuse installed code dependencies, never production config/provider credentials.
+         env['HERMES_RUNTIME_DIR'] = str(SOURCE.parent / 'tools')
+@@ -127,7 +131,7 @@ memory:
+                     except aiohttp.ClientError:
+                         pass
+                     await asyncio.sleep(.2)
+-        cfg = {'state_dir': str(tmp_path / 'bridge-state'), 'event_limit': 1000, 'run_event_limit': 500, 'event_days': 7, 'upload_limit': 1024 * 1024, 'artifact_limit': 2 * 1024 * 1024, 'backends': {'default': {'url': f'http://127.0.0.1:{port}', 'token': 'u' * 32, 'boards': ['default'], 'workspaces': {'test': str(work)}, 'artifact_roots': [str(work / '.hermes/desktop-attachments'), str(home / 'attachments')], 'bot_mode_roster': commit == '4bb9e57bfde8a0affb5553eff13ed6e1f14147f1', 'installed_commit': commit}}}
++        cfg = {'state_dir': str(tmp_path / 'bridge-state'), 'event_limit': 1000, 'run_event_limit': 500, 'event_days': 7, 'upload_limit': 1024 * 1024, 'artifact_limit': 2 * 1024 * 1024, 'backends': {'default': {'url': f'http://127.0.0.1:{port}', 'token': 'u' * 32, 'boards': ['default'], 'workspaces': {'test': str(work)}, 'artifact_roots': [str(work / '.hermes/desktop-attachments'), str(home / 'attachments')], 'bot_chat_control': True, 'bot_mode_roster': commit == '4bb9e57bfde8a0affb5553eff13ed6e1f14147f1', 'installed_commit': commit}}}
+         app = create_app(cfg)
+         service = app[SERVICE]
+         _, token = service.store.token('integration', ['read', 'chat.control', 'tasks.manage', 'approvals.respond'], ['default'])
+@@ -145,14 +149,67 @@ memory:
+             bot = next(b for b in bots if b['name'] == 'Research Orchestrator')
+             detail = await request('GET', '/bots/' + bot['id'])
+             assert {v['name'] for v in detail['skills']} == set(SKILLS)
+-            # Seed only a fixture-owned SQLite transcript via the installed source.
+-            script = "from hermes_state import SessionDB; from pathlib import Path; db=SessionDB(db_path=Path(" + repr(str(home / 'profiles/research-orchestrator/state.db')) + ")); db.create_session('fixture-bot-chat', source='desktop', profile_name='research-orchestrator'); db.set_session_title('fixture-bot-chat','Bot Chat'); db.set_session_hidden('fixture-bot-chat',True); db.append_message('fixture-bot-chat','user','Existing canonical fixture chat'); db.close()"
+-            seed_args = json.loads(subprocess.check_output([str(python), '-I', '-c', resolver, str(SOURCE), script], env=dict(env, HERMES_HOME=str(SOURCE.parent)), text=True))
+-            seeded = await asyncio.to_thread(subprocess.run, seed_args, cwd=SOURCE, env=env, capture_output=True, timeout=30)
+-            assert seeded.returncode == 0, seeded.stderr.decode()[-1000:]
+-            chat = await request('GET', '/bots/' + bot['id'] + '/conversation')
+-            assert chat['messages'][0]['content'] == 'Existing canonical fixture chat'
+-            assert chat['conversation']['read_only'] is True
++            # Real Desktop lifecycle: absent -> hidden eager-title -> native-profile resume.
++            canonical = {}
++            for bot in bots:
++                chat, concurrent = await asyncio.gather(request('POST', '/bots/' + bot['id'] + '/conversation', {}), request('POST', '/bots/' + bot['id'] + '/conversation', {}))
++                assert concurrent['conversation']['id'] == chat['conversation']['id']
++                assert chat['messages'] == []
++                conv = chat['conversation']
++                assert conv['read_only'] is False and conv['canonical'] is True
++                assert conv['bot_profile'] == bot['profile_id'] and conv['profile'] == bot['id']
++                again = await request('POST', '/bots/' + bot['id'] + '/conversation', {})
++                assert again['conversation']['id'] == conv['id']
++                canonical[bot['profile_id']] = conv
++            for name, expected_model in [('default', 'bridge-local-test'), ('research-worker', 'bridge-research-worker-test')]:
++                start = len(model.calls)
++                bc = canonical[name]
++                test_run = await request('POST', f"/conversations/{bc['id']}/runs", {'text': 'Safely identify the configured fixture bot.'}, 202)
++                await eventually(lambda: service.store.get('runs', test_run['id'])['state'] in {'complete', 'failed'}, timeout=30)
++                assert service.store.get('runs', test_run['id'])['state'] == 'complete'
++                assert model.calls[start]['model'] == expected_model
++                if name == 'research-worker':
++                    assert 'ISOLATED_RESEARCH_WORKER_CONTEXT_MARKER' in json.dumps(model.calls[start]['messages'])
++            oc = canonical['research-orchestrator']
++            before = len(model.calls)
++            br = await request('POST', f"/conversations/{oc['id']}/runs", {'text': 'Safely identify the configured fixture profile.'}, 202)
++            await eventually(lambda: service.store.get('runs', br['id'])['state'] in {'complete', 'failed'}, timeout=40)
++            assert (await request('GET', '/runs/' + br['id']))['state'] == 'complete'
++            call = model.calls[before]
++            assert call['model'] == 'bridge-research-orchestrator-test'
++            context = json.dumps(call['messages'])
++            assert 'ISOLATED_RESEARCH_ORCHESTRATOR_CONTEXT_MARKER' in context
++            assert 'ISOLATED_RESEARCH_WORKER_CONTEXT_MARKER' not in context
++            assert 'research-terminal' in context
++            native = service.store.get('conversations', oc['id'])
++            resumed = await service.backends['default'].rpc('session.resume', {'session_id': native['stored_id'], 'profile': 'research-orchestrator', 'omit_messages': True})
++            assert resumed['info']['profile_name'] == 'research-orchestrator'
++            assert resumed['info']['model'] == 'bridge-research-orchestrator-test'
++            assert resumed['info']['provider'] == 'custom'
++            listed = (await request('GET', '/conversations'))['conversations']
++            assert len([x for x in listed if x['id'] == oc['id']]) == 1
++            history = await request('GET', '/conversations/' + oc['id'])
++            assert any(m['role'] == 'assistant' for m in history['messages'])
++            qr = await request('POST', f"/conversations/{oc['id']}/runs", {'text': 'exercise-clarify'}, 202)
++            await eventually(lambda: service.store.get('runs', qr['id'])['state'] == 'waiting_for_input', timeout=30)
++            # Drop/reconnect transport while both exact questions remain open.
++            generation = service.backends['default'].generation
++            await service.backends['default'].ws.close()
++            await eventually(lambda: service.backends['default'].connected and service.backends['default'].generation > generation, timeout=20)
++            await eventually(lambda: service.store.get('runs', qr['id'])['state'] == 'waiting_for_input', timeout=10)
++            prompts = [x for x in (await request('GET', '/attention'))['items'] if x['run_id'] == qr['id'] and x['can_respond']]
++            assert len(prompts) == 2, {'run': service.store.get('runs', qr['id']), 'attention': (await request('GET', '/attention')), 'active': await service.backends['default'].rpc('session.active_list')}
++            for prompt in prompts:
++                await request('POST', '/attention/' + prompt['id'] + '/respond', {'answer': 'Proceed'})
++            await eventually(lambda: service.store.get('runs', qr['id'])['state'] in {'complete', 'failed'}, timeout=30)
++            assert service.store.get('runs', qr['id'])['state'] == 'complete'
++            # The same bot conversation exercises ordinary stream/tool/stop/steer paths.
++            bt = await request('POST', f"/conversations/{oc['id']}/runs", {'text': 'exercise-safe-tool'}, 202)
++            await eventually(lambda: service.store.db.execute("SELECT COUNT(*) FROM events WHERE run_id=? AND type='tool.started'", (bt['id'],)).fetchone()[0] > 0, timeout=40)
++            assert (await request('POST', '/runs/' + bt['id'] + '/steer', {'text': 'bot-steer-evidence'}))['status'] == 'queued'
++            assert (await request('POST', '/runs/' + bt['id'] + '/stop', {}))['acknowledged']
++            await eventually(lambda: service.store.get('runs', bt['id'])['state'] in {'cancelled', 'failed'}, timeout=30)
++            assert service.store.get('runs', bt['id'])['state'] == 'cancelled'
+         c = await request('POST', '/conversations', {'title': 'Local integration', 'workspace': 'test'}, 201)
+         r = await request('POST', f"/conversations/{c['id']}/runs", {'text': 'Say hello using the local model.'}, 202)
+         await eventually(lambda: service.store.get('runs', r['id'])['state'] in {'complete', 'failed'}, timeout=40)
+@@ -232,6 +289,10 @@ memory:
+         client = aiohttp.ClientSession(headers={'Authorization': 'Bearer ' + token})
+         await eventually(lambda: service.backends['default'].connected, timeout=20)
+         assert (await request('GET', f"/runs/{r['id']}"))['state'] == 'complete'
++        if cfg['backends']['default']['bot_mode_roster']:
++            restored = await request('POST', '/bots/' + next(b['id'] for b in bots if b['profile_id'] == 'research-orchestrator') + '/conversation', {})
++            assert restored['conversation']['id'] == oc['id']
++            assert any(m['role'] == 'assistant' for m in restored['messages'])
+         # Real Hermes process restart during a controlled tool execution.
+         rc = await request('POST', '/conversations', {'title': 'Restart integration', 'workspace': 'test'}, 201)
+         rr = await request('POST', f"/conversations/{rc['id']}/runs", {'text': 'exercise-safe-tool'}, 202)
+@@ -249,6 +310,17 @@ memory:
+         await eventually(lambda: service.backends['default'].connected and service.backends['default'].generation > generation, timeout=30)
+         assert (await request('GET', f"/runs/{rr['id']}"))['state'] == 'unknown'
+         assert len(model.calls) == before_restart
++        if cfg['backends']['default']['bot_mode_roster']:
++            cold = await request('POST', '/bots/' + next(b['id'] for b in bots if b['profile_id'] == 'research-orchestrator') + '/conversation', {})
++            assert cold['conversation']['id'] == oc['id']
++            assert any(m['role'] == 'assistant' for m in cold['messages'])
++            first = len(model.calls)
++            cold_run = await request('POST', f"/conversations/{oc['id']}/runs", {'text': 'Safely verify your profile after a cold backend restart.'}, 202)
++            await eventually(lambda: service.store.get('runs', cold_run['id'])['state'] in {'complete', 'failed'}, timeout=30)
++            assert service.store.get('runs', cold_run['id'])['state'] == 'complete'
++            assert model.calls[first]['model'] == 'bridge-research-orchestrator-test'
++            assert 'ISOLATED_RESEARCH_ORCHESTRATOR_CONTEXT_MARKER' in json.dumps(model.calls[first]['messages'])
++            assert 'research-terminal' in json.dumps(model.calls[first]['messages'])
+         home_result = await request('GET', '/home')
+         assert home_result['recent_completions']
+         await request('DELETE', f"/conversations/{c['id']}", {})
+diff --git a/scripts/bridge-service.py b/scripts/bridge-service.py
+index b62b181..de90c41 100644
+--- a/scripts/bridge-service.py
++++ b/scripts/bridge-service.py
+@@ -202,7 +202,7 @@ def install(args, root):
+     artifact = workspace / '.hermes/desktop-attachments'; private_dir(artifact)
+     config = {'state_dir':str(root/'state'), 'listen_host':'127.0.0.1', 'listen_port':args.bridge_port,
+               'backends':{'default':{'url':f'http://127.0.0.1:{args.hermes_port}', 'token_file':str(secret),
+-                 'source_dir':str(source), 'bot_mode_roster':args.bot_mode, 'boards':args.board, 'workspaces':{'studio':str(workspace)}, 'artifact_roots':[str(artifact)]}}}
++                 'source_dir':str(source), 'bot_mode_roster':args.bot_mode or args.bot_chat, 'bot_chat_control':args.bot_chat, 'installed_commit':commit, 'boards':args.board, 'workspaces':{'studio':str(workspace)}, 'artifact_roots':[str(artifact)]}}}
+     private_write(root/'config.json', json.dumps(config, indent=2))
+     manifest = {'hermes_source':str(source), 'hermes_home':str(home), 'hermes_port':args.hermes_port,
+                 'bridge_port':args.bridge_port, 'workspace':str(workspace), 'logs':str(logs), 'python':args.python,
+@@ -288,6 +288,7 @@ def uninstall(root, purge=False):
+ 
+ def main():
+     parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument('--bot-chat', action='store_true', help='Allow native canonical Bot Chat initialization and control for every local Desktop bot')
+     parser.add_argument('--bot-mode', action='store_true', help='Allow mobile read access to every local Desktop bot, including future bots')
+     parser.add_argument('action',choices=['install','start','stop','status','update','uninstall','tailscale','pairing'])
+     parser.add_argument('--root',default=str(DEFAULT_ROOT)); parser.add_argument('--json',action='store_true')

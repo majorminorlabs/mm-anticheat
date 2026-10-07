@@ -4,7 +4,7 @@
   "requested_commits": 150,
   "commits_scanned": 150,
   "commits_with_high": 2,
-  "commits_with_high_or_medium": 19,
+  "commits_with_high_or_medium": 11,
   "counts": [
     {
       "rule_id": "GH001",
@@ -29,12 +29,12 @@
     {
       "rule_id": "GH003",
       "severity": "low",
-      "count": 16
+      "count": 22
     },
     {
       "rule_id": "GH003",
       "severity": "medium",
-      "count": 19
+      "count": 13
     },
     {
       "rule_id": "GH004",
@@ -48,8 +48,13 @@
     },
     {
       "rule_id": "GH006",
+      "severity": "low",
+      "count": 18
+    },
+    {
+      "rule_id": "GH006",
       "severity": "medium",
-      "count": 30
+      "count": 6
     },
     {
       "rule_id": "GH010",
@@ -233,11 +238,11 @@
         "subject": "Add support for lazy imports (#13776)",
         "rule_id": "GH003",
         "rule_name": "skip-marker-added",
-        "severity": "medium",
+        "severity": "low",
         "confidence": "normal",
         "file": "tests/test_lazy_imports.py",
         "line": 11,
-        "title": "Skip/focus marker added",
+        "title": "Skip/focus marker added to a new test",
         "evidence": "pytest.mark.skipif(sys.version_info < (3, 15), reason='Requires lazy imports introduced in Python 3.15')",
         "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
         "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
@@ -344,12 +349,12 @@
         "subject": "Add `__namespace__` parameter to `create_model()` (#13895)",
         "rule_id": "GH006",
         "rule_name": "hardcoded-test-expectation",
-        "severity": "medium",
+        "severity": "low",
         "confidence": "normal",
         "file": "pydantic/errors.py",
         "line": 54,
         "title": "New source literal matches a test expectation",
-        "evidence": "    'create-model-namespace',\ntests/test_create_model.py:487:     assert exc_info.value.code == 'create-model-namespace'",
+        "evidence": "    'create-model-namespace',\ntests/test_create_model.py:467:     assert exc_info.value.code == 'create-model-namespace'",
         "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
         "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
         "allowed": false
@@ -359,7 +364,7 @@
         "subject": "Add `__namespace__` parameter to `create_model()` (#13895)",
         "rule_id": "GH006",
         "rule_name": "hardcoded-test-expectation",
-        "severity": "medium",
+        "severity": "low",
         "confidence": "normal",
         "file": "pydantic/main.py",
         "line": 1766,
@@ -374,7 +379,7 @@
         "subject": "Add `__namespace__` parameter to `create_model()` (#13895)",
         "rule_id": "GH006",
         "rule_name": "hardcoded-test-expectation",
-        "severity": "medium",
+        "severity": "low",
         "confidence": "normal",
         "file": "pydantic/main.py",
         "line": 1767,
@@ -389,7 +394,7 @@
         "subject": "Add `__namespace__` parameter to `create_model()` (#13895)",
         "rule_id": "GH006",
         "rule_name": "hardcoded-test-expectation",
-        "severity": "medium",
+        "severity": "low",
         "confidence": "normal",
         "file": "pydantic/main.py",
         "line": 1768,
@@ -404,7 +409,7 @@
         "subject": "Add `__namespace__` parameter to `create_model()` (#13895)",
         "rule_id": "GH006",
         "rule_name": "hardcoded-test-expectation",
-        "severity": "medium",
+        "severity": "low",
         "confidence": "normal",
         "file": "pydantic/main.py",
         "line": 1769,
@@ -609,12 +614,12 @@
         {
           "rule_id": "GH006",
           "rule_name": "hardcoded-test-expectation",
-          "severity": "medium",
+          "severity": "low",
           "confidence": "normal",
           "file": "pydantic/errors.py",
           "line": 54,
           "title": "New source literal matches a test expectation",
-          "evidence": "    'create-model-namespace',\ntests/test_create_model.py:487:     assert exc_info.value.code == 'create-model-namespace'",
+          "evidence": "    'create-model-namespace',\ntests/test_create_model.py:467:     assert exc_info.value.code == 'create-model-namespace'",
           "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
           "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
           "allowed": false
@@ -622,7 +627,7 @@
         {
           "rule_id": "GH006",
           "rule_name": "hardcoded-test-expectation",
-          "severity": "medium",
+          "severity": "low",
           "confidence": "normal",
           "file": "pydantic/main.py",
           "line": 1766,
@@ -635,7 +640,7 @@
         {
           "rule_id": "GH006",
           "rule_name": "hardcoded-test-expectation",
-          "severity": "medium",
+          "severity": "low",
           "confidence": "normal",
           "file": "pydantic/main.py",
           "line": 1767,
@@ -648,7 +653,7 @@
         {
           "rule_id": "GH006",
           "rule_name": "hardcoded-test-expectation",
-          "severity": "medium",
+          "severity": "low",
           "confidence": "normal",
           "file": "pydantic/main.py",
           "line": 1768,
@@ -661,7 +666,7 @@
         {
           "rule_id": "GH006",
           "rule_name": "hardcoded-test-expectation",
-          "severity": "medium",
+          "severity": "low",
           "confidence": "normal",
           "file": "pydantic/main.py",
           "line": 1769,
@@ -674,7 +679,7 @@
         {
           "rule_id": "GH006",
           "rule_name": "hardcoded-test-expectation",
-          "severity": "medium",
+          "severity": "low",
           "confidence": "normal",
           "file": "pydantic/main.py",
           "line": 1770,
@@ -687,12 +692,12 @@
         {
           "rule_id": "GH006",
           "rule_name": "hardcoded-test-expectation",
-          "severity": "medium",
+          "severity": "low",
           "confidence": "normal",
           "file": "pydantic/main.py",
           "line": 1901,
           "title": "New source literal matches a test expectation",
-          "evidence": "                code='create-model-namespace',\ntests/test_create_model.py:487:     assert exc_info.value.code == 'create-model-namespace'",
+          "evidence": "                code='create-model-namespace',\ntests/test_create_model.py:467:     assert exc_info.value.code == 'create-model-namespace'",
           "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
           "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
           "allowed": false
@@ -700,12 +705,12 @@
         {
           "rule_id": "GH006",
           "rule_name": "hardcoded-test-expectation",
-          "severity": "medium",
+          "severity": "low",
           "confidence": "normal",
           "file": "pydantic/main.py",
           "line": 1907,
           "title": "New source literal matches a test expectation",
-          "evidence": "                    code='create-model-namespace',\ntests/test_create_model.py:487:     assert exc_info.value.code == 'create-model-namespace'",
+          "evidence": "                    code='create-model-namespace',\ntests/test_create_model.py:467:     assert exc_info.value.code == 'create-model-namespace'",
           "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
           "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
           "allowed": false
@@ -966,7 +971,7 @@
         {
           "rule_id": "GH006",
           "rule_name": "hardcoded-test-expectation",
-          "severity": "medium",
+          "severity": "low",
           "confidence": "normal",
           "file": "pydantic-core/python/pydantic_core/core_schema.py",
           "line": 4928,
@@ -987,7 +992,7 @@
         {
           "rule_id": "GH006",
           "rule_name": "hardcoded-test-expectation",
-          "severity": "medium",
+          "severity": "low",
           "confidence": "normal",
           "file": "pydantic-core/python/pydantic_core/core_schema.py",
           "line": 4857,
@@ -1116,26 +1121,13 @@
       "subject": "Add support for lazy imports (#13776)",
       "findings": [
         {
-          "rule_id": "GH006",
-          "rule_name": "hardcoded-test-expectation",
-          "severity": "medium",
-          "confidence": "normal",
-          "file": "pydantic/_internal/_typing_extra.py",
-          "line": 369,
-          "title": "New source literal matches a test expectation",
-          "evidence": "        if sys.version_info >= (3, 12):\ntests/test_edge_cases.py:1603:     assert Model(a=12).a == 12",
-          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
-          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
-          "allowed": false
-        },
-        {
           "rule_id": "GH003",
           "rule_name": "skip-marker-added",
-          "severity": "medium",
+          "severity": "low",
           "confidence": "normal",
           "file": "tests/test_lazy_imports.py",
           "line": 11,
-          "title": "Skip/focus marker added",
+          "title": "Skip/focus marker added to a new test",
           "evidence": "pytest.mark.skipif(sys.version_info < (3, 15), reason='Requires lazy imports introduced in Python 3.15')",
           "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
           "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
@@ -1185,11 +1177,11 @@
         {
           "rule_id": "GH003",
           "rule_name": "skip-marker-added",
-          "severity": "medium",
+          "severity": "low",
           "confidence": "normal",
           "file": "tests/test_freethreaded.py",
           "line": 16,
-          "title": "Skip/focus marker added",
+          "title": "Skip/focus marker added to a new test",
           "evidence": "pytest.mark.skipif(sys.platform == 'emscripten', reason='no threading on emscripten')",
           "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
           "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
@@ -1198,11 +1190,11 @@
         {
           "rule_id": "GH003",
           "rule_name": "skip-marker-added",
-          "severity": "medium",
+          "severity": "low",
           "confidence": "normal",
           "file": "tests/test_freethreaded.py",
           "line": 17,
-          "title": "Skip/focus marker added",
+          "title": "Skip/focus marker added to a new test",
           "evidence": "pytest.mark.skipif(not is_free_threaded, reason='only relevant on free-threaded builds')",
           "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
           "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
@@ -1237,20 +1229,7 @@
           "file": "pydantic/json_schema.py",
           "line": 2875,
           "title": "New source literal matches a test expectation",
-          "evidence": "      exponent is greater than or equal to -6.\ntests/test_json_schema.py:2343:         ({'le': 5}, int, 6),",
-          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
-          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
-          "allowed": false
-        },
-        {
-          "rule_id": "GH006",
-          "rule_name": "hardcoded-test-expectation",
-          "severity": "medium",
-          "confidence": "normal",
-          "file": "pydantic/json_schema.py",
-          "line": 2924,
-          "title": "New source literal matches a test expectation",
-          "evidence": "        alts += [f'[1-9](?:{frac_part(max_places - k)})?E-{k}' for k in range(7, max_places + 1)]\ntests/test_dataclasses.py:909:     assert f.meta.seen_count == 7",
+          "evidence": "      exponent is greater than or equal to -6.\ntests/test_dataclasses.py:180:     assert d.a == 6",
           "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
           "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
           "allowed": false
@@ -1697,19 +1676,6 @@
       "subject": "Allow `dict`, `frozendict` and `frozenset` as `defaultdict` default factories (#13623)",
       "findings": [
         {
-          "rule_id": "GH006",
-          "rule_name": "hardcoded-test-expectation",
-          "severity": "medium",
-          "confidence": "normal",
-          "file": "pydantic/_internal/_validators.py",
-          "line": 437,
-          "title": "New source literal matches a test expectation",
-          "evidence": "if sys.version_info >= (3, 15):\ntests/test_internal.py:178:         (Decimal('0.000'), 3, 3),",
-          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
-          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
-          "allowed": false
-        },
-        {
           "rule_id": "GH004",
           "rule_name": "assertion-count-decreased",
           "severity": "medium",
@@ -1757,32 +1723,6 @@
       "subject": "Add support for `frozendict` type (#13634)",
       "findings": [
         {
-          "rule_id": "GH006",
-          "rule_name": "hardcoded-test-expectation",
-          "severity": "medium",
-          "confidence": "normal",
-          "file": "pydantic-core/python/pydantic_core/core_schema.py",
-          "line": 4549,
-          "title": "New source literal matches a test expectation",
-          "evidence": "    'frozen_dict_type',\ntests/types/test_frozendict.py:64:     assert exc_info.value.errors()[0]['type'] == 'frozen_dict_type'",
-          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
-          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
-          "allowed": false
-        },
-        {
-          "rule_id": "GH003",
-          "rule_name": "skip-marker-added",
-          "severity": "medium",
-          "confidence": "normal",
-          "file": "pydantic-core/tests/serializers/test_frozendict.py",
-          "line": 10,
-          "title": "Skip/focus marker added",
-          "evidence": "pytest.skip(reason='The `frozendict` builtin type is only available in Python 3.15+', allow_module_level=True)",
-          "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
-          "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
-          "allowed": false
-        },
-        {
           "rule_id": "GH003",
           "rule_name": "skip-marker-added",
           "severity": "medium",
@@ -1796,40 +1736,14 @@
           "allowed": false
         },
         {
-          "rule_id": "GH003",
-          "rule_name": "skip-marker-added",
-          "severity": "medium",
-          "confidence": "normal",
-          "file": "pydantic-core/tests/validators/test_frozendict.py",
-          "line": 14,
-          "title": "Skip/focus marker added",
-          "evidence": "pytest.skip(reason='The `frozendict` builtin type is only available in Python 3.15+', allow_module_level=True)",
-          "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
-          "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
-          "allowed": false
-        },
-        {
           "rule_id": "GH006",
           "rule_name": "hardcoded-test-expectation",
-          "severity": "medium",
+          "severity": "low",
           "confidence": "normal",
-          "file": "pydantic/_internal/_generate_schema.py",
-          "line": 126,
+          "file": "pydantic-core/python/pydantic_core/core_schema.py",
+          "line": 4549,
           "title": "New source literal matches a test expectation",
-          "evidence": "if sys.version_info >= (3, 15):\ntests/test_pipeline.py:593:     assert ta.validate_python(15) == 15",
-          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
-          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
-          "allowed": false
-        },
-        {
-          "rule_id": "GH006",
-          "rule_name": "hardcoded-test-expectation",
-          "severity": "medium",
-          "confidence": "normal",
-          "file": "pydantic/_internal/_generate_schema.py",
-          "line": 451,
-          "title": "New source literal matches a test expectation",
-          "evidence": "    if sys.version_info >= (3, 15):\ntests/test_pipeline.py:593:     assert ta.validate_python(15) == 15",
+          "evidence": "    'frozen_dict_type',\ntests/types/test_frozendict.py:64:     assert exc_info.value.errors()[0]['type'] == 'frozen_dict_type'",
           "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
           "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
           "allowed": false
@@ -1837,11 +1751,11 @@
         {
           "rule_id": "GH003",
           "rule_name": "skip-marker-added",
-          "severity": "medium",
+          "severity": "low",
           "confidence": "normal",
-          "file": "tests/types/test_frozendict.py",
+          "file": "pydantic-core/tests/serializers/test_frozendict.py",
           "line": 10,
-          "title": "Skip/focus marker added",
+          "title": "Skip/focus marker added to a new test",
           "evidence": "pytest.skip(reason='The `frozendict` builtin type is only available in Python 3.15+', allow_module_level=True)",
           "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
           "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
@@ -1856,6 +1770,32 @@
           "line": 10,
           "title": "Skip/focus marker added to a new test",
           "evidence": "pytest.mark.skipif(sys.version_info >= (3, 15), reason='The `frozendict` builtin type is available in Python 3.15+')",
+          "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
+          "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH003",
+          "rule_name": "skip-marker-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "pydantic-core/tests/validators/test_frozendict.py",
+          "line": 14,
+          "title": "Skip/focus marker added to a new test",
+          "evidence": "pytest.skip(reason='The `frozendict` builtin type is only available in Python 3.15+', allow_module_level=True)",
+          "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
+          "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
+          "allowed": false
+        },
+        {
+          "rule_id": "GH003",
+          "rule_name": "skip-marker-added",
+          "severity": "low",
+          "confidence": "normal",
+          "file": "tests/types/test_frozendict.py",
+          "line": 10,
+          "title": "Skip/focus marker added to a new test",
+          "evidence": "pytest.skip(reason='The `frozendict` builtin type is only available in Python 3.15+', allow_module_level=True)",
           "why_flagged": "Skip or exclusive-run markers can hide previously exercised behavior.",
           "legit_if": "The test is flaky, obsolete or gated on an unavailable platform/dependency.",
           "allowed": false
@@ -2201,19 +2141,6 @@
       "subject": "Refactor type references logic (#13643)",
       "findings": [
         {
-          "rule_id": "GH006",
-          "rule_name": "hardcoded-test-expectation",
-          "severity": "medium",
-          "confidence": "normal",
-          "file": "pydantic/_internal/_type_refs.py",
-          "line": 123,
-          "title": "New source literal matches a test expectation",
-          "evidence": "    if sys.version_info >= (3, 15):\ntests/types/unions/test_discriminated_union.py:2129:     assert ta.validate_python(int_dog).friends[1].id == 3",
-          "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
-          "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
-          "allowed": false
-        },
-        {
           "rule_id": "GH010",
           "rule_name": "lint-or-type-suppression-added",
           "severity": "low",
@@ -2272,12 +2199,12 @@
         {
           "rule_id": "GH006",
           "rule_name": "hardcoded-test-expectation",
-          "severity": "medium",
+          "severity": "low",
           "confidence": "normal",
           "file": "pydantic/json_schema.py",
           "line": 868,
           "title": "New source literal matches a test expectation",
-          "evidence": "            temporal_format = 'seconds' if self._config.ser_json_timedelta == 'float' else 'iso8601'\ntests/test_json_schema.py:859: @pytest.mark.parametrize('ser_json_temporal', ['iso8601', 'seconds', 'milliseconds'])",
+          "evidence": "            temporal_format = 'seconds' if self._config.ser_json_timedelta == 'float' else 'iso8601'\ntests/test_json_schema.py:833: @pytest.mark.parametrize('ser_json_temporal', ['iso8601', 'seconds', 'milliseconds'])",
           "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
           "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
           "allowed": false
@@ -2285,12 +2212,12 @@
         {
           "rule_id": "GH006",
           "rule_name": "hardcoded-test-expectation",
-          "severity": "medium",
+          "severity": "low",
           "confidence": "normal",
           "file": "pydantic/json_schema.py",
           "line": 872,
           "title": "New source literal matches a test expectation",
-          "evidence": "        self, format: str, temporal_format: Literal['iso8601', 'seconds', 'milliseconds']\ntests/test_json_schema.py:859: @pytest.mark.parametrize('ser_json_temporal', ['iso8601', 'seconds', 'milliseconds'])",
+          "evidence": "        self, format: str, temporal_format: Literal['iso8601', 'seconds', 'milliseconds']\ntests/test_json_schema.py:833: @pytest.mark.parametrize('ser_json_temporal', ['iso8601', 'seconds', 'milliseconds'])",
           "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
           "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
           "allowed": false
@@ -2298,12 +2225,12 @@
         {
           "rule_id": "GH006",
           "rule_name": "hardcoded-test-expectation",
-          "severity": "medium",
+          "severity": "low",
           "confidence": "normal",
           "file": "pydantic/json_schema.py",
           "line": 874,
           "title": "New source literal matches a test expectation",
-          "evidence": "        if temporal_format != 'iso8601':\ntests/test_json_schema.py:859: @pytest.mark.parametrize('ser_json_temporal', ['iso8601', 'seconds', 'milliseconds'])",
+          "evidence": "        if temporal_format != 'iso8601':\ntests/test_json_schema.py:833: @pytest.mark.parametrize('ser_json_temporal', ['iso8601', 'seconds', 'milliseconds'])",
           "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
           "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
           "allowed": false
@@ -2549,7 +2476,7 @@
           "file": "pydantic/dataclasses.py",
           "line": 88,
           "title": "New source literal matches a test expectation",
-          "evidence": "    A Pydantic dataclass validates its inputs like a `BaseModel` does. Its\ntests/test_plugins.py:204:             assert schema_kind == 'BaseModel'",
+          "evidence": "    A Pydantic dataclass validates its inputs like a `BaseModel` does. Its\ntests/test_plugins.py:65:             assert schema_kind == 'BaseModel'",
           "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
           "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
           "allowed": false
@@ -2661,7 +2588,7 @@
         {
           "rule_id": "GH006",
           "rule_name": "hardcoded-test-expectation",
-          "severity": "medium",
+          "severity": "low",
           "confidence": "normal",
           "file": "pydantic-core/python/pydantic_core/core_schema.py",
           "line": 3633,
@@ -2674,7 +2601,7 @@
         {
           "rule_id": "GH006",
           "rule_name": "hardcoded-test-expectation",
-          "severity": "medium",
+          "severity": "low",
           "confidence": "normal",
           "file": "pydantic-core/python/pydantic_core/core_schema.py",
           "line": 3688,
@@ -2687,7 +2614,7 @@
         {
           "rule_id": "GH006",
           "rule_name": "hardcoded-test-expectation",
-          "severity": "medium",
+          "severity": "low",
           "confidence": "normal",
           "file": "pydantic-core/python/pydantic_core/core_schema.py",
           "line": 4418,
@@ -2700,7 +2627,7 @@
         {
           "rule_id": "GH006",
           "rule_name": "hardcoded-test-expectation",
-          "severity": "medium",
+          "severity": "low",
           "confidence": "normal",
           "file": "pydantic/_internal/_schema_gather.py",
           "line": 188,

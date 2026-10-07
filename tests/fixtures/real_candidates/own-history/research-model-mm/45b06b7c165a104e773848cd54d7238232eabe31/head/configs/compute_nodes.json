@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "description": "Small heterogeneous research-node registry. This file describes control-plane access; it does not provision or wake hosts.",
+  "nodes": [
+    {
+      "id": "rtx3070",
+      "display_name": "Windows RTX 3070",
+      "os": "Windows 11",
+      "hardware": "NVIDIA GeForce RTX 3070 8 GiB",
+      "transport": {
+        "kind": "ssh",
+        "alias": "research-win",
+        "probe_command": "ver"
+      },
+      "inference": {
+        "backend": "llama.cpp",
+        "base_url": "http://100.118.128.27:8080",
+        "health_path": "/health",
+        "models_path": "/v1/models"
+      },
+      "power": {
+        "strategy": "manual",
+        "wake_supported": false
+      },
+      "dispatch": {
+        "kind": "ssh",
+        "supported": true
+      }
+    },
+    {
+      "id": "thinkpad",
+      "display_name": "Lenovo ThinkPad T14 Gen 2a",
+      "os": "Pop!_OS 24.04 LTS",
+      "hardware": "AMD Ryzen 7 PRO 5850U, Radeon Vega integrated graphics, 14.5 GiB RAM",
+      "transport": {
+        "kind": "ssh",
+        "alias": "thinkpad",
+        "probe_command": "printf 'hostname=%s\\n' \"$(hostname)\"; printf 'kernel=%s\\n' \"$(uname -sr)\"; printf 'cpu=%s\\n' \"$(lscpu | awk -F: '/Model name/ {gsub(/^ +/, \"\", $2); print $2; exit}')\"; printf 'ram_available_bytes=%s\\n' \"$(awk '/MemAvailable:/ {print $2 * 1024}' /proc/meminfo)\""
+      },
+      "inference": {
+        "backend": "none-installed",
+        "base_url": null,
+        "health_path": "/health",
+        "models_path": "/v1/models"
+      },
+      "power": {
+        "strategy": "manual",
+        "wake_supported": false
+      },
+      "dispatch": {
+        "kind": "ssh",
+        "supported": true
+      }
+    }
+  ]
+}

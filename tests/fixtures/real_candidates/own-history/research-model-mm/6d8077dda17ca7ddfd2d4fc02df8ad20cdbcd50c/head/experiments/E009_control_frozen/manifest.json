@@ -1,0 +1,93 @@
+{
+  "experiment_schema_version": "1.0",
+  "experiment_id": "E009_control_frozen",
+  "title": "general-capability control benchmark freeze",
+  "status": "completed",
+  "metadata_status": "reconstructed_after_fact",
+  "manifest_created_at": "2026-09-16T01:48:33Z",
+  "research_question": null,
+  "hypothesis": null,
+  "experiment_type": "control_freeze",
+  "git": {
+    "commit": null,
+    "dirty": true,
+    "status_note": "Artifact was created before the provenance milestone commit; exact commit was unavailable at generation time."
+  },
+  "environment": {
+    "machine": {
+      "hostname": "dippos-Mac-Studio.local",
+      "os": "Darwin 25.6.0",
+      "architecture": "arm64",
+      "cpu": "i386",
+      "gpu": null,
+      "gpu_count": null,
+      "vram_gb": null,
+      "ram_gb": 32.0,
+      "hardware_probe_note": "GPU and VRAM are null unless explicitly measured by the run."
+    },
+    "software": {
+      "python": "3.13.12",
+      "platform": "macOS-26.6.2-arm64-i386-64bit-Mach-O",
+      "packages": {
+        "transformers": "5.17.0",
+        "mlx": "0.32.2",
+        "mlx-lm": "0.31.3"
+      },
+      "cuda": null
+    }
+  },
+  "dataset": {
+    "path": "data/generated/research-data-v0.1-expanded.jsonl",
+    "sha256": "703aceae7a28450fe9dca35be29c09cf0e64aceeda49f60e7f626b6e3708a91f",
+    "dataset_content_hash": "75283e511cb120bbb29fb95e13b7a26fa5f6b4f887ddf41079c50c4a96505cf1"
+  },
+  "benchmark": {
+    "path": "benchmarks/control/general-capability-v0.1.jsonl",
+    "sha256": "b9ff1050dd05eeaf062aba8e8fce1f0a39ffc7da68754d02f011779780628636",
+    "benchmark_content_hash": "1be2dc5298066bb645ec49f48157de81c09a05579bab8679d87fa86723efbad5"
+  },
+  "model": {
+    "name": null,
+    "revision": null,
+    "tokenizer_revision": null
+  },
+  "training": {},
+  "execution": {
+    "command": [
+      "uv run research-model control build --version general-control-v0.1"
+    ],
+    "start_time": null,
+    "end_time": null,
+    "duration_seconds": null,
+    "seed": 17,
+    "retries": [],
+    "deviations": []
+  },
+  "artifacts": {
+    "control_metadata": "benchmarks/control/general-capability-v0.1.metadata.json",
+    "control_metadata_sha256": "552e293bd8c42d5a51b34cbe7512d15aa85354aa16553cdea17fdc33c08d99ad",
+    "summary_path": "/Volumes/Research/research-model-mm/experiments/E009_control_frozen/summary.md"
+  },
+  "results": {
+    "control_version": "general-control-v0.1",
+    "count": 12,
+    "control_content_hash": "1be2dc5298066bb645ec49f48157de81c09a05579bab8679d87fa86723efbad5",
+    "metadata_path": "benchmarks/control/general-capability-v0.1.metadata.json"
+  },
+  "interpretation": "The control is a small frozen regression guard for ordinary instruction following, arithmetic/reasoning, summarization, and technical explanation.",
+  "limitations": [
+    "This manifest was recorded after the command completed; exact start/end timestamps are unavailable.",
+    "No public release is authorized by this manifest."
+  ],
+  "conclusion": "Control benchmark frozen for before/after retention checks; keyword scores are deliberately modest and not a universal capability measure.",
+  "missing_metadata": [
+    "git_commit",
+    "exact_freeze_timestamp_before_model_evaluation",
+    "expert scoring review"
+  ],
+  "reconstruction_sources": [
+    "data/generated",
+    "benchmarks/releases",
+    "docs/research_questions.md"
+  ]
+}

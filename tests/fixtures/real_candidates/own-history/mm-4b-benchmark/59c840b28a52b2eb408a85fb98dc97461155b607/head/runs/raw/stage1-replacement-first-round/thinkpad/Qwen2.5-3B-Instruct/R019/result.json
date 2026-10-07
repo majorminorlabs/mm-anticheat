@@ -1,0 +1,213 @@
+{
+  "attempt_id": "R019-attempt-001",
+  "elapsed_s": 11.579076290130615,
+  "errors": [
+    "model_malformed_arguments"
+  ],
+  "events": [
+    {
+      "arguments": {},
+      "ok": true,
+      "response": [
+        {
+          "affinity": "gpu",
+          "id": "j-gpu"
+        },
+        {
+          "affinity": "cpu",
+          "id": "j-cpu"
+        }
+      ],
+      "state": {
+        "queues": {
+          "node-a": [
+            {
+              "affinity": "gpu",
+              "id": "j-gpu"
+            },
+            {
+              "affinity": "cpu",
+              "id": "j-cpu"
+            }
+          ]
+        },
+        "workers": {
+          "node-a": {
+            "gpu": false,
+            "load": 96
+          },
+          "node-b": {
+            "gpu": true,
+            "load": 91
+          },
+          "node-c": {
+            "gpu": false,
+            "load": 39
+          }
+        }
+      },
+      "tool": "get_queue",
+      "type": "tool_call"
+    },
+    {
+      "arguments": {},
+      "ok": true,
+      "response": {
+        "node-a": {
+          "gpu": false,
+          "load": 96
+        },
+        "node-b": {
+          "gpu": true,
+          "load": 91
+        },
+        "node-c": {
+          "gpu": false,
+          "load": 39
+        }
+      },
+      "state": {
+        "queues": {
+          "node-a": [
+            {
+              "affinity": "gpu",
+              "id": "j-gpu"
+            },
+            {
+              "affinity": "cpu",
+              "id": "j-cpu"
+            }
+          ]
+        },
+        "workers": {
+          "node-a": {
+            "gpu": false,
+            "load": 96
+          },
+          "node-b": {
+            "gpu": true,
+            "load": 91
+          },
+          "node-c": {
+            "gpu": false,
+            "load": 39
+          }
+        }
+      },
+      "tool": "get_workers",
+      "type": "tool_call"
+    },
+    {
+      "arguments": {
+        "source": "node-a",
+        "target": "node-b"
+      },
+      "invalid": true,
+      "ok": false,
+      "response": "malformed_arguments:KeyError:'destination'",
+      "tool": "move_jobs",
+      "type": "tool_call"
+    },
+    {
+      "reason": "model_stop",
+      "state": {
+        "queues": {
+          "node-a": [
+            {
+              "affinity": "gpu",
+              "id": "j-gpu"
+            },
+            {
+              "affinity": "cpu",
+              "id": "j-cpu"
+            }
+          ]
+        },
+        "workers": {
+          "node-a": {
+            "gpu": false,
+            "load": 96
+          },
+          "node-b": {
+            "gpu": true,
+            "load": 91
+          },
+          "node-c": {
+            "gpu": false,
+            "load": 39
+          }
+        }
+      },
+      "type": "termination"
+    }
+  ],
+  "model": "Qwen2.5-3B-Instruct",
+  "raw_response_count": 3,
+  "resource_samples": [
+    {
+      "epoch": 1789761366.5352402,
+      "mem": {
+        "MemAvailable": 9055752192,
+        "SwapFree": 17659904000,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2152402944
+      },
+      "phase": "before_request",
+      "pid": 88629,
+      "rss_bytes": 321187840
+    },
+    {
+      "epoch": 1789761373.197221,
+      "mem": {
+        "MemAvailable": 9023590400,
+        "SwapFree": 17659904000,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2152402944
+      },
+      "phase": "after_get_queue",
+      "pid": 88629,
+      "rss_bytes": 353345536
+    },
+    {
+      "epoch": 1789761375.0767088,
+      "mem": {
+        "MemAvailable": 9023590400,
+        "SwapFree": 17659904000,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2152402944
+      },
+      "phase": "after_get_workers",
+      "pid": 88629,
+      "rss_bytes": 353345536
+    },
+    {
+      "epoch": 1789761378.1108174,
+      "mem": {
+        "MemAvailable": 9025003520,
+        "SwapFree": 17659904000,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2152402944
+      },
+      "phase": "after_move_jobs",
+      "pid": 88629,
+      "rss_bytes": 353345536
+    },
+    {
+      "epoch": 1789761378.1113276,
+      "mem": {
+        "MemAvailable": 9025003520,
+        "SwapFree": 17659904000,
+        "SwapTotal": 19812306944,
+        "SwapUsed": 2152402944
+      },
+      "phase": "after_request",
+      "pid": 88629,
+      "rss_bytes": 353345536
+    }
+  ],
+  "run_id": "R019",
+  "status": "complete",
+  "task": "Q05",
+  "transport_errors": [],
+  "turns": 3
+}

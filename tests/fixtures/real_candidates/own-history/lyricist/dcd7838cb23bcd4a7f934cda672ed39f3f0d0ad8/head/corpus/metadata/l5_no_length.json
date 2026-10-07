@@ -1,0 +1,95 @@
+{
+  "diagnostic_only": true,
+  "fixed_prompt_suite_unchanged": true,
+  "source_ids": [
+    "p01",
+    "p02",
+    "p04",
+    "p06",
+    "p07",
+    "p10",
+    "p12",
+    "p16",
+    "p18",
+    "p29",
+    "p33",
+    "p38",
+    "p42",
+    "p43",
+    "p48",
+    "p50"
+  ],
+  "runs": {
+    "L1-48": {
+      "summary": {
+        "empty_count": 0,
+        "length_field_omitted": true,
+        "max_new_tokens": 160,
+        "max_words": 150,
+        "mean_words": 99.9,
+        "median_words": 121.5,
+        "meta_instruction_count": 1,
+        "min_words": 2,
+        "prompt_count": 16,
+        "repetition_penalty": 1.08,
+        "source_prompt_sha256": "358012c9bf38cd18a561db136034fd3eb5f0723a41e0b9053adf46eb060454b8",
+        "temperature": 0.85,
+        "token_cap_count": 8,
+        "top_p": 0.92,
+        "topic_any_first50_rate": 0.818,
+        "topic_scored_prompts": 11,
+        "unexpected_section_label_count": 0,
+        "unfinished_tail_proxy_count": 10
+      },
+      "qualitative_note": "Longer outputs often become prose or hit the 160-token cap. p04 omits the hospital; p50 emits task instructions before a refrain."
+    },
+    "L4-35": {
+      "summary": {
+        "empty_count": 0,
+        "length_field_omitted": true,
+        "max_new_tokens": 160,
+        "max_words": 136,
+        "mean_words": 36.8,
+        "median_words": 24.0,
+        "meta_instruction_count": 0,
+        "min_words": 2,
+        "prompt_count": 16,
+        "repetition_penalty": 1.08,
+        "source_prompt_sha256": "358012c9bf38cd18a561db136034fd3eb5f0723a41e0b9053adf46eb060454b8",
+        "temperature": 0.85,
+        "token_cap_count": 1,
+        "top_p": 0.92,
+        "topic_any_first50_rate": 0.909,
+        "topic_scored_prompts": 11,
+        "unexpected_section_label_count": 0,
+        "unfinished_tail_proxy_count": 11
+      },
+      "qualitative_note": "Often very short without the field: p18 is two sea-adjacent lines and p33 is five words. p43 is a fuller lyric-shaped exception; p50 lacks the growing refrain."
+    },
+    "L5-35": {
+      "summary": {
+        "empty_count": 0,
+        "length_field_omitted": true,
+        "max_new_tokens": 160,
+        "max_words": 142,
+        "mean_words": 70.7,
+        "median_words": 64.0,
+        "meta_instruction_count": 0,
+        "min_words": 2,
+        "prompt_count": 16,
+        "repetition_penalty": 1.08,
+        "source_prompt_sha256": "358012c9bf38cd18a561db136034fd3eb5f0723a41e0b9053adf46eb060454b8",
+        "temperature": 0.85,
+        "token_cap_count": 3,
+        "top_p": 0.92,
+        "topic_any_first50_rate": 0.909,
+        "topic_scored_prompts": 11,
+        "unexpected_section_label_count": 0,
+        "unfinished_tail_proxy_count": 8
+      },
+      "qualitative_note": "More sustained than L4-35, but p01 and p04 still hit the cap in prose, p18 wrongly places the beacon by the sea, p33 is five words, and p50 lacks a growing refrain."
+    }
+  },
+  "interpretation": "L5-35 does not depend completely on an explicit length field: it averages 70.7 words versus L4-35 at 36.8 with the field omitted. Both retain 10/11 lexical topic hits, but obvious completion and prompt-fit failures remain. This secondary set has no requested length, so adherence is not measured.",
+  "limitations": "The same concepts may have different sampled text because removing the field changes the model input; fixed seeds and generation parameters are held constant. Internal reading is not independent scoring."
+}

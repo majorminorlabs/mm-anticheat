@@ -1,0 +1,1496 @@
+diff --git a/configs/research/e014_scientific_invariants_v1.json b/configs/research/e014_scientific_invariants_v1.json
+new file mode 100644
+index 0000000..622827b
+--- /dev/null
++++ b/configs/research/e014_scientific_invariants_v1.json
+@@ -0,0 +1,196 @@
++{
++  "schema_version": "1.0",
++  "record_type": "frozen_scientific_invariants",
++  "experiment_id": "E014_qwen3_8b_primary_qlora",
++  "status": "frozen_before_primary_results",
++  "frozen_at_commit": "bc27f558b6c0cd6d0c27206ee5e4fff851b7f12f",
++  "source_manifest": "experiments/E014_qwen3_8b_primary_qlora/manifest.json",
++  "source_manifest_sha256": "0958d3fa63dcad2d2f93bd019d77c036b1174cdcc4ee4afb8568a9dc2204e5c0",
++  "source_training_config": "configs/training/qwen3_8b_v0.1_qlora.toml",
++  "source_training_config_sha256": "efe00566bb8ef12a31c76f8dd4f88986643b53a964d8540f19484e1f7bd920bf",
++  "source_hypothesis_config": "configs/research/primary_v0.1.json",
++  "source_hypothesis_config_sha256": "c73e8c65a57b24b9898561f2cb1a3d06b1c5a0b189973f20073346b0b7baf356",
++  "source_research_evaluation_config": "configs/evaluation/research_benchmark_v0.1.toml",
++  "source_research_evaluation_config_sha256": "051543f4b654ce64a1064dac0423841681859015eea5addefb8fe49fbac23e32",
++  "source_lockfile": "uv.lock",
++  "source_lockfile_sha256": "82e0e70b44474c2ac0f2211664b6352b870171481ca1e6167faf95333e572825",
++  "scientific_invariants": {
++    "question": "Does research-behavior specialization improve Qwen3-8B-Base on unseen research tasks while preserving useful general capabilities?",
++    "hypothesis_h1": "The tuned 8B model will have higher macro-averaged structured validity and research-action accuracy than the untouched base on the frozen research benchmark.",
++    "model": {
++      "name": "Qwen/Qwen3-8B-Base",
++      "revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
++      "tokenizer_revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4"
++    },
++    "training_data": {
++      "version": "research-data-v0.1-expanded",
++      "path": "data/generated/research-data-v0.1-expanded.jsonl",
++      "file_sha256": "703aceae7a28450fe9dca35be29c09cf0e64aceeda49f60e7f626b6e3708a91f",
++      "content_sha256": "75283e511cb120bbb29fb95e13b7a26fa5f6b4f887ddf41079c50c4a96505cf1",
++      "row_count": 25269,
++      "split_counts": {"train": 19626, "validation": 2816, "test": 2827},
++      "split_content_sha256": {
++        "train": "aa28f649c2c460f8c692512eabab4c17fb59c0f500d9630c639957c89c220055",
++        "validation": "35d5e764675252779dae6879927d0ebf45b5f656558af734a65c138be827d73b",
++        "test": "d08d005a21dc4ca953ad06be582b46b6c7bfa78776732a2e02dd91a32d3aea92"
++      }
++    },
++    "benchmark": {
++      "version": "research-bench-v0.1",
++      "path": "benchmarks/releases/research-bench-v0.1.jsonl",
++      "file_sha256": "3f1f859a10f1bb34ebb22197fadfeba08f2f812c2346a9d75c2b1b7e97b878c4",
++      "content_sha256": "d44b8226ed8d5122ffedcb353761a9624917fb0bd6f6be60e5595799a0a5eb3e",
++      "case_count": 248,
++      "task_family_count": 31,
++      "cases_per_task_family": 8,
++      "contaminated_at_preregistration": false
++    },
++    "general_capability_control": {
++      "version": "general-control-v0.1",
++      "path": "benchmarks/control/general-capability-v0.1.jsonl",
++      "file_sha256": "b9ff1050dd05eeaf062aba8e8fce1f0a39ffc7da68754d02f011779780628636",
++      "content_sha256": "1be2dc5298066bb645ec49f48157de81c09a05579bab8679d87fa86723efbad5",
++      "case_count": 12,
++      "interpretation_limit": "Keyword-based narrow regression guard; not a general-intelligence measure."
++    },
++    "training_treatment": {
++      "method": "QLoRA supervised fine-tuning",
++      "backend": "Transformers SFTTrainer",
++      "context_length": 4608,
++      "microbatch_per_device": 1,
++      "gradient_accumulation_steps": 16,
++      "effective_global_batch_size": 16,
++      "epochs": 2,
++      "optimizer_steps": 2454,
++      "planned_training_tokens": 46810376,
++      "seed": 17,
++      "data_seed": 17,
++      "quantization": {
++        "load_in_4bit": true,
++        "type": "NF4",
++        "double_quantization": true,
++        "compute_dtype": "bfloat16",
++        "base_weight_dtype": "bfloat16"
++      },
++      "lora": {
++        "rank": 16,
++        "alpha": 32,
++        "dropout": 0.05,
++        "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
++      },
++      "optimizer": "adamw_torch_fused",
++      "learning_rate": 0.0002,
++      "weight_decay": 0.01,
++      "scheduler": "cosine",
++      "warmup_ratio": 0.05,
++      "warmup_steps": 123,
++      "gradient_checkpointing": true,
++      "loss": "causal language-model SFT over serialized research prompt plus expected JSON output; EOS appended by TRL",
++      "training_config_values": {
++        "base_model": "Qwen/Qwen3-8B-Base",
++        "model_revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
++        "tokenizer_revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
++        "dataset_path": "data/generated/research-data-v0.1-expanded.jsonl",
++        "dataset_file_sha256": "703aceae7a28450fe9dca35be29c09cf0e64aceeda49f60e7f626b6e3708a91f",
++        "dataset_content_hash": "75283e511cb120bbb29fb95e13b7a26fa5f6b4f887ddf41079c50c4a96505cf1",
++        "output_dir": "outputs/qwen3-8b-research-v0.1-qlora",
++        "seed": 17,
++        "method": "qlora",
++        "backend": "transformers",
++        "max_seq_length": 4608,
++        "per_device_train_batch_size": 1,
++        "gradient_accumulation_steps": 16,
++        "learning_rate": 0.0002,
++        "num_train_epochs": 2,
++        "warmup_ratio": 0.05,
++        "weight_decay": 0.01,
++        "lr_scheduler_type": "cosine",
++        "optim": "adamw_torch_fused",
++        "gradient_checkpointing": true,
++        "bf16": true,
++        "load_in_4bit": true,
++        "lora_r": 16,
++        "lora_alpha": 32,
++        "lora_dropout": 0.05,
++        "lora_target_modules": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
++        "logging_steps": 10,
++        "eval_strategy": "steps",
++        "eval_steps": 500,
++        "save_strategy": "steps",
++        "save_steps": 500,
++        "save_total_limit": 5,
++        "load_best_model_at_end": true,
++        "metric_for_best_model": "eval_loss",
++        "greater_is_better": false,
++        "include_num_input_tokens_seen": true
++      }
++    },
++    "checkpoint_policy": {
++      "save_every_steps": 500,
++      "evaluate_every_steps": 500,
++      "maximum_checkpoints": 5,
++      "select_by": "validation eval_loss, lower is better",
++      "test_split_for_selection": false,
++      "early_stopping": false,
++      "resume": "latest atomically marked, valid Trainer checkpoint"
++    },
++    "evaluation": {
++      "base_before_training": true,
++      "test_after_training_only": true,
++      "test_for_checkpoint_selection": false,
++      "base_and_tuned_model_quantization": "NF4 4-bit, double quantization, BF16 compute",
++      "research_prompt": "Same frozen research_model.research_protocol.build_prompt protocol for base and tuned models; no tuned-only prompt or chat template.",
++      "research_generation": {"temperature": 0.0, "max_new_tokens": 512},
++      "control_generation": {"temperature": 0.0, "max_new_tokens": 256},
++      "primary_metrics": ["structured_valid", "action_accuracy"],
++      "primary_success_rule": "Both tuned-minus-base paired mean deltas must be positive and both two-sided 95% paired percentile-bootstrap confidence intervals must exclude zero.",
++      "secondary_or_descriptive_metrics": [
++        "citation_precision", "citation_recall", "claim_status_f1", "evidence_recall",
++        "unsupported_claim_rate", "insufficient_evidence_accuracy", "by_task", "by_domain", "control_benchmark_score"
++      ],
++      "bootstrap": {
++        "samples": 20000,
++        "seed": 17,
++        "interval": "paired percentile 95% CI",
++        "research_id_key": "example_id",
++        "control_id_key": "control_id",
++        "undefined_metric_policy": "pair only rows with the metric defined in both conditions"
++      },
++      "no_post_hoc_composite": true
++    }
++  },
++  "execution_backend_details": {
++    "currently_preregistered_execution": "Linux x86_64 NVIDIA CUDA with one BF16-capable A100 80 GB or H100 80 GB (planning profile; not measured)",
++    "amd_candidate": "Linux x86_64, one AMD Instinct MI300X (gfx942), ROCm 7.14 / TheRock PyTorch wheel",
++    "same_version_pins_required_for_case_a": {
++      "python": "3.13",
++      "torch": "2.14.0",
++      "transformers": "5.17.0",
++      "peft": "0.21.0",
++      "trl": "1.13.0",
++      "bitsandbytes": "0.50.2",
++      "accelerate": "1.15.0",
++      "datasets": "5.0.1"
++    },
++    "permitted_recorded_backend_variations": [
++      {"item": "CUDA to ROCm/HIP runtime", "scientific_effect": "Not inherently a treatment change if the same pinned PyTorch version, model, quantization and training operations execute; kernel numerics and determinism can differ, so record runtime and qualify loss/finite updates."},
++      {"item": "SDPA kernel dispatch", "scientific_effect": "Flash Attention is not required; default SDPA may select a backend-specific kernel. It can affect speed, numerical roundoff and memory, but not the declared objective or batch. Record the effective attention implementation."},
++      {"item": "bitsandbytes ROCm kernels", "scientific_effect": "Backend implementation may differ while retaining NF4, double quantization and BF16 compute. This is not presumed equivalent until the actual pinned load, backward, optimizer and checkpoint smoke passes."},
++      {"item": "single-GPU placement and allocator", "scientific_effect": "Device placement and allocator are execution details; record device/HBM/peaks. The MI300X run remains one GPU with microbatch 1 and effective batch 16."},
++      {"item": "fused AdamW kernel implementation", "scientific_effect": "The optimizer family and configured name stay adamw_torch_fused. Different ROCm implementation can affect floating-point order; require a successful finite update and record actual optimizer class."}
++    ],
++    "not_permitted_without_new_experiment_id": [
++      "NF4 QLoRA to BF16 LoRA or another quantization/training method",
++      "change to base model or revision, tokenizer, data, benchmark, prompt, loss, target modules, rank, alpha, dropout, sequence length, effective batch, optimizer family, learning rate, scheduler, warmup, epochs/steps, seed, checkpoint selection, evaluation, metrics, or stopping rule"
++    ],
++    "qualification_status": "READY_FOR_AMD_QUALIFICATION",
++    "literal_amd_execution_classification": "Not yet classified; hardware smoke is required before choosing CASE A, B, C or D. No AMD device/session/credits were visible in the local environment at preparation time."
++  },
++  "validation_policy": {
++    "required_before_smoke": "scripts/validate_e014_invariants.py must verify all frozen file hashes, dataset/benchmark canonical content hashes, split hashes/counts, manifest/config equality and locked package versions.",
++    "mismatch_action": "Stop without modifying frozen experiment artifacts or creating an AMD qualification run directory.",
++    "smoke_is_model_quality_evaluation": false,
++    "smoke_may_use_test_or_benchmark": false,
++    "full_training_started": false
++  }
++}
+diff --git a/docs/hardware/E014_AMD_qualification.md b/docs/hardware/E014_AMD_qualification.md
+new file mode 100644
+index 0000000..ed3acee
+--- /dev/null
++++ b/docs/hardware/E014_AMD_qualification.md
+@@ -0,0 +1,89 @@
++# E014 AMD MI300X qualification
++
++## Status and gate
++
++Status: `READY_FOR_AMD_QUALIFICATION`. E014 and E015 remain unchanged. No AMD GPU or signed-in AMD Developer Cloud session was available in the local environment; no VM, credits, or paid compute were used. The actual account balance and provider-specific rate are unknown. Do not provision a VM based on this record alone.
++
++The qualification is an engineering smoke, not a model-quality experiment. Its records belong under `outputs/hardware-qualification/E014/AMD_MI300X/`, never in E014's training outputs or benchmark results. The frozen source snapshot is captured in `configs/research/e014_scientific_invariants_v1.json`; run `python3 scripts/validate_e014_invariants.py` before any host qualification.
++
++## Frozen E014 treatment
++
++| Area | Invariant |
++| --- | --- |
++| Base | `Qwen/Qwen3-8B-Base`, model and tokenizer revision `49e3418fbbbca6ecbdf9608b4d22e5a407081db4` |
++| Training data | `research-data-v0.1-expanded`; 25,269 rows; 19,626 train / 2,816 validation / 2,827 test; file SHA-256 `703aceae7a28450fe9dca35be29c09cf0e64aceeda49f60e7f626b6e3708a91f`; canonical content hash `75283e511cb120bbb29fb95e13b7a26fa5f6b4f887ddf41079c50c4a96505cf1` |
++| Research benchmark | `research-bench-v0.1`, 248 cases / 31 families × 8; file SHA-256 `3f1f859a10f1bb34ebb22197fadfeba08f2f812c2346a9d75c2b1b7e97b878c4`; canonical content hash `d44b8226ed8d5122ffedcb353761a9624917fb0bd6f6be60e5595799a0a5eb3e` |
++| Control | `general-control-v0.1`, 12 cases; file SHA-256 `b9ff1050dd05eeaf062aba8e8fce1f0a39ffc7da68754d02f011779780628636`; canonical content hash `1be2dc5298066bb645ec49f48157de81c09a05579bab8679d87fa86723efbad5`; narrow keyword regression guard only |
++| Method | Transformers/TRL SFT with NF4 4-bit base weights, double quantization, BF16 compute, LoRA rank 16 / alpha 32 / dropout 0.05 on `q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj` |
++| Sequence and batch | 4,608 tokens; microbatch 1; accumulation 16; effective global batch 16 on one GPU |
++| Optimization | `adamw_torch_fused`; learning rate `2e-4`; cosine scheduler; 5% warmup = 123 steps; weight decay 0.01; two epochs; 2,454 optimizer steps; seed and data seed 17; gradient checkpointing |
++| Checkpointing | Save/evaluate each 500 steps; retain at most five; choose lower validation `eval_loss`; no performance early stop; test split is evaluated after training and never selects a checkpoint |
++| Primary result | H1 requires positive tuned-minus-base paired mean deltas for both `structured_valid` and `action_accuracy`, with each two-sided 95% paired percentile-bootstrap CI excluding zero; 20,000 resamples, seed 17 |
++| Other scores | `citation_precision`, `citation_recall`, `claim_status_f1`, `evidence_recall`, `unsupported_claim_rate`, `insufficient_evidence_accuracy`, task/domain reporting, and the narrow control; no post-hoc composite |
++
++The training config SHA-256 is `efe00566bb8ef12a31c76f8dd4f88986643b53a964d8540f19484e1f7bd920bf`; lockfile SHA-256 is `82e0e70b44474c2ac0f2211664b6352b870171481ca1e6167faf95333e572825`. The validator also checks dataset/benchmark canonical and split hashes plus lock pins. Any mismatch blocks qualification.
++
++## Scientific invariants versus backend details
++
++The values above define E014. ROCm/HIP versus CUDA, kernel dispatch, allocator, device placement, and telemetry are execution details only when the pinned method and data path execute unchanged. They can still change floating-point accumulation order, throughput, memory use, or stability, so record them and require the smoke. Do not assume bitwise equality or interpret a successful health check as equivalence.
++
++The current E014 runner and NVIDIA hardware-profile gate are NVIDIA-specific. The separate AMD script checks `torch.version.hip`, a single MI300X, BF16, exact package versions, all frozen hashes, and the live NF4/double-quantized module state. It tests TRL SFT forward/backward, the configured fused AdamW update, finite adapter/optimizer state, and complete save/restart/resume checkpoints. This leaves E014's code, outputs, and registration untouched.
++
++The smoke uses 96 longest unique examples from the frozen training split only, padded to 4,608 positions, with six optimizer updates (3 before process exit, then a fresh-process resume to step 6). It sets zero warmup because six steps cannot represent E014's 123-step full-run warmup. The frozen JSONL is fully read to verify all split hashes, but only selected training rows are passed to the trainer; validation/test are not evaluated, no benchmark/control cases are loaded, and no checkpoint selection or model-quality scoring occurs. These limited engineering deviations are written into every run record.
++
++## Current software compatibility finding
++
++The concern that E014's PyTorch 2.14.0 pin necessarily forces a downgrade is not supported by the current official artifacts. PyTorch's 2.14 release notes document ROCm 7.14/TheRock, and the official wheel index contains a Linux x86_64 CPython 3.13 `torch-2.14.0+rocm7.14` wheel. Therefore a 2.13 fallback is not currently necessary. [PyTorch 2.14 release notes](https://pytorch.org/blog/pytorch-2-14-release-blog/) · [official wheel index](https://download.pytorch.org/whl/torch/) · [ROCm 7.14 compatibility matrix](https://rocm.docs.amd.com/en/docs-7.14.1/compatibility/compatibility-matrix.html)
++
++PyTorch for HIP intentionally reuses `torch.cuda` APIs; `torch.version.hip` distinguishes it from CUDA. This allows much of the existing single-GPU path to run unchanged but does not remove the NVIDIA-specific profile checks. [PyTorch HIP semantics](https://docs.pytorch.org/docs/main/notes/hip.html)
++
++| Component | Evidence today | Qualification status |
++| --- | --- | --- |
++| PyTorch | Exact 2.14.0 ROCm 7.14 wheel is published for Linux x86_64 / Python 3.13. | Install path identified; MI300X runtime not exercised. |
++| Transformers 5.17.0 | Exact release exists and is pinned in the lock. | Model load + SFT unverified on this ROCm build. |
++| PEFT 0.21.0 | Exact release exists; PEFT's Transformers 5 compatibility requires PEFT 0.18+. | Adapter injection/save/resume unverified on this stack. |
++| TRL 1.13.0 | Exact release exists; its declared Transformers, Accelerate, and Datasets minimums are met by E014 pins. | SFTTrainer path unverified on this ROCm build. |
++| bitsandbytes 0.50.2 | The pinned release includes a ROCm 10 build; its tagged install guide lists Linux ROCm 7.14 `gfx942` support and ROCm CDNA features, including 4-bit NF4/FP4 support. | This is encouraging upstream support, not proof of exact PyTorch 2.14 + MI300X NF4/double-quant + PEFT + TRL + fused AdamW execution. Smoke required. No source build is planned unless the exact wheel fails. |
++
++References: [Transformers 5.17.0](https://github.com/huggingface/transformers/releases/tag/v5.17.0), [PEFT releases](https://github.com/huggingface/peft/releases), [TRL 1.13.0 requirements](https://github.com/huggingface/trl/blob/v1.13.0/pyproject.toml), [bitsandbytes 0.50.2 release](https://github.com/bitsandbytes-foundation/bitsandbytes/releases/tag/0.50.2), [bitsandbytes 0.50.2 install guide](https://github.com/bitsandbytes-foundation/bitsandbytes/blob/0.50.2/docs/source/installation.mdx).
++
++One install trap is already resolved in the setup script: on Linux, `uv.lock` points at the PyPI CUDA Torch artifact and its CUDA dependencies. The AMD setup keeps the lock unchanged for all non-Torch packages (`uv sync --locked --no-install-package torch`) then installs `torch==2.14.0+rocm7.14` from the official ROCm 7.14 index. No local ROCm source build is necessary based on published wheel availability. The pinned bitsandbytes guide also describes building from source on ROCm 6.3–10.0 with CMake ≥3.31.6 and Python ≥3.10, so a source build is feasible if the wheel fails; it would be separately versioned and qualified, not silently substituted. [bitsandbytes 0.50.2 source-build requirements](https://github.com/bitsandbytes-foundation/bitsandbytes/blob/0.50.2/docs/source/installation.mdx)
++
++AMD documents both bare-OS images (install the desired ROCm version) and Quick Start containers with preinstalled frameworks. Either can host this stack, but the exact current ADC image was not checked in the user's account. A container shares the host kernel, so the host's ROCm kernel-mode driver and GPU device access must be compatible even if the PyTorch/HIP user-space stack is inside Docker. The recommended reproducible route is a single-GPU bare-OS VM plus this pinned venv setup, unless the live account shows a matching supported Quick Start image. [AMD Developer Cloud setup guide](https://www.amd.com/en/developer/resources/technical-articles/2025/how-to-get-started-on-the-amd-developer-cloud-.html) · [ROCm container requirements](https://rocm.docs.amd.com/projects/install-on-linux/en/docs-6.0.0/how-to/docker.html)
++
++## MI300X capacity and BF16-LoRA alternative
++
++AMD lists the single-GPU Developer Cloud configuration at 192 GB HBM, 20 vCPUs, and 240 GB host RAM. The 8-GPU option is unnecessary and would waste credits for this single-device recipe. Credits are account/eligibility-specific; AMD says qualified program members may receive $100, but that is not evidence of a balance on this account. A powered-off VM continues to accrue charges/credit use until it is destroyed. [AMD Developer Cloud configuration and terms](https://www.amd.com/en/developer/resources/cloud-access/amd-developer-cloud.html)
++
++Independent rough estimate for full BF16 LoRA, not an E014 treatment: the BF16 base weights are about 16.4 GB decimal (about 15.3 GiB); the frozen seven-module rank-16 adapter is approximately 43.65 million parameters. FP32 Adam moments alone are roughly 0.33 GiB; adapter gradients/weights add on the order of a few tenths of a GiB depending on storage. With gradient checkpointing, one BF16 hidden-state boundary per layer at `[1,4608,4096]` is about 1.27 GiB total, plus per-layer transients, SDPA workspace, activations and allocator overhead. A conservative expected process envelope is roughly 25–45 GiB, not measured; the attention implementation can materially affect the peak. This should fit comfortably in a 192 GB MI300X. It is a different quantization/training method: if selected, leave E014 untouched and preregister a new experiment ID (candidate E016 only after an ID/index audit).
++
++## Candidate hardware comparison
++
++These are capability and current published rate-card observations, not measured runtimes. The RunPod page was updated 13 Sep 2026; rates/stock may change and do not represent AMD credits or a guaranteed reservation. [RunPod GPU pricing](https://www.runpod.io/pricing)
++
++| Option | Method fit / memory | Complexity and reproducibility | Posted rate / availability evidence | Runtime status |
++| --- | --- | --- | --- | --- |
++| MI300X 192 GB | E014 QLoRA should fit by capacity; BF16 LoRA also has ample theoretical headroom. | Highest new-stack uncertainty; exact TheRock + bitsandbytes + fused optimizer path must pass. Single GPU keeps batch logic simple. | AMD ADC lists 1× and 8× configurations; user account/session and price/credits unknown. | Unmeasured. |
++| RTX 3090 single, 24 GB | NF4 QLoRA is plausible, but 4,608-token peak is tight/unqualified. | Most established path is NVIDIA CUDA; simplest on one card if memory smoke passes. | RunPod lists $0.50/GPU-hour; current listing, availability not account-checked. | Unmeasured. |
++| RTX 3090 dual, 24 GB each | QLoRA per-GPU memory remains 24 GB; VRAM does not pool. | DDP and transfer/synchronization add complexity; profile adjusts accumulation to keep effective batch 16. | At the listed $0.50 per GPU-hour, two simultaneously rented cards cost about $1.00 per wall-hour before other charges; actual two-card stock/configuration not verified. | Unmeasured; no reliable scaling assumption. |
++| A100 40 GB | Likely safer headroom for QLoRA than 24 GB; still qualify. | Standard CUDA/Transformers path; lower memory margin than 80 GB. | No A100 40 GB listing/rate was present on the inspected rate card. | Unmeasured. |
++| A100 80 GB | Strong margin for the frozen NF4 path. | Mature CUDA option, least compatibility uncertainty relative to the recorded E014 plan. | RunPod lists $1.59/GPU-hour. | E014 manifest's 9–19 total GPU-hour planning range targets A100/H100-class hardware but is explicitly rough and unmeasured; same-rate scenario is about $14–$30 before storage/other charges. |
++| H100 80 GB | Strong margin for the frozen NF4 path. | Mature CUDA option; typically the throughput-first NVIDIA candidate, but compare measured quotes rather than assume. | RunPod lists $2.89/GPU-hour. | Same unmeasured 9–19 GPU-hour planning scenario would be about $26–$55 before storage/other charges; actual runtime not measured. |
++
++The only safe AMD duration formula after smoke is `2,454 × measured median optimizer-step time`, with a confidence range based on the observed six-step variation and added time for periodic evaluation/checkpointing. The benchmark has not been run on the base model, so benchmark duration and full evaluation cost remain separately unmeasured. AMD credit consumption is unknown until the live provider/account billing rate and balance are inspected. Never equate a smoke's throughput with a model result.
++
++## Host setup and exact next commands
++
++AMD Developer Cloud is delivered through a third-party provider. Before launch, choose the single MI300X, verify the session is the intended funded account, inspect its actual GPU/ROCm/OS and disk pricing, and remember that powered-off instances remain billable until destroyed. No cloud command is issued by this repo.
++
++To make a portable, committed-source bundle without including dirty working-tree or E015 files, create it locally with `bash scripts/package_amd_host.sh /tmp/research-model-amd.bundle`. Transfer that bundle and the frozen dataset separately through the provider's approved file-transfer path; verify the dataset SHA-256 shown by the script. After placing both on the AMD Linux host at the expected paths:
++
++```sh
++bash scripts/prepare_amd_host.sh
++bash scripts/qualify_amd.sh check
++bash scripts/qualify_amd.sh run
++```
++
++`check` is the no-model-download gate. `run` performs only the six-step smoke and writes a unique report under `outputs/hardware-qualification/E014/AMD_MI300X/`. Inspect the report and provider invoice/credit usage, then destroy the instance when finished. The qualification command is not the full-run command.
++
++No full-run command is authorized here. If (and only if) the smoke passes, a separate implementation/review must add an explicit AMD hardware profile to the training entrypoint, revalidate the same invariant file, complete the frozen base benchmark/control before full training, and obtain fresh explicit authorization for the substantial GPU run. If a material method/version substitution is needed, preregister it under a new experiment instead of routing through E014.
+diff --git a/experiments/E014_amd_qualification/manifest.json b/experiments/E014_amd_qualification/manifest.json
+new file mode 100644
+index 0000000..3b93ec1
+--- /dev/null
++++ b/experiments/E014_amd_qualification/manifest.json
+@@ -0,0 +1,111 @@
++{
++  "record_schema_version": "1.0",
++  "record_type": "hardware_qualification_preregistration",
++  "record_id": "E014_AMD_MI300X_qualification",
++  "created_date": "2026-09-16",
++  "prepared_from_git_commit": "7854e7975d370a0dc5a66fc8b29166a9b7515349",
++  "status": "READY_FOR_AMD_QUALIFICATION",
++  "parent_experiment_id": "E014_qwen3_8b_primary_qlora",
++  "scientific_invariants_path": "configs/research/e014_scientific_invariants_v1.json",
++  "scientific_invariants_record_type": "frozen_scientific_invariants",
++  "qualification_only": true,
++  "model_quality_claims_authorized": false,
++  "full_training_started": false,
++  "amd_access": {
++    "local_amd_gpu": false,
++    "cloud_session_configured": false,
++    "user_reports_credits": true,
++    "account_credit_balance_observed": false,
++    "instance_provisioned": false,
++    "paid_compute_incurred_usd": 0,
++    "blocker": "No AMD Developer Cloud credentials or interactive signed-in session were available in the local environment. No instance was provisioned."
++  },
++  "environment_investigation": {
++    "candidate_gpu": "1 x AMD Instinct MI300X, gfx942, 192 GB HBM3",
++    "target_runtime": "Linux x86_64, Python 3.13, PyTorch 2.14.0+rocm7.14, ROCm 7.14",
++    "target_python_packages": {
++      "transformers": "5.17.0",
++      "peft": "0.21.0",
++      "trl": "1.13.0",
++      "bitsandbytes": "0.50.2",
++      "accelerate": "1.15.0",
++      "datasets": "5.0.1"
++    },
++    "pytorch_2_14_rocm_wheel_found": true,
++    "official_adc_image_with_exact_stack_verified": false,
++    "container_or_venv_plan": "Use an ADC Linux image with a compatible MI300X ROCm driver/runtime; sync the exact uv.lock dependencies while skipping its Linux PyPI CUDA torch artifact, then install the official PyTorch 2.14.0 ROCm 7.14 wheel. The environment is not yet exercised on ADC.",
++    "source_build_required_by_current_evidence": false,
++    "bitsandbytes_exact_stack_qualification": "Unverified until MI300X forward/backward/update/checkpoint/resume smoke passes.",
++    "transformers_peft_trl_exact_stack_qualification": "Pinned releases and dependency bounds exist; the complete stack remains unverified until the smoke passes."
++  },
++  "smoke_protocol": {
++    "command": "bash scripts/qualify_amd.sh run",
++    "preflight_command": "bash scripts/qualify_amd.sh check",
++    "independent_artifact_root": "outputs/hardware-qualification/E014/AMD_MI300X/",
++    "base_model_revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
++    "dataset": "Frozen E014 train split only; 96 longest unique tokenized rows; frozen data hashes checked before output creation.",
++    "sequence_length": 4608,
++    "microbatch": 1,
++    "gradient_accumulation_steps": 16,
++    "effective_batch_size": 16,
++    "optimizer_steps": 6,
++    "checkpoint_and_resume": "Save complete step-3 Trainer checkpoint; exit; launch a fresh Python process; load/resume through step 6; validate optimizer, scheduler, RNG, adapter and trainer checkpoint files; require adapter weights to change.",
++    "operations_exercised": [
++      "4-bit NF4 load",
++      "double quantization state inspection",
++      "BF16 compute",
++      "LoRA injection on the frozen seven target module names",
++      "TRL SFTTrainer forward and backward passes",
++      "adamw_torch_fused optimizer updates",
++      "finite adapter parameters and optimizer state",
++      "checkpoint save, fresh-process load and resume"
++    ],
++    "engineering_only_deviations": {
++      "steps": "6 rather than 2,454",
++      "warmup": "0 steps rather than the full-run 123; a six-step smoke is not the preregistered training schedule",
++      "evaluation": "Validation/test are hash and split-audited but not passed to the trainer/evaluator; no benchmark, control, quality score or checkpoint selection.",
++      "output": "Qualification-only directory; never E014 training outputs."
++    },
++    "recorded_measurements": [
++      "GPU name/architecture/HBM, ROCm, PyTorch, Python and pinned package versions",
++      "per-step duration and non-padding/padded token throughput",
++      "PyTorch peak allocated/reserved HBM and phase-end device memory",
++      "host RAM and process peak RSS",
++      "bitsandbytes quantization modules, NF4 quant type and nested state",
++      "optimizer class, adapter parameter count, finite-state checks and warnings",
++      "checkpoint hashes and resume evidence"
++    ]
++  },
++  "decision": {
++    "case": "unclassified_pending_smoke",
++    "exact_e014_on_amd_authorized": false,
++    "e016_required_now": false,
++    "bf16_lora_is_not_a_fallback_inside_e014": true,
++    "if_exact_nf4_qlora_passes": "Record CUDA-to-ROCm, kernel, allocator and telemetry as backend details; only call it CASE A after the complete pinned stack smoke passes. Do not start full training in this phase.",
++    "if_nf4_qlora_fails_but_bf16_lora_is_chosen": "Keep E014 frozen; preregister a new experiment (candidate E016 after ID/index audit) before training.",
++    "if_stack_is_unstable_or_requires_unpinned_substitutions": "Do not use it for the primary result; evaluate the NVIDIA profiles without treating this smoke as a model-quality result.",
++    "if_amd_is_unusually_slow": "Retain measured smoke evidence, estimate full-run duration from observed throughput with uncertainty, then compare costs before any full-run authorization."
++  },
++  "full_run": {
++    "authorized": false,
++    "started": false,
++    "measured_amd_step_time_seconds": null,
++    "measured_amd_tokens_per_second": null,
++    "measured_amd_hbm_bytes": null,
++    "measured_benchmark_duration_seconds": null,
++    "estimated_amd_total_hours": null,
++    "amd_credit_cost": null,
++    "reason_unestimated": "No AMD smoke measurement, ADC account balance, or account-specific hourly/credit rate is available."
++  },
++  "provenance": {
++    "qualification_tool": "scripts/qualify_amd.py",
++    "host_setup_script": "scripts/prepare_amd_host.sh",
++    "launch_wrapper": "scripts/qualify_amd.sh",
++    "invariant_validator": "scripts/validate_e014_invariants.py",
++    "summary_document": "docs/hardware/E014_AMD_qualification.md",
++    "qualification_artifacts_are_not_primary_results": true,
++    "data_or_benchmark_modified": false,
++    "E014_modified": false,
++    "E015_modified": false
++  }
++}
+diff --git a/scripts/package_amd_host.sh b/scripts/package_amd_host.sh
+new file mode 100644
+index 0000000..b109265
+--- /dev/null
++++ b/scripts/package_amd_host.sh
+@@ -0,0 +1,24 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++BUNDLE_PATH="${1:?usage: bash scripts/package_amd_host.sh /path/to/output.bundle}"
++REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++cd "$REPO_ROOT"
++BRANCH="$(git branch --show-current)"
++if [[ -z "$BRANCH" ]]; then
++  echo "a named Git branch is required" >&2
++  exit 1
++fi
++if [[ -e "$BUNDLE_PATH" ]]; then
++  echo "refusing to overwrite existing bundle: $BUNDLE_PATH" >&2
++  exit 1
++fi
++
++# Bundles contain committed history only. They do not include the dirty index,
++# working tree, ignored files, credentials, or the untracked frozen dataset.
++git bundle create "$BUNDLE_PATH" "$BRANCH"
++git bundle verify "$BUNDLE_PATH"
++printf 'Portable Git bundle: %s\n' "$BUNDLE_PATH"
++printf 'Branch: %s\n' "$BRANCH"
++printf 'Committed source revision: %s\n' "$(git rev-parse HEAD)"
++printf 'Copy data/generated/research-data-v0.1-expanded.jsonl separately; expected SHA-256: 703aceae7a28450fe9dca35be29c09cf0e64aceeda49f60e7f626b6e3708a91f\n'
+diff --git a/scripts/prepare_amd_host.sh b/scripts/prepare_amd_host.sh
+new file mode 100644
+index 0000000..d7f59df
+--- /dev/null
++++ b/scripts/prepare_amd_host.sh
+@@ -0,0 +1,25 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++cd "$REPO_ROOT"
++
++if ! command -v uv >/dev/null 2>&1; then
++  echo "uv is required; install it on the AMD host using Astral's official instructions" >&2
++  exit 1
++fi
++if [[ "$(uname -s)" != "Linux" || "$(uname -m)" != "x86_64" ]]; then
++  echo "AMD qualification requires Linux x86_64" >&2
++  exit 1
++fi
++
++# uv.lock's Linux torch artifact is the PyPI CUDA build. Keep every other
++# dependency locked, skip that torch artifact, then install the official ROCm wheel.
++uv sync --python 3.13 --locked --extra dev --extra ml --no-install-package torch
++uv pip install --python "$REPO_ROOT/.venv/bin/python" \
++  --index-url https://download.pytorch.org/whl/rocm7.14 \
++  'torch==2.14.0+rocm7.14'
++
++uv run --no-sync python -c 'import torch; import transformers, peft, trl, bitsandbytes, accelerate, datasets; print({"torch": torch.__version__, "hip": torch.version.hip, "transformers": transformers.__version__, "peft": peft.__version__, "trl": trl.__version__, "bitsandbytes": bitsandbytes.__version__, "accelerate": accelerate.__version__, "datasets": datasets.__version__})'
++uv run --no-sync python scripts/validate_e014_invariants.py
++echo "Pinned AMD environment installed. No model weights or training were started."
+diff --git a/scripts/qualify_amd.py b/scripts/qualify_amd.py
+new file mode 100644
+index 0000000..55358f2
+--- /dev/null
++++ b/scripts/qualify_amd.py
+@@ -0,0 +1,729 @@
++"""Execution-only MI300X/ROCm smoke test for the frozen E014 QLoRA path."""
++
++from __future__ import annotations
++
++import argparse
++import hashlib
++import importlib.metadata
++import json
++import os
++import platform
++import random
++import shutil
++import subprocess
++import sys
++import time
++import warnings
++from datetime import datetime, timezone
++from pathlib import Path
++from statistics import median
++from typing import Any
++from uuid import uuid4
++
++ROOT = Path(__file__).resolve().parents[1]
++for path in (ROOT / "src", ROOT / "scripts"):
++    if str(path) not in sys.path:
++        sys.path.insert(0, str(path))
++
++from research_model.training.checkpoints import validate_checkpoint, write_checkpoint_complete_marker
++from train_transformers import _example_text, _load_data, _tokenizer_lengths
++from validate_e014_invariants import DEFAULT_INVARIANTS, validate as validate_invariants
++
++DEFAULT_CONFIG = "configs/training/qwen3_8b_v0.1_qlora.toml"
++QUALIFICATION_ROOT = ROOT / "outputs/hardware-qualification/E014/AMD_MI300X"
++SAMPLE_COUNT = 96
++FIRST_STAGE_STEP = 3
++FINAL_STAGE_STEP = 6
++CHECKPOINT_INTERVAL = 3
++MINIMUM_FREE_DISK_BYTES = 40_000_000_000
++MINIMUM_HOST_RAM_BYTES = 64 * 1024**3
++MINIMUM_GPU_MEMORY_BYTES = 170 * 1024**3
++PINNED_PACKAGES = {
++    "transformers": "5.17.0",
++    "peft": "0.21.0",
++    "trl": "1.13.0",
++    "bitsandbytes": "0.50.2",
++    "accelerate": "1.15.0",
++    "datasets": "5.0.1",
++}
++
++
++def _now() -> str:
++    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
++
++
++def _atomic_json(path: Path, value: Any) -> None:
++    path.parent.mkdir(parents=True, exist_ok=True)
++    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
++    with temporary.open("x", encoding="utf-8") as handle:
++        json.dump(value, handle, indent=2, ensure_ascii=False)
++        handle.write("\n")
++        handle.flush()
++        os.fsync(handle.fileno())
++    os.replace(temporary, path)
++
++
++def _sha256(path: Path) -> str:
++    digest = hashlib.sha256()
++    with path.open("rb") as handle:
++        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
++            digest.update(chunk)
++    return digest.hexdigest()
++
++
++def _load_config(config_path: str) -> dict[str, Any]:
++    import tomllib
++
++    path = Path(config_path)
++    if not path.is_absolute():
++        path = ROOT / path
++    with path.open("rb") as handle:
++        return tomllib.load(handle)
++
++
++def _package_version(name: str) -> str | None:
++    try:
++        return importlib.metadata.version(name)
++    except importlib.metadata.PackageNotFoundError:
++        return None
++
++
++def _host_memory_bytes() -> int | None:
++    try:
++        return int(os.sysconf("SC_PHYS_PAGES") * os.sysconf("SC_PAGE_SIZE"))
++    except (AttributeError, OSError, ValueError):
++        return None
++
++
++def _runtime_environment(torch: Any) -> dict[str, Any]:
++    index = int(torch.cuda.current_device())
++    props = torch.cuda.get_device_properties(index)
++    free_bytes, total_bytes = torch.cuda.mem_get_info(index)
++    package_names = ("torch", *PINNED_PACKAGES.keys())
++    arch = getattr(props, "gcnArchName", None)
++    return {
++        "host": {
++            "platform": platform.platform(),
++            "architecture": platform.machine(),
++            "python": platform.python_version(),
++            "ram_bytes": _host_memory_bytes(),
++            "disk_free_bytes": shutil.disk_usage(ROOT).free,
++        },
++        "gpu": {
++            "name": str(props.name),
++            "architecture": arch,
++            "visible_gpu_count": int(torch.cuda.device_count()),
++            "hbm_total_bytes": int(props.total_memory),
++            "hbm_free_bytes_at_sample": int(free_bytes),
++            "reported_total_bytes_at_sample": int(total_bytes),
++            "bf16_supported": bool(torch.cuda.is_bf16_supported()),
++        },
++        "software": {
++            "python": platform.python_version(),
++            "torch_version": str(torch.__version__),
++            "torch_hip_version": torch.version.hip,
++            "torch_cuda_version": torch.version.cuda,
++            "packages": {name: _package_version(name) for name in package_names},
++        },
++    }
++
++
++def _host_preflight() -> tuple[Any, dict[str, Any]]:
++    if platform.system() != "Linux" or platform.machine().lower() not in {"x86_64", "amd64"}:
++        raise SystemExit("AMD qualification requires Linux x86_64; no output directory or model download was started")
++    if platform.python_version_tuple()[:2] != ("3", "13"):
++        raise SystemExit("E014 AMD qualification requires the frozen Python 3.13 environment")
++    try:
++        import torch
++    except ImportError as exc:
++        raise SystemExit("PyTorch is missing; prepare the pinned ROCm environment before qualification") from exc
++
++    if not torch.version.hip:
++        raise SystemExit("this PyTorch build is not ROCm/HIP-enabled; no model download was started")
++    if not str(torch.__version__).split("+", 1)[0] == "2.14.0":
++        raise SystemExit(f"expected PyTorch 2.14.0 ROCm wheel, found {torch.__version__}")
++    if not str(torch.version.hip).startswith("7.14"):
++        raise SystemExit(f"expected PyTorch ROCm 7.14 build, found HIP runtime {torch.version.hip}")
++    for package, expected in PINNED_PACKAGES.items():
++        actual = _package_version(package)
++        if actual != expected:
++            raise SystemExit(f"expected pinned {package} {expected}, found {actual}")
++    if not torch.cuda.is_available():
++        raise SystemExit("ROCm PyTorch cannot see a GPU; no model download was started")
++    if int(torch.cuda.device_count()) != 1:
++        raise SystemExit(f"MI300X smoke requires exactly one visible GPU, found {torch.cuda.device_count()}")
++    torch.cuda.set_device(0)
++    if not torch.cuda.is_bf16_supported():
++        raise SystemExit("the frozen E014 recipe requires BF16 support")
++
++    props = torch.cuda.get_device_properties(0)
++    if "mi300x" not in str(props.name).casefold():
++        raise SystemExit(f"expected one MI300X, found {props.name!r}")
++    if int(props.total_memory) < MINIMUM_GPU_MEMORY_BYTES:
++        raise SystemExit(
++            f"expected at least {MINIMUM_GPU_MEMORY_BYTES / 1024**3:.0f} GiB visible HBM, "
++            f"found {int(props.total_memory) / 1024**3:.1f} GiB"
++        )
++    ram_bytes = _host_memory_bytes()
++    if ram_bytes is not None and ram_bytes < MINIMUM_HOST_RAM_BYTES:
++        raise SystemExit("at least 64 GiB host RAM is required for the qualification workload")
++
++    cache_home = Path(os.environ.get("HF_HOME", Path.home() / ".cache/huggingface")).expanduser()
++    for label, target in (("Hugging Face cache", cache_home), ("qualification output", QUALIFICATION_ROOT)):
++        probe = target
++        while not probe.exists() and probe != probe.parent:
++            probe = probe.parent
++        if shutil.disk_usage(probe).free < MINIMUM_FREE_DISK_BYTES:
++            raise SystemExit(f"at least 40 GB free disk is required on the {label} filesystem")
++    return torch, _runtime_environment(torch)
++
++
++def _fixed_length_collator(tokenizer: Any, sequence_length: int):
++    """Pad each smoke batch to E014's full sequence length and ignore padding in loss."""
++
++    import torch
++
++    def collate(features: list[dict[str, Any]]) -> dict[str, Any]:
++        model_features = [
++            {key: feature[key] for key in ("input_ids", "attention_mask") if key in feature}
++            for feature in features
++        ]
++        if any(len(feature["input_ids"]) > sequence_length for feature in model_features):
++            raise ValueError("qualification sample exceeds E014's frozen sequence-length cap")
++        batch = tokenizer.pad(
++            model_features,
++            padding="max_length",
++            max_length=sequence_length,
++            return_tensors="pt",
++        )
++        if batch["input_ids"].shape[-1] != sequence_length:
++            raise ValueError("qualification collator did not produce the exact frozen sequence length")
++        labels = batch["input_ids"].clone()
++        labels[batch["attention_mask"] == 0] = -100
++        batch["labels"] = labels
++        return batch
++
++    return collate
++
++
++def _select_examples(
++    config: dict[str, Any],
++    train_rows: list[dict[str, Any]],
++    tokenizer: Any,
++    dataset_report: dict[str, Any],
++    run_dir: Path,
++) -> dict[str, Any]:
++    texts = [_example_text(row) for row in train_rows]
++    lengths: list[int] = []
++    for offset in range(0, len(texts), 32):
++        lengths.extend(_tokenizer_lengths(tokenizer, texts[offset:offset + 32]))
++    ranked = sorted(
++        zip(train_rows, lengths),
++        key=lambda pair: (-pair[1], str(pair[0].get("example_id", ""))),
++    )[:SAMPLE_COUNT]
++    if len(ranked) != SAMPLE_COUNT:
++        raise RuntimeError(f"need {SAMPLE_COUNT} unique training rows, found {len(ranked)}")
++    if len({str(row["example_id"]) for row, _ in ranked}) != SAMPLE_COUNT:
++        raise RuntimeError("qualification sample contains duplicate example_id values")
++    if max(length for _, length in ranked) > int(config["max_seq_length"]):
++        raise RuntimeError("qualification sample exceeds E014's frozen context length")
++    body = {
++        "selection_policy": (
++            "96 longest tokenized unique examples from frozen train split only; no validation/test rows"
++        ),
++        "dataset_file_sha256": dataset_report["file_sha256"],
++        "model_revision": config["model_revision"],
++        "max_sequence_length": config["max_seq_length"],
++        "example_ids": [str(row["example_id"]) for row, _ in ranked],
++        "token_lengths": [int(length) for _, length in ranked],
++    }
++    body["selection_sha256"] = hashlib.sha256(
++        json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")
++    ).hexdigest()
++    _atomic_json(run_dir / "selected_training_examples.json", body)
++    return body
++
++
++def _verify_selection(selection: dict[str, Any], dataset_report: dict[str, Any], config: dict[str, Any]) -> None:
++    payload = {key: value for key, value in selection.items() if key != "selection_sha256"}
++    digest = hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
++    if digest != selection.get("selection_sha256"):
++        raise RuntimeError("qualification selection record hash is invalid")
++    if selection.get("dataset_file_sha256") != dataset_report["file_sha256"]:
++        raise RuntimeError("qualification selection references a different dataset file")
++    if selection.get("model_revision") != config["model_revision"]:
++        raise RuntimeError("qualification selection references a different model revision")
++
++
++def _worker(args: argparse.Namespace) -> int:
++    import torch
++    from datasets import Dataset
++    from peft import LoraConfig
++    from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, TrainerCallback, set_seed
++    from trl import SFTConfig, SFTTrainer
++
++    invariant_result = validate_invariants(args.invariants)
++    if invariant_result["status"] != "passed":
++        raise SystemExit("frozen E014 invariant check failed in worker; see parent log")
++    torch, environment = _host_preflight()
++    config = _load_config(args.config)
++    splits, dataset_report = _load_data(config, world_size=1)
++    run_dir = Path(args.run_dir)
++    selection_path = run_dir / "selected_training_examples.json"
++
++    with warnings.catch_warnings(record=True) as caught_warnings:
++        warnings.simplefilter("always")
++        tokenizer = AutoTokenizer.from_pretrained(config["base_model"], revision=config["tokenizer_revision"])
++        if tokenizer.pad_token_id is None:
++            if tokenizer.eos_token is None:
++                raise RuntimeError("qualification requires a tokenizer pad token or EOS token")
++            tokenizer.pad_token = tokenizer.eos_token
++        tokenizer.padding_side = "right"
++
++        if args.worker_phase == "first":
++            selection = _select_examples(config, splits["train"], tokenizer, dataset_report, run_dir)
++        else:
++            selection = json.loads(selection_path.read_text(encoding="utf-8"))
++            _verify_selection(selection, dataset_report, config)
++
++        rows_by_id = {str(row["example_id"]): row for row in splits["train"]}
++        selected_rows = [rows_by_id[example_id] for example_id in selection["example_ids"]]
++        train_dataset = Dataset.from_list([{"text": _example_text(row)} for row in selected_rows])
++
++        random.seed(int(config["seed"]))
++        torch.manual_seed(int(config["seed"]))
++        set_seed(int(config["seed"]))
++        quantization = BitsAndBytesConfig(
++            load_in_4bit=True,
++            bnb_4bit_quant_type="nf4",
++            bnb_4bit_compute_dtype=torch.bfloat16,
++            bnb_4bit_use_double_quant=True,
++        )
++        model = AutoModelForCausalLM.from_pretrained(
++            config["base_model"],
++            revision=config["model_revision"],
++            device_map={"": torch.cuda.current_device()},
++            torch_dtype=torch.bfloat16,
++            quantization_config=quantization,
++        )
++        model.config.use_cache = False
++
++        import bitsandbytes as bnb
++
++        four_bit_modules = [module for module in model.modules() if isinstance(module, bnb.nn.Linear4bit)]
++        if not four_bit_modules:
++            raise RuntimeError("the model loaded without any bitsandbytes Linear4bit modules")
++        quant_states = [getattr(module.weight, "quant_state", None) for module in four_bit_modules]
++        if any(state is None for state in quant_states):
++            raise RuntimeError("one or more 4-bit modules has no initialized bitsandbytes quantization state")
++        quant_types = sorted({str(getattr(state, "quant_type", None)) for state in quant_states})
++        if quant_types != ["nf4"]:
++            raise RuntimeError(f"expected NF4 quantization state on all 4-bit modules, found {quant_types}")
++        nested_values = [getattr(state, "nested", None) for state in quant_states]
++        if not all(value is True for value in nested_values):
++            raise RuntimeError("double-quantized nested NF4 state was not confirmed on every 4-bit module")
++
++        lora_config = LoraConfig(
++            r=int(config["lora_r"]),
++            lora_alpha=int(config["lora_alpha"]),
++            lora_dropout=float(config["lora_dropout"]),
++            target_modules=list(config["lora_target_modules"]),
++            task_type="CAUSAL_LM",
++        )
++
++        step_durations: list[float] = []
++
++        class StepTimingCallback(TrainerCallback):
++            current_step_started: float | None = None
++
++            def on_step_begin(self, callback_args: Any, state: Any, control: Any, **kwargs: Any) -> Any:
++                del callback_args, state, control, kwargs
++                torch.cuda.synchronize()
++                self.current_step_started = time.monotonic()
++                return None
++
++            def on_step_end(self, callback_args: Any, state: Any, control: Any, **kwargs: Any) -> Any:
++                del callback_args, state, control, kwargs
++                if self.current_step_started is not None:
++                    torch.cuda.synchronize()
++                    step_durations.append(time.monotonic() - self.current_step_started)
++                return None
++
++        class AtomicCheckpointCallback(TrainerCallback):
++            def on_save(self, callback_args: Any, state: Any, control: Any, **kwargs: Any) -> Any:
++                del kwargs
++                if state.is_world_process_zero:
++                    checkpoint = Path(callback_args.output_dir) / f"checkpoint-{state.global_step}"
++                    write_checkpoint_complete_marker(checkpoint, world_size=1)
++                return control
++
++        target_step = FIRST_STAGE_STEP if args.worker_phase == "first" else FINAL_STAGE_STEP
++        training_args = SFTConfig(
++            output_dir=str(run_dir),
++            seed=int(config["seed"]),
++            data_seed=int(config["seed"]),
++            num_train_epochs=1,
++            max_steps=target_step,
++            per_device_train_batch_size=1,
++            gradient_accumulation_steps=int(config["gradient_accumulation_steps"]),
++            learning_rate=float(config["learning_rate"]),
++            warmup_steps=0,
++            weight_decay=float(config["weight_decay"]),
++            lr_scheduler_type=config["lr_scheduler_type"],
++            optim=config["optim"],
++            logging_steps=1,
++            eval_strategy="no",
++            save_strategy="steps",
++            save_steps=CHECKPOINT_INTERVAL,
++            save_total_limit=5,
++            load_best_model_at_end=False,
++            bf16=True,
++            gradient_checkpointing=True,
++            include_num_input_tokens_seen=True,
++            report_to="none",
++            max_length=int(config["max_seq_length"]),
++            dataset_text_field="text",
++        )
++        trainer = SFTTrainer(
++            model=model,
++            args=training_args,
++            train_dataset=train_dataset,
++            peft_config=lora_config,
++            processing_class=tokenizer,
++            data_collator=_fixed_length_collator(tokenizer, int(config["max_seq_length"])),
++            callbacks=[StepTimingCallback(), AtomicCheckpointCallback()],
++        )
++        expected_targets = set(config["lora_target_modules"])
++        observed_targets = {
++            name.rsplit(".", 1)[-1]
++            for name, module in trainer.model.named_modules()
++            if getattr(module, "lora_A", None) is not None and getattr(module, "lora_B", None) is not None
++        }
++        if observed_targets != expected_targets:
++            raise RuntimeError(
++                "LoRA target module mismatch: "
++                f"expected {sorted(expected_targets)}, observed {sorted(observed_targets)}"
++            )
++
++        resume_checkpoint: Path | None = None
++        if args.worker_phase == "resume":
++            resume_checkpoint = run_dir / f"checkpoint-{FIRST_STAGE_STEP}"
++            if not validate_checkpoint(resume_checkpoint, expected_world_size=1):
++                raise RuntimeError("step-3 checkpoint failed marker/files/optimizer/RNG validation")
++
++        torch.cuda.reset_peak_memory_stats()
++        started = time.monotonic()
++        train_output = trainer.train(resume_from_checkpoint=str(resume_checkpoint) if resume_checkpoint else None)
++        runtime_seconds = float(train_output.metrics.get("train_runtime", time.monotonic() - started))
++        if int(trainer.state.global_step) != target_step:
++            raise RuntimeError(f"expected global step {target_step}, received {trainer.state.global_step}")
++
++        checkpoint = run_dir / f"checkpoint-{target_step}"
++        if not validate_checkpoint(checkpoint, expected_world_size=1):
++            raise RuntimeError(f"step-{target_step} checkpoint failed completion validation")
++        if args.worker_phase == "resume":
++            trainer.save_model(str(run_dir))
++            tokenizer.save_pretrained(str(run_dir))
++
++        adapter_parameters = [param for param in trainer.model.parameters() if param.requires_grad]
++        if not adapter_parameters:
++            raise RuntimeError("PEFT installed no trainable LoRA parameters")
++        if any(not bool(torch.isfinite(param.detach()).all().item()) for param in adapter_parameters):
++            raise RuntimeError("non-finite LoRA adapter parameter detected after optimizer updates")
++        optimizer_state_tensors = [
++            value
++            for state in trainer.optimizer.state.values()
++            for value in state.values()
++            if torch.is_tensor(value) and value.is_floating_point()
++        ]
++        if not optimizer_state_tensors:
++            raise RuntimeError("optimizer has no floating-point state after the real update steps")
++        if any(not bool(torch.isfinite(value).all().item()) for value in optimizer_state_tensors):
++            raise RuntimeError("non-finite floating-point optimizer state detected")
++
++        free_hbm, total_hbm = torch.cuda.mem_get_info(0)
++        phase_record = {
++            "phase": args.worker_phase,
++            "global_step": int(trainer.state.global_step),
++            "train_runtime_seconds": runtime_seconds,
++            "optimizer_step_durations_seconds": [round(value, 4) for value in step_durations],
++            "train_metrics": train_output.metrics,
++            "log_history": trainer.state.log_history,
++            "environment": environment,
++            "hbm_after_phase": {"free_bytes": int(free_hbm), "total_bytes": int(total_hbm)},
++            "peak_hbm": {
++                "allocated_bytes": int(torch.cuda.max_memory_allocated(0)),
++                "reserved_bytes": int(torch.cuda.max_memory_reserved(0)),
++            },
++            "process_peak_rss_bytes": _process_peak_rss_bytes(),
++            "quantization": {
++                "requested_type": "nf4",
++                "double_quantization_requested": True,
++                "compute_dtype": "bfloat16",
++                "linear4bit_module_count": len(four_bit_modules),
++                "quant_types_observed": quant_types,
++                "nested_quantization_modules_confirmed": sum(value is True for value in nested_values),
++                "all_modules_confirmed_double_quantized": all(value is True for value in nested_values),
++            },
++            "attention_implementation": getattr(model.config, "_attn_implementation", "unknown"),
++            "optimizer_class": f"{type(trainer.optimizer).__module__}.{type(trainer.optimizer).__qualname__}",
++            "lora_trainable_parameter_count": sum(param.numel() for param in adapter_parameters),
++            "lora_target_modules_observed": sorted(observed_targets),
++            "optimizer_state_finite": True,
++            "adapter_parameters_finite": True,
++            "warnings": [
++                {"category": warning.category.__name__, "message": str(warning.message)}
++                for warning in caught_warnings
++            ],
++            "checkpoint": str(checkpoint.relative_to(ROOT)),
++            "checkpoint_marker_valid": True,
++            "optimizer_file_bytes": (checkpoint / "optimizer.pt").stat().st_size,
++            "scheduler_file_bytes": (checkpoint / "scheduler.pt").stat().st_size,
++            "dataset_sha256": dataset_report["file_sha256"],
++        }
++        _atomic_json(run_dir / f"{args.worker_phase}_phase.json", phase_record)
++    return 0
++
++
++def _process_peak_rss_bytes() -> int | None:
++    try:
++        import resource
++
++        return int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * 1024)
++    except (ImportError, OSError, ValueError):
++        return None
++
++
++def _run_phase(phase: str, run_dir: Path, config_path: str, invariants_path: Path) -> None:
++    log_path = run_dir / f"{phase}_phase.log"
++    command = [
++        sys.executable,
++        str(Path(__file__).resolve()),
++        "--worker-phase", phase,
++        "--run",
++        "--run-dir", str(run_dir),
++        "--config", config_path,
++        "--invariants", str(invariants_path),
++    ]
++    with log_path.open("w", encoding="utf-8") as log_handle:
++        result = subprocess.run(command, cwd=ROOT, stdout=log_handle, stderr=subprocess.STDOUT, text=True)
++    if result.returncode:
++        raise RuntimeError(f"{phase} worker exited {result.returncode}; inspect {log_path}")
++
++
++def _parent(args: argparse.Namespace) -> int:
++    invariant_result = validate_invariants(args.invariants)
++    if invariant_result["status"] != "passed":
++        print(json.dumps(invariant_result, indent=2, ensure_ascii=False), file=sys.stderr)
++        raise SystemExit("E014 frozen invariants failed; stopped before model download or output creation")
++    config = _load_config(args.config)
++    splits, dataset_report = _load_data(config, world_size=1)
++    del splits
++    torch, environment = _host_preflight()
++    del torch
++    if args.check_only:
++        print(json.dumps({
++            "status": "ready_for_qualification",
++            "qualification_status": "READY_FOR_AMD_QUALIFICATION",
++            "profile": "AMD_MI300X_SINGLE",
++            "environment": environment,
++            "dataset": dataset_report,
++            "invariants": invariant_result,
++            "model_weights_downloaded": False,
++            "output_directory_created": False,
++        }, indent=2, ensure_ascii=False))
++        return 0
++
++    run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid4().hex[:8]
++    run_dir = QUALIFICATION_ROOT / run_id
++    run_dir.mkdir(parents=True, exist_ok=False)
++    try:
++        git_commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
++    except (OSError, subprocess.SubprocessError):
++        git_commit = None
++    started_at = time.monotonic()
++    start_record = {
++        "status": "running",
++        "started_at": _now(),
++        "run_id": run_id,
++        "git_commit": git_commit,
++        "profile": "AMD_MI300X_SINGLE",
++        "environment": environment,
++        "model": config["base_model"],
++        "model_revision": config["model_revision"],
++        "tokenizer_revision": config["tokenizer_revision"],
++        "training_config_path": args.config,
++        "training_config_sha256": _sha256(ROOT / args.config),
++        "invariants_path": str(args.invariants),
++        "invariants_validation": invariant_result,
++        "dataset": dataset_report,
++        "output_scope": str(run_dir.relative_to(ROOT)),
++        "model_quality_evaluation_performed": False,
++        "test_split_used": False,
++        "benchmark_loaded": False,
++        "full_training_started": False,
++        "smoke_only_deviations": {
++            "optimizer_steps": 6,
++            "sample_count": SAMPLE_COUNT,
++            "warmup_steps": 0,
++            "validation_and_test": "not loaded or evaluated",
++            "checkpoint_stages": [FIRST_STAGE_STEP, FINAL_STAGE_STEP],
++            "rationale": (
++                "exercise real pinned-stack forward/backward/updates and fresh-process resume "
++                "without constituting a model-quality run"
++            ),
++        },
++    }
++    _atomic_json(run_dir / "qualification_started.json", start_record)
++    try:
++        _run_phase("first", run_dir, args.config, args.invariants)
++        _run_phase("resume", run_dir, args.config, args.invariants)
++        selection = json.loads((run_dir / "selected_training_examples.json").read_text(encoding="utf-8"))
++        first = json.loads((run_dir / "first_phase.json").read_text(encoding="utf-8"))
++        resumed = json.loads((run_dir / "resume_phase.json").read_text(encoding="utf-8"))
++        checkpoint_first = run_dir / f"checkpoint-{FIRST_STAGE_STEP}"
++        checkpoint_final = run_dir / f"checkpoint-{FINAL_STAGE_STEP}"
++        if first["global_step"] != FIRST_STAGE_STEP or resumed["global_step"] != FINAL_STAGE_STEP:
++            raise RuntimeError("smoke did not reach the expected first and resumed optimizer steps")
++        if not validate_checkpoint(checkpoint_first, expected_world_size=1):
++            raise RuntimeError("step-3 checkpoint failed marker/files/optimizer/RNG validation")
++        if not validate_checkpoint(checkpoint_final, expected_world_size=1):
++            raise RuntimeError("step-6 checkpoint failed marker/files/optimizer/RNG validation")
++        checkpoint_adapter = next(iter(sorted(checkpoint_first.glob("adapter_model.*"))))
++        final_adapter = next(iter(sorted(run_dir.glob("adapter_model.*"))))
++        checkpoint_hash = _sha256(checkpoint_adapter)
++        final_hash = _sha256(final_adapter)
++        if checkpoint_hash == final_hash:
++            raise RuntimeError("LoRA adapter did not change after loading step 3 and resuming to step 6")
++
++        durations = first["optimizer_step_durations_seconds"] + resumed["optimizer_step_durations_seconds"]
++        if len(durations) != FINAL_STAGE_STEP:
++            raise RuntimeError(
++                f"expected {FINAL_STAGE_STEP} measured optimizer step durations, found {len(durations)}"
++            )
++        total_step_seconds = sum(float(value) for value in durations)
++        nonpadding_tokens = sum(int(value) for value in selection["token_lengths"])
++        padded_token_positions = FINAL_STAGE_STEP * 16 * int(config["max_seq_length"])
++        median_step_seconds = median(durations)
++        report = {
++            **start_record,
++            "status": "passed",
++            "finished_at": _now(),
++            "qualification_wall_seconds": round(time.monotonic() - started_at, 3),
++            "optimizer_step_seconds": [round(float(value), 4) for value in durations],
++            "median_optimizer_step_seconds": round(median_step_seconds, 4),
++            "measured_nonpadding_tokens_per_second": (
++                round(nonpadding_tokens / total_step_seconds, 3) if total_step_seconds else None
++            ),
++            "measured_padded_token_positions_per_second": (
++                round(padded_token_positions / total_step_seconds, 3) if total_step_seconds else None
++            ),
++            "steps": {
++                "before_process_restart": first["global_step"],
++                "after_fresh_process_resume": resumed["global_step"],
++            },
++            "save_load_resume": {
++                "checkpoint_3_valid": True,
++                "checkpoint_6_valid": True,
++                "resume_used_fresh_process": True,
++                "optimizer_scheduler_and_rng_files_validated": True,
++                "adapter_weights_changed_after_resume": True,
++                "checkpoint_3_adapter_sha256": checkpoint_hash,
++                "step_6_adapter_sha256": final_hash,
++            },
++            "quantization": resumed["quantization"],
++            "optimizer_class": resumed["optimizer_class"],
++            "lora_trainable_parameter_count": resumed["lora_trainable_parameter_count"],
++            "lora_target_modules_observed": resumed["lora_target_modules_observed"],
++            "numerical_checks": {
++                "adapter_parameters_finite": (
++                    first["adapter_parameters_finite"] and resumed["adapter_parameters_finite"]
++                ),
++                "optimizer_state_finite": first["optimizer_state_finite"] and resumed["optimizer_state_finite"],
++                "warnings": first["warnings"] + resumed["warnings"],
++            },
++            "workload": {
++                "model_quality_evaluation_performed": False,
++                "test_split_used": False,
++                "benchmark_loaded": False,
++                "unique_train_examples": len(selection["example_ids"]),
++                "optimizer_steps": FINAL_STAGE_STEP,
++                "gradient_accumulation_steps": 16,
++                "effective_global_batch_size": 16,
++                "max_sequence_length": int(config["max_seq_length"]),
++                "padded_forward_sequence_length": int(config["max_seq_length"]),
++                "selected_min_tokens": min(selection["token_lengths"]),
++                "selected_max_tokens": max(selection["token_lengths"]),
++                "selected_total_nonpadding_tokens": nonpadding_tokens,
++                "total_padded_token_positions": padded_token_positions,
++                "selected_examples_sha256": selection["selection_sha256"],
++            },
++            "peak_hbm": {
++                "allocated_bytes": max(first["peak_hbm"]["allocated_bytes"], resumed["peak_hbm"]["allocated_bytes"]),
++                "reserved_bytes": max(first["peak_hbm"]["reserved_bytes"], resumed["peak_hbm"]["reserved_bytes"]),
++                "end_of_phase_device_hbm_used_bytes": environment["gpu"]["hbm_total_bytes"] - min(
++                    first["hbm_after_phase"]["free_bytes"], resumed["hbm_after_phase"]["free_bytes"]
++                ),
++            },
++            "process_peak_rss_bytes_by_phase": {
++                "first": first["process_peak_rss_bytes"],
++                "resume": resumed["process_peak_rss_bytes"],
++            },
++            "attention_implementation": resumed["attention_implementation"],
++            "artifacts": {
++                "report": str((run_dir / "qualification_report.json").relative_to(ROOT)),
++                "selected_examples": str((run_dir / "selected_training_examples.json").relative_to(ROOT)),
++                "phase_logs": [
++                    str((run_dir / "first_phase.log").relative_to(ROOT)),
++                    str((run_dir / "resume_phase.log").relative_to(ROOT)),
++                ],
++                "telemetry": str((run_dir / "qualification_report.json").relative_to(ROOT)),
++                "final_adapter": str(final_adapter.relative_to(ROOT)),
++            },
++        }
++        _atomic_json(run_dir / "qualification_report.json", report)
++        print(json.dumps(report, indent=2, ensure_ascii=False))
++        return 0
++    except Exception as exc:
++        failure = {
++            **start_record,
++            "status": "failed",
++            "finished_at": _now(),
++            "qualification_wall_seconds": round(time.monotonic() - started_at, 3),
++            "error_type": type(exc).__name__,
++            "error": str(exc),
++            "model_quality_evaluation_performed": False,
++            "full_training_started": False,
++        }
++        _atomic_json(run_dir / "qualification_report.json", failure)
++        print(json.dumps(failure, indent=2, ensure_ascii=False), file=sys.stderr)
++        return 1
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser(description=__doc__)
++    mode = parser.add_mutually_exclusive_group(required=True)
++    mode.add_argument(
++        "--check-only",
++        action="store_true",
++        help="validate the ROCm host and frozen artifacts without model weights or output creation",
++    )
++    mode.add_argument(
++        "--run",
++        action="store_true",
++        help="run six isolated QLoRA optimizer steps and a fresh-process resume",
++    )
++    parser.add_argument("--config", default=DEFAULT_CONFIG)
++    parser.add_argument("--invariants", type=Path, default=DEFAULT_INVARIANTS)
++    parser.add_argument("--worker-phase", choices=("first", "resume"), help=argparse.SUPPRESS)
++    parser.add_argument("--run-dir", help=argparse.SUPPRESS)
++    args = parser.parse_args()
++    if args.worker_phase:
++        if not args.run_dir:
++            parser.error("--run-dir is required for an internal qualification worker")
++        return _worker(args)
++    return _parent(args)
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/scripts/qualify_amd.sh b/scripts/qualify_amd.sh
+new file mode 100644
+index 0000000..2c2ba4d
+--- /dev/null
++++ b/scripts/qualify_amd.sh
+@@ -0,0 +1,13 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++MODE="${1:?usage: bash scripts/qualify_amd.sh check|run}"
++case "$MODE" in
++  check) MODE_ARGS=(--check-only) ;;
++  run) MODE_ARGS=(--run) ;;
++  *) echo "mode must be check or run" >&2; exit 2 ;;
++esac
++
++REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++cd "$REPO_ROOT"
++exec uv run --no-sync --extra dev --extra ml python scripts/qualify_amd.py "${MODE_ARGS[@]}"
+diff --git a/scripts/validate_e014_invariants.py b/scripts/validate_e014_invariants.py
+new file mode 100644
+index 0000000..bd74264
+--- /dev/null
++++ b/scripts/validate_e014_invariants.py
+@@ -0,0 +1,181 @@
++"""Validate the E014 scientific-invariant snapshot against frozen source artifacts."""
++
++from __future__ import annotations
++
++import argparse
++import hashlib
++import json
++import sys
++import tomllib
++from pathlib import Path
++from typing import Any
++
++ROOT = Path(__file__).resolve().parents[1]
++DEFAULT_INVARIANTS = ROOT / "configs/research/e014_scientific_invariants_v1.json"
++
++
++def _sha256(path: Path) -> str:
++    digest = hashlib.sha256()
++    with path.open("rb") as handle:
++        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
++            digest.update(chunk)
++    return digest.hexdigest()
++
++
++def _read_jsonl(path: Path) -> list[dict[str, Any]]:
++    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
++
++
++def _content_hash(rows: list[dict[str, Any]]) -> str:
++    payload = "\n".join(json.dumps(row, ensure_ascii=False, sort_keys=True) for row in rows).encode("utf-8")
++    return hashlib.sha256(payload).hexdigest()
++
++
++def validate(invariants_path: Path = DEFAULT_INVARIANTS) -> dict[str, Any]:
++    invariants = json.loads(invariants_path.read_text(encoding="utf-8"))
++    failures: list[str] = []
++    verified_files: dict[str, str] = {}
++
++    source_files = {
++        "source_manifest": (invariants["source_manifest"], invariants["source_manifest_sha256"]),
++        "source_training_config": (invariants["source_training_config"], invariants["source_training_config_sha256"]),
++        "source_hypothesis_config": (
++            invariants["source_hypothesis_config"], invariants["source_hypothesis_config_sha256"]
++        ),
++        "source_research_evaluation_config": (
++            invariants["source_research_evaluation_config"],
++            invariants["source_research_evaluation_config_sha256"],
++        ),
++        "source_lockfile": (invariants["source_lockfile"], invariants["source_lockfile_sha256"]),
++        "training_data": (
++            invariants["scientific_invariants"]["training_data"]["path"],
++            invariants["scientific_invariants"]["training_data"]["file_sha256"],
++        ),
++        "research_benchmark": (
++            invariants["scientific_invariants"]["benchmark"]["path"],
++            invariants["scientific_invariants"]["benchmark"]["file_sha256"],
++        ),
++        "general_control": (
++            invariants["scientific_invariants"]["general_capability_control"]["path"],
++            invariants["scientific_invariants"]["general_capability_control"]["file_sha256"],
++        ),
++    }
++    for label, (relative_path, expected_hash) in source_files.items():
++        path = ROOT / relative_path
++        if not path.is_file():
++            failures.append(f"{label}: missing file {relative_path}")
++            continue
++        actual_hash = _sha256(path)
++        verified_files[relative_path] = actual_hash
++        if actual_hash != expected_hash:
++            failures.append(f"{label}: SHA-256 mismatch (expected {expected_hash}, got {actual_hash})")
++
++    manifest_path = ROOT / invariants["source_manifest"]
++    config_path = ROOT / invariants["source_training_config"]
++    lock_path = ROOT / invariants["source_lockfile"]
++    if manifest_path.is_file() and config_path.is_file():
++        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
++        with config_path.open("rb") as handle:
++            raw_config = tomllib.load(handle)
++        if manifest.get("experiment_id") != invariants["experiment_id"]:
++            failures.append("manifest experiment_id differs from invariant record")
++        if manifest.get("training", {}).get("config_sha256") != invariants["source_training_config_sha256"]:
++            failures.append("manifest training config hash differs from invariant record")
++        if manifest.get("training", {}).get("config") != raw_config:
++            failures.append("manifest embedded training config differs from frozen TOML")
++        expected_eval_quant = invariants["scientific_invariants"]["evaluation"]["base_and_tuned_model_quantization"]
++        if manifest.get("model", {}).get("base_quantization_for_training_and_evaluation") != expected_eval_quant:
++            failures.append("manifest base/evaluation quantization differs from invariant record")
++        if raw_config != invariants["scientific_invariants"]["training_treatment"]["training_config_values"]:
++            failures.append("machine-readable training config values differ from frozen TOML")
++        expected_training = invariants["scientific_invariants"]["training_treatment"]
++        for key, expected in (
++            ("expected_optimizer_steps", expected_training["optimizer_steps"]),
++            ("expected_warmup_steps", expected_training["warmup_steps"]),
++            ("planned_total_training_tokens", expected_training["planned_training_tokens"]),
++        ):
++            if manifest.get("training", {}).get(key) != expected:
++                failures.append(f"manifest {key} differs from invariant record")
++
++    hypothesis_path = ROOT / invariants["source_hypothesis_config"]
++    if hypothesis_path.is_file():
++        hypothesis_config = json.loads(hypothesis_path.read_text(encoding="utf-8"))
++        primary = [item for item in hypothesis_config.get("hypotheses", []) if item.get("id") == "H1"]
++        primary_questions = [
++            item for item in hypothesis_config.get("research_questions", []) if item.get("id") == "RQ1"
++        ]
++        expected_primary = invariants["scientific_invariants"]["evaluation"]["primary_metrics"]
++        if len(primary) != 1 or primary[0].get("metrics") != expected_primary:
++            failures.append("frozen H1 metrics differ from invariant record")
++        if len(primary_questions) != 1 or primary_questions[0].get("primary") is not True:
++            failures.append("frozen RQ1 primary designation differs from invariant record")
++
++    data_record = invariants["scientific_invariants"]["training_data"]
++    dataset_path = ROOT / data_record["path"]
++    if dataset_path.is_file():
++        rows = _read_jsonl(dataset_path)
++        all_hash = _content_hash(rows)
++        counts: dict[str, int] = {}
++        split_hashes: dict[str, str] = {}
++        for split in ("train", "validation", "test"):
++            split_rows = [row for row in rows if row.get("split") == split]
++            counts[split] = len(split_rows)
++            split_hashes[split] = _content_hash(split_rows)
++        if len(rows) != data_record["row_count"]:
++            failures.append(f"dataset row count mismatch: expected {data_record['row_count']}, got {len(rows)}")
++        if counts != data_record["split_counts"]:
++            failures.append(f"dataset split counts mismatch: expected {data_record['split_counts']}, got {counts}")
++        if all_hash != data_record["content_sha256"]:
++            failures.append(f"dataset content hash mismatch: expected {data_record['content_sha256']}, got {all_hash}")
++        if split_hashes != data_record["split_content_sha256"]:
++            failures.append("dataset per-split content hashes differ from frozen values")
++
++    for label in ("benchmark", "general_capability_control"):
++        record = invariants["scientific_invariants"][label]
++        path = ROOT / record["path"]
++        if not path.is_file():
++            continue
++        rows = _read_jsonl(path)
++        content_hash = _content_hash(rows)
++        if len(rows) != record["case_count"]:
++            failures.append(f"{label} case count mismatch: expected {record['case_count']}, got {len(rows)}")
++        if content_hash != record["content_sha256"]:
++            failures.append(f"{label} canonical content hash mismatch")
++
++    if lock_path.is_file():
++        with lock_path.open("rb") as handle:
++            lock = tomllib.load(handle)
++        locked_versions = {item["name"]: item["version"] for item in lock.get("package", [])}
++        package_pins = invariants["execution_backend_details"]["same_version_pins_required_for_case_a"]
++        for package, expected in package_pins.items():
++            if package == "python":
++                continue
++            actual = locked_versions.get(package)
++            if actual != expected:
++                failures.append(f"locked {package} version mismatch: expected {expected}, got {actual}")
++
++    return {
++        "status": "passed" if not failures else "failed",
++        "experiment_id": invariants["experiment_id"],
++        "invariants_path": str(
++            invariants_path.relative_to(ROOT) if invariants_path.is_relative_to(ROOT) else invariants_path
++        ),
++        "verified_files": verified_files,
++        "failures": failures,
++    }
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--invariants", type=Path, default=DEFAULT_INVARIANTS)
++    args = parser.parse_args()
++    try:
++        result = validate(args.invariants)
++    except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
++        result = {"status": "failed", "failures": [f"{type(exc).__name__}: {exc}"]}
++    print(json.dumps(result, indent=2, ensure_ascii=False))
++    return 0 if result["status"] == "passed" else 1
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+diff --git a/tests/test_amd_qualification.py b/tests/test_amd_qualification.py
+new file mode 100644
+index 0000000..5581fc5
+--- /dev/null
++++ b/tests/test_amd_qualification.py
+@@ -0,0 +1,74 @@
++from __future__ import annotations
++
++import json
++import sys
++from pathlib import Path
++
++import pytest
++
++torch = pytest.importorskip("torch")
++ROOT = Path(__file__).resolve().parents[1]
++sys.path.insert(0, str(ROOT / "scripts"))
++
++from qualify_amd import _fixed_length_collator, _verify_selection
++from validate_e014_invariants import validate
++
++
++class TinyTokenizer:
++    def pad(self, features, *, padding, max_length, return_tensors):
++        assert padding == "max_length"
++        assert return_tensors == "pt"
++        rows = []
++        masks = []
++        for feature in features:
++            ids = list(feature["input_ids"])
++            mask = list(feature.get("attention_mask", [1] * len(ids)))
++            amount = max_length - len(ids)
++            rows.append(ids + [0] * amount)
++            masks.append(mask + [0] * amount)
++        return {"input_ids": torch.tensor(rows), "attention_mask": torch.tensor(masks)}
++
++
++def test_e014_invariant_snapshot_matches_frozen_inputs() -> None:
++    result = validate()
++    assert result["status"] == "passed", result["failures"]
++
++
++def test_amd_qualification_collator_uses_exact_length_and_masks_padding() -> None:
++    collate = _fixed_length_collator(TinyTokenizer(), 8)
++    batch = collate([
++        {"input_ids": [11, 12, 13], "attention_mask": [1, 1, 1], "text": "ignored"},
++        {"input_ids": [21, 22], "attention_mask": [1, 1]},
++    ])
++    assert tuple(batch["input_ids"].shape) == (2, 8)
++    assert batch["labels"][0, :3].tolist() == [11, 12, 13]
++    assert batch["labels"][0, 3:].tolist() == [-100] * 5
++    assert batch["labels"][1, :2].tolist() == [21, 22]
++
++
++def test_amd_qualification_collator_rejects_overlength_examples() -> None:
++    collate = _fixed_length_collator(TinyTokenizer(), 4)
++    with pytest.raises(ValueError, match="exceeds"):
++        collate([{"input_ids": [1, 2, 3, 4, 5], "attention_mask": [1] * 5}])
++
++
++def test_amd_qualification_rejects_tampered_selection() -> None:
++    selection = {
++        "selection_policy": "train split only",
++        "dataset_file_sha256": "dataset-hash",
++        "model_revision": "revision",
++        "max_sequence_length": 4608,
++        "example_ids": ["one"],
++        "token_lengths": [4200],
++        "selection_sha256": "not-the-hash",
++    }
++    with pytest.raises(RuntimeError, match="selection record hash"):
++        _verify_selection(selection, {"file_sha256": "dataset-hash"}, {"model_revision": "revision"})
++
++
++def test_amd_qualification_manifest_is_engineering_only() -> None:
++    manifest = json.loads((ROOT / "experiments/E014_amd_qualification/manifest.json").read_text())
++    assert manifest["qualification_only"] is True
++    assert manifest["model_quality_claims_authorized"] is False
++    assert manifest["full_run"]["started"] is False
++    assert manifest["decision"]["case"] == "unclassified_pending_smoke"

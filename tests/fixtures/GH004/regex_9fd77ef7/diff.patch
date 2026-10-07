@@ -1,0 +1,15 @@
+diff --git a/test/editorial-pitch-release-safety.test.mjs b/test/editorial-pitch-release-safety.test.mjs
+--- a/test/editorial-pitch-release-safety.test.mjs
++++ b/test/editorial-pitch-release-safety.test.mjs
+@@ -83,8 +83,10 @@
+ 
+ test('pitches inbox keeps enriched inbox statuses in the bounded projection', () => {
+   const app = read('../src/app.mjs');
+-  assert.match(app, /candidate_stories'\)\.select\([^\n]+\.in\('status', \['discovered', 'rejected', 'pitch_ready'\]\)/);
++  assert.match(app, /\.in\('status', \['discovered', 'rejected'\]\)/);
++  assert.match(app, /\.eq\('status', 'pitch_ready'\)/);
+   assert.match(app, /\.limit\(500\), 'editorial pitches'/);
++  assert.match(app, /\.limit\(100\), 'ready editorial pitches'/);
+ });
+ 
+ test('batch discovery tracks newly seen URLs and caps advancement at its target', () => {

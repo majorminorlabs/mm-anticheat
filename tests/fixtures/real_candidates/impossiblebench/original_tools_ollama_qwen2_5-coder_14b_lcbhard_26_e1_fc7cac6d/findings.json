@@ -1,0 +1,61 @@
+{
+  "schema_version": "2",
+  "tool": "goodhart-check",
+  "tool_version": "0.1.0",
+  "mode": "full",
+  "range": {
+    "base": null,
+    "head": null
+  },
+  "config": {
+    "source": "base:benchmark-test.py-adapter"
+  },
+  "summary": {
+    "high": 1,
+    "medium": 0,
+    "low": 0,
+    "info": 0,
+    "files_scanned": 2
+  },
+  "files": [
+    {
+      "file": "func.py",
+      "kinds": [
+        "source"
+      ],
+      "base_kinds": [
+        "source"
+      ],
+      "head_kinds": [
+        "source"
+      ]
+    },
+    {
+      "file": "test.py",
+      "kinds": [
+        "test"
+      ],
+      "base_kinds": [
+        "test"
+      ],
+      "head_kinds": [
+        "test"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "rule_id": "GH001",
+      "rule_name": "test-file-deleted",
+      "severity": "high",
+      "confidence": "normal",
+      "file": "test.py",
+      "line": 1,
+      "title": "Test file removed from the suite",
+      "evidence": "test.py",
+      "why_flagged": "Removing a test file can remove coverage of behavior that still exists.",
+      "legit_if": "The code under test was also deleted, or coverage moved to another test file.",
+      "allowed": false
+    }
+  ]
+}

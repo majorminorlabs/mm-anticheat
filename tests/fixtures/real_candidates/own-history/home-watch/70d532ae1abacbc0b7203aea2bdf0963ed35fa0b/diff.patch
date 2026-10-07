@@ -1,0 +1,71 @@
+diff --git a/src/lib/concierge/knowledge-base.ts b/src/lib/concierge/knowledge-base.ts
+index da9d300..30fc1f7 100644
+--- a/src/lib/concierge/knowledge-base.ts
++++ b/src/lib/concierge/knowledge-base.ts
+@@ -404,12 +404,12 @@ export const conciergeEntries: ConciergeEntry[] = [
+     id: "optional-property-items",
+     category: "optional-checks",
+     label: "Optional Services",
+-    questions: ["can you check my dock", "do you check boat lifts vehicles pools irrigation or generators", "optional property checks"],
+-    keywords: ["dock", "pier", "boat lift", "vehicle", "boat", "pool", "irrigation", "generator", "waterfront structure"],
+-    phrases: ["boat lift", "optional checklist", "owner approved"],
++    questions: ["can you check my dock", "does it check docks", "do you check boat lifts vehicles pools irrigation or generators", "can you check my seawall", "do you check seawalls", "optional property checks"],
++    keywords: ["dock", "pier", "boat lift", "vehicle", "boat", "pool", "irrigation", "generator", "seawall", "waterfront structure"],
++    phrases: ["boat lift", "optional checklist", "owner approved", "dock check", "seawall check"],
+     exclusions: ["repair", "maintenance"],
+     answer:
+-      "Optional services include leak-sensor setup, Storm Watch, Contractor Coordination, and Arrival Prep. Vehicles, boats, docks, piers, boat lifts, pools, irrigation, generators, and waterfront structures may also be added as owner-approved checklist items when applicable and safely accessible; they are not automatic in every plan.\n\nProperty-item coverage is a visual check only—not operation, testing, maintenance, diagnosis, repair, marine surveying, or landscaping.",
++      "Optional services include leak-sensor setup, Storm Watch, Contractor Coordination, and Arrival Prep. Vehicles, boats, docks, piers, boat lifts, seawalls, pools, irrigation, generators, and other waterfront structures may also be added as owner-approved checklist items when applicable and safely accessible; they are not automatic in every plan.\n\nSeawalls receive no structural assessment. Property-item coverage is a visual check only—not operation, testing, maintenance, diagnosis, repair, marine surveying, or landscaping.",
+     links: [
+       { id: "plans", label: "View optional-service pricing", href: "/plans-pricing" },
+       contactLink,
+diff --git a/src/lib/concierge/matcher.ts b/src/lib/concierge/matcher.ts
+index d8ff6d5..756fad5 100644
+--- a/src/lib/concierge/matcher.ts
++++ b/src/lib/concierge/matcher.ts
+@@ -13,7 +13,9 @@ const aliases: Array<[RegExp, string]> = [
+   [/\bwater damage\b/gi, "water leak"],
+   [/\bflood(?:ing|ed)?\b/gi, "water leak"],
+   [/\bpiers?\b/gi, "dock"],
++  [/\bdocks?\b/gi, "dock"],
+   [/\bboat lifts?\b/gi, "boat lift"],
++  [/\bseawalls?\b/gi, "seawall"],
+   [/\bpricing\b|\bcosts?\b|\brates?\b/gi, "price"],
+   [/\binspect(?:ion|ing|ed)?\b|\blook(?:ing)? at\b|\bwatch(?:ing)?\b/gi, "check"],
+   [/\bvacation home\b|\bsecond home\b/gi, "seasonal home"],
+diff --git a/tests/concierge/matcher.test.ts b/tests/concierge/matcher.test.ts
+index 6bbe8fe..59b46e7 100644
+--- a/tests/concierge/matcher.test.ts
++++ b/tests/concierge/matcher.test.ts
+@@ -55,7 +55,9 @@ describe("concierge input normalization", () => {
+     ["air conditioning", "hvac"],
+     ["tropical storm", "storm"],
+     ["water damage", "water leak"],
++    ["docks", "dock"],
+     ["boat lifts", "boat lift"],
++    ["seawalls", "seawall"],
+     ["cost", "price"],
+     ["look at", "check"],
+     ["vacation home", "seasonal home"],
+@@ -95,6 +97,12 @@ describe("deterministic matching", () => {
+     expect(matchConciergeQuery("Can you look at my pier?").entry?.id).toBe(
+       "optional-property-items",
+     );
++    expect(matchConciergeQuery("Does it check docks?").entry?.id).toBe(
++      "optional-property-items",
++    );
++    expect(matchConciergeQuery("Can you check my seawall?").entry?.id).toBe(
++      "optional-property-items",
++    );
+     expect(matchConciergeQuery("What does it cost?").entry?.id).toBe(
+       "plans-pricing",
+     );
+@@ -169,6 +177,8 @@ describe("required policy routing", () => {
+     ["do you care for pets", "limitations-pets"],
+     ["can you feed my dog", "limitations-pets"],
+     ["can you check my dock", "optional-property-items"],
++    ["does it check docks", "optional-property-items"],
++    ["do you check seawalls", "optional-property-items"],
+     ["do you check boat lifts vehicles pools irrigation or generators", "optional-property-items"],
+     ["do you provide landscaping", "limitations-landscaping-handyman"],
+     ["do you do lawn care", "limitations-landscaping-handyman"],

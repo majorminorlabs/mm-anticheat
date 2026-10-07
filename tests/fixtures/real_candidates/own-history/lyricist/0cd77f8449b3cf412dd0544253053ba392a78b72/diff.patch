@@ -1,0 +1,812 @@
+diff --git a/.gitignore b/.gitignore
+index 0e4a98d..729b7cb 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -13,3 +13,5 @@ data/eval/*.jsonl
+ *.log
+ 
+ uv.lock
++
++data/l2/*.jsonl
+diff --git a/EXPERIMENTS.md b/EXPERIMENTS.md
+index 41db141..dc9bafa 100644
+--- a/EXPERIMENTS.md
++++ b/EXPERIMENTS.md
+@@ -49,3 +49,39 @@ Recommended next experiment, after human review: improve prompt-to-target superv
+ ## Blind comparison protocol
+ 
+ After checkpoint evaluation, make a paired packet with `python3 -m scripts.blind_compare --b0 outputs/b0/generations.jsonl --l1 outputs/l1-best/generations.jsonl --out outputs/blind-review`. Read each pair without opening `answer_key.json`. Score imagery, phrasing, cadence, ambiguity, indirect associations, coherence, prompt response, and originality. This is a required human judgment before claiming the acceptance gate is met.
++
++## L1 failure analysis before L2
++
++The fixed B0 and L1 step-48 generations were re-read and scored with `scripts/analyze_outputs.py` (report: `outputs/l1-failure-analysis.json`). The shape heuristic marks 43/50 B0 outputs and 26/50 L1 outputs as prose-like; mean content lines rose from 4.4 to 7.52 and mean words per line fell from 38.12 to 25.09. This is real movement toward shorter lines, but 29/50 L1 outputs still contain a line over 25 words. The lexical prompt-term check found no substantive prompt word in 24/50 B0 and 32/50 L1 outputs. That check misses paraphrases, so it is a warning rather than a semantic score.
++
++Manual spot checks: L1 p03 and p16 gained line breaks and some imagery; p33 made an indirect connection between broken clocks and bodily value. L1 p07 drifted from jealousy into a generic kitchen scene, p18 emitted writing-instruction text, and p50 described a refrain instead of writing one. Generic phrase matches remained high (51 B0 versus 49 L1), while meta-instruction matches rose from 3 to 9. Duplicate lines rose from 1 to 7 across the 50 outputs, mostly in structured requests. Many outputs ended mid-thought at the fixed token cap (43 B0 versus 33 L1); that count is partly a generation-cap effect, not evidence of malformed corpus targets. These observations motivate shorter grounded targets and closer prompt/target alignment for L2. The 50 prompts and generation settings remain fixed.
++
++## L2 dataset design and preflight
++
++L2 keeps the pinned Qwen3 base, the frozen 84/11/11 work split, and the fixed 50 prompts. The dataset is made by `scripts/build_l2.py` from stanza-bounded source passages, never whole works. Each training target is 2–8 original lyric lines with exact Markdown source line numbers and a source SHA-256. It has one generated prompt per retained passage, no synthetic lyric targets, and no evaluation prompt in training. Short/medium controls follow target length. The prompt builder uses auditable lexical evidence for broad concepts or, in a small minority, one concrete source word. It copies no target phrase longer than two words into a prompt.
++
++The final build contains **373 training passages from all 84 training works**, 54 validation passages from the 11 validation works, and 50 held-out passages from the 11 held-out works. Training prompts are 239 descriptive (64.1%) and 134 sparse (35.9%). Length controls are 262 short and 111 medium. Training target lines: 54 two-line, 43 three-line, 129 four-line, 49 five-line, 55 six-line, 20 seven-line, and 23 eight-line. Median target length is 28 words / 35 Qwen tokens; p90 is 46 words / 58 tokens; maximum is 74 words / 88 tokens. Source-work coverage is 1–10 passages per work (median four).
++
++The builder skipped 58 exact and 25 near-repeated sections, 21 near-repeated passages, 101 internally repetitive chunks, 61 chunks lacking a grounded prompt, and three chunks containing section annotations. The QA tool found zero exact or fuzzy duplicate target pairs across L2 splits, zero work-level leakage, no broken source-line provenance, no prompt/target overlap of four or more words, and no ungrounded retained prompt tags. A deterministic spot check of 15 final examples found broad but defensible concept labels and intact target line breaks. The final train dataset SHA-256 is recorded in `corpus/metadata/l2_dataset.json` and `corpus/metadata/l2_qa.json`; the latter includes complete distributions and checks. The build is deterministic; eight local tests passed before GPU training.
++
++## L2 training and fixed-prompt evaluation
++
++The two-update smoke job passed loading, training, adapter save/reload, fresh-process generation, evaluation, and persistent-storage checks. The full run used the same pinned base with LoRA rank 8 / alpha 16 / dropout 0.10 on query and value projections; BF16, sequence length 256, batch 2, accumulation 4 (effective batch 8), AdamW weight decay 0.01, peak learning rate 6e-5, 10% warmup and linear decay, seed 314161. It completed **250 optimizer updates / 5.362 passage-level effective epochs in 182.78 seconds** on one A40. The checkpoint GPU snapshots reported about 4,799–4,801 MiB in use; peak PyTorch allocation was 3,761 MiB. Validation loss never deteriorated by the early-stop margin. The run manifest and per-checkpoint adapter SHA-256 values are in `outputs/l2/run.json`; its training dataset hash is `47dbc753e3796754f2bb917c5b05bedceef58a044280911607e92105774d6fe3`.
++
++All five checkpoints used the **unchanged** 50 evaluation prompts and the same generation settings as B0 and L1. The held-out numbers below are completion-only loss on the **same 50 L2 short-passage probes**. They are not directly comparable with the older 11-complete-work losses of 2.955 B0 and 2.870 L1. On the short-passage probes, B0 scored 3.87292 and L1 step 48 scored 3.70032.
++
++| L2 step | Val loss | Held-out loss | Length adherence | Mean words | Output tokens median / p90 | Mean words/line | Prompt-term misses | Generic phrase hits | Memorization flags |
++| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
++| 50 | 3.46311 | 3.58015 | 44% | 35.9 | 27 / 96 | 11.09 | 38/50 | 12 | 0/50 |
++| 100 | 3.36431 | 3.47284 | 34% | 22.2 | 23 / 42 | 9.98 | 48/50 | 6 | 0/50 |
++| 150 | 3.34847 | 3.45029 | 40% | 25.6 | 28.5 / 46 | 10.18 | 47/50 | 6 | 0/50 |
++| 200 | 3.34612 | 3.44596 | 48% | 25.1 | 25 / 50 | 9.97 | 47/50 | 9 | 0/50 |
++| 250 | 3.34127 | 3.44496 | 50% | 27.9 | 28 / 55 | 9.91 | 48/50 | 10 | 0/50 |
++
++The prompt-term check counts a miss if no substantive word from the prompt appears in the output. It cannot judge paraphrases, but manual reading supports a real adherence problem. For comparison, B0/L1 step 48 had 78%/84% length adherence, 125.7/119.3 mean words, 38.12/25.09 mean words per output line, 24/32 prompt-term misses, and 51/49 generic-phrase hits. Step 50 is the **best L2 checkpoint for review** because it retains more substance and prompt contact than later checkpoints, despite their better loss. Its median output is 27 Qwen tokens, versus 160 B0 and 137.5 L1. The median line has eight words versus 25 B0 and nine L1; L2 has far fewer long lines (4/50 outputs with a line over 25 words versus 44 B0 and 29 L1). Its 32/50 prose-like flag count is largely from outputs of three or fewer lines. Full shape diagnostics, distributions, per-prompt flags, and token counts are in `outputs/l2-comparison/shape-selected.json` and `shape-{100,150,200,250}.json`.
++
++Manual spot checks show some movement toward concise lyric phrasing: step 50 addresses the unfamiliar old friend directly and uses a moth image for the emergency-exit prompt. But it also gives only four words for the jealousy prompt, omits the locked room in that prompt, and turns the broken-clock request into a conventional story. Later checkpoints often fall to two or three generic relationship lines, including the wet-concrete and red-chair prompts; step 250 also misses the requested refrain. The model frequently ends after a short passage despite a longer requested length. These are material regressions in prompt fit and useful completion length. **L2 does not pass the creative-quality gate; L1 step 48 remains the current best available model.** Lower L2 loss alone does not change that decision. No optional follow-up was run because there is no clearly improved L2 checkpoint to refine.
++
++The selected step-50 evaluation has **0/50 memorization flags**, zero shared training 5-grams, and a maximum four-word exact phrase shared with a training work. There are no flagged cases requiring a nearest-source-work listing. No substantial source passage is evident in the 50 generated outputs under the exact-overlap audit. A suspicious fuzzy-overlap detector was not implemented; this audit cannot prove that every output is original. The step-50 adapter is retained at `outputs/l2/checkpoint-050/` and all five checkpoint/evaluation artifacts are retained locally and on persistent pod storage. The 50-prompt randomized three-way packet is `outputs/l2-blind-review/review_packet.jsonl`, with `answer_key.json` separate and a rubric beside it. No blind human scores are claimed.
++
++Because L2 did not improve actual writing over L1, it was **not exported to GGUF** and `models/best.gguf` was not changed. The existing L1 GGUF was loaded by the local `./writer` CLI after L2 and produced a response for a sunlight-room prompt; this is an operational check of the current model, not an L2 quality result. The pod remains running. The next experiment should specifically test stronger, human-checked prompt-to-passage grounding and a target-length mix that includes complete short responses, while preserving the fixed work split and eval prompts. A longer run with the current L2 labels is not supported by these results.
+diff --git a/README.md b/README.md
+index b66efea..3b9626d 100644
+--- a/README.md
++++ b/README.md
+@@ -71,3 +71,26 @@ python /path/to/llama.cpp/convert_hf_to_gguf.py models/fused-048 --outfile model
+ ```
+ 
+ `models/best.gguf` is already prepared locally; its SHA-256 is `90bbabf458f74c22e153d5c7d6df2cb06fa6600bb094f35d95299a63e0a1ab31`. Local `./writer` inference was tested with Homebrew llama.cpp. The automated evaluations and selected examples do **not** establish that L1 meets the creative-quality objective. See `EXPERIMENTS.md` for results and limitations.
++
++## L2 short-passage experiment
++
++L2 uses the same pinned base, work split, and 50 fixed prompts. `scripts.build_l2` deterministically extracts 2–8-line source passages and grounded prompts, recording exact source-line provenance. Only the 84 training works feed optimizer updates; the 11 validation and 11 held-out works supply separate loss probes. Rebuild and check the dataset from the repo root:
++
++```sh
++python3 -m scripts.build_l2
++```
++
++On the A40, use the virtual environment with Transformers installed to run full tokenizer QA, training, and evaluation:
++
++```sh
++.venv/bin/python -m scripts.qa_l2 --tokenizer
++.venv/bin/python -m scripts.train_l2 --smoke --out outputs/l2-smoke
++.venv/bin/python -m scripts.train_l2 --out outputs/l2
++for n in 050 100 150 200 250; do
++  .venv/bin/python -m scripts.evaluate --adapter outputs/l2/checkpoint-$n --out outputs/l2-eval-$n
++done
++.venv/bin/python -m scripts.eval_l2_loss --split heldout --out outputs/l2-comparison/b0-short-heldout.json
++.venv/bin/python -m scripts.eval_l2_loss --adapter outputs/l1/checkpoint-048 --split heldout --out outputs/l2-comparison/l1-short-heldout.json
++```
++
++The best L2 checkpoint for **review** is step 50. Its adapter is `outputs/l2/checkpoint-050/`; the blind B0/L1/L2 packet and separate key are in `outputs/l2-blind-review/`. L2 produces more compact lines but loses prompt fit and frequently stops too early, so it did not pass the creative-quality gate. The current local CLI model remains the L1 `models/best.gguf`; no L2 GGUF was exported. All L2 outputs and adapters are ignored by Git and backed up on the pod's `/workspace/lyricist/outputs` mount. See `EXPERIMENTS.md` for complete metrics and the selection rationale.
+diff --git a/corpus/metadata/dataset_hashes.json b/corpus/metadata/dataset_hashes.json
+index 44fda3f..85bcfb0 100644
+--- a/corpus/metadata/dataset_hashes.json
++++ b/corpus/metadata/dataset_hashes.json
+@@ -1,6 +1,9 @@
+ {
+   "data/heldout/heldout.jsonl": "fd0f5bbf2f354d08e95e47988462d4fdba8e203cf7fba4b5e389553a1295afe8",
+   "data/heldout/raw.jsonl": "bf63e927bd71611ba08bc47147d699bcb86467443d300d9f40e97a77fa23a38a",
++  "data/l2/heldout.jsonl": "af27b7b24712744415080ea555205eee6454678769eed09b44b44eaa64715f3d",
++  "data/l2/train.jsonl": "47dbc753e3796754f2bb917c5b05bedceef58a044280911607e92105774d6fe3",
++  "data/l2/validation.jsonl": "7ca0b3f4f0be51d3b6c769af8b88879fda2e49201e4a2ee5011c06a238435703",
+   "data/pretrain/train.jsonl": "a8927ebfd1d3c22330581ba5df5026f8fd2099e92058aeac042ff4441dd5c5c4",
+   "data/pretrain/validation.jsonl": "247e2973b8b42ba31e35d445f4b133109722be6cef97828e68f7d68a4e5c4bf9",
+   "data/sft/train.jsonl": "689e1ab4de77cf22d9f0a2a5f8253a6b366ecb9daa3dc9d346682b7a4dea4600",
+diff --git a/corpus/metadata/l2_dataset.json b/corpus/metadata/l2_dataset.json
+new file mode 100644
+index 0000000..a0462ea
+--- /dev/null
++++ b/corpus/metadata/l2_dataset.json
+@@ -0,0 +1,30 @@
++{
++  "audit": {
++    "annotation_passage_skipped": 3,
++    "internal_repetition_skipped": 101,
++    "near_repeat_passages_skipped": 21,
++    "near_repeat_sections_skipped": 25,
++    "raw_sections": 531,
++    "repeat_sections_skipped": 58,
++    "single_line_stanzas_skipped": 26,
++    "source_works": 106,
++    "ungrounded_prompt_skipped": 61,
++    "work_cap_dropped": 0
++  },
++  "config": {
++    "descriptive_class_threshold_percent": 65,
++    "max_passages_per_work": 10,
++    "passage_near_duplicate_threshold": 0.88,
++    "section_near_duplicate_threshold": 0.88
++  },
++  "counts": {
++    "heldout": 50,
++    "train": 373,
++    "validation": 54
++  },
++  "hashes": {
++    "heldout": "af27b7b24712744415080ea555205eee6454678769eed09b44b44eaa64715f3d",
++    "train": "47dbc753e3796754f2bb917c5b05bedceef58a044280911607e92105774d6fe3",
++    "validation": "7ca0b3f4f0be51d3b6c769af8b88879fda2e49201e4a2ee5011c06a238435703"
++  }
++}
+diff --git a/corpus/metadata/l2_qa.json b/corpus/metadata/l2_qa.json
+new file mode 100644
+index 0000000..8a5d1a6
+--- /dev/null
++++ b/corpus/metadata/l2_qa.json
+@@ -0,0 +1,62 @@
++{
++  "counts": {
++    "heldout": 50,
++    "train": 373,
++    "validation": 54
++  },
++  "dataset_hashes": {
++    "heldout": "af27b7b24712744415080ea555205eee6454678769eed09b44b44eaa64715f3d",
++    "train": "47dbc753e3796754f2bb917c5b05bedceef58a044280911607e92105774d6fe3",
++    "validation": "7ca0b3f4f0be51d3b6c769af8b88879fda2e49201e4a2ee5011c06a238435703"
++  },
++  "errors": [],
++  "examples_per_work": {
++    "max": 10,
++    "median": 4.0,
++    "min": 1,
++    "p10": 2,
++    "p90": 6
++  },
++  "fuzzy_duplicate_count": 0,
++  "fuzzy_duplicate_pairs": [],
++  "length_controls": {
++    "medium": 111,
++    "short": 262
++  },
++  "max_prompt_target_phrase_words": 2,
++  "prompt_classes": {
++    "descriptive": 239,
++    "sparse": 134
++  },
++  "prompt_target_overlap_distribution": {
++    "max": 2,
++    "median": 1,
++    "min": 0,
++    "p10": 0,
++    "p90": 1
++  },
++  "target_line_counts": {
++    "2": 54,
++    "3": 43,
++    "4": 129,
++    "5": 49,
++    "6": 55,
++    "7": 20,
++    "8": 23
++  },
++  "target_token_distribution": {
++    "max": 88,
++    "median": 35,
++    "min": 10,
++    "p10": 17,
++    "p90": 58
++  },
++  "target_word_distribution": {
++    "max": 74,
++    "median": 28,
++    "min": 9,
++    "p10": 13,
++    "p90": 46
++  },
++  "training_works": 84
++}
+diff --git a/scripts/analyze_l2.py b/scripts/analyze_l2.py
+new file mode 100644
+index 0000000..964976e
+--- /dev/null
++++ b/scripts/analyze_l2.py
+@@ -0,0 +1,30 @@
++"""Comparable B0/L1/L2 output-shape diagnostics on the frozen 50 prompts."""
++import argparse,json,statistics
++from pathlib import Path
++from scripts.analyze_outputs import analyze,content_lines
++from scripts.evaluate import norm_words
++from scripts.modeling import CONFIG
++from scripts.pipeline import write_json
++
++def quantiles(vals):
++    vals=sorted(vals)
++    return {'min':vals[0],'median':statistics.median(vals),'p90':vals[int(.9*(len(vals)-1))],'max':vals[-1]}
++def summarize(path,tokenizer=None):
++    x=analyze(path)
++    rows=[json.loads(s) for s in Path(path).read_text().splitlines()]
++    all_lengths=[len(norm_words(line)) for r in rows for line in content_lines(r['output'])]
++    x['line_length_distribution_words']=quantiles(all_lengths)
++    x['output_word_distribution']=quantiles([len(norm_words(r['output'])) for r in rows])
++    x['output_token_distribution']=quantiles([len(tokenizer(r['output'],add_special_tokens=False)['input_ids']) for r in rows]) if tokenizer else None
++    return x
++
++def main():
++    p=argparse.ArgumentParser();p.add_argument('--b0',required=True);p.add_argument('--l1',required=True);p.add_argument('--l2',required=True);p.add_argument('--out',required=True);p.add_argument('--tokenizer',action='store_true');a=p.parse_args()
++    tok=None
++    if a.tokenizer:
++        from transformers import AutoTokenizer
++        tok=AutoTokenizer.from_pretrained(CONFIG['model_id'],revision=CONFIG['model_revision'])
++    result={'B0':summarize(a.b0,tok),'L1':summarize(a.l1,tok),'L2':summarize(a.l2,tok)}
++    write_json(Path(a.out),result)
++    for name,x in result.items():print(name,{k:v for k,v in x.items() if k not in ('flagged_ids','per_prompt')})
++if __name__=='__main__':main()
+diff --git a/scripts/analyze_outputs.py b/scripts/analyze_outputs.py
+new file mode 100644
+index 0000000..b8eae35
+--- /dev/null
++++ b/scripts/analyze_outputs.py
+@@ -0,0 +1,49 @@
++"""Transparent diagnostics for fixed-prompt output shape; lexical hits are only hints."""
++from __future__ import annotations
++import argparse,json,re,statistics
++from collections import Counter
++from pathlib import Path
++from scripts.evaluate import norm_words
++from scripts.pipeline import write_json
++
++STOP={'write','about','something','short','long','medium','the','a','an','and','or','to','from','in','on','at','of','with','without','your','you','someone','somewhere','that','this','it','its','after','before','who','how','what','when','where','use','single','stanza','verse','chorus','refrain','feeling','feel','being','unable','not','no','one'}
++GENERIC=('there was','it was','i remember','i don’t know','i don\'t know','in my life','once upon','a long time','the world','the sun','the air','the darkness')
++META=('no dialogue','make it feel','the first part of the refrain','write a poem','here is','i will write','as an ai')
++
++def content_lines(text):return [x.strip() for x in text.splitlines() if x.strip()]
++def meaningful_words(prompt):
++    return {w for w in norm_words(prompt) if len(w)>=4 and w not in STOP}
++def analyze_row(row):
++    out=row['output'];lines=content_lines(out);lengths=[len(norm_words(x)) for x in lines]
++    words=norm_words(out);key=meaningful_words(row['prompt']);hits=key&set(words)
++    explicit_form=bool(row.get('form'))
++    return {'id':row['id'],'line_count':len(lines),'mean_line_words':round(statistics.mean(lengths),2) if lengths else 0,
++      'long_line_count':sum(n>25 for n in lengths),'prose_like':len(lines)<=3 or (statistics.mean(lengths)>20 if lengths else False),
++      'prompt_terms':sorted(key),'prompt_term_hits':sorted(hits),'no_prompt_term_hit':bool(key) and not hits,
++      'generic_phrase_hits':sum(out.casefold().count(g) for g in GENERIC),
++      'unexpected_section_label':not explicit_form and bool(re.search(r'(?im)^\s*(?:verse|chorus|bridge)(?:\s*\d+)?\s*:',out)),
++      'meta_instruction_hit':any(m in out.casefold() for m in META),
++      'unfinished_tail':bool(out) and out.rstrip()[-1].isalnum(),
++      'duplicate_lines':sum(n-1 for n in Counter(x.casefold() for x in lines).values() if n>1)}
++
++def analyze(path):
++    rows=[json.loads(x) for x in Path(path).read_text().splitlines()]
++    measures=[analyze_row(r) for r in rows]
++    return {'count':len(rows),'prose_like':sum(x['prose_like'] for x in measures),
++      'mean_content_lines':round(statistics.mean(x['line_count'] for x in measures),2),
++      'mean_line_words':round(statistics.mean(x['mean_line_words'] for x in measures),2),
++      'outputs_with_long_line':sum(x['long_line_count']>0 for x in measures),
++      'no_prompt_term_hit':sum(x['no_prompt_term_hit'] for x in measures),
++      'generic_phrase_hits':sum(x['generic_phrase_hits'] for x in measures),
++      'unexpected_section_labels':sum(x['unexpected_section_label'] for x in measures),
++      'meta_instruction_hits':sum(x['meta_instruction_hit'] for x in measures),
++      'unfinished_tails':sum(x['unfinished_tail'] for x in measures),
++      'duplicate_lines':sum(x['duplicate_lines'] for x in measures),
++      'flagged_ids':{k:[x['id'] for x in measures if x[k]] for k in ('prose_like','no_prompt_term_hit','meta_instruction_hit','unfinished_tail')},
++      'per_prompt':measures}
++
++if __name__=='__main__':
++    p=argparse.ArgumentParser();p.add_argument('--b0',required=True);p.add_argument('--l1',required=True);p.add_argument('--out',required=True);a=p.parse_args()
++    result={'B0':analyze(a.b0),'L1':analyze(a.l1)}
++    write_json(Path(a.out),result)
++    for name,x in result.items(): print(name,{k:v for k,v in x.items() if k not in ('flagged_ids','per_prompt')})
+diff --git a/scripts/blind_compare_l2.py b/scripts/blind_compare_l2.py
+new file mode 100644
+index 0000000..0a6747f
+--- /dev/null
++++ b/scripts/blind_compare_l2.py
+@@ -0,0 +1,24 @@
++"""Private, deterministic three-way blind packet; answer key stored separately."""
++import argparse,json,random
++from pathlib import Path
++from scripts.pipeline import write_json,write_jsonl
++
++def read(path):return {x['id']:x for x in (json.loads(line) for line in Path(path).read_text().splitlines())}
++def main():
++    p=argparse.ArgumentParser();p.add_argument('--b0',required=True);p.add_argument('--l1',required=True);p.add_argument('--l2',required=True);p.add_argument('--out',required=True);a=p.parse_args()
++    models={'B0':read(a.b0),'L1':read(a.l1),'L2':read(a.l2)}
++    ids=set(models['B0'])
++    if any(set(m)!=ids for m in models.values()):raise ValueError('Prompt sets differ')
++    rng=random.Random(161803);packet=[];key={}
++    for pid in sorted(ids):
++        prompt=models['B0'][pid]['prompt']
++        if any(m[pid]['prompt']!=prompt for m in models.values()):raise ValueError(f'Prompt changed: {pid}')
++        choices=list(models);rng.shuffle(choices)
++        record={'id':pid,'prompt':prompt,'A':models[choices[0]][pid]['output'],
++            'B':models[choices[1]][pid]['output'],'C':models[choices[2]][pid]['output']}
++        packet.append(record);key[pid]={'A':choices[0],'B':choices[1],'C':choices[2]}
++    out=Path(a.out);out.mkdir(parents=True,exist_ok=True)
++    write_jsonl(out/'review_packet.jsonl',packet);write_json(out/'answer_key.json',key)
++    (out/'rubric.md').write_text('''# Blind B0/L1/L2 comparison\n\nRead A, B and C for each prompt before opening `answer_key.json`. Rate each output 1–5 for target-style feel, unusual phrasing, imagery, cadence, ambiguity, originality, prompt fit and overall preference. Note copying concerns or malformed text. Preserve the answer key separately until scoring is complete. These are generated outputs; source lyrics are not included.\n''')
++    print(f'{len(packet)} blinded prompts')
++if __name__=='__main__':main()
+diff --git a/scripts/build_l2.py b/scripts/build_l2.py
+new file mode 100644
+index 0000000..690afbe
+--- /dev/null
++++ b/scripts/build_l2.py
+@@ -0,0 +1,192 @@
++"""Build short, grounded L2 supervision from the frozen complete-work split."""
++from __future__ import annotations
++import difflib, json, re, unicodedata
++from collections import Counter,defaultdict
++from pathlib import Path
++from scripts.modeling import ROOT,CONFIG
++from scripts.pipeline import SECTION,sha,words,write_json,write_jsonl
++
++# Each label has auditable word evidence. Prompts use a category, not target phrases.
++TAGS={
++ 'water':{'water','rain','river','sea','ocean','creek','flood','drown','shore','wet','waves'},
++ 'winter':{'ice','snow','frozen','cold','winter','frost'},
++ 'memory':{'memory','memories','remember','forget','forgot','recall','recognize','name'},
++ 'leaving':{'leave','left','leaving','gone','away','return','returning','home','stay'},
++ 'light':{'sun','light','shadow','moon','night','dark','darkness','stars','star'},
++ 'body':{'hand','hands','teeth','blood','skin','face','mouth','eyes','head','tongue','bone'},
++ 'enclosure':{'room','wall','walls','door','window','house','bed','inside','prison','cell'},
++ 'doubt':{'lie','lies','truth','true','believe','wrong','trust','doubt'},
++ 'distance':{'far','apart','alone','empty','missing','lost','lonely'},
++ 'change':{'change','changed','changing','different','difference','break','broken','fall','falling','fade','fading','turn'},
++ 'sound':{'voice','sound','silence','scream','sing','singing','noise','quiet','echo'},
++ 'movement':{'walk','walking','run','running','crawl','road','drive','train','steps'},
++ 'time':{'time','years','year','old','young','before','after','past','future'},
++ 'belief':{'god','cross','pray','saint','sin','soul','heaven','faith'},
++ 'damage':{'cut','wound','scar','poison','burn','fire','crack','bruise','destroyed','destroy','crushing'},
++ 'touch':{'touch','hold','holding','kiss','embrace'},
++ 'attachment':{'love','lover','beloved','heart','kiss','darling','sweetheart'},
++ 'guilt':{'guilt','blame','regret','sorry','shame','fault'},
++ 'understanding':{'understand','understanding','answer','answers','question','questions','realize'},
++ 'fear':{'scared','afraid','fear','panic','terror','nervous','frightened'},
++ 'judgment':{'evaluate','judge','judged','criticism','proof','prove','testimonial'},
++ 'exchange':{'money','cash','price','buy','sell','sold','compensated','commercial'},
++ 'meaning':{'meaning','meaningful','mattered','matters','matter','purpose','consequence'},
++ 'mind':{'mind','conscience','instincts','thought','thoughts','dream'},
++ 'release':{'surrender','release','released','letting','strayed'},
++ 'disappearance':{'disappeared','vanished','vanish','vanishing'},
++}
++DESCRIPTIONS={
++ 'water':'water','winter':'cold or snow','memory':'uncertain memory','leaving':'leaving or returning',
++ 'light':'light and darkness','body':'the body','enclosure':'an enclosed place','doubt':'doubt or mistrust',
++ 'distance':'distance from someone','change':'something changing','sound':'a sound or silence',
++ 'movement':'movement through a place','time':'time passing','belief':'belief or faith',
++ 'damage':'damage or injury','touch':'physical closeness',
++ 'attachment':'attachment to someone','guilt':'guilt or blame','understanding':'trying to understand something',
++ 'fear':'fear','judgment':'being judged','exchange':'money or exchange',
++ 'meaning':'what matters','mind':'the mind or a dream','release':'letting go',
++ 'disappearance':'disappearance',
++}
++PRIORITY=['water','winter','enclosure','body','light','sound','damage','movement','memory','fear','guilt','attachment','leaving','disappearance','doubt','distance','change','belief','touch','judgment','exchange','meaning','mind','release','understanding','time']
++STOP={'about','after','again','always','before','because','could','every','going','have','just','know','like','more','never','nothing','only','other','right','some','something','still','their','there','these','they','thing','things','through','would','your','youre','with','without','this','that','what','when','where','were','from','into','then','them','dont','cant','will','want','make','take','ever','here','been','once','while','which','everything','anything','everybody','completely','exactly','already','particularly','particular'}
++ANNOTATION=re.compile(r'^\s*\((?:chorus|verse|bridge|outro|pre-chorus|post-chorus)(?:\s*\d+)?\)\s*$',re.I)
++FALLBACK_CONCRETE={'compass','concrete','gunpowder','courtyard','fingerprint','picture','ransom',
++    'children','california','disaster','comfort','heartaches','buried','crying','jumping','borrowed'}
++
++
++def normalized(text):
++    return [w.casefold().replace('’',"'") for w in words(text)]
++def similarity(a,b):
++    aa=normalized(a);bb=normalized(b)
++    if not aa or not bb:return 0.0
++    return difflib.SequenceMatcher(None,aa,bb,autojunk=False).ratio()
++def source_sections(path:Path):
++    lines=path.read_text(encoding='utf-8-sig').splitlines()
++    try: opener=lines.index('```text'); closer=lines.index('```',opener+1)
++    except ValueError as exc: raise ValueError(f'Missing lyric fence: {path}') from exc
++    result=[];current=[];label=None
++    def flush():
++        if current:result.append({'label':label,'records':current.copy()})
++    for idx in range(opener+1,closer):
++        line=lines[idx]
++        match=SECTION.fullmatch(line)
++        if match:
++            flush();current=[];label=match.group(1)
++        else:current.append((idx+1,unicodedata.normalize('NFC',line.rstrip())))
++    flush()
++    return result,lines
++
++def stanza_chunks(records):
++    stanzas=[];current=[]
++    for number,line in records:
++        if line.strip():current.append((number,line))
++        elif current:stanzas.append(current);current=[]
++    if current:stanzas.append(current)
++    for stanza in stanzas:
++        if len(stanza)<2:continue
++        if len(stanza)<=8:yield stanza
++        else:
++            for start in range(0,len(stanza),6):
++                chunk=stanza[start:start+6]
++                if len(chunk)>=2:yield chunk
++
++def tags_for(text):
++    toks=set(normalized(text));found=[];evidence={}
++    for tag in PRIORITY:
++        hits=sorted(toks&TAGS[tag])
++        if hits:found.append(tag);evidence[tag]=hits
++    return found,evidence
++
++def fallback_word(text):
++    candidates=[w for w in normalized(text) if w in FALLBACK_CONCRETE]
++    counts=Counter(candidates)
++    return min(counts, key=lambda w:(counts[w],-len(w),w)) if counts else None
++
++def prompt_for(passage_id,text):
++    tags,evidence=tags_for(text)
++    h=int(sha(f'class:{CONFIG["seed"]}:{passage_id}'.encode())[:8],16)%100
++    klass='descriptive' if h<65 else 'sparse'
++    if klass=='sparse':
++        if tags:prompt=DESCRIPTIONS[tags[0]]
++        else:prompt=fallback_word(text)
++        selected=tags[:1]
++    else:
++        if len(tags)>=2:
++            prompt=f'write something short involving {DESCRIPTIONS[tags[0]]} and {DESCRIPTIONS[tags[1]]}'
++            selected=tags[:2]
++        elif tags:
++            prompt=f'write something short and indirect about {DESCRIPTIONS[tags[0]]}'
++            selected=tags[:1]
++        else:
++            fallback=fallback_word(text)
++            prompt=f'write something short involving {fallback}' if fallback else None
++            selected=[]
++    return prompt,klass,selected,{tag:evidence[tag] for tag in selected}
++
++def build():
++    manifest=json.loads((ROOT/'corpus/metadata/manifest.json').read_text())
++    rows={x:[] for x in ('train','validation','heldout')}
++    audit={'source_works':len(manifest),'raw_sections':0,'repeat_sections_skipped':0,'near_repeat_sections_skipped':0,
++           'single_line_stanzas_skipped':0,'near_repeat_passages_skipped':0,'internal_repetition_skipped':0,
++           'ungrounded_prompt_skipped':0,'annotation_passage_skipped':0,'work_cap_dropped':0}
++    for work in manifest:
++        path=ROOT/work['source_path'];source,source_lines=source_sections(path)
++        split=work['split'];work_rows=[];seen_sections=[];seen_passages=[]
++        for section_index,section in enumerate(source):
++            audit['raw_sections']+=1
++            section_text='\n'.join(line for _,line in section['records'] if line.strip())
++            if not section_text:continue
++            ratios=[similarity(section_text,old) for old in seen_sections]
++            if ratios and max(ratios)>=0.88 and min(len(normalized(section_text)),len(normalized(seen_sections[ratios.index(max(ratios))])))>=10:
++                audit['repeat_sections_skipped' if max(ratios)==1 else 'near_repeat_sections_skipped']+=1
++                continue
++            seen_sections.append(section_text)
++            audit['single_line_stanzas_skipped']+=sum(1 for s in _stanzas(section['records']) if len(s)==1)
++            for chunk_index,chunk in enumerate(stanza_chunks(section['records'])):
++                target='\n'.join(line for _,line in chunk)
++                if len(words(target))<7:continue
++                if any(ANNOTATION.fullmatch(line) for _,line in chunk):
++                    audit['annotation_passage_skipped']+=1;continue
++                distinct=[]
++                for _,line in chunk:
++                    if not any(similarity(line,old)>=0.85 for old in distinct):distinct.append(line)
++                if len(distinct)/len(chunk)<0.75:
++                    audit['internal_repetition_skipped']+=1;continue
++                if any(similarity(target,old)>=0.88 for old in seen_passages):
++                    audit['near_repeat_passages_skipped']+=1;continue
++                seen_passages.append(target)
++                start,end=chunk[0][0],chunk[-1][0]
++                passage_id=f"{work['work_id']}:{start}-{end}"
++                prompt,klass,tags,evidence=prompt_for(passage_id,target)
++                if prompt is None:
++                    audit['ungrounded_prompt_skipped']+=1;continue
++                row={'id':passage_id,'work_id':work['work_id'],'split':split,'source_path':work['source_path'],
++                    'source_sha256':work['source_sha256'],'source_line_start':start,'source_line_end':end,
++                    'source_line_numbers':[n for n,_ in chunk],'section_label':section['label'],
++                    'section_index':section_index,'target':target,'target_sha256':sha(target.encode()),
++                    'target_line_count':len(chunk),'prompt':prompt,'prompt_class':klass,
++                    'length_control':'short' if len(chunk)<=4 or len(words(target))<=30 else 'medium',
++                    'prompt_tags':tags,'prompt_evidence':evidence}
++                # Verify every target line against the unmodified Markdown file.
++                if [source_lines[n-1].rstrip() for n,_ in chunk]!=[line for _,line in chunk]:
++                    raise ValueError(f'Provenance line mismatch: {passage_id}')
++                work_rows.append(row)
++        if not work_rows: raise ValueError(f'No L2 passage from {work["work_id"]}')
++        if len(work_rows)>10:
++            work_rows=sorted(work_rows,key=lambda r:sha(f'select:{CONFIG["seed"]}:{r["id"]}'.encode()))[:10]
++            audit['work_cap_dropped']+=len(seen_passages)-10
++            work_rows.sort(key=lambda r:r['source_line_start'])
++        rows[split].extend(work_rows)
++    for split,items in rows.items():write_jsonl(ROOT/'data/l2'/f'{split}.jsonl',items)
++    hashes={split:sha((ROOT/'data/l2'/f'{split}.jsonl').read_bytes()) for split in rows}
++    write_json(ROOT/'corpus/metadata/l2_dataset.json',{'config':{'section_near_duplicate_threshold':0.88,'passage_near_duplicate_threshold':0.88,'max_passages_per_work':10,'descriptive_class_threshold_percent':65},'audit':audit,'counts':{k:len(v) for k,v in rows.items()},'hashes':hashes})
++    return {'audit':audit,'counts':{k:len(v) for k,v in rows.items()},'hashes':hashes}
++
++def _stanzas(records):
++    out=[];current=[]
++    for number,line in records:
++        if line.strip():current.append((number,line))
++        elif current:out.append(current);current=[]
++    if current:out.append(current)
++    return out
++
++if __name__=='__main__':print(json.dumps(build(),indent=2))
+diff --git a/scripts/eval_l2_loss.py b/scripts/eval_l2_loss.py
+new file mode 100644
+index 0000000..469af56
+--- /dev/null
++++ b/scripts/eval_l2_loss.py
+@@ -0,0 +1,25 @@
++"""Completion-only loss on the fixed L2 passage probes, never used for training."""
++import argparse,json,statistics
++from collections import defaultdict
++from pathlib import Path
++from scripts.modeling import ROOT,CONFIG,load_model
++from scripts.pipeline import write_json
++from scripts.train import batchify
++from scripts.train_l2 import prepare,rows
++
++def main():
++    import torch
++    p=argparse.ArgumentParser();p.add_argument('--adapter');p.add_argument('--split',choices=('validation','heldout'),default='heldout');p.add_argument('--out',required=True);a=p.parse_args()
++    passages=rows(a.split);tok,model=load_model(a.adapter)
++    losses=[];by_work=defaultdict(list)
++    with torch.inference_mode():
++        for row in passages:
++            batch=batchify(tok,[prepare(tok,row)],model.device)
++            value=float(model(**batch).loss)
++            losses.append(value);by_work[row['work_id']].append(value)
++    result={'base_id':CONFIG['model_id'],'base_revision':CONFIG['model_revision'],'adapter':a.adapter,
++      'split':a.split,'passages':len(passages),'works':len(by_work),
++      'mean_passage_loss':round(statistics.mean(losses),5),
++      'mean_work_loss':round(statistics.mean(statistics.mean(v) for v in by_work.values()),5)}
++    write_json(Path(a.out),result);print(json.dumps(result,indent=2))
++if __name__=='__main__':main()
+diff --git a/scripts/evaluate.py b/scripts/evaluate.py
+index df144af..051d9d0 100644
+--- a/scripts/evaluate.py
++++ b/scripts/evaluate.py
+@@ -68,7 +68,13 @@ def run_generation(adapter,output_dir,limit=None):
+         if (i+1)%10==0: print(f'generated {i+1}/{len(prompts)}',flush=True)
+     output_dir.mkdir(parents=True,exist_ok=True)
+     write_jsonl(output_dir/'generations.jsonl',rows)
+-    write_json(output_dir/'run.json',{'model_id':CONFIG['model_id'],'model_revision':CONFIG['model_revision'],'adapter':adapter,'dataset_hashes':json.loads((ROOT/'corpus/metadata/dataset_hashes.json').read_text()),'generation':{'temperature':0.85,'top_p':0.92,'repetition_penalty':1.08,'max_new_tokens':'by length category'},'prompts_sha256':sha((ROOT/'data/eval/prompts.json').read_bytes())})
++    run={'model_id':CONFIG['model_id'],'model_revision':CONFIG['model_revision'],'adapter':adapter,
++         'dataset_hashes':json.loads((ROOT/'corpus/metadata/dataset_hashes.json').read_text()),
++         'generation':{'temperature':0.85,'top_p':0.92,'repetition_penalty':1.08,'max_new_tokens':'by length category'},
++         'prompts_sha256':sha((ROOT/'data/eval/prompts.json').read_bytes())}
++    if adapter and '/l2/' in f'/{adapter}/':
++        run['l2_dataset_hashes']=json.loads((ROOT/'corpus/metadata/l2_dataset.json').read_text())['hashes']
++    write_json(output_dir/'run.json',run)
+     print(json.dumps(evaluate(output_dir/'generations.jsonl',output_dir),indent=2))
+ 
+ if __name__=='__main__':
+diff --git a/scripts/qa_l2.py b/scripts/qa_l2.py
+new file mode 100644
+index 0000000..a075d48
+--- /dev/null
++++ b/scripts/qa_l2.py
+@@ -0,0 +1,77 @@
++"""Audit frozen L2 passages, provenance, duplication, leakage and prompt grounding."""
++from __future__ import annotations
++import argparse,difflib,json,statistics,unicodedata
++from collections import Counter
++from pathlib import Path
++from scripts.modeling import ROOT,CONFIG
++from scripts.pipeline import sha,words,write_json
++from scripts.build_l2 import normalized
++
++def load(split):return [json.loads(x) for x in (ROOT/'data/l2'/f'{split}.jsonl').read_text().splitlines()]
++def quantiles(vals):
++    vals=sorted(vals)
++    return {'min':vals[0],'p10':vals[int(.1*(len(vals)-1))],'median':statistics.median(vals),'p90':vals[int(.9*(len(vals)-1))],'max':vals[-1]}
++def longest_overlap(a,b):
++    a=normalized(a);b=normalized(b)
++    return difflib.SequenceMatcher(None,a,b,autojunk=False).find_longest_match(0,len(a),0,len(b)).size
++
++def main():
++    p=argparse.ArgumentParser();p.add_argument('--tokenizer',action='store_true');a=p.parse_args()
++    manifest={x['work_id']:x for x in json.loads((ROOT/'corpus/metadata/manifest.json').read_text())}
++    by_split={s:load(s) for s in ('train','validation','heldout')};all_rows=[r for x in by_split.values() for r in x]
++    errors=[];source_cache={};seen_id=set();seen_target={}
++    for split,rows in by_split.items():
++        for r in rows:
++            wid=r['work_id'];m=manifest[wid]
++            if m['split']!=split or r['split']!=split: errors.append(f'split:{r["id"]}')
++            if r['id'] in seen_id: errors.append(f'duplicate-id:{r["id"]}')
++            seen_id.add(r['id'])
++            path=ROOT/r['source_path']
++            if path not in source_cache:source_cache[path]=(path.read_bytes(),path.read_text(encoding='utf-8-sig').splitlines())
++            raw,lines=source_cache[path]
++            if sha(raw)!=r['source_sha256'] or sha(raw)!=m['source_sha256']: errors.append(f'source-hash:{r["id"]}')
++            nums=r['source_line_numbers'];target_lines=r['target'].splitlines()
++            if len(nums)!=len(target_lines) or len(nums)!=r['target_line_count'] or not 2<=len(nums)<=8:errors.append(f'line-count:{r["id"]}')
++            if nums!=list(range(nums[0],nums[-1]+1)):errors.append(f'noncontiguous:{r["id"]}')
++            if [unicodedata.normalize('NFC',lines[n-1].rstrip()) for n in nums]!=target_lines:errors.append(f'provenance:{r["id"]}')
++            if sha(r['target'].encode())!=r['target_sha256']: errors.append(f'target-hash:{r["id"]}')
++            if r['length_control'] not in ('short','medium'): errors.append(f'length-control:{r["id"]}')
++            norm=' '.join(normalized(r['target']))
++            if norm in seen_target:errors.append(f'exact-target-duplicate:{r["id"]}:{seen_target[norm]}')
++            seen_target[norm]=r['id']
++            toks=set(normalized(r['target']))
++            if any(not set(hits)<=toks for hits in r['prompt_evidence'].values()):errors.append(f'ungrounded-tag:{r["id"]}')
++            if not r['prompt_tags'] and r['prompt'].split()[-1] not in toks:errors.append(f'ungrounded-fallback:{r["id"]}')
++            if longest_overlap(r['prompt'],r['target'])>=4:errors.append(f'prompt-copy:{r["id"]}')
++    ids={s:{r['work_id'] for r in rows} for s,rows in by_split.items()}
++    if any(ids[a]&ids[b] for a,b in [('train','validation'),('train','heldout'),('validation','heldout')]):errors.append('work-leakage')
++    if ids['train']!={x['work_id'] for x in manifest.values() if x['split']=='train'}:errors.append('training-coverage')
++    # Candidate-filtered fuzzy duplicates among all target passages.
++    fuzzy=[];tokens=[normalized(r['target']) for r in all_rows];sets=[set(t) for t in tokens]
++    for i in range(len(all_rows)):
++        for j in range(i+1,len(all_rows)):
++            if len(sets[i]&sets[j])/max(1,len(sets[i]|sets[j]))<.72:continue
++            ratio=difflib.SequenceMatcher(None,tokens[i],tokens[j],autojunk=False).ratio()
++            if ratio>=.88:fuzzy.append({'a':all_rows[i]['id'],'b':all_rows[j]['id'],'same_work':all_rows[i]['work_id']==all_rows[j]['work_id'],'cross_split':all_rows[i]['split']!=all_rows[j]['split'],'ratio':round(ratio,3)})
++    if any(x['cross_split'] for x in fuzzy):errors.append('cross-split-fuzzy-duplicate')
++    classes=Counter(r['prompt_class'] for r in by_split['train']);perwork=Counter(r['work_id'] for r in by_split['train'])
++    length_controls=Counter(r['length_control'] for r in by_split['train'])
++    lengths=Counter(r['target_line_count'] for r in by_split['train'])
++    prompt_overlaps=[longest_overlap(r['prompt'],r['target']) for r in by_split['train']]
++    token_dist=None
++    if a.tokenizer:
++        from transformers import AutoTokenizer
++        tok=AutoTokenizer.from_pretrained(CONFIG['model_id'],revision=CONFIG['model_revision'])
++        token_dist=quantiles([len(tok(r['target'],add_special_tokens=False)['input_ids']) for r in by_split['train']])
++    result={'counts':{s:len(rows) for s,rows in by_split.items()},'training_works':len(ids['train']),
++       'prompt_classes':dict(classes),'length_controls':dict(length_controls),'target_line_counts':dict(sorted(lengths.items())),
++       'target_word_distribution':quantiles([len(words(r['target'])) for r in by_split['train']]),
++       'target_token_distribution':token_dist,'examples_per_work':quantiles(list(perwork.values())),
++       'max_prompt_target_phrase_words':max(prompt_overlaps),'prompt_target_overlap_distribution':quantiles(prompt_overlaps),
++       'fuzzy_duplicate_pairs':fuzzy,'fuzzy_duplicate_count':len(fuzzy),
++       'dataset_hashes':{s:sha((ROOT/'data/l2'/f'{s}.jsonl').read_bytes()) for s in by_split},
++       'errors':errors}
++    write_json(ROOT/'corpus/metadata/l2_qa.json',result)
++    print(json.dumps({k:v for k,v in result.items() if k not in ('fuzzy_duplicate_pairs','dataset_hashes')},indent=2))
++    if errors:raise SystemExit(1)
++if __name__=='__main__':main()
+diff --git a/scripts/train_l2.py b/scripts/train_l2.py
+new file mode 100644
+index 0000000..ac82381
+--- /dev/null
++++ b/scripts/train_l2.py
+@@ -0,0 +1,115 @@
++"""L2 passage-level LoRA training from the same pinned base, with work-safe data."""
++from __future__ import annotations
++import argparse,json,random,time
++from pathlib import Path
++from scripts.modeling import ROOT,CONFIG,format_prompt
++from scripts.pipeline import sha,write_json
++from scripts.train import batchify,gpu_snapshot
++
++L2={'seed':CONFIG['seed']+2,'max_sequence_length':256,'lora_rank':8,'lora_alpha':16,'lora_dropout':0.10,
++    'learning_rate':6e-5,'weight_decay':0.01,'batch_size':2,'gradient_accumulation_steps':4,
++    'max_steps':250,'eval_steps':50,'save_steps':50,'min_steps':150,'early_stop_patience':2,
++    'early_stop_margin':0.02}
++
++def rows(split):return [json.loads(x) for x in (ROOT/'data/l2'/f'{split}.jsonl').read_text().splitlines()]
++def prepare(tokenizer,row):
++    prefix=format_prompt(row['prompt'],row['length_control'])
++    ids=tokenizer(prefix+row['target']+tokenizer.eos_token,add_special_tokens=False,truncation=True,max_length=L2['max_sequence_length'])['input_ids']
++    n=len(tokenizer(prefix,add_special_tokens=False)['input_ids'])
++    if len(ids)<=n or len(ids)>=L2['max_sequence_length']:raise ValueError(f'Truncated L2 target: {row["id"]}')
++    return {'input_ids':ids,'attention_mask':[1]*len(ids),'labels':[-100]*n+ids[n:]}
++
++def batch_indices(train_rows,step,micro):
++    count=len(train_rows);indices=[]
++    for j in range(L2['batch_size']):
++        position=(step*L2['gradient_accumulation_steps']+micro)*L2['batch_size']+j
++        epoch,offset=divmod(position,count)
++        order=list(range(count));random.Random(L2['seed']+epoch).shuffle(order)
++        indices.append(order[offset])
++    return indices
++
++def main():
++    import torch
++    from transformers import AutoTokenizer,AutoModelForCausalLM,get_linear_schedule_with_warmup
++    from peft import LoraConfig,get_peft_model,PeftModel,TaskType
++    p=argparse.ArgumentParser();p.add_argument('--out',required=True);p.add_argument('--smoke',action='store_true');p.add_argument('--resume',action='store_true');a=p.parse_args()
++    if not torch.cuda.is_available():raise RuntimeError('CUDA unavailable')
++    torch.manual_seed(L2['seed']);torch.cuda.manual_seed_all(L2['seed']);random.seed(L2['seed'])
++    out=Path(a.out);out.mkdir(parents=True,exist_ok=True)
++    train=rows('train');val=rows('validation');held=rows('heldout')
++    assert {r['work_id'] for r in train}.isdisjoint({r['work_id'] for r in val+held})
++    tok=AutoTokenizer.from_pretrained(CONFIG['model_id'],revision=CONFIG['model_revision']);tok.pad_token=tok.eos_token
++    # Pre-tokenize once: the dataset is small and exact input lengths are a QA gate.
++    train_prepared=[prepare(tok,r) for r in train]
++    val_prepared=[prepare(tok,r) for r in val]
++    held_prepared=[prepare(tok,r) for r in held]
++    model=AutoModelForCausalLM.from_pretrained(CONFIG['model_id'],revision=CONFIG['model_revision'],dtype=torch.bfloat16,attn_implementation='sdpa')
++    model.config.use_cache=False;model.gradient_checkpointing_enable();model.enable_input_require_grads();model.to('cuda')
++    state_file=out/'optimizer.pt';last_adapter=out/'last'
++    if a.resume and state_file.exists():model=PeftModel.from_pretrained(model,last_adapter,is_trainable=True)
++    else:model=get_peft_model(model,LoraConfig(r=L2['lora_rank'],lora_alpha=L2['lora_alpha'],lora_dropout=L2['lora_dropout'],
++        target_modules=['q_proj','v_proj'],bias='none',task_type=TaskType.CAUSAL_LM))
++    model.train()
++    opt=torch.optim.AdamW((p for p in model.parameters() if p.requires_grad),lr=L2['learning_rate'],weight_decay=L2['weight_decay'])
++    steps=2 if a.smoke else L2['max_steps'];accum=L2['gradient_accumulation_steps']
++    scheduler=get_linear_schedule_with_warmup(opt,max(1,round(steps*.1)),steps)
++    start=0;best_val=float('inf');worse=0
++    if a.resume and state_file.exists():
++        state=torch.load(state_file,map_location='cpu',weights_only=False)
++        opt.load_state_dict(state['optimizer']);scheduler.load_state_dict(state['scheduler']);start=state['step']
++        best_val=state['best_val'];worse=state['worse']
++        torch.set_rng_state(state['torch_rng']);torch.cuda.set_rng_state_all(state['cuda_rng'])
++    dataset_hashes={s:sha((ROOT/'data/l2'/f'{s}.jsonl').read_bytes()) for s in ('train','validation','heldout')}
++    manifest={'base_id':CONFIG['model_id'],'base_revision':CONFIG['model_revision'],'l2_config':L2,
++      'dataset_hashes':dataset_hashes,'train_examples':len(train),'train_works':len({r['work_id'] for r in train}),
++      'validation_examples':len(val),'heldout_examples':len(held),'smoke':a.smoke,
++      'started_at_utc':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'checkpoints':[]}
++    if not a.resume:write_json(out/'run.json',manifest)
++    else:manifest=json.loads((out/'run.json').read_text())
++    start_time=time.time();log=out/'metrics.jsonl'
++    def evaluate(examples):
++        model.eval();losses=[]
++        with torch.inference_mode():
++            for ex in examples:
++                b=batchify(tok,[ex],'cuda')
++                with torch.autocast('cuda',dtype=torch.bfloat16):losses.append(float(model(**b).loss))
++        model.train();return sum(losses)/len(losses)
++    for step in range(start,steps):
++        opt.zero_grad(set_to_none=True);losses=[]
++        for micro in range(accum):
++            indices=batch_indices(train,step,micro)
++            b=batchify(tok,[train_prepared[i] for i in indices],'cuda')
++            with torch.autocast('cuda',dtype=torch.bfloat16):loss=model(**b).loss/accum
++            loss.backward();losses.append(float(loss.detach())*accum)
++        torch.nn.utils.clip_grad_norm_(model.parameters(),1.0)
++        opt.step();scheduler.step();n=step+1
++        checkpoint=a.smoke or n%L2['eval_steps']==0 or n==steps
++        record={'step':n,'effective_epochs':round(n*accum*L2['batch_size']/len(train),3),
++          'train_loss':round(sum(losses)/len(losses),5),'lr':scheduler.get_last_lr()[0],
++          'elapsed_seconds':round(time.time()-start_time,2)}
++        if checkpoint:
++            record.update({'validation_loss':round(evaluate(val_prepared),5),'heldout_loss':round(evaluate(held_prepared),5),
++                'gpu':gpu_snapshot(),'peak_allocated_mib':round(torch.cuda.max_memory_allocated()/2**20,1)})
++            if record['validation_loss']<best_val:
++                best_val=record['validation_loss'];worse=0
++            elif record['validation_loss']>best_val+L2['early_stop_margin']:worse+=1
++            else:worse=0
++            cp=out/f'checkpoint-{n:03d}';model.save_pretrained(cp,safe_serialization=True)
++            model.save_pretrained(last_adapter,safe_serialization=True)
++            adapter_hash=sha((cp/'adapter_model.safetensors').read_bytes())
++            record['adapter_sha256']=adapter_hash
++            manifest['checkpoints'].append({'step':n,'adapter_sha256':adapter_hash,'validation_loss':record['validation_loss'],
++                'heldout_loss':record['heldout_loss']})
++            write_json(out/'run.json',manifest)
++            torch.save({'step':n,'optimizer':opt.state_dict(),'scheduler':scheduler.state_dict(),
++                'torch_rng':torch.get_rng_state(),'cuda_rng':torch.cuda.get_rng_state_all(),
++                'best_val':best_val,'worse':worse},state_file)
++        with log.open('a') as f:f.write(json.dumps(record)+'\n')
++        if checkpoint:print(json.dumps(record),flush=True)
++        if not a.smoke and checkpoint and n>=L2['min_steps'] and worse>=L2['early_stop_patience']:
++            print(f'early-stop at {n}: validation deterioration',flush=True);break
++    manifest['finished_at_utc']=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())
++    manifest['wall_time_seconds']=round(time.time()-start_time,2);manifest['completed_steps']=n
++    write_json(out/'run.json',manifest)
++    print(f'complete {out}: {n} updates in {manifest["wall_time_seconds"]} s',flush=True)
++if __name__=='__main__':main()
+diff --git a/tests/test_l2.py b/tests/test_l2.py
+new file mode 100644
+index 0000000..35f9265
+--- /dev/null
++++ b/tests/test_l2.py
+@@ -0,0 +1,30 @@
++import json
++from collections import Counter
++from scripts.build_l2 import build,prompt_for,source_sections
++from scripts.modeling import ROOT
++from scripts.qa_l2 import longest_overlap,load
++from scripts.pipeline import sha
++
++def test_l2_deterministic_work_boundaries_and_provenance():
++    first=build();second=build()
++    assert first['hashes']==second['hashes']
++    manifest={x['work_id']:x for x in json.loads((ROOT/'corpus/metadata/manifest.json').read_text())}
++    train=load('train');validation=load('validation');heldout=load('heldout')
++    assert {x['work_id'] for x in train}=={w for w,m in manifest.items() if m['split']=='train'}
++    assert not ({x['work_id'] for x in train}&{x['work_id'] for x in validation+heldout})
++    assert len({x['id'] for x in train+validation+heldout})==len(train+validation+heldout)
++    for row in train+validation+heldout:
++        source=(ROOT/row['source_path']).read_text(encoding='utf-8-sig').splitlines()
++        assert row['target'].splitlines()==[source[n-1] for n in row['source_line_numbers']]
++        assert sha(row['target'].encode())==row['target_sha256']
++        assert 2<=row['target_line_count']<=8
++        assert longest_overlap(row['prompt'],row['target'])<4
++
++def test_l2_prompt_classes_and_grounding():
++    rows=load('train');classes=Counter(x['prompt_class'] for x in rows)
++    assert .6 <= classes['descriptive']/len(rows) <= .7
++    assert .3 <= classes['sparse']/len(rows) <= .4
++    assert all(x['prompt'] and x['target'] and x['source_line_start']<=x['source_line_end'] for x in rows)
++    prompt,klass,tags,evidence=prompt_for('sample:1-2','Rain in a room, your hand at the door')
++    assert tags and all(evidence.values())
++    assert prompt and klass in ('descriptive','sparse')

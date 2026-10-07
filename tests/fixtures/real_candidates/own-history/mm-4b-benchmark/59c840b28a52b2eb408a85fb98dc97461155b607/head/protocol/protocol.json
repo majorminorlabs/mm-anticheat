@@ -1,0 +1,20 @@
+{
+  "protocol_version": "qualification-v1.0.0",
+  "stage": "reference_model_qualification",
+  "hardware": {"host": "ThinkPad T14 Gen 2a", "cpu": "AMD Ryzen 7 PRO 5850U", "usable_ram_gib": 14.5, "os": "Pop!_OS 24.04", "gpu": "AMD Radeon Graphics (RADV RENOIR)"},
+  "backend": "llama.cpp Vulkan/RADV",
+  "context_ceiling_tokens": 16384,
+  "quantization": "Q4_K_M",
+  "temperature": 0,
+  "seed": "fixed_where_supported",
+  "internet_during_runs": false,
+  "external_tools": "deterministic_simulator_only",
+  "human_intervention": false,
+  "primary_metric": "agent_capability_score",
+  "secondary_metrics": ["catastrophic_action_rate", "task_completion_rate", "ram_usage", "swap_usage", "prompt_processing_tok_s", "generation_tok_s", "wall_time"],
+  "initial_round": {"models": 4, "tasks": 7, "repetitions": 1, "runs": 28},
+  "finalist_round": {"models": 2, "tasks": 7, "additional_repetitions": 2, "runs": 28, "launch_automatically": false},
+  "scoring": {"max_points": 80, "llm_judge": false, "human_judgment": "none in v1"},
+  "resource_eligibility": {"available_ram_min_gib": 5.0, "model_inference_swap_allowed": false, "memory_instability_allowed": false, "baseline_swap_must_be_distinguished": true, "status": "frozen"},
+  "stop_before": ["candidate_download", "real_model_runs", "winner_selection", "MM-Agent_harness_comparison"]
+}

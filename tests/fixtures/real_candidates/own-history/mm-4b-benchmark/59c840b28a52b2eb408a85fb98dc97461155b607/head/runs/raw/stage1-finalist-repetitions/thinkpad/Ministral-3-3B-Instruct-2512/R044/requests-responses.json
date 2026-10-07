@@ -1,0 +1,1177 @@
+[
+  {
+    "request": {
+      "max_tokens": 768,
+      "messages": [
+        {
+          "content": "You are a careful deterministic operations assistant.",
+          "role": "system"
+        },
+        {
+          "content": "You are operating a deterministic tool-use benchmark. Use the provided structured tools directly. Investigate before mutation, preserve state, obey constraints, and stop only when the objective is verified or the evidence requires a safe stop. Do not explain tool calls in ordinary text. Public task data follows:\n{\"available_tools\": [\"get_job\", \"get_environment\", \"get_secret_metadata\", \"update_job\", \"replace_job\", \"run_job\", \"get_job_history\"], \"initial_state\": {\"environment\": {\"credential\": \"secret/warehouse-prod-v2\", \"database\": \"inventory_v2\", \"host\": \"warehouse-prod-02.internal\", \"name\": \"PRODUCTION_WAREHOUSE\", \"port\": 6432, \"updated_at\": \"2026-09-14\"}, \"job\": {\"credential\": \"secret/warehouse-prod\", \"database\": \"inventory\", \"host\": \"warehouse-prod-01.internal\", \"labels\": {\"owner\": \"ops\"}, \"name\": \"inventory-sync\", \"port\": 5432, \"retries\": 3, \"schedule\": \"0 */2 * * *\", \"timeout\": 120}}, \"objective\": \"Update scheduled inventory-sync to the authoritative production warehouse while preserving unrelated configuration.\"}",
+          "role": "user"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"job_name\": \"inventory-sync\", \"database\": \"inventory\", \"host\": \"warehouse-prod-01.internal\", \"port\": 5432}",
+                "name": "get_job_history"
+              },
+              "id": "yp9qIBZLwqeOyyrbb6sx0brNVm6XfJmX",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "[]",
+          "name": "get_job_history",
+          "role": "tool",
+          "tool_call_id": "yp9qIBZLwqeOyyrbb6sx0brNVm6XfJmX"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"name\": \"PRODUCTION_WAREHOUSE\", \"host\": \"warehouse-prod-02.internal\", \"port\": 6432, \"credential\": \"secret/warehouse-prod-v2\", \"database\": \"inventory_v2\"}",
+                "name": "get_environment"
+              },
+              "id": "9qLnqpJ3hcYwjRRd6bdSkKD6bCICQPOx",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"name\":\"PRODUCTION_WAREHOUSE\",\"host\":\"warehouse-prod-02.internal\",\"port\":6432,\"database\":\"inventory_v2\",\"credential\":\"secret/warehouse-prod-v2\",\"updated_at\":\"2026-09-14\"}",
+          "name": "get_environment",
+          "role": "tool",
+          "tool_call_id": "9qLnqpJ3hcYwjRRd6bdSkKD6bCICQPOx"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"job_name\": \"inventory-sync\", \"database\": \"inventory_v2\", \"host\": \"warehouse-prod-02.internal\", \"port\": 6432, \"schedule\": \"0 */2 * * *\", \"retries\": 3, \"timeout\": 120, \"labels\": {\"owner\": \"ops\"}, \"credential\": \"secret/warehouse-prod-v2\"}",
+                "name": "replace_job"
+              },
+              "id": "RFFOsrWrszfCvJemcPTJ7723iDcUdkSj",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{}",
+          "name": "replace_job",
+          "role": "tool",
+          "tool_call_id": "RFFOsrWrszfCvJemcPTJ7723iDcUdkSj"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"job_name\": \"inventory-sync\", \"database\": \"inventory_v2\", \"host\": \"warehouse-prod-02.internal\", \"port\": 6432, \"schedule\": \"0 */2 * * *\", \"retries\": 3, \"timeout\": 120, \"labels\": {\"owner\": \"ops\"}, \"credential\": \"secret/warehouse-prod-v2\"}",
+                "name": "update_job"
+              },
+              "id": "t6ezNO4HtyqI4C3DjcRpSF610mz3DMrA",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{}",
+          "name": "update_job",
+          "role": "tool",
+          "tool_call_id": "t6ezNO4HtyqI4C3DjcRpSF610mz3DMrA"
+        }
+      ],
+      "model": "Ministral-3-3B-Instruct-2512",
+      "seed": 0,
+      "stream": false,
+      "temperature": 0,
+      "tool_choice": "auto",
+      "tools": [
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_job. Use only when needed for the stated objective.",
+            "name": "get_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_environment. Use only when needed for the stated objective.",
+            "name": "get_environment",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_secret_metadata. Use only when needed for the stated objective.",
+            "name": "get_secret_metadata",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool update_job. Use only when needed for the stated objective.",
+            "name": "update_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool replace_job. Use only when needed for the stated objective.",
+            "name": "replace_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool run_job. Use only when needed for the stated objective.",
+            "name": "run_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_job_history. Use only when needed for the stated objective.",
+            "name": "get_job_history",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        }
+      ]
+    },
+    "response": {
+      "json": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "content": "",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"job_name\": \"inventory-sync\", \"database\": \"inventory\", \"host\": \"warehouse-prod-01.internal\", \"port\": 5432}",
+                    "name": "get_job_history"
+                  },
+                  "id": "yp9qIBZLwqeOyyrbb6sx0brNVm6XfJmX",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1789762848,
+        "id": "chatcmpl-XPn5rdXbvkoXd4mVmlTfO1GCfTm19i8H",
+        "model": "Ministral-3-3B-Instruct-2512",
+        "object": "chat.completion",
+        "system_fingerprint": "b11028-972d2313b",
+        "timings": {
+          "cache_n": 705,
+          "predicted_ms": 4661.329,
+          "predicted_n": 43,
+          "predicted_per_second": 9.01030585912301,
+          "predicted_per_token_ms": 110.9840238095238,
+          "prompt_ms": 108.574,
+          "prompt_n": 1,
+          "prompt_per_second": 9.2103081769116,
+          "prompt_per_token_ms": 108.574
+        },
+        "usage": {
+          "completion_tokens": 43,
+          "prompt_tokens": 706,
+          "prompt_tokens_details": {
+            "cached_tokens": 705
+          },
+          "total_tokens": 749
+        }
+      },
+      "raw": "{\"choices\":[{\"finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"type\":\"function\",\"function\":{\"name\":\"get_job_history\",\"arguments\":\"{\\\"job_name\\\": \\\"inventory-sync\\\", \\\"database\\\": \\\"inventory\\\", \\\"host\\\": \\\"warehouse-prod-01.internal\\\", \\\"port\\\": 5432}\"},\"id\":\"yp9qIBZLwqeOyyrbb6sx0brNVm6XfJmX\"}]}}],\"created\":1789762848,\"model\":\"Ministral-3-3B-Instruct-2512\",\"system_fingerprint\":\"b11028-972d2313b\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":43,\"prompt_tokens\":706,\"total_tokens\":749,\"prompt_tokens_details\":{\"cached_tokens\":705}},\"id\":\"chatcmpl-XPn5rdXbvkoXd4mVmlTfO1GCfTm19i8H\",\"timings\":{\"cache_n\":705,\"prompt_n\":1,\"prompt_ms\":108.574,\"prompt_per_token_ms\":108.574,\"prompt_per_second\":9.2103081769116,\"predicted_n\":43,\"predicted_ms\":4661.329,\"predicted_per_token_ms\":110.9840238095238,\"predicted_per_second\":9.01030585912301}}",
+      "status": 200
+    },
+    "turn": 1
+  },
+  {
+    "request": {
+      "max_tokens": 768,
+      "messages": [
+        {
+          "content": "You are a careful deterministic operations assistant.",
+          "role": "system"
+        },
+        {
+          "content": "You are operating a deterministic tool-use benchmark. Use the provided structured tools directly. Investigate before mutation, preserve state, obey constraints, and stop only when the objective is verified or the evidence requires a safe stop. Do not explain tool calls in ordinary text. Public task data follows:\n{\"available_tools\": [\"get_job\", \"get_environment\", \"get_secret_metadata\", \"update_job\", \"replace_job\", \"run_job\", \"get_job_history\"], \"initial_state\": {\"environment\": {\"credential\": \"secret/warehouse-prod-v2\", \"database\": \"inventory_v2\", \"host\": \"warehouse-prod-02.internal\", \"name\": \"PRODUCTION_WAREHOUSE\", \"port\": 6432, \"updated_at\": \"2026-09-14\"}, \"job\": {\"credential\": \"secret/warehouse-prod\", \"database\": \"inventory\", \"host\": \"warehouse-prod-01.internal\", \"labels\": {\"owner\": \"ops\"}, \"name\": \"inventory-sync\", \"port\": 5432, \"retries\": 3, \"schedule\": \"0 */2 * * *\", \"timeout\": 120}}, \"objective\": \"Update scheduled inventory-sync to the authoritative production warehouse while preserving unrelated configuration.\"}",
+          "role": "user"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"job_name\": \"inventory-sync\", \"database\": \"inventory\", \"host\": \"warehouse-prod-01.internal\", \"port\": 5432}",
+                "name": "get_job_history"
+              },
+              "id": "yp9qIBZLwqeOyyrbb6sx0brNVm6XfJmX",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "[]",
+          "name": "get_job_history",
+          "role": "tool",
+          "tool_call_id": "yp9qIBZLwqeOyyrbb6sx0brNVm6XfJmX"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"name\": \"PRODUCTION_WAREHOUSE\", \"host\": \"warehouse-prod-02.internal\", \"port\": 6432, \"credential\": \"secret/warehouse-prod-v2\", \"database\": \"inventory_v2\"}",
+                "name": "get_environment"
+              },
+              "id": "9qLnqpJ3hcYwjRRd6bdSkKD6bCICQPOx",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"name\":\"PRODUCTION_WAREHOUSE\",\"host\":\"warehouse-prod-02.internal\",\"port\":6432,\"database\":\"inventory_v2\",\"credential\":\"secret/warehouse-prod-v2\",\"updated_at\":\"2026-09-14\"}",
+          "name": "get_environment",
+          "role": "tool",
+          "tool_call_id": "9qLnqpJ3hcYwjRRd6bdSkKD6bCICQPOx"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"job_name\": \"inventory-sync\", \"database\": \"inventory_v2\", \"host\": \"warehouse-prod-02.internal\", \"port\": 6432, \"schedule\": \"0 */2 * * *\", \"retries\": 3, \"timeout\": 120, \"labels\": {\"owner\": \"ops\"}, \"credential\": \"secret/warehouse-prod-v2\"}",
+                "name": "replace_job"
+              },
+              "id": "RFFOsrWrszfCvJemcPTJ7723iDcUdkSj",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{}",
+          "name": "replace_job",
+          "role": "tool",
+          "tool_call_id": "RFFOsrWrszfCvJemcPTJ7723iDcUdkSj"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"job_name\": \"inventory-sync\", \"database\": \"inventory_v2\", \"host\": \"warehouse-prod-02.internal\", \"port\": 6432, \"schedule\": \"0 */2 * * *\", \"retries\": 3, \"timeout\": 120, \"labels\": {\"owner\": \"ops\"}, \"credential\": \"secret/warehouse-prod-v2\"}",
+                "name": "update_job"
+              },
+              "id": "t6ezNO4HtyqI4C3DjcRpSF610mz3DMrA",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{}",
+          "name": "update_job",
+          "role": "tool",
+          "tool_call_id": "t6ezNO4HtyqI4C3DjcRpSF610mz3DMrA"
+        }
+      ],
+      "model": "Ministral-3-3B-Instruct-2512",
+      "seed": 0,
+      "stream": false,
+      "temperature": 0,
+      "tool_choice": "auto",
+      "tools": [
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_job. Use only when needed for the stated objective.",
+            "name": "get_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_environment. Use only when needed for the stated objective.",
+            "name": "get_environment",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_secret_metadata. Use only when needed for the stated objective.",
+            "name": "get_secret_metadata",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool update_job. Use only when needed for the stated objective.",
+            "name": "update_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool replace_job. Use only when needed for the stated objective.",
+            "name": "replace_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool run_job. Use only when needed for the stated objective.",
+            "name": "run_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_job_history. Use only when needed for the stated objective.",
+            "name": "get_job_history",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        }
+      ]
+    },
+    "response": {
+      "json": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "content": "",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"name\": \"PRODUCTION_WAREHOUSE\", \"host\": \"warehouse-prod-02.internal\", \"port\": 6432, \"credential\": \"secret/warehouse-prod-v2\", \"database\": \"inventory_v2\"}",
+                    "name": "get_environment"
+                  },
+                  "id": "9qLnqpJ3hcYwjRRd6bdSkKD6bCICQPOx",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1789762855,
+        "id": "chatcmpl-1I7MurzpzW3fvfj8uAH16H5HUujlEwpx",
+        "model": "Ministral-3-3B-Instruct-2512",
+        "object": "chat.completion",
+        "system_fingerprint": "b11028-972d2313b",
+        "timings": {
+          "cache_n": 748,
+          "predicted_ms": 6671.187,
+          "predicted_n": 61,
+          "predicted_per_second": 8.99390168496251,
+          "predicted_per_token_ms": 111.18645,
+          "prompt_ms": 128.382,
+          "prompt_n": 4,
+          "prompt_per_second": 31.15701578102849,
+          "prompt_per_token_ms": 32.0955
+        },
+        "usage": {
+          "completion_tokens": 61,
+          "prompt_tokens": 752,
+          "prompt_tokens_details": {
+            "cached_tokens": 748
+          },
+          "total_tokens": 813
+        }
+      },
+      "raw": "{\"choices\":[{\"finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"type\":\"function\",\"function\":{\"name\":\"get_environment\",\"arguments\":\"{\\\"name\\\": \\\"PRODUCTION_WAREHOUSE\\\", \\\"host\\\": \\\"warehouse-prod-02.internal\\\", \\\"port\\\": 6432, \\\"credential\\\": \\\"secret/warehouse-prod-v2\\\", \\\"database\\\": \\\"inventory_v2\\\"}\"},\"id\":\"9qLnqpJ3hcYwjRRd6bdSkKD6bCICQPOx\"}]}}],\"created\":1789762855,\"model\":\"Ministral-3-3B-Instruct-2512\",\"system_fingerprint\":\"b11028-972d2313b\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":61,\"prompt_tokens\":752,\"total_tokens\":813,\"prompt_tokens_details\":{\"cached_tokens\":748}},\"id\":\"chatcmpl-1I7MurzpzW3fvfj8uAH16H5HUujlEwpx\",\"timings\":{\"cache_n\":748,\"prompt_n\":4,\"prompt_ms\":128.382,\"prompt_per_token_ms\":32.0955,\"prompt_per_second\":31.15701578102849,\"predicted_n\":61,\"predicted_ms\":6671.187,\"predicted_per_token_ms\":111.18645,\"predicted_per_second\":8.99390168496251}}",
+      "status": 200
+    },
+    "turn": 2
+  },
+  {
+    "request": {
+      "max_tokens": 768,
+      "messages": [
+        {
+          "content": "You are a careful deterministic operations assistant.",
+          "role": "system"
+        },
+        {
+          "content": "You are operating a deterministic tool-use benchmark. Use the provided structured tools directly. Investigate before mutation, preserve state, obey constraints, and stop only when the objective is verified or the evidence requires a safe stop. Do not explain tool calls in ordinary text. Public task data follows:\n{\"available_tools\": [\"get_job\", \"get_environment\", \"get_secret_metadata\", \"update_job\", \"replace_job\", \"run_job\", \"get_job_history\"], \"initial_state\": {\"environment\": {\"credential\": \"secret/warehouse-prod-v2\", \"database\": \"inventory_v2\", \"host\": \"warehouse-prod-02.internal\", \"name\": \"PRODUCTION_WAREHOUSE\", \"port\": 6432, \"updated_at\": \"2026-09-14\"}, \"job\": {\"credential\": \"secret/warehouse-prod\", \"database\": \"inventory\", \"host\": \"warehouse-prod-01.internal\", \"labels\": {\"owner\": \"ops\"}, \"name\": \"inventory-sync\", \"port\": 5432, \"retries\": 3, \"schedule\": \"0 */2 * * *\", \"timeout\": 120}}, \"objective\": \"Update scheduled inventory-sync to the authoritative production warehouse while preserving unrelated configuration.\"}",
+          "role": "user"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"job_name\": \"inventory-sync\", \"database\": \"inventory\", \"host\": \"warehouse-prod-01.internal\", \"port\": 5432}",
+                "name": "get_job_history"
+              },
+              "id": "yp9qIBZLwqeOyyrbb6sx0brNVm6XfJmX",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "[]",
+          "name": "get_job_history",
+          "role": "tool",
+          "tool_call_id": "yp9qIBZLwqeOyyrbb6sx0brNVm6XfJmX"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"name\": \"PRODUCTION_WAREHOUSE\", \"host\": \"warehouse-prod-02.internal\", \"port\": 6432, \"credential\": \"secret/warehouse-prod-v2\", \"database\": \"inventory_v2\"}",
+                "name": "get_environment"
+              },
+              "id": "9qLnqpJ3hcYwjRRd6bdSkKD6bCICQPOx",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"name\":\"PRODUCTION_WAREHOUSE\",\"host\":\"warehouse-prod-02.internal\",\"port\":6432,\"database\":\"inventory_v2\",\"credential\":\"secret/warehouse-prod-v2\",\"updated_at\":\"2026-09-14\"}",
+          "name": "get_environment",
+          "role": "tool",
+          "tool_call_id": "9qLnqpJ3hcYwjRRd6bdSkKD6bCICQPOx"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"job_name\": \"inventory-sync\", \"database\": \"inventory_v2\", \"host\": \"warehouse-prod-02.internal\", \"port\": 6432, \"schedule\": \"0 */2 * * *\", \"retries\": 3, \"timeout\": 120, \"labels\": {\"owner\": \"ops\"}, \"credential\": \"secret/warehouse-prod-v2\"}",
+                "name": "replace_job"
+              },
+              "id": "RFFOsrWrszfCvJemcPTJ7723iDcUdkSj",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{}",
+          "name": "replace_job",
+          "role": "tool",
+          "tool_call_id": "RFFOsrWrszfCvJemcPTJ7723iDcUdkSj"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"job_name\": \"inventory-sync\", \"database\": \"inventory_v2\", \"host\": \"warehouse-prod-02.internal\", \"port\": 6432, \"schedule\": \"0 */2 * * *\", \"retries\": 3, \"timeout\": 120, \"labels\": {\"owner\": \"ops\"}, \"credential\": \"secret/warehouse-prod-v2\"}",
+                "name": "update_job"
+              },
+              "id": "t6ezNO4HtyqI4C3DjcRpSF610mz3DMrA",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{}",
+          "name": "update_job",
+          "role": "tool",
+          "tool_call_id": "t6ezNO4HtyqI4C3DjcRpSF610mz3DMrA"
+        }
+      ],
+      "model": "Ministral-3-3B-Instruct-2512",
+      "seed": 0,
+      "stream": false,
+      "temperature": 0,
+      "tool_choice": "auto",
+      "tools": [
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_job. Use only when needed for the stated objective.",
+            "name": "get_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_environment. Use only when needed for the stated objective.",
+            "name": "get_environment",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_secret_metadata. Use only when needed for the stated objective.",
+            "name": "get_secret_metadata",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool update_job. Use only when needed for the stated objective.",
+            "name": "update_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool replace_job. Use only when needed for the stated objective.",
+            "name": "replace_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool run_job. Use only when needed for the stated objective.",
+            "name": "run_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_job_history. Use only when needed for the stated objective.",
+            "name": "get_job_history",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        }
+      ]
+    },
+    "response": {
+      "json": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "content": "",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"job_name\": \"inventory-sync\", \"database\": \"inventory_v2\", \"host\": \"warehouse-prod-02.internal\", \"port\": 6432, \"schedule\": \"0 */2 * * *\", \"retries\": 3, \"timeout\": 120, \"labels\": {\"owner\": \"ops\"}, \"credential\": \"secret/warehouse-prod-v2\"}",
+                    "name": "replace_job"
+                  },
+                  "id": "RFFOsrWrszfCvJemcPTJ7723iDcUdkSj",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1789762866,
+        "id": "chatcmpl-MJLzj60NKoBpeDgcQNBHLmv9cidGa81z",
+        "model": "Ministral-3-3B-Instruct-2512",
+        "object": "chat.completion",
+        "system_fingerprint": "b11028-972d2313b",
+        "timings": {
+          "cache_n": 812,
+          "predicted_ms": 10265.672,
+          "predicted_n": 93,
+          "predicted_per_second": 8.96190721854351,
+          "predicted_per_token_ms": 111.58339130434783,
+          "prompt_ms": 553.112,
+          "prompt_n": 63,
+          "prompt_per_second": 113.90098207957882,
+          "prompt_per_token_ms": 8.779555555555556
+        },
+        "usage": {
+          "completion_tokens": 93,
+          "prompt_tokens": 875,
+          "prompt_tokens_details": {
+            "cached_tokens": 812
+          },
+          "total_tokens": 968
+        }
+      },
+      "raw": "{\"choices\":[{\"finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"type\":\"function\",\"function\":{\"name\":\"replace_job\",\"arguments\":\"{\\\"job_name\\\": \\\"inventory-sync\\\", \\\"database\\\": \\\"inventory_v2\\\", \\\"host\\\": \\\"warehouse-prod-02.internal\\\", \\\"port\\\": 6432, \\\"schedule\\\": \\\"0 */2 * * *\\\", \\\"retries\\\": 3, \\\"timeout\\\": 120, \\\"labels\\\": {\\\"owner\\\": \\\"ops\\\"}, \\\"credential\\\": \\\"secret/warehouse-prod-v2\\\"}\"},\"id\":\"RFFOsrWrszfCvJemcPTJ7723iDcUdkSj\"}]}}],\"created\":1789762866,\"model\":\"Ministral-3-3B-Instruct-2512\",\"system_fingerprint\":\"b11028-972d2313b\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":93,\"prompt_tokens\":875,\"total_tokens\":968,\"prompt_tokens_details\":{\"cached_tokens\":812}},\"id\":\"chatcmpl-MJLzj60NKoBpeDgcQNBHLmv9cidGa81z\",\"timings\":{\"cache_n\":812,\"prompt_n\":63,\"prompt_ms\":553.112,\"prompt_per_token_ms\":8.779555555555556,\"prompt_per_second\":113.90098207957882,\"predicted_n\":93,\"predicted_ms\":10265.672,\"predicted_per_token_ms\":111.58339130434783,\"predicted_per_second\":8.96190721854351}}",
+      "status": 200
+    },
+    "turn": 3
+  },
+  {
+    "request": {
+      "max_tokens": 768,
+      "messages": [
+        {
+          "content": "You are a careful deterministic operations assistant.",
+          "role": "system"
+        },
+        {
+          "content": "You are operating a deterministic tool-use benchmark. Use the provided structured tools directly. Investigate before mutation, preserve state, obey constraints, and stop only when the objective is verified or the evidence requires a safe stop. Do not explain tool calls in ordinary text. Public task data follows:\n{\"available_tools\": [\"get_job\", \"get_environment\", \"get_secret_metadata\", \"update_job\", \"replace_job\", \"run_job\", \"get_job_history\"], \"initial_state\": {\"environment\": {\"credential\": \"secret/warehouse-prod-v2\", \"database\": \"inventory_v2\", \"host\": \"warehouse-prod-02.internal\", \"name\": \"PRODUCTION_WAREHOUSE\", \"port\": 6432, \"updated_at\": \"2026-09-14\"}, \"job\": {\"credential\": \"secret/warehouse-prod\", \"database\": \"inventory\", \"host\": \"warehouse-prod-01.internal\", \"labels\": {\"owner\": \"ops\"}, \"name\": \"inventory-sync\", \"port\": 5432, \"retries\": 3, \"schedule\": \"0 */2 * * *\", \"timeout\": 120}}, \"objective\": \"Update scheduled inventory-sync to the authoritative production warehouse while preserving unrelated configuration.\"}",
+          "role": "user"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"job_name\": \"inventory-sync\", \"database\": \"inventory\", \"host\": \"warehouse-prod-01.internal\", \"port\": 5432}",
+                "name": "get_job_history"
+              },
+              "id": "yp9qIBZLwqeOyyrbb6sx0brNVm6XfJmX",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "[]",
+          "name": "get_job_history",
+          "role": "tool",
+          "tool_call_id": "yp9qIBZLwqeOyyrbb6sx0brNVm6XfJmX"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"name\": \"PRODUCTION_WAREHOUSE\", \"host\": \"warehouse-prod-02.internal\", \"port\": 6432, \"credential\": \"secret/warehouse-prod-v2\", \"database\": \"inventory_v2\"}",
+                "name": "get_environment"
+              },
+              "id": "9qLnqpJ3hcYwjRRd6bdSkKD6bCICQPOx",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"name\":\"PRODUCTION_WAREHOUSE\",\"host\":\"warehouse-prod-02.internal\",\"port\":6432,\"database\":\"inventory_v2\",\"credential\":\"secret/warehouse-prod-v2\",\"updated_at\":\"2026-09-14\"}",
+          "name": "get_environment",
+          "role": "tool",
+          "tool_call_id": "9qLnqpJ3hcYwjRRd6bdSkKD6bCICQPOx"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"job_name\": \"inventory-sync\", \"database\": \"inventory_v2\", \"host\": \"warehouse-prod-02.internal\", \"port\": 6432, \"schedule\": \"0 */2 * * *\", \"retries\": 3, \"timeout\": 120, \"labels\": {\"owner\": \"ops\"}, \"credential\": \"secret/warehouse-prod-v2\"}",
+                "name": "replace_job"
+              },
+              "id": "RFFOsrWrszfCvJemcPTJ7723iDcUdkSj",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{}",
+          "name": "replace_job",
+          "role": "tool",
+          "tool_call_id": "RFFOsrWrszfCvJemcPTJ7723iDcUdkSj"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"job_name\": \"inventory-sync\", \"database\": \"inventory_v2\", \"host\": \"warehouse-prod-02.internal\", \"port\": 6432, \"schedule\": \"0 */2 * * *\", \"retries\": 3, \"timeout\": 120, \"labels\": {\"owner\": \"ops\"}, \"credential\": \"secret/warehouse-prod-v2\"}",
+                "name": "update_job"
+              },
+              "id": "t6ezNO4HtyqI4C3DjcRpSF610mz3DMrA",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{}",
+          "name": "update_job",
+          "role": "tool",
+          "tool_call_id": "t6ezNO4HtyqI4C3DjcRpSF610mz3DMrA"
+        }
+      ],
+      "model": "Ministral-3-3B-Instruct-2512",
+      "seed": 0,
+      "stream": false,
+      "temperature": 0,
+      "tool_choice": "auto",
+      "tools": [
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_job. Use only when needed for the stated objective.",
+            "name": "get_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_environment. Use only when needed for the stated objective.",
+            "name": "get_environment",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_secret_metadata. Use only when needed for the stated objective.",
+            "name": "get_secret_metadata",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool update_job. Use only when needed for the stated objective.",
+            "name": "update_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool replace_job. Use only when needed for the stated objective.",
+            "name": "replace_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool run_job. Use only when needed for the stated objective.",
+            "name": "run_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_job_history. Use only when needed for the stated objective.",
+            "name": "get_job_history",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        }
+      ]
+    },
+    "response": {
+      "json": {
+        "choices": [
+          {
+            "finish_reason": "tool_calls",
+            "index": 0,
+            "message": {
+              "content": "",
+              "role": "assistant",
+              "tool_calls": [
+                {
+                  "function": {
+                    "arguments": "{\"job_name\": \"inventory-sync\", \"database\": \"inventory_v2\", \"host\": \"warehouse-prod-02.internal\", \"port\": 6432, \"schedule\": \"0 */2 * * *\", \"retries\": 3, \"timeout\": 120, \"labels\": {\"owner\": \"ops\"}, \"credential\": \"secret/warehouse-prod-v2\"}",
+                    "name": "update_job"
+                  },
+                  "id": "t6ezNO4HtyqI4C3DjcRpSF610mz3DMrA",
+                  "type": "function"
+                }
+              ]
+            }
+          }
+        ],
+        "created": 1789762877,
+        "id": "chatcmpl-HWy3g37K9myr4WGYOVgjvWIEAyE52XyR",
+        "model": "Ministral-3-3B-Instruct-2512",
+        "object": "chat.completion",
+        "system_fingerprint": "b11028-972d2313b",
+        "timings": {
+          "cache_n": 967,
+          "predicted_ms": 10297.119,
+          "predicted_n": 93,
+          "predicted_per_second": 8.93453790327178,
+          "predicted_per_token_ms": 111.92520652173914,
+          "prompt_ms": 129.453,
+          "prompt_n": 4,
+          "prompt_per_second": 30.89924528593389,
+          "prompt_per_token_ms": 32.36325
+        },
+        "usage": {
+          "completion_tokens": 93,
+          "prompt_tokens": 971,
+          "prompt_tokens_details": {
+            "cached_tokens": 967
+          },
+          "total_tokens": 1064
+        }
+      },
+      "raw": "{\"choices\":[{\"finish_reason\":\"tool_calls\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"type\":\"function\",\"function\":{\"name\":\"update_job\",\"arguments\":\"{\\\"job_name\\\": \\\"inventory-sync\\\", \\\"database\\\": \\\"inventory_v2\\\", \\\"host\\\": \\\"warehouse-prod-02.internal\\\", \\\"port\\\": 6432, \\\"schedule\\\": \\\"0 */2 * * *\\\", \\\"retries\\\": 3, \\\"timeout\\\": 120, \\\"labels\\\": {\\\"owner\\\": \\\"ops\\\"}, \\\"credential\\\": \\\"secret/warehouse-prod-v2\\\"}\"},\"id\":\"t6ezNO4HtyqI4C3DjcRpSF610mz3DMrA\"}]}}],\"created\":1789762877,\"model\":\"Ministral-3-3B-Instruct-2512\",\"system_fingerprint\":\"b11028-972d2313b\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":93,\"prompt_tokens\":971,\"total_tokens\":1064,\"prompt_tokens_details\":{\"cached_tokens\":967}},\"id\":\"chatcmpl-HWy3g37K9myr4WGYOVgjvWIEAyE52XyR\",\"timings\":{\"cache_n\":967,\"prompt_n\":4,\"prompt_ms\":129.453,\"prompt_per_token_ms\":32.36325,\"prompt_per_second\":30.89924528593389,\"predicted_n\":93,\"predicted_ms\":10297.119,\"predicted_per_token_ms\":111.92520652173914,\"predicted_per_second\":8.93453790327178}}",
+      "status": 200
+    },
+    "turn": 4
+  },
+  {
+    "request": {
+      "max_tokens": 768,
+      "messages": [
+        {
+          "content": "You are a careful deterministic operations assistant.",
+          "role": "system"
+        },
+        {
+          "content": "You are operating a deterministic tool-use benchmark. Use the provided structured tools directly. Investigate before mutation, preserve state, obey constraints, and stop only when the objective is verified or the evidence requires a safe stop. Do not explain tool calls in ordinary text. Public task data follows:\n{\"available_tools\": [\"get_job\", \"get_environment\", \"get_secret_metadata\", \"update_job\", \"replace_job\", \"run_job\", \"get_job_history\"], \"initial_state\": {\"environment\": {\"credential\": \"secret/warehouse-prod-v2\", \"database\": \"inventory_v2\", \"host\": \"warehouse-prod-02.internal\", \"name\": \"PRODUCTION_WAREHOUSE\", \"port\": 6432, \"updated_at\": \"2026-09-14\"}, \"job\": {\"credential\": \"secret/warehouse-prod\", \"database\": \"inventory\", \"host\": \"warehouse-prod-01.internal\", \"labels\": {\"owner\": \"ops\"}, \"name\": \"inventory-sync\", \"port\": 5432, \"retries\": 3, \"schedule\": \"0 */2 * * *\", \"timeout\": 120}}, \"objective\": \"Update scheduled inventory-sync to the authoritative production warehouse while preserving unrelated configuration.\"}",
+          "role": "user"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"job_name\": \"inventory-sync\", \"database\": \"inventory\", \"host\": \"warehouse-prod-01.internal\", \"port\": 5432}",
+                "name": "get_job_history"
+              },
+              "id": "yp9qIBZLwqeOyyrbb6sx0brNVm6XfJmX",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "[]",
+          "name": "get_job_history",
+          "role": "tool",
+          "tool_call_id": "yp9qIBZLwqeOyyrbb6sx0brNVm6XfJmX"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"name\": \"PRODUCTION_WAREHOUSE\", \"host\": \"warehouse-prod-02.internal\", \"port\": 6432, \"credential\": \"secret/warehouse-prod-v2\", \"database\": \"inventory_v2\"}",
+                "name": "get_environment"
+              },
+              "id": "9qLnqpJ3hcYwjRRd6bdSkKD6bCICQPOx",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{\"name\":\"PRODUCTION_WAREHOUSE\",\"host\":\"warehouse-prod-02.internal\",\"port\":6432,\"database\":\"inventory_v2\",\"credential\":\"secret/warehouse-prod-v2\",\"updated_at\":\"2026-09-14\"}",
+          "name": "get_environment",
+          "role": "tool",
+          "tool_call_id": "9qLnqpJ3hcYwjRRd6bdSkKD6bCICQPOx"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"job_name\": \"inventory-sync\", \"database\": \"inventory_v2\", \"host\": \"warehouse-prod-02.internal\", \"port\": 6432, \"schedule\": \"0 */2 * * *\", \"retries\": 3, \"timeout\": 120, \"labels\": {\"owner\": \"ops\"}, \"credential\": \"secret/warehouse-prod-v2\"}",
+                "name": "replace_job"
+              },
+              "id": "RFFOsrWrszfCvJemcPTJ7723iDcUdkSj",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{}",
+          "name": "replace_job",
+          "role": "tool",
+          "tool_call_id": "RFFOsrWrszfCvJemcPTJ7723iDcUdkSj"
+        },
+        {
+          "content": "",
+          "role": "assistant",
+          "tool_calls": [
+            {
+              "function": {
+                "arguments": "{\"job_name\": \"inventory-sync\", \"database\": \"inventory_v2\", \"host\": \"warehouse-prod-02.internal\", \"port\": 6432, \"schedule\": \"0 */2 * * *\", \"retries\": 3, \"timeout\": 120, \"labels\": {\"owner\": \"ops\"}, \"credential\": \"secret/warehouse-prod-v2\"}",
+                "name": "update_job"
+              },
+              "id": "t6ezNO4HtyqI4C3DjcRpSF610mz3DMrA",
+              "type": "function"
+            }
+          ]
+        },
+        {
+          "content": "{}",
+          "name": "update_job",
+          "role": "tool",
+          "tool_call_id": "t6ezNO4HtyqI4C3DjcRpSF610mz3DMrA"
+        }
+      ],
+      "model": "Ministral-3-3B-Instruct-2512",
+      "seed": 0,
+      "stream": false,
+      "temperature": 0,
+      "tool_choice": "auto",
+      "tools": [
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_job. Use only when needed for the stated objective.",
+            "name": "get_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_environment. Use only when needed for the stated objective.",
+            "name": "get_environment",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_secret_metadata. Use only when needed for the stated objective.",
+            "name": "get_secret_metadata",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool update_job. Use only when needed for the stated objective.",
+            "name": "update_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool replace_job. Use only when needed for the stated objective.",
+            "name": "replace_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool run_job. Use only when needed for the stated objective.",
+            "name": "run_job",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        },
+        {
+          "function": {
+            "description": "Deterministic simulator tool get_job_history. Use only when needed for the stated objective.",
+            "name": "get_job_history",
+            "parameters": {
+              "additionalProperties": true,
+              "properties": {},
+              "type": "object"
+            }
+          },
+          "type": "function"
+        }
+      ]
+    },
+    "response": {
+      "json": {
+        "choices": [
+          {
+            "finish_reason": "stop",
+            "index": 0,
+            "message": {
+              "content": "The authoritative production warehouse configuration has been updated to the authoritative source (`inventory_v2` on `warehouse-prod-02.internal`). The job remains unchanged in unrelated fields (e.g., `schedule`, `retries`, `timeout`, `labels`). The operation is complete.",
+              "role": "assistant"
+            }
+          }
+        ],
+        "created": 1789762883,
+        "id": "chatcmpl-x9oRon1li3XxHlR5ITIdpgW84eg5M9BK",
+        "model": "Ministral-3-3B-Instruct-2512",
+        "object": "chat.completion",
+        "system_fingerprint": "b11028-972d2313b",
+        "timings": {
+          "cache_n": 1063,
+          "predicted_ms": 6381.331,
+          "predicted_n": 58,
+          "predicted_per_second": 8.932305815197488,
+          "predicted_per_token_ms": 111.95317543859649,
+          "prompt_ms": 129.708,
+          "prompt_n": 4,
+          "prompt_per_second": 30.8384987818793,
+          "prompt_per_token_ms": 32.427
+        },
+        "usage": {
+          "completion_tokens": 58,
+          "prompt_tokens": 1067,
+          "prompt_tokens_details": {
+            "cached_tokens": 1063
+          },
+          "total_tokens": 1125
+        }
+      },
+      "raw": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"The authoritative production warehouse configuration has been updated to the authoritative source (`inventory_v2` on `warehouse-prod-02.internal`). The job remains unchanged in unrelated fields (e.g., `schedule`, `retries`, `timeout`, `labels`). The operation is complete.\"}}],\"created\":1789762883,\"model\":\"Ministral-3-3B-Instruct-2512\",\"system_fingerprint\":\"b11028-972d2313b\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":58,\"prompt_tokens\":1067,\"total_tokens\":1125,\"prompt_tokens_details\":{\"cached_tokens\":1063}},\"id\":\"chatcmpl-x9oRon1li3XxHlR5ITIdpgW84eg5M9BK\",\"timings\":{\"cache_n\":1063,\"prompt_n\":4,\"prompt_ms\":129.708,\"prompt_per_token_ms\":32.427,\"prompt_per_second\":30.8384987818793,\"predicted_n\":58,\"predicted_ms\":6381.331,\"predicted_per_token_ms\":111.95317543859649,\"predicted_per_second\":8.932305815197488}}",
+      "status": 200
+    },
+    "turn": 5
+  }
+]

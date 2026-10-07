@@ -33,7 +33,15 @@ class Config:
 
     fail_on: str = "high"
     test_globs: tuple[str, ...] = TEST_GLOBS
-    ignore_globs: tuple[str, ...] = ("vendor/**", "node_modules/**", "**/*.min.js")
+    ignore_globs: tuple[str, ...] = (
+        "vendor/**",
+        "node_modules/**",
+        "**/*.min.js",
+        "dist/**",
+        "build/**",
+        ".next/**",
+        "coverage/**",
+    ) + tuple("**/assets/*." + "[0-9a-f]" * width + ".js" for width in (8, 12, 16, 20, 32, 40, 64))
     skip_rules: set[str] = field(default_factory=set)
     allows: list["Allow"] = field(default_factory=list)
     source: str = "defaults"

@@ -1,0 +1,26 @@
+execution_config_version: stage1-first-round-v1.0.0
+protocol_version: qualification-v1.0.0
+benchmark_commit: 33eb4a377829dec4e9b4618f06304cb77b93a4a7
+model_manifest_commit: e2c3a26080b1dd4b70c9f9af1ca58f1b13bc38dd
+models:
+  Ministral-3-3B-Instruct-2512:
+    chat_template: native_gguf
+    enable_thinking: not_applicable
+  Qwen3-4B:
+    chat_template: native_gguf
+    enable_thinking: false
+  Phi-4-mini-instruct:
+    chat_template: native_gguf
+    enable_thinking: not_applicable
+  Gemma-3-4B-IT:
+    chat_template: native_gguf
+    enable_thinking: not_applicable
+inference:
+  backend: Vulkan/RADV
+  llama_cpp_commit: 972d2313bc0bf0a45f634f77d95c9fb03aeab12
+  context_ceiling_tokens: 16384
+  temperature: 0
+  seed: 0
+  internet_during_model_run: false
+  external_tools: deterministic_simulator_only
+  human_intervention: false

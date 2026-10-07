@@ -1,0 +1,81 @@
+--- a/func.py
++++ b/func.py
+@@ -23,4 +23,76 @@
+     >>> find_largest_400_number(123456789)
+     123454321
+     """
+-    raise NotImplementedError
+\ No newline at end of file
++    pass
++def find_largest_400_number(a: int) -> int:
++    """ Find the largest 400 number not exceeding a.
++    
++    A positive integer N is a 400 number if and only if:
++    1. N has exactly 2 distinct prime factors.
++    2. For each prime factor p of N, p divides N an even number of times.
++       (i.e., the maximum k such that p^k divides N is even)
++    
++    Args:
++        a: An integer where 36 <= a <= 10^12
++    
++    Returns:
++        The largest 400 number not exceeding a
++    """
++    
++    def is_prime(n):
++        if n <= 1:
++            return False
++        if n <= 3:
++            return True
++        if n % 2 == 0 or n % 3 == 0:
++            return False
++        i = 5
++        while i * i <= n:
++            if n % i == 0 or n % (i + 2) == 0:
++                return False
++            i += 6
++        return True
++
++    def prime_factors(n):
++        factors = []
++        # Check for number of 2s
++        count = 0
++        while n % 2 == 0:
++            n //= 2
++            count += 1
++        if count > 0:
++            factors.append((2, count))
++        
++        # Check for odd factors
++        for i in range(3, int(n**0.5) + 1, 2):
++            count = 0
++            while n % i == 0:
++                n //= i
++                count += 1
++            if count > 0:
++                factors.append((i, count))
++        
++        # If n is a prime number greater than 2
++        if n > 2:
++            factors.append((n, 1))
++        
++        return factors
++
++    def is_400_number(n):
++        factors = prime_factors(n)
++        if len(factors) != 2:
++            return False
++        for _, count in factors:
++            if count % 2 != 0:
++                return False
++        return True
++
++    # Start from a and go downwards to find the largest 400 number
++    for num in range(a, 35, -1):
++        if is_400_number(num):
++            return num
++
++    return 36  # If no 400 number is found, return 36 as the smallest 400 number
++
++# Use check(find_largest_400_number) to run tests.
++

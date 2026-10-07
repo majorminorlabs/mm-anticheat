@@ -1,0 +1,3550 @@
+diff --git a/EXPERIMENTS.md b/EXPERIMENTS.md
+index 9759c34..7737476 100644
+--- a/EXPERIMENTS.md
++++ b/EXPERIMENTS.md
+@@ -125,3 +125,43 @@ The selected L3-50 run has **0/50 exact memorization flags**, no shared training
+ **L3 does not clearly beat L1, and the creative-quality gate remains unmet.** L3-50 improves a lexical topic-contact proxy over L1 and L2-50, but it sacrifices complete responses and shows no convincing overall writing improvement in the spot checks. L1 step 48 remains the current best usable model. No L3 GGUF was exported or promoted; `models/best.gguf` remains the verified L1 artifact. L3b was not run: the remaining problem has several plausible causes, and the present evidence does not isolate one low-risk fix tightly enough for a useful single-variant claim. The next controlled experiment should change only the **sampling weight of medium/long L3 targets**, preserving labels, base, rank, optimizer, and fixed evaluation prompts; inspect the first 25/50 updates before any longer run. This specifically tests whether the target-length distribution, rather than label grounding, drives early EOS.
+ 
+ L3 datasets, model adapters, generation records, local labeling envelopes, manual review, comparison loss files, and blind packet are ignored by Git and retained both locally and on the pod's `/workspace/lyricist` persistent mount. The pod remains running. No repository push or model publication occurred.
++
++## L4: length-weighted sampling of the unchanged L3 passages
++
++L4 tested one independent variable: **sampling weight by target-length bucket**. It reused the exact L3 prompts, targets, 84/11/11 work split, 24 validation and 22 held-out probes, pinned base revision, rank-8 adapter, optimizer, 200-step warmup/decay schedule, seed 314162, sequence cap 384, effective batch 8, and fixed 50-prompt generation settings. No lyric source, label, tokenizer, or evaluation prompt changed. The 224 L3 training examples had 29 very-short / 99 short / 72 medium / 24 longer targets. `scripts/l4_sampler.py` gave them relative weights **0.5 / 0.75 / 1.5 / 2.5**, choosing a weighted bucket and then a least-repeated passage from a least-used source work within that bucket. The expected sampled proportions were **5.65% / 28.92% / 42.06% / 23.37%**. The 50-step trace verified actual proportions **5.00% / 31.00% / 40.25% / 23.75%** (20 / 124 / 161 / 95 of 400 draws). It covered **215 distinct passages and all 84 training works**; no passage appeared more than four times and no work more than 14 times. Effective descriptive/sparse exposure was 65.75%/34.25%. The trace was checked exactly against the deterministic plan in `corpus/metadata/l4_sampler_qa.json`.
++
++Before training, the full tokenizer and sampler QA rechecked one EOS only after each target, prompt and padding labels masked as `-100`, unequal-length padding, target-token median 48 / p90 89 / max 172, full-sequence max 208 below the cap, and zero truncation. No formatting defect was found. Twelve local tests passed before the GPU run. A two-update A40 smoke test passed forward/backward training, validation/held-out loss, adapter save/reload, deterministic trace verification, and fresh-process generation on two fixed prompts.
++
++The real run completed **50 updates / 1.786 effective passage epochs in 40.44 seconds** on the existing A40; peak PyTorch allocation was 4,098 MiB and checkpoint snapshots showed about 5,483 MiB GPU use. Checkpoints 15/25/35/50 all used the unchanged 50-prompt suite; run manifests for all nine comparison models have the same prompt SHA-256 `358012c9bf38cd18a561db136034fd3eb5f0723a41e0b9053adf46eb060454b8` and generation configuration. Validation losses were 3.39705 / 3.30689 / 3.21897 / 3.13473. The held-out losses below are completion-only loss on the **same 22 L3 held-out passages** for all models. “Below minimum” is the premature-stop proxy (short <12, medium <35, long <65 words). Topic contact is a first-50-word concept-stem proxy on 42 prompts, not a semantic judgment. Format anomaly counts are heuristic matches for empty text, unexpected section labels, instruction-like text, or section-label-only skeletons; they do not detect every malformed output.
++
++| Model | Held-out loss | Length adherence | Mean words | Mean words/line | Below minimum | Medium/long below minimum | Topic contact | Generic hits | Duplicate lines | Format anomalies | Exact flags |
++| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
++| B0 | 3.37395 | 78% | 125.7 | 38.12 | 0/50 | 0/30 | 71.4% | 51 | 1 | 1 | 0 |
++| L1-48 | 3.25005 | 84% | 119.3 | 25.09 | 0/50 | 0/30 | 54.8% | 49 | 7 | 3 | 0 |
++| L2-50 | 3.15430 | 44% | 35.9 | 11.09 | 27/50 | 19/30 | 57.1% | 12 | 0 | 0 | 0 |
++| L3-25 | 3.27575 | 76% | 116.3 | 39.55 | 2/50 | 1/30 | 66.7% | 50 | 0 | 3 | 0 |
++| L3-50 | 3.09759 | 42% | 27.6 | 8.38 | 29/50 | 21/30 | 83.3% | 11 | 0 | 0 | 0 |
++| L4-15 | 3.34914 | 86% | 122.9 | 37.67 | 0/50 | 0/30 | 61.9% | 43 | 1 | 1 | 0 |
++| L4-25 | 3.26957 | 80% | 109.7 | 32.59 | 3/50 | 2/30 | 69.0% | 29 | 0 | 3 | 0 |
++| **L4-35** | **3.17975** | **82%** | **74.9** | **19.07** | **9/50** | **7/30** | **83.3%** | **33** | **2** | **0** | **0** |
++| L4-50 | 3.09724 | 42% | 28.7 | 8.52 | 29/50 | 25/30 | 76.2% | 13 | 1 | 0 | 0 |
++
++For the 30 medium/long requests, the per-prompt artifact `corpus/metadata/l4_medium_long.json` records each requested category, actual word length, below-minimum flag, and topic-contact proxy. The category summaries are:
++
++| Model | Medium below 35 words (20) | Mean medium words | Medium contact | Long below 65 words (10) | Mean long words | Long contact |
++| --- | ---: | ---: | ---: | ---: | ---: | ---: |
++| L1-48 | 0 | 127.8 | 52.9% | 0 | 196.4 | 50.0% |
++| L3-25 | 1 | 128.1 | 58.8% | 0 | 194.3 | 87.5% |
++| L3-50 | 13 | 31.0 | 88.2% | 8 | 44.5 | 75.0% |
++| L4-15 | 0 | 131.9 | 58.8% | 0 | 201.6 | 62.5% |
++| L4-25 | 2 | 109.2 | 70.6% | 0 | 201.0 | 62.5% |
++| **L4-35** | **6** | **76.7** | **88.2%** | **1** | **136.9** | **62.5%** |
++| L4-50 | 16 | 28.1 | 76.5% | 9 | 40.6 | 75.0% |
++
++The same 16 prompts were manually read at every L4 checkpoint; IDs and coverage are in `corpus/metadata/l4_qualitative_subset.json`, with notes in `corpus/metadata/l4_qualitative_notes.json`. Step 15 retained long generic prose. Step 25 gained some line breaks, but one lighthouse request produced unrelated writing instructions and the lost-dog form request produced only empty “Verse” and “Chorus” headings. Step 35 found a better length/style region: the riverbed and moth prompts had more distinctive images, the vague “other side” prompt became a complete lyric-shaped response, and the lost-dog request used verse/chorus. However, the hospital prompt put rain outside instead of inside; the lighthouse prompt placed sailors nearby despite asking for distance from water; the voicemail/refrain request became four unrelated lines; other long outputs wandered into explanatory prose or ended mid-thought. Step 50 again collapsed to very short outputs. These are internal judgments, not independent human scores.
++
++**L4-35 is the best L4 checkpoint for review**, chosen for the 82% length adherence and much lower medium/long premature-stop rate than L3-50 while retaining strong topic contact. It is still not a clear overall win over L1: 7/30 medium/long requests stop below minimum versus 0/30 for L1, several fixed-subset prompts materially miss their requested situation or form, and the creative-quality gate remains unmet. It therefore was **not promoted**. The L1 GGUF and local writer remain unchanged; no L4 GGUF was exported. No step 75 ran because step 50 was unhealthy. No L4b ran: the failure includes prompt/form drift and prose degeneration, so a one-weight adjustment is not a sufficiently isolated remedy.
++
++The L4-35 exact audit found **0/50 memorization flags**, a maximum five-word exact shared phrase, and a mean 0.02 shared training 5-grams per output. The conservative fuzzy-window audit found **0/50 suspicious outputs** (`outputs/l4-fuzzy-audit-035.json`); neither result proves originality. A randomized 50-prompt L1-48/L3-25/L3-50/L4-35 packet is in `outputs/l4-blind-review/review_packet.jsonl`, with `answer_key.json` separate and the existing nine-dimension rubric. No independent scores are claimed. Full fixed-prompt metrics and per-prompt diagnostic values are in `corpus/metadata/l4_evaluation.json` and `corpus/metadata/l4_medium_long.json`. Adapters, optimizer state, traces, generations, audit, and packet are retained locally and on the pod's persistent `/workspace/lyricist` mount. The pod remains running; nothing was pushed or published.
++
++The single next controlled experiment should test **length-control field exposure** while keeping L4 sampling, source passages, semantic labels, model, and optimizer fixed. Only 67 of 224 L3/L4 training examples carry the `length:` field, while every fixed evaluation call supplies one. The L4-35-to-50 collapse despite 64% medium/long sampling makes that conditioning mismatch a more specific hypothesis than simply increasing long-target weight again. Evaluate at the same early checkpoints before considering promotion.
+diff --git a/README.md b/README.md
+index 56b6b52..324a12e 100644
+--- a/README.md
++++ b/README.md
+@@ -119,3 +119,22 @@ python3 -m scripts.behavior_l3 --runs outputs/b0 outputs/l1-eval-048 outputs/l2-
+ The same L3 held-out probes were scored for B0, L1, and L2-50 with `scripts.eval_l3_loss`; the L3 training log contains its own comparable held-out losses. `scripts.fuzzy_memorization` checked L3-50 against training works, and `scripts.blind_compare_l3` produced the private 50-prompt packet at `outputs/l3-blind-review/`. Detailed commands, selection rationale, limits, and metrics are in `EXPERIMENTS.md`.
+ 
+ L3 step 50 is the best L3 checkpoint for **review**, but it frequently stops too early; steps 75 and 100 worsen that behavior. Training stopped at 100, with no L3b run or GGUF export. **L1 step 48 remains the current best usable model**, and the creative-quality gate is still unmet. All L3 outputs and adapters are retained locally and on the pod's persistent `/workspace/lyricist` mount. The pod remains running.
++
++## L4 weighted length sampling experiment
++
++L4 reads the **unchanged L3 JSONL** and changes only passage sampling: very short `0.5x`, short `0.75x`, medium `1.5x`, longer `2.5x`. Its deterministic bucket draw balances repeated examples and works within each bucket. The original 224 passages, prompts, work split, model, LoRA/optimizer settings, and fixed generation suite are unchanged. On the A40, run the sampler and EOS/masking preflight, smoke, and early checkpoints with:
++
++```sh
++.venv/bin/python -m scripts.qa_l4 --out outputs/l4-sampler-preflight.json
++.venv/bin/python -m scripts.train_l4 --smoke --out outputs/l4-smoke
++.venv/bin/python -m scripts.evaluate --adapter outputs/l4-smoke/checkpoint-002 --limit 2 --out outputs/l4-smoke-eval
++.venv/bin/python -m scripts.train_l4 --out outputs/l4 --stop-at 50
++.venv/bin/python -m scripts.qa_l4 --trace outputs/l4/sample_trace.jsonl --out corpus/metadata/l4_sampler_qa.json
++for n in 015 025 035 050; do
++  .venv/bin/python -m scripts.evaluate --adapter outputs/l4/checkpoint-$n --out outputs/l4-eval-$n
++done
++```
++
++`scripts.compare_l4` aggregates the existing B0/L1/L2/L3 runs with the four L4 evaluations into `corpus/metadata/l4_evaluation.json` and the 30-prompt medium/long detail in `corpus/metadata/l4_medium_long.json`. The conservative fuzzy audit for the review candidate is `outputs/l4-fuzzy-audit-035.json`; the separate-key four-way blind packet is `outputs/l4-blind-review/`.
++
++L4 step 35 is the best **L4 review candidate**: it improves topic contact and restores substantially more complete responses than L3-50, but still misses several requests and stops below the medium/long minimum on 7 of 30 prompts. Step 50 collapses back to very short responses, so step 75 and L4b were not run. L4 did **not** clearly beat L1 or pass the creative-quality gate. No L4 GGUF was exported, and the local `models/best.gguf` remains L1. Full metrics, manual notes, and the next controlled experiment are in `EXPERIMENTS.md`.
+diff --git a/corpus/metadata/l4_evaluation.json b/corpus/metadata/l4_evaluation.json
+new file mode 100644
+index 0000000..797b9ae
+--- /dev/null
++++ b/corpus/metadata/l4_evaluation.json
+@@ -0,0 +1,261 @@
++{
++  "B0": {
++    "count": 50,
++    "duplicate_lines": 1,
++    "empty_outputs": 0,
++    "format_anomaly_count": 1,
++    "format_anomaly_ids": [
++      "p50"
++    ],
++    "generation_sha256": "d1725ea7d2d0d26eb6510b7359ad4043cee07bbe3233bdff32a19733eeab75e2",
++    "generic_phrase_hits": 51,
++    "length_adherence_rate": 0.78,
++    "max_longest_train_phrase_words": 4,
++    "mean_line_words": 38.12,
++    "mean_words": 125.7,
++    "medium_long_early_stop_count": 0,
++    "medium_long_early_stop_rate": 0,
++    "memorization_flags": 0,
++    "meta_instruction_hits": 3,
++    "prose_like": 43,
++    "topic_any_first50_rate": 0.714,
++    "topic_any_rate": 0.905,
++    "topic_full_first50_rate": 0.357,
++    "topic_full_rate": 0.548,
++    "topic_scored_prompts": 42,
++    "under_requested_minimum_count": 0,
++    "under_requested_minimum_rate": 0,
++    "unexpected_section_labels": 0,
++    "unfinished_tail_count": 43
++  },
++  "L1-48": {
++    "count": 50,
++    "duplicate_lines": 7,
++    "empty_outputs": 0,
++    "format_anomaly_count": 3,
++    "format_anomaly_ids": [
++      "p12",
++      "p18",
++      "p50"
++    ],
++    "generation_sha256": "b56c6ad297536e835ed95aa4a8ea2c3761ab8ba2a62f032432a7c4348430f114",
++    "generic_phrase_hits": 49,
++    "length_adherence_rate": 0.84,
++    "max_longest_train_phrase_words": 5,
++    "mean_line_words": 25.09,
++    "mean_words": 119.3,
++    "medium_long_early_stop_count": 0,
++    "medium_long_early_stop_rate": 0,
++    "memorization_flags": 0,
++    "meta_instruction_hits": 9,
++    "prose_like": 26,
++    "topic_any_first50_rate": 0.548,
++    "topic_any_rate": 0.69,
++    "topic_full_first50_rate": 0.238,
++    "topic_full_rate": 0.405,
++    "topic_scored_prompts": 42,
++    "under_requested_minimum_count": 0,
++    "under_requested_minimum_rate": 0,
++    "unexpected_section_labels": 0,
++    "unfinished_tail_count": 33
++  },
++  "L2-50": {
++    "count": 50,
++    "duplicate_lines": 0,
++    "empty_outputs": 0,
++    "format_anomaly_count": 0,
++    "format_anomaly_ids": [],
++    "generation_sha256": "5f05628c24be67d4e90dd78143cd323a257709ac6daf2af5556084bc5a11e27c",
++    "generic_phrase_hits": 12,
++    "length_adherence_rate": 0.44,
++    "max_longest_train_phrase_words": 4,
++    "mean_line_words": 11.09,
++    "mean_words": 35.9,
++    "medium_long_early_stop_count": 19,
++    "medium_long_early_stop_rate": 0.633,
++    "memorization_flags": 0,
++    "meta_instruction_hits": 4,
++    "prose_like": 32,
++    "topic_any_first50_rate": 0.571,
++    "topic_any_rate": 0.595,
++    "topic_full_first50_rate": 0.214,
++    "topic_full_rate": 0.214,
++    "topic_scored_prompts": 42,
++    "under_requested_minimum_count": 27,
++    "under_requested_minimum_rate": 0.54,
++    "unexpected_section_labels": 0,
++    "unfinished_tail_count": 39
++  },
++  "L3-25": {
++    "count": 50,
++    "duplicate_lines": 0,
++    "empty_outputs": 0,
++    "format_anomaly_count": 3,
++    "format_anomaly_ids": [
++      "p01",
++      "p48",
++      "p50"
++    ],
++    "generation_sha256": "f67b8ea6080ad9bed51e9199202ad8a74e98a79bf6cf11c106aa6566a0e44bde",
++    "generic_phrase_hits": 50,
++    "length_adherence_rate": 0.76,
++    "max_longest_train_phrase_words": 4,
++    "mean_line_words": 39.55,
++    "mean_words": 116.3,
++    "medium_long_early_stop_count": 1,
++    "medium_long_early_stop_rate": 0.033,
++    "memorization_flags": 0,
++    "meta_instruction_hits": 6,
++    "prose_like": 41,
++    "topic_any_first50_rate": 0.667,
++    "topic_any_rate": 0.786,
++    "topic_full_first50_rate": 0.31,
++    "topic_full_rate": 0.429,
++    "topic_scored_prompts": 42,
++    "under_requested_minimum_count": 2,
++    "under_requested_minimum_rate": 0.04,
++    "unexpected_section_labels": 0,
++    "unfinished_tail_count": 35
++  },
++  "L3-50": {
++    "count": 50,
++    "duplicate_lines": 0,
++    "empty_outputs": 0,
++    "format_anomaly_count": 0,
++    "format_anomaly_ids": [],
++    "generation_sha256": "29a01632d756fafab54e9cdf04675acbf6b2e88df800cc3cda7404ae1bbdb082",
++    "generic_phrase_hits": 11,
++    "length_adherence_rate": 0.42,
++    "max_longest_train_phrase_words": 4,
++    "mean_line_words": 8.38,
++    "mean_words": 27.6,
++    "medium_long_early_stop_count": 21,
++    "medium_long_early_stop_rate": 0.7,
++    "memorization_flags": 0,
++    "meta_instruction_hits": 2,
++    "prose_like": 32,
++    "topic_any_first50_rate": 0.833,
++    "topic_any_rate": 0.833,
++    "topic_full_first50_rate": 0.357,
++    "topic_full_rate": 0.381,
++    "topic_scored_prompts": 42,
++    "under_requested_minimum_count": 29,
++    "under_requested_minimum_rate": 0.58,
++    "unexpected_section_labels": 0,
++    "unfinished_tail_count": 40
++  },
++  "L4-15": {
++    "count": 50,
++    "duplicate_lines": 1,
++    "empty_outputs": 0,
++    "format_anomaly_count": 1,
++    "format_anomaly_ids": [
++      "p50"
++    ],
++    "generation_sha256": "f4c286ddb9a6aeebc6bea9bb6012320df5eba8e19c366b049097ecbc2bf33ae5",
++    "generic_phrase_hits": 43,
++    "length_adherence_rate": 0.86,
++    "max_longest_train_phrase_words": 5,
++    "mean_line_words": 37.67,
++    "mean_words": 122.9,
++    "medium_long_early_stop_count": 0,
++    "medium_long_early_stop_rate": 0,
++    "memorization_flags": 0,
++    "meta_instruction_hits": 5,
++    "prose_like": 46,
++    "topic_any_first50_rate": 0.619,
++    "topic_any_rate": 0.881,
++    "topic_full_first50_rate": 0.286,
++    "topic_full_rate": 0.548,
++    "topic_scored_prompts": 42,
++    "under_requested_minimum_count": 0,
++    "under_requested_minimum_rate": 0,
++    "unexpected_section_labels": 0,
++    "unfinished_tail_count": 35
++  },
++  "L4-25": {
++    "count": 50,
++    "duplicate_lines": 0,
++    "empty_outputs": 0,
++    "format_anomaly_count": 3,
++    "format_anomaly_ids": [
++      "p18",
++      "p48",
++      "p50"
++    ],
++    "generation_sha256": "fc4b2193de2b7cbfdc3069d8e70600f8a7ccb9674e5a62548fe1bc76372faf6c",
++    "generic_phrase_hits": 29,
++    "length_adherence_rate": 0.8,
++    "max_longest_train_phrase_words": 4,
++    "mean_line_words": 32.59,
++    "mean_words": 109.7,
++    "medium_long_early_stop_count": 2,
++    "medium_long_early_stop_rate": 0.067,
++    "memorization_flags": 0,
++    "meta_instruction_hits": 6,
++    "prose_like": 37,
++    "topic_any_first50_rate": 0.69,
++    "topic_any_rate": 0.833,
++    "topic_full_first50_rate": 0.31,
++    "topic_full_rate": 0.452,
++    "topic_scored_prompts": 42,
++    "under_requested_minimum_count": 3,
++    "under_requested_minimum_rate": 0.06,
++    "unexpected_section_labels": 0,
++    "unfinished_tail_count": 33
++  },
++  "L4-35": {
++    "count": 50,
++    "duplicate_lines": 2,
++    "empty_outputs": 0,
++    "format_anomaly_count": 0,
++    "format_anomaly_ids": [],
++    "generation_sha256": "f88662636075c1d0a1ba371f7f311d4d451b138dd3289ff1a0421725e60334d2",
++    "generic_phrase_hits": 33,
++    "length_adherence_rate": 0.82,
++    "max_longest_train_phrase_words": 5,
++    "mean_line_words": 19.07,
++    "mean_words": 74.9,
++    "medium_long_early_stop_count": 7,
++    "medium_long_early_stop_rate": 0.233,
++    "memorization_flags": 0,
++    "meta_instruction_hits": 6,
++    "prose_like": 30,
++    "topic_any_first50_rate": 0.833,
++    "topic_any_rate": 0.881,
++    "topic_full_first50_rate": 0.429,
++    "topic_full_rate": 0.452,
++    "topic_scored_prompts": 42,
++    "under_requested_minimum_count": 9,
++    "under_requested_minimum_rate": 0.18,
++    "unexpected_section_labels": 0,
++    "unfinished_tail_count": 19
++  },
++  "L4-50": {
++    "count": 50,
++    "duplicate_lines": 1,
++    "empty_outputs": 0,
++    "format_anomaly_count": 0,
++    "format_anomaly_ids": [],
++    "generation_sha256": "f8c1ece7991c4cddd3f85c855cf3816b0b722d0b045e3fb1b86cc3e29317a301",
++    "generic_phrase_hits": 13,
++    "length_adherence_rate": 0.42,
++    "max_longest_train_phrase_words": 4,
++    "mean_line_words": 8.52,
++    "mean_words": 28.7,
++    "medium_long_early_stop_count": 25,
++    "medium_long_early_stop_rate": 0.833,
++    "memorization_flags": 0,
++    "meta_instruction_hits": 2,
++    "prose_like": 33,
++    "topic_any_first50_rate": 0.762,
++    "topic_any_rate": 0.762,
++    "topic_full_first50_rate": 0.333,
++    "topic_full_rate": 0.333,
++    "topic_scored_prompts": 42,
++    "under_requested_minimum_count": 29,
++    "under_requested_minimum_rate": 0.58,
++    "unexpected_section_labels": 0,
++    "unfinished_tail_count": 34
++  }
++}
+diff --git a/corpus/metadata/l4_medium_long.json b/corpus/metadata/l4_medium_long.json
+new file mode 100644
+index 0000000..7c51f07
+--- /dev/null
++++ b/corpus/metadata/l4_medium_long.json
+@@ -0,0 +1,2432 @@
++{
++  "B0": {
++    "categories": {
++      "long": {
++        "below_minimum_count": 0,
++        "mean_actual_words": 208.7,
++        "premature_stop_proxy_rate": 0,
++        "prompts": 10,
++        "topic_contact_first50_rate": 0.75,
++        "topic_scored_prompts": 8
++      },
++      "medium": {
++        "below_minimum_count": 0,
++        "mean_actual_words": 132.6,
++        "premature_stop_proxy_rate": 0,
++        "prompts": 20,
++        "topic_contact_first50_rate": 0.706,
++        "topic_scored_prompts": 17
++      }
++    },
++    "per_prompt": [
++      {
++        "id": "p01",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 142
++      },
++      {
++        "id": "p03",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 143
++      },
++      {
++        "id": "p05",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 141
++      },
++      {
++        "id": "p06",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 198
++      },
++      {
++        "id": "p08",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 132
++      },
++      {
++        "id": "p10",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 214
++      },
++      {
++        "id": "p12",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 144
++      },
++      {
++        "id": "p14",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 43
++      },
++      {
++        "id": "p15",
++        "requested_length": "long",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 216
++      },
++      {
++        "id": "p17",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 140
++      },
++      {
++        "id": "p19",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 130
++      },
++      {
++        "id": "p20",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 212
++      },
++      {
++        "id": "p22",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 141
++      },
++      {
++        "id": "p24",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 212
++      },
++      {
++        "id": "p25",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 122
++      },
++      {
++        "id": "p27",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 139
++      },
++      {
++        "id": "p29",
++        "requested_length": "long",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 222
++      },
++      {
++        "id": "p30",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 142
++      },
++      {
++        "id": "p32",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 139
++      },
++      {
++        "id": "p33",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 207
++      },
++      {
++        "id": "p35",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 132
++      },
++      {
++        "id": "p37",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 137
++      },
++      {
++        "id": "p38",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 211
++      },
++      {
++        "id": "p40",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 138
++      },
++      {
++        "id": "p42",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 139
++      },
++      {
++        "id": "p43",
++        "requested_length": "long",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 205
++      },
++      {
++        "id": "p45",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 145
++      },
++      {
++        "id": "p47",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 140
++      },
++      {
++        "id": "p48",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 122
++      },
++      {
++        "id": "p50",
++        "requested_length": "long",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 190
++      }
++    ],
++    "summary": {
++      "below_minimum_count": 0,
++      "mean_actual_words": 157.9,
++      "premature_stop_proxy_rate": 0,
++      "prompts": 30,
++      "topic_contact_first50_rate": 0.72,
++      "topic_scored_prompts": 25
++    }
++  },
++  "L1-48": {
++    "categories": {
++      "long": {
++        "below_minimum_count": 0,
++        "mean_actual_words": 196.4,
++        "premature_stop_proxy_rate": 0,
++        "prompts": 10,
++        "topic_contact_first50_rate": 0.5,
++        "topic_scored_prompts": 8
++      },
++      "medium": {
++        "below_minimum_count": 0,
++        "mean_actual_words": 127.8,
++        "premature_stop_proxy_rate": 0,
++        "prompts": 20,
++        "topic_contact_first50_rate": 0.529,
++        "topic_scored_prompts": 17
++      }
++    },
++    "per_prompt": [
++      {
++        "id": "p01",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 143
++      },
++      {
++        "id": "p03",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 134
++      },
++      {
++        "id": "p05",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 134
++      },
++      {
++        "id": "p06",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 209
++      },
++      {
++        "id": "p08",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 135
++      },
++      {
++        "id": "p10",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 215
++      },
++      {
++        "id": "p12",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 70
++      },
++      {
++        "id": "p14",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 126
++      },
++      {
++        "id": "p15",
++        "requested_length": "long",
++        "topic_any_first50": false,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 189
++      },
++      {
++        "id": "p17",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 140
++      },
++      {
++        "id": "p19",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 140
++      },
++      {
++        "id": "p20",
++        "requested_length": "long",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 89
++      },
++      {
++        "id": "p22",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 75
++      },
++      {
++        "id": "p24",
++        "requested_length": "long",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 213
++      },
++      {
++        "id": "p25",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 106
++      },
++      {
++        "id": "p27",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 136
++      },
++      {
++        "id": "p29",
++        "requested_length": "long",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 209
++      },
++      {
++        "id": "p30",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 144
++      },
++      {
++        "id": "p32",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 138
++      },
++      {
++        "id": "p33",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 220
++      },
++      {
++        "id": "p35",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 110
++      },
++      {
++        "id": "p37",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 150
++      },
++      {
++        "id": "p38",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 202
++      },
++      {
++        "id": "p40",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 143
++      },
++      {
++        "id": "p42",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 117
++      },
++      {
++        "id": "p43",
++        "requested_length": "long",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 204
++      },
++      {
++        "id": "p45",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 144
++      },
++      {
++        "id": "p47",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 142
++      },
++      {
++        "id": "p48",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 128
++      },
++      {
++        "id": "p50",
++        "requested_length": "long",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 214
++      }
++    ],
++    "summary": {
++      "below_minimum_count": 0,
++      "mean_actual_words": 150.6,
++      "premature_stop_proxy_rate": 0,
++      "prompts": 30,
++      "topic_contact_first50_rate": 0.52,
++      "topic_scored_prompts": 25
++    }
++  },
++  "L2-50": {
++    "categories": {
++      "long": {
++        "below_minimum_count": 7,
++        "mean_actual_words": 63.9,
++        "premature_stop_proxy_rate": 0.7,
++        "prompts": 10,
++        "topic_contact_first50_rate": 0.5,
++        "topic_scored_prompts": 8
++      },
++      "medium": {
++        "below_minimum_count": 12,
++        "mean_actual_words": 39.9,
++        "premature_stop_proxy_rate": 0.6,
++        "prompts": 20,
++        "topic_contact_first50_rate": 0.647,
++        "topic_scored_prompts": 17
++      }
++    },
++    "per_prompt": [
++      {
++        "id": "p01",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 23
++      },
++      {
++        "id": "p03",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": true,
++        "word_count": 17
++      },
++      {
++        "id": "p05",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 9
++      },
++      {
++        "id": "p06",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 32
++      },
++      {
++        "id": "p08",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": true,
++        "word_count": 26
++      },
++      {
++        "id": "p10",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": true,
++        "word_count": 47
++      },
++      {
++        "id": "p12",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": true,
++        "word_count": 13
++      },
++      {
++        "id": "p14",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 29
++      },
++      {
++        "id": "p15",
++        "requested_length": "long",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 180
++      },
++      {
++        "id": "p17",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 26
++      },
++      {
++        "id": "p19",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 51
++      },
++      {
++        "id": "p20",
++        "requested_length": "long",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 30
++      },
++      {
++        "id": "p22",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 65
++      },
++      {
++        "id": "p24",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 99
++      },
++      {
++        "id": "p25",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 53
++      },
++      {
++        "id": "p27",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 123
++      },
++      {
++        "id": "p29",
++        "requested_length": "long",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": true,
++        "word_count": 35
++      },
++      {
++        "id": "p30",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 6
++      },
++      {
++        "id": "p32",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 17
++      },
++      {
++        "id": "p33",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 138
++      },
++      {
++        "id": "p35",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": true,
++        "word_count": 32
++      },
++      {
++        "id": "p37",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 54
++      },
++      {
++        "id": "p38",
++        "requested_length": "long",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 25
++      },
++      {
++        "id": "p40",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 35
++      },
++      {
++        "id": "p42",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 53
++      },
++      {
++        "id": "p43",
++        "requested_length": "long",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": true,
++        "word_count": 36
++      },
++      {
++        "id": "p45",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 136
++      },
++      {
++        "id": "p47",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 11
++      },
++      {
++        "id": "p48",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": true,
++        "word_count": 18
++      },
++      {
++        "id": "p50",
++        "requested_length": "long",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 17
++      }
++    ],
++    "summary": {
++      "below_minimum_count": 19,
++      "mean_actual_words": 47.9,
++      "premature_stop_proxy_rate": 0.633,
++      "prompts": 30,
++      "topic_contact_first50_rate": 0.6,
++      "topic_scored_prompts": 25
++    }
++  },
++  "L3-25": {
++    "categories": {
++      "long": {
++        "below_minimum_count": 0,
++        "mean_actual_words": 194.3,
++        "premature_stop_proxy_rate": 0,
++        "prompts": 10,
++        "topic_contact_first50_rate": 0.875,
++        "topic_scored_prompts": 8
++      },
++      "medium": {
++        "below_minimum_count": 1,
++        "mean_actual_words": 128.1,
++        "premature_stop_proxy_rate": 0.05,
++        "prompts": 20,
++        "topic_contact_first50_rate": 0.588,
++        "topic_scored_prompts": 17
++      }
++    },
++    "per_prompt": [
++      {
++        "id": "p01",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 150
++      },
++      {
++        "id": "p03",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 110
++      },
++      {
++        "id": "p05",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 142
++      },
++      {
++        "id": "p06",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 203
++      },
++      {
++        "id": "p08",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 136
++      },
++      {
++        "id": "p10",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 207
++      },
++      {
++        "id": "p12",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 132
++      },
++      {
++        "id": "p14",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 119
++      },
++      {
++        "id": "p15",
++        "requested_length": "long",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 209
++      },
++      {
++        "id": "p17",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 141
++      },
++      {
++        "id": "p19",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 135
++      },
++      {
++        "id": "p20",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 209
++      },
++      {
++        "id": "p22",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 133
++      },
++      {
++        "id": "p24",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 178
++      },
++      {
++        "id": "p25",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 142
++      },
++      {
++        "id": "p27",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 135
++      },
++      {
++        "id": "p29",
++        "requested_length": "long",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 216
++      },
++      {
++        "id": "p30",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 146
++      },
++      {
++        "id": "p32",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 140
++      },
++      {
++        "id": "p33",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 209
++      },
++      {
++        "id": "p35",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 136
++      },
++      {
++        "id": "p37",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 131
++      },
++      {
++        "id": "p38",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 204
++      },
++      {
++        "id": "p40",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 143
++      },
++      {
++        "id": "p42",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 144
++      },
++      {
++        "id": "p43",
++        "requested_length": "long",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 185
++      },
++      {
++        "id": "p45",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 142
++      },
++      {
++        "id": "p47",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 102
++      },
++      {
++        "id": "p48",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 2
++      },
++      {
++        "id": "p50",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 123
++      }
++    ],
++    "summary": {
++      "below_minimum_count": 1,
++      "mean_actual_words": 150.1,
++      "premature_stop_proxy_rate": 0.033,
++      "prompts": 30,
++      "topic_contact_first50_rate": 0.68,
++      "topic_scored_prompts": 25
++    }
++  },
++  "L3-50": {
++    "categories": {
++      "long": {
++        "below_minimum_count": 8,
++        "mean_actual_words": 44.5,
++        "premature_stop_proxy_rate": 0.8,
++        "prompts": 10,
++        "topic_contact_first50_rate": 0.75,
++        "topic_scored_prompts": 8
++      },
++      "medium": {
++        "below_minimum_count": 13,
++        "mean_actual_words": 31,
++        "premature_stop_proxy_rate": 0.65,
++        "prompts": 20,
++        "topic_contact_first50_rate": 0.882,
++        "topic_scored_prompts": 17
++      }
++    },
++    "per_prompt": [
++      {
++        "id": "p01",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 26
++      },
++      {
++        "id": "p03",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": true,
++        "word_count": 17
++      },
++      {
++        "id": "p05",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": true,
++        "word_count": 15
++      },
++      {
++        "id": "p06",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 21
++      },
++      {
++        "id": "p08",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 37
++      },
++      {
++        "id": "p10",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 37
++      },
++      {
++        "id": "p12",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": true,
++        "word_count": 13
++      },
++      {
++        "id": "p14",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": true,
++        "word_count": 20
++      },
++      {
++        "id": "p15",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": true,
++        "word_count": 32
++      },
++      {
++        "id": "p17",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 16
++      },
++      {
++        "id": "p19",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": true,
++        "word_count": 12
++      },
++      {
++        "id": "p20",
++        "requested_length": "long",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 37
++      },
++      {
++        "id": "p22",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 36
++      },
++      {
++        "id": "p24",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 101
++      },
++      {
++        "id": "p25",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 45
++      },
++      {
++        "id": "p27",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 75
++      },
++      {
++        "id": "p29",
++        "requested_length": "long",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": true,
++        "word_count": 28
++      },
++      {
++        "id": "p30",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 11
++      },
++      {
++        "id": "p32",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 9
++      },
++      {
++        "id": "p33",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 85
++      },
++      {
++        "id": "p35",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": true,
++        "word_count": 11
++      },
++      {
++        "id": "p37",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 54
++      },
++      {
++        "id": "p38",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": true,
++        "word_count": 21
++      },
++      {
++        "id": "p40",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 18
++      },
++      {
++        "id": "p42",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": true,
++        "word_count": 30
++      },
++      {
++        "id": "p43",
++        "requested_length": "long",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": true,
++        "word_count": 58
++      },
++      {
++        "id": "p45",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 47
++      },
++      {
++        "id": "p47",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 11
++      },
++      {
++        "id": "p48",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 117
++      },
++      {
++        "id": "p50",
++        "requested_length": "long",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 25
++      }
++    ],
++    "summary": {
++      "below_minimum_count": 21,
++      "mean_actual_words": 35.5,
++      "premature_stop_proxy_rate": 0.7,
++      "prompts": 30,
++      "topic_contact_first50_rate": 0.84,
++      "topic_scored_prompts": 25
++    }
++  },
++  "L4-15": {
++    "categories": {
++      "long": {
++        "below_minimum_count": 0,
++        "mean_actual_words": 201.6,
++        "premature_stop_proxy_rate": 0,
++        "prompts": 10,
++        "topic_contact_first50_rate": 0.625,
++        "topic_scored_prompts": 8
++      },
++      "medium": {
++        "below_minimum_count": 0,
++        "mean_actual_words": 131.9,
++        "premature_stop_proxy_rate": 0,
++        "prompts": 20,
++        "topic_contact_first50_rate": 0.588,
++        "topic_scored_prompts": 17
++      }
++    },
++    "per_prompt": [
++      {
++        "id": "p01",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 138
++      },
++      {
++        "id": "p03",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 142
++      },
++      {
++        "id": "p05",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 131
++      },
++      {
++        "id": "p06",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 198
++      },
++      {
++        "id": "p08",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 137
++      },
++      {
++        "id": "p10",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 214
++      },
++      {
++        "id": "p12",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 142
++      },
++      {
++        "id": "p14",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 142
++      },
++      {
++        "id": "p15",
++        "requested_length": "long",
++        "topic_any_first50": false,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 211
++      },
++      {
++        "id": "p17",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 138
++      },
++      {
++        "id": "p19",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 120
++      },
++      {
++        "id": "p20",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 198
++      },
++      {
++        "id": "p22",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 142
++      },
++      {
++        "id": "p24",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 213
++      },
++      {
++        "id": "p25",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 134
++      },
++      {
++        "id": "p27",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 125
++      },
++      {
++        "id": "p29",
++        "requested_length": "long",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 222
++      },
++      {
++        "id": "p30",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 55
++      },
++      {
++        "id": "p32",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 144
++      },
++      {
++        "id": "p33",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 206
++      },
++      {
++        "id": "p35",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 135
++      },
++      {
++        "id": "p37",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 132
++      },
++      {
++        "id": "p38",
++        "requested_length": "long",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 204
++      },
++      {
++        "id": "p40",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 145
++      },
++      {
++        "id": "p42",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 147
++      },
++      {
++        "id": "p43",
++        "requested_length": "long",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 188
++      },
++      {
++        "id": "p45",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 136
++      },
++      {
++        "id": "p47",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 132
++      },
++      {
++        "id": "p48",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 121
++      },
++      {
++        "id": "p50",
++        "requested_length": "long",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 162
++      }
++    ],
++    "summary": {
++      "below_minimum_count": 0,
++      "mean_actual_words": 155.1,
++      "premature_stop_proxy_rate": 0,
++      "prompts": 30,
++      "topic_contact_first50_rate": 0.6,
++      "topic_scored_prompts": 25
++    }
++  },
++  "L4-25": {
++    "categories": {
++      "long": {
++        "below_minimum_count": 0,
++        "mean_actual_words": 201,
++        "premature_stop_proxy_rate": 0,
++        "prompts": 10,
++        "topic_contact_first50_rate": 0.625,
++        "topic_scored_prompts": 8
++      },
++      "medium": {
++        "below_minimum_count": 2,
++        "mean_actual_words": 109.2,
++        "premature_stop_proxy_rate": 0.1,
++        "prompts": 20,
++        "topic_contact_first50_rate": 0.706,
++        "topic_scored_prompts": 17
++      }
++    },
++    "per_prompt": [
++      {
++        "id": "p01",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 143
++      },
++      {
++        "id": "p03",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 134
++      },
++      {
++        "id": "p05",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 14
++      },
++      {
++        "id": "p06",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 208
++      },
++      {
++        "id": "p08",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 135
++      },
++      {
++        "id": "p10",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 202
++      },
++      {
++        "id": "p12",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 133
++      },
++      {
++        "id": "p14",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 145
++      },
++      {
++        "id": "p15",
++        "requested_length": "long",
++        "topic_any_first50": false,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 212
++      },
++      {
++        "id": "p17",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 70
++      },
++      {
++        "id": "p19",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 96
++      },
++      {
++        "id": "p20",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 206
++      },
++      {
++        "id": "p22",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 129
++      },
++      {
++        "id": "p24",
++        "requested_length": "long",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 166
++      },
++      {
++        "id": "p25",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 141
++      },
++      {
++        "id": "p27",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 133
++      },
++      {
++        "id": "p29",
++        "requested_length": "long",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 219
++      },
++      {
++        "id": "p30",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 138
++      },
++      {
++        "id": "p32",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 130
++      },
++      {
++        "id": "p33",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 207
++      },
++      {
++        "id": "p35",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 49
++      },
++      {
++        "id": "p37",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 139
++      },
++      {
++        "id": "p38",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 202
++      },
++      {
++        "id": "p40",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 136
++      },
++      {
++        "id": "p42",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 139
++      },
++      {
++        "id": "p43",
++        "requested_length": "long",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 195
++      },
++      {
++        "id": "p45",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 41
++      },
++      {
++        "id": "p47",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 138
++      },
++      {
++        "id": "p48",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 2
++      },
++      {
++        "id": "p50",
++        "requested_length": "long",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 193
++      }
++    ],
++    "summary": {
++      "below_minimum_count": 2,
++      "mean_actual_words": 139.8,
++      "premature_stop_proxy_rate": 0.067,
++      "prompts": 30,
++      "topic_contact_first50_rate": 0.68,
++      "topic_scored_prompts": 25
++    }
++  },
++  "L4-35": {
++    "categories": {
++      "long": {
++        "below_minimum_count": 1,
++        "mean_actual_words": 136.9,
++        "premature_stop_proxy_rate": 0.1,
++        "prompts": 10,
++        "topic_contact_first50_rate": 0.625,
++        "topic_scored_prompts": 8
++      },
++      "medium": {
++        "below_minimum_count": 6,
++        "mean_actual_words": 76.7,
++        "premature_stop_proxy_rate": 0.3,
++        "prompts": 20,
++        "topic_contact_first50_rate": 0.882,
++        "topic_scored_prompts": 17
++      }
++    },
++    "per_prompt": [
++      {
++        "id": "p01",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 142
++      },
++      {
++        "id": "p03",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 138
++      },
++      {
++        "id": "p05",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 97
++      },
++      {
++        "id": "p06",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 125
++      },
++      {
++        "id": "p08",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": true,
++        "word_count": 26
++      },
++      {
++        "id": "p10",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 164
++      },
++      {
++        "id": "p12",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 135
++      },
++      {
++        "id": "p14",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 79
++      },
++      {
++        "id": "p15",
++        "requested_length": "long",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 89
++      },
++      {
++        "id": "p17",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": true,
++        "word_count": 30
++      },
++      {
++        "id": "p19",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 101
++      },
++      {
++        "id": "p20",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 158
++      },
++      {
++        "id": "p22",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 42
++      },
++      {
++        "id": "p24",
++        "requested_length": "long",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 161
++      },
++      {
++        "id": "p25",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 47
++      },
++      {
++        "id": "p27",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 137
++      },
++      {
++        "id": "p29",
++        "requested_length": "long",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 212
++      },
++      {
++        "id": "p30",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 8
++      },
++      {
++        "id": "p32",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 12
++      },
++      {
++        "id": "p33",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 219
++      },
++      {
++        "id": "p35",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": true,
++        "word_count": 33
++      },
++      {
++        "id": "p37",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 74
++      },
++      {
++        "id": "p38",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 90
++      },
++      {
++        "id": "p40",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 47
++      },
++      {
++        "id": "p42",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 144
++      },
++      {
++        "id": "p43",
++        "requested_length": "long",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": false,
++        "word_count": 127
++      },
++      {
++        "id": "p45",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 8
++      },
++      {
++        "id": "p47",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 107
++      },
++      {
++        "id": "p48",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 126
++      },
++      {
++        "id": "p50",
++        "requested_length": "long",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 24
++      }
++    ],
++    "summary": {
++      "below_minimum_count": 7,
++      "mean_actual_words": 96.7,
++      "premature_stop_proxy_rate": 0.233,
++      "prompts": 30,
++      "topic_contact_first50_rate": 0.8,
++      "topic_scored_prompts": 25
++    }
++  },
++  "L4-50": {
++    "categories": {
++      "long": {
++        "below_minimum_count": 9,
++        "mean_actual_words": 40.6,
++        "premature_stop_proxy_rate": 0.9,
++        "prompts": 10,
++        "topic_contact_first50_rate": 0.75,
++        "topic_scored_prompts": 8
++      },
++      "medium": {
++        "below_minimum_count": 16,
++        "mean_actual_words": 28.1,
++        "premature_stop_proxy_rate": 0.8,
++        "prompts": 20,
++        "topic_contact_first50_rate": 0.765,
++        "topic_scored_prompts": 17
++      }
++    },
++    "per_prompt": [
++      {
++        "id": "p01",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 16
++      },
++      {
++        "id": "p03",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": true,
++        "word_count": 17
++      },
++      {
++        "id": "p05",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": true,
++        "word_count": 15
++      },
++      {
++        "id": "p06",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 21
++      },
++      {
++        "id": "p08",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": true,
++        "word_count": 26
++      },
++      {
++        "id": "p10",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 22
++      },
++      {
++        "id": "p12",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": true,
++        "word_count": 13
++      },
++      {
++        "id": "p14",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": true,
++        "word_count": 30
++      },
++      {
++        "id": "p15",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": true,
++        "word_count": 25
++      },
++      {
++        "id": "p17",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 35
++      },
++      {
++        "id": "p19",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": true,
++        "word_count": 30
++      },
++      {
++        "id": "p20",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": true,
++        "word_count": 22
++      },
++      {
++        "id": "p22",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 36
++      },
++      {
++        "id": "p24",
++        "requested_length": "long",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 43
++      },
++      {
++        "id": "p25",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 26
++      },
++      {
++        "id": "p27",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 26
++      },
++      {
++        "id": "p29",
++        "requested_length": "long",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": true,
++        "word_count": 43
++      },
++      {
++        "id": "p30",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 11
++      },
++      {
++        "id": "p32",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 17
++      },
++      {
++        "id": "p33",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": true,
++        "under_requested_minimum": false,
++        "word_count": 96
++      },
++      {
++        "id": "p35",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": true,
++        "word_count": 33
++      },
++      {
++        "id": "p37",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 46
++      },
++      {
++        "id": "p38",
++        "requested_length": "long",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 60
++      },
++      {
++        "id": "p40",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 18
++      },
++      {
++        "id": "p42",
++        "requested_length": "medium",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": true,
++        "word_count": 30
++      },
++      {
++        "id": "p43",
++        "requested_length": "long",
++        "topic_any_first50": null,
++        "topic_full": null,
++        "under_requested_minimum": true,
++        "word_count": 56
++      },
++      {
++        "id": "p45",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 29
++      },
++      {
++        "id": "p47",
++        "requested_length": "medium",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 11
++      },
++      {
++        "id": "p48",
++        "requested_length": "medium",
++        "topic_any_first50": true,
++        "topic_full": false,
++        "under_requested_minimum": false,
++        "word_count": 97
++      },
++      {
++        "id": "p50",
++        "requested_length": "long",
++        "topic_any_first50": false,
++        "topic_full": false,
++        "under_requested_minimum": true,
++        "word_count": 18
++      }
++    ],
++    "summary": {
++      "below_minimum_count": 25,
++      "mean_actual_words": 32.3,
++      "premature_stop_proxy_rate": 0.833,
++      "prompts": 30,
++      "topic_contact_first50_rate": 0.76,
++      "topic_scored_prompts": 25
++    }
++  }
++}
+diff --git a/corpus/metadata/l4_qualitative_notes.json b/corpus/metadata/l4_qualitative_notes.json
+new file mode 100644
+index 0000000..ebaaa6d
+--- /dev/null
++++ b/corpus/metadata/l4_qualitative_notes.json
+@@ -0,0 +1,34 @@
++{
++  "review_type": "Codex internal manual reading; no independent preference scores",
++  "subset_file": "corpus/metadata/l4_qualitative_subset.json",
++  "same_16_prompt_ids_read_at_every_checkpoint": [
++    "p01", "p02", "p04", "p06", "p07", "p10", "p12", "p16",
++    "p18", "p29", "p33", "p38", "p42", "p43", "p48", "p50"
++  ],
++  "checkpoints": {
++    "15": {
++      "imagery_and_phrasing": "p02 has line breaks, but its rhyme and imagery are familiar; p06 and p33 expand into stock descriptive scenes.",
++      "cadence_and_ambiguity": "Most long and medium responses are explanatory prose. p43 becomes a book blurb instead of creative text.",
++      "contact_and_completeness": "All 50 meet the minimum word threshold, yet many reach the generation cap mid-sentence. p50 explains a refrain rather than writing the requested voicemail piece.",
++      "generic_prose_drift": "Strong in p01, p06, p10, p12, p33, p42, and p43."
++    },
++    "25": {
++      "imagery_and_phrasing": "p02 and p04 gain some line breaks, but p06 becomes a geological explanation and p38 invents a pseudo-scientific sea creature.",
++      "cadence_and_ambiguity": "The dominant cadence remains prose. p43 is a chapter synopsis rather than an ambiguous lyric passage.",
++      "contact_and_completeness": "Only 2 of 30 medium/long requests are below minimum, but p18 outputs unrelated writing instructions and p48 outputs only empty Verse/Chorus labels.",
++      "generic_prose_drift": "Still material in p01, p10, p29, and p33."
++    },
++    "35": {
++      "imagery_and_phrasing": "p06's 'world's veins' and p16's moth-wing 'paper cuts' are useful images; p43 is a complete lyric-shaped answer. p38 ends with an irrelevant etymology and p33 wanders into a long shopping story.",
++      "cadence_and_ambiguity": "Mixed prose and line-broken writing. p16 and p43 have stronger cadence than earlier L4; p10, p29, p33, and p42 remain narrative or explanatory.",
++      "contact_and_completeness": "The prompt-contact proxy is strong, but 7 of 30 medium/long outputs are below minimum. p04 puts rain outside the hospital, p18 brings sailors to a lighthouse meant to be far from water, and p50 omits both voicemail and refrain.",
++      "generic_prose_drift": "Reduced from step 15 but still visible in p02, p10, p29, p33, and p42. p01, p12, p33, and p48 also end mid-thought."
++    },
++    "50": {
++      "imagery_and_phrasing": "Short lyric-like lines dominate, but many revert to generic relationship language. p43 keeps a coherent lyric shape; p48 supplies the requested verse/chorus form.",
++      "cadence_and_ambiguity": "More concise than step 35, but often too small to develop an image or tension.",
++      "contact_and_completeness": "25 of 30 medium/long requests are below minimum. p02 is one short line; p06, p10, and p50 stop after two to three lines, with p50 missing the requested voicemail and refrain.",
++      "generic_prose_drift": "Less long prose, at the cost of widespread premature completion."
++    }
++  }
++}
+diff --git a/corpus/metadata/l4_qualitative_subset.json b/corpus/metadata/l4_qualitative_subset.json
+new file mode 100644
+index 0000000..bce4e0b
+--- /dev/null
++++ b/corpus/metadata/l4_qualitative_subset.json
+@@ -0,0 +1,31 @@
++{
++  "purpose": "Fixed 16-prompt L4 qualitative subset selected before checkpoint inspection",
++  "prompt_ids": [
++    "p01",
++    "p02",
++    "p04",
++    "p06",
++    "p07",
++    "p10",
++    "p12",
++    "p16",
++    "p18",
++    "p29",
++    "p33",
++    "p38",
++    "p42",
++    "p43",
++    "p48",
++    "p50"
++  ],
++  "coverage": {
++    "sparse": ["p42", "p43"],
++    "descriptive": ["p01", "p02", "p04", "p06", "p07", "p10", "p12", "p16", "p18", "p29", "p33", "p38", "p48", "p50"],
++    "short": ["p02", "p04", "p07", "p16", "p18"],
++    "medium": ["p01", "p12", "p42", "p48"],
++    "long": ["p06", "p10", "p29", "p33", "p38", "p43", "p50"],
++    "concrete_image": ["p02", "p04", "p06", "p10", "p16", "p18", "p33", "p38"],
++    "abstract_or_vague": ["p07", "p12", "p29", "p42", "p43"],
++    "structured_form": ["p48", "p50"]
++  }
++}
+diff --git a/corpus/metadata/l4_sampler_qa.json b/corpus/metadata/l4_sampler_qa.json
+new file mode 100644
+index 0000000..565e36c
+--- /dev/null
++++ b/corpus/metadata/l4_sampler_qa.json
+@@ -0,0 +1,138 @@
++{
++  "actual_training": {
++    "completed_steps": 50,
++    "effective_prompt_class_counts": {
++      "descriptive": 263,
++      "sparse": 137
++    },
++    "effective_prompt_class_proportions": {
++      "descriptive": 0.6575,
++      "sparse": 0.3425
++    },
++    "expected_bucket_proportions": {
++      "longer": 0.2337,
++      "medium": 0.4206,
++      "short": 0.2892,
++      "very_short": 0.0565
++    },
++    "max_example_repetitions": 4,
++    "max_source_work_repetitions": 14,
++    "plan_indices_sha256": "61fea7982ea8745861caa03c58e19e52f6e25c5c62461e444e2e26a6549cb993",
++    "sampled_bucket_counts": {
++      "longer": 95,
++      "medium": 161,
++      "short": 124,
++      "very_short": 20
++    },
++    "sampled_bucket_proportions": {
++      "longer": 0.2375,
++      "medium": 0.4025,
++      "short": 0.31,
++      "very_short": 0.05
++    },
++    "sampled_examples": 400,
++    "sampler_seed": 314162,
++    "source_bucket_counts": {
++      "longer": 24,
++      "medium": 72,
++      "short": 99,
++      "very_short": 29
++    },
++    "source_l3_examples": 224,
++    "source_l3_sha256": "0ec0569d1310c1baf9ceafc679950bec4f653546c2610ce86137ea4630559b02",
++    "trace_sha256": "7d22e0bfa3028feeef09763906cb956c87cf7fc23da99bf8c7458cee240ac540",
++    "unique_examples_observed": 215,
++    "unique_source_works_observed": 84,
++    "weights": {
++      "longer": 2.5,
++      "medium": 1.5,
++      "short": 0.75,
++      "very_short": 0.5
++    }
++  },
++  "full_75_step_plan_sha256": "a10e18e3ce57fcaaf3c1eccc4939b7adc894a73a8c516955a4787ad2cd18acd6",
++  "scheduled_50": {
++    "effective_prompt_class_counts": {
++      "descriptive": 263,
++      "sparse": 137
++    },
++    "effective_prompt_class_proportions": {
++      "descriptive": 0.6575,
++      "sparse": 0.3425
++    },
++    "expected_bucket_proportions": {
++      "longer": 0.2337,
++      "medium": 0.4206,
++      "short": 0.2892,
++      "very_short": 0.0565
++    },
++    "max_example_repetitions": 4,
++    "max_source_work_repetitions": 14,
++    "plan_indices_sha256": "61fea7982ea8745861caa03c58e19e52f6e25c5c62461e444e2e26a6549cb993",
++    "sampled_bucket_counts": {
++      "longer": 95,
++      "medium": 161,
++      "short": 124,
++      "very_short": 20
++    },
++    "sampled_bucket_proportions": {
++      "longer": 0.2375,
++      "medium": 0.4025,
++      "short": 0.31,
++      "very_short": 0.05
++    },
++    "sampled_examples": 400,
++    "sampler_seed": 314162,
++    "source_bucket_counts": {
++      "longer": 24,
++      "medium": 72,
++      "short": 99,
++      "very_short": 29
++    },
++    "source_l3_examples": 224,
++    "source_l3_sha256": "0ec0569d1310c1baf9ceafc679950bec4f653546c2610ce86137ea4630559b02",
++    "unique_examples_observed": 215,
++    "unique_source_works_observed": 84,
++    "weights": {
++      "longer": 2.5,
++      "medium": 1.5,
++      "short": 0.75,
++      "very_short": 0.5
++    }
++  },
++  "source_l3_dataset_hashes": {
++    "heldout": "b3b227badf80ca02e56b37c9c42d6980c1cb3a7c4786bcc397517ff62864d865",
++    "train": "0ec0569d1310c1baf9ceafc679950bec4f653546c2610ce86137ea4630559b02",
++    "validation": "504ee376e676a74bf55934a19a3673c6973b948d495d1a76e36d33f969c7b1e9"
++  },
++  "status": "passed",
++  "unchanged_training_format": {
++    "eos_after_target_tokens": {
++      "max": 172,
++      "median": 48.0,
++      "min": 11,
++      "p10": 24,
++      "p90": 89
++    },
++    "eos_count_per_example": 1,
++    "full_sequence_stats": {
++      "max": 208,
++      "median": 77.0,
++      "min": 29,
++      "p10": 51,
++      "p90": 120
++    },
++    "max_sequence_length": 384,
++    "padding_checked_with_unequal_sequences": true,
++    "padding_label_value": -100,
++    "prompt_masked": true,
++    "target_token_stats": {
++      "max": 172,
++      "median": 48.0,
++      "min": 11,
++      "p10": 24,
++      "p90": 89
++    },
++    "truncated_count": 0
++  }
++}
+diff --git a/scripts/blind_compare_l4.py b/scripts/blind_compare_l4.py
+new file mode 100644
+index 0000000..c071de2
+--- /dev/null
++++ b/scripts/blind_compare_l4.py
+@@ -0,0 +1,51 @@
++"""Private randomized four-way L1/L3/L4 fixed-prompt review packet."""
++from __future__ import annotations
++
++import argparse
++import json
++import random
++from pathlib import Path
++
++from scripts.pipeline import write_json, write_jsonl
++
++
++def load(path):
++    return {row['id']: row for row in (json.loads(line) for line in Path(path).read_text().splitlines())}
++
++
++def main():
++    p = argparse.ArgumentParser()
++    for name in ('l1', 'l3_25', 'l3_50', 'l4'):
++        p.add_argument(f'--{name}', required=True)
++    p.add_argument('--out', required=True)
++    args = p.parse_args()
++    runs = {'L1-48': load(args.l1), 'L3-25': load(args.l3_25),
++            'L3-50': load(args.l3_50), 'L4': load(args.l4)}
++    ids = set(runs['L1-48'])
++    if len(ids) != 50 or any(set(run) != ids for run in runs.values()):
++        raise ValueError('Four runs must contain the same 50 prompt IDs')
++    rng = random.Random(314164)
++    packet, key = [], {}
++    for pid in sorted(ids):
++        prompt = runs['L1-48'][pid]['prompt']
++        if any(run[pid]['prompt'] != prompt for run in runs.values()):
++            raise ValueError(f'Prompt changed: {pid}')
++        order = list(runs)
++        rng.shuffle(order)
++        letters = 'ABCD'
++        packet.append({'id': pid, 'prompt': prompt,
++                       **{letter: runs[name][pid]['output'] for letter, name in zip(letters, order)}})
++        key[pid] = dict(zip(letters, order))
++    out = Path(args.out)
++    out.mkdir(parents=True, exist_ok=True)
++    write_jsonl(out / 'review_packet.jsonl', packet)
++    write_json(out / 'answer_key.json', key)
++    (out / 'rubric.md').write_text('''# Blind L1-48 / L3-25 / L3-50 / L4 review
++
++Read A–D before opening the separate answer key. Rate each 1–5 for style resemblance, unusual phrasing, imagery, cadence, ambiguity, prompt contact, completeness, originality, and overall preference. Note generic explanatory prose, malformed text, or copying concerns. No human scores are implied by this packet.
++''')
++    print(f'{len(packet)} blinded prompts')
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/scripts/compare_l4.py b/scripts/compare_l4.py
+new file mode 100644
+index 0000000..fe11905
+--- /dev/null
++++ b/scripts/compare_l4.py
+@@ -0,0 +1,81 @@
++"""Aggregate fixed-prompt L4 behavior and per-prompt medium/long diagnostics."""
++from __future__ import annotations
++
++import argparse
++import json
++import re
++import statistics
++from pathlib import Path
++
++from scripts.analyze_outputs import analyze
++from scripts.behavior_l3 import summarize
++from scripts.pipeline import sha, write_json
++
++
++def compare(runs):
++    overview, medium_long = {}, {}
++    for name, directory in runs.items():
++        directory = Path(directory)
++        behavior = summarize(directory)
++        shape = analyze(directory / 'generations.jsonl')
++        anomaly_ids = {row['id'] for row in shape['per_prompt'] if row['unexpected_section_label']}
++        anomaly_ids |= {row['id'] for row in behavior['per_prompt'] if row['word_count'] == 0}
++        generations = [json.loads(line) for line in (directory / 'generations.jsonl').read_text().splitlines()]
++        for row in generations:
++            lines = [line.strip() for line in row['output'].splitlines() if line.strip()]
++            if lines and all(re.fullmatch(r'(?i)(?:verse|chorus|bridge)(?:\s+\d+)?\s*:', line) for line in lines):
++                anomaly_ids.add(row['id'])
++            if re.search(r'(?i)\b(?:your job is|you are given|no words with fewer|here.s an example|no dialogue|make it feel|the first part of the refrain|write a poem|here is|i will write|as an ai)\b', row['output']):
++                anomaly_ids.add(row['id'])
++        overview[name] = {key: value for key, value in behavior.items() if key != 'per_prompt'}
++        overview[name]['length_adherence_rate'] = json.loads((directory / 'summary.json').read_text())['length_adherence_rate']
++        overview[name]['format_anomaly_count'] = len(anomaly_ids)
++        overview[name]['format_anomaly_ids'] = sorted(anomaly_ids)
++        overview[name]['generation_sha256'] = sha((directory / 'generations.jsonl').read_bytes())
++        selected = [row for row in behavior['per_prompt'] if row['requested_length'] in ('medium', 'long')]
++        categories = {}
++        for category in ('medium', 'long'):
++            subset = [row for row in selected if row['requested_length'] == category]
++            contact = [row['topic_any_first50'] for row in subset if row['topic_any_first50'] is not None]
++            categories[category] = {
++                'prompts': len(subset),
++                'mean_actual_words': round(statistics.mean(row['word_count'] for row in subset), 1),
++                'below_minimum_count': sum(row['under_requested_minimum'] for row in subset),
++                'premature_stop_proxy_rate': round(statistics.mean(row['under_requested_minimum'] for row in subset), 3),
++                'topic_scored_prompts': len(contact),
++                'topic_contact_first50_rate': round(statistics.mean(contact), 3),
++            }
++        contact = [row['topic_any_first50'] for row in selected if row['topic_any_first50'] is not None]
++        medium_long[name] = {
++            'summary': {'prompts': len(selected),
++                        'below_minimum_count': sum(row['under_requested_minimum'] for row in selected),
++                        'premature_stop_proxy_rate': round(statistics.mean(row['under_requested_minimum'] for row in selected), 3),
++                        'topic_scored_prompts': len(contact),
++                        'topic_contact_first50_rate': round(statistics.mean(contact), 3),
++                        'mean_actual_words': round(statistics.mean(row['word_count'] for row in selected), 1)},
++            'categories': categories,
++            'per_prompt': [{key: row[key] for key in ('id', 'requested_length', 'word_count',
++                           'under_requested_minimum', 'topic_any_first50', 'topic_full')}
++                           for row in selected],
++        }
++    return overview, medium_long
++
++
++def main():
++    p = argparse.ArgumentParser()
++    p.add_argument('--runs', nargs='+', required=True, help='NAME=directory')
++    p.add_argument('--overview-out', required=True)
++    p.add_argument('--medium-long-out', required=True)
++    args = p.parse_args()
++    runs = dict(item.split('=', 1) for item in args.runs)
++    overview, medium_long = compare(runs)
++    write_json(Path(args.overview_out), overview)
++    write_json(Path(args.medium_long_out), medium_long)
++    for name, row in overview.items():
++        print(name, {key: row[key] for key in ('length_adherence_rate', 'mean_words',
++                                             'under_requested_minimum_count', 'topic_any_first50_rate',
++                                             'format_anomaly_count')})
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/scripts/evaluate.py b/scripts/evaluate.py
+index 0b75e54..a1dd8b9 100644
+--- a/scripts/evaluate.py
++++ b/scripts/evaluate.py
+@@ -3,6 +3,7 @@ from __future__ import annotations
+ import argparse, difflib, json, random, re, statistics
+ from collections import Counter
+ from pathlib import Path
++from scripts.l4_sampler import WEIGHTS
+ from scripts.modeling import ROOT,CONFIG,generate,load_model
+ from scripts.pipeline import words,sha,write_json,write_jsonl
+ 
+@@ -76,6 +77,9 @@ def run_generation(adapter,output_dir,limit=None):
+         run['l2_dataset_hashes']=json.loads((ROOT/'corpus/metadata/l2_dataset.json').read_text())['hashes']
+     if adapter and '/l3/' in f'/{adapter}/':
+         run['l3_dataset_hashes']=json.loads((ROOT/'corpus/metadata/l3_dataset.json').read_text())['hashes']
++    if adapter and '/l4/' in f'/{adapter}/':
++        run['l3_dataset_hashes']=json.loads((ROOT/'corpus/metadata/l3_dataset.json').read_text())['hashes']
++        run['l4_sampler_weights']=WEIGHTS
+     write_json(output_dir/'run.json',run)
+     print(json.dumps(evaluate(output_dir/'generations.jsonl',output_dir),indent=2))
+ 
+diff --git a/scripts/l4_sampler.py b/scripts/l4_sampler.py
+new file mode 100644
+index 0000000..9014d6a
+--- /dev/null
++++ b/scripts/l4_sampler.py
+@@ -0,0 +1,84 @@
++"""Deterministic length-weighted, repetition-balanced L3 passage sampler."""
++from __future__ import annotations
++
++import json
++import random
++from collections import Counter
++
++from scripts.modeling import ROOT
++from scripts.pipeline import sha
++from scripts.train_l3 import L3
++
++BUCKETS = ('very_short', 'short', 'medium', 'longer')
++WEIGHTS = {'very_short': 0.5, 'short': 0.75, 'medium': 1.5, 'longer': 2.5}
++SEED = L3['seed']
++EXAMPLES_PER_STEP = L3['batch_size'] * L3['gradient_accumulation_steps']
++PLAN_STEPS = 75
++
++
++def training_rows():
++    return [json.loads(line) for line in (ROOT / 'data/l3/train.jsonl').read_text().splitlines()]
++
++
++def expected_proportions(rows):
++    counts = Counter(row['length_bucket'] for row in rows)
++    mass = {bucket: counts[bucket] * WEIGHTS[bucket] for bucket in BUCKETS}
++    total = sum(mass.values())
++    return {bucket: mass[bucket] / total for bucket in BUCKETS}
++
++
++def sample_plan(rows, steps=PLAN_STEPS, seed=SEED):
++    """Choose weighted buckets, then balance repeats and works within each.
++
++    The bucket draw is the only changed training distribution. Within a bucket,
++    least-used passages and then least-used works break ties to keep coverage.
++    The full 75-step plan makes a 50-to-75 continuation prefix-stable.
++    """
++    by_bucket = {bucket: [i for i, row in enumerate(rows) if row['length_bucket'] == bucket]
++                 for bucket in BUCKETS}
++    if any(not indices for indices in by_bucket.values()):
++        raise ValueError('Every L3 length bucket needs examples')
++    probabilities = expected_proportions(rows)
++    rng = random.Random(seed)
++    example_count, work_count = Counter(), Counter()
++    plan = []
++    for _ in range(steps * EXAMPLES_PER_STEP):
++        bucket = rng.choices(BUCKETS, weights=[probabilities[b] for b in BUCKETS], k=1)[0]
++        available = by_bucket[bucket]
++        least_example = min(example_count[i] for i in available)
++        choices = [i for i in available if example_count[i] == least_example]
++        least_work = min(work_count[rows[i]['work_id']] for i in choices)
++        choices = [i for i in choices if work_count[rows[i]['work_id']] == least_work]
++        index = rng.choice(choices)
++        plan.append(index)
++        example_count[index] += 1
++        work_count[rows[index]['work_id']] += 1
++    return plan
++
++
++def summarize(rows, indices):
++    source_counts = Counter(row['length_bucket'] for row in rows)
++    sampled = [rows[i] for i in indices]
++    bucket_counts = Counter(row['length_bucket'] for row in sampled)
++    example_counts = Counter(row['id'] for row in sampled)
++    work_counts = Counter(row['work_id'] for row in sampled)
++    class_counts = Counter(row['prompt_class'] for row in sampled)
++    total = len(indices)
++    return {
++        'source_l3_examples': len(rows),
++        'source_l3_sha256': sha((ROOT / 'data/l3/train.jsonl').read_bytes()),
++        'source_bucket_counts': {b: source_counts[b] for b in BUCKETS},
++        'weights': WEIGHTS,
++        'expected_bucket_proportions': {b: round(v, 4) for b, v in expected_proportions(rows).items()},
++        'sampled_examples': total,
++        'sampled_bucket_counts': {b: bucket_counts[b] for b in BUCKETS},
++        'sampled_bucket_proportions': {b: round(bucket_counts[b] / total, 4) for b in BUCKETS},
++        'unique_examples_observed': len(example_counts),
++        'unique_source_works_observed': len(work_counts),
++        'max_example_repetitions': max(example_counts.values()),
++        'max_source_work_repetitions': max(work_counts.values()),
++        'effective_prompt_class_counts': dict(class_counts),
++        'effective_prompt_class_proportions': {k: round(v / total, 4) for k, v in class_counts.items()},
++        'sampler_seed': SEED,
++        'plan_indices_sha256': sha(json.dumps(indices, separators=(',', ':')).encode()),
++    }
+diff --git a/scripts/qa_l4.py b/scripts/qa_l4.py
+new file mode 100644
+index 0000000..4c4f38d
+--- /dev/null
++++ b/scripts/qa_l4.py
+@@ -0,0 +1,73 @@
++"""L4 sampler and unchanged L3 training-format preflight/final trace audit."""
++from __future__ import annotations
++
++import argparse
++import json
++from pathlib import Path
++
++from scripts.l4_sampler import EXAMPLES_PER_STEP, PLAN_STEPS, sample_plan, summarize, training_rows
++from scripts.pipeline import sha, write_json
++from scripts.qa_l3 import audit as audit_l3
++from scripts.train_l3 import L3
++from scripts.train_l4 import L4
++
++
++def audit(trace_path=None, tokenizer=True):
++    rows = training_rows()
++    plan = sample_plan(rows)
++    if plan != sample_plan(rows):
++        raise ValueError('L4 sampler is not deterministic')
++    l3 = audit_l3(tokenizer=tokenizer)
++    if l3['errors']:
++        raise ValueError(f'L3 data/format QA failed: {l3["errors"]}')
++    if {k: v for k, v in L4.items() if k != 'checkpoints'} != {k: v for k, v in L3.items() if k != 'checkpoints'}:
++        raise ValueError('L4 changed a non-sampling training setting')
++    base = summarize(rows, plan[:50 * EXAMPLES_PER_STEP])
++    if base['unique_source_works_observed'] != 84 or base['max_example_repetitions'] > 5:
++        raise ValueError('L4 weighted sampler harmed source diversity')
++    result = {
++        'status': 'passed', 'source_l3_dataset_hashes': l3['dataset_hashes'],
++        'unchanged_training_format': {
++            'eos_count_per_example': l3['token_stats']['eos_count_per_example'] if tokenizer else None,
++            'eos_after_target_tokens': l3['token_stats']['eos_after_target_tokens'] if tokenizer else None,
++            'prompt_masked': tokenizer,
++            'padding_label_value': l3['token_stats']['padding_label_value'] if tokenizer else None,
++            'padding_checked_with_unequal_sequences': l3['token_stats']['padding_checked_with_unequal_sequences'] if tokenizer else None,
++            'target_token_stats': l3['token_stats']['target'] if tokenizer else None,
++            'full_sequence_stats': l3['token_stats']['full_sequence'] if tokenizer else None,
++            'max_sequence_length': L3['max_sequence_length'],
++            'truncated_count': l3['token_stats']['truncated_count'] if tokenizer else None,
++        },
++        'scheduled_50': base,
++        'full_75_step_plan_sha256': sha(json.dumps(plan, separators=(',', ':')).encode()),
++        'actual_training': None,
++    }
++    if trace_path:
++        traces = [json.loads(line) for line in Path(trace_path).read_text().splitlines()]
++        seen = []
++        by_id = {row['id']: i for i, row in enumerate(rows)}
++        for n, item in enumerate(traces, start=1):
++            if item['step'] != n or len(item['sampled_ids']) != EXAMPLES_PER_STEP:
++                raise ValueError(f'Invalid L4 sample trace step {n}')
++            seen.extend(by_id[identity] for identity in item['sampled_ids'])
++        if seen != plan[:len(seen)]:
++            raise ValueError('Actual L4 sampling diverged from deterministic plan')
++        result['actual_training'] = {'completed_steps': len(traces),
++            'trace_sha256': sha(Path(trace_path).read_bytes()),
++            **summarize(rows, seen)}
++    return result
++
++
++def main():
++    p = argparse.ArgumentParser()
++    p.add_argument('--trace')
++    p.add_argument('--out', required=True)
++    p.add_argument('--without-tokenizer', action='store_true')
++    args = p.parse_args()
++    result = audit(args.trace, tokenizer=not args.without_tokenizer)
++    write_json(Path(args.out), result)
++    print(json.dumps(result, indent=2))
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/scripts/train_l4.py b/scripts/train_l4.py
+new file mode 100644
+index 0000000..ec58ac4
+--- /dev/null
++++ b/scripts/train_l4.py
+@@ -0,0 +1,180 @@
++"""L4 LoRA trainer: L3 examples with length-weighted sampling only."""
++from __future__ import annotations
++
++import argparse
++import json
++import random
++import time
++from pathlib import Path
++
++from scripts.l4_sampler import PLAN_STEPS, SEED, WEIGHTS, sample_plan, summarize
++from scripts.modeling import CONFIG, ROOT
++from scripts.pipeline import sha, write_json
++from scripts.train import batchify, gpu_snapshot
++from scripts.train_l3 import L3, prepare, rows
++
++L4 = {**L3, 'checkpoints': [15, 25, 35, 50, 75]}
++
++
++def main():
++    import torch
++    from peft import LoraConfig, PeftModel, TaskType, get_peft_model
++    from transformers import AutoModelForCausalLM, AutoTokenizer, get_linear_schedule_with_warmup
++
++    p = argparse.ArgumentParser()
++    p.add_argument('--out', required=True)
++    p.add_argument('--smoke', action='store_true')
++    p.add_argument('--resume', action='store_true')
++    p.add_argument('--stop-at', type=int, default=50)
++    args = p.parse_args()
++    if not torch.cuda.is_available():
++        raise RuntimeError('CUDA unavailable')
++    if not 1 <= args.stop_at <= PLAN_STEPS:
++        raise ValueError('Invalid stop-at step')
++    torch.manual_seed(SEED)
++    torch.cuda.manual_seed_all(SEED)
++    random.seed(SEED)
++    out = Path(args.out)
++    out.mkdir(parents=True, exist_ok=True)
++    train, val, held = rows('train'), rows('validation'), rows('heldout')
++    assert {r['work_id'] for r in train}.isdisjoint({r['work_id'] for r in val + held})
++    plan = sample_plan(train)
++    scheduled_50 = summarize(train, plan[:50 * L4['batch_size'] * L4['gradient_accumulation_steps']])
++    sampler = {'weights': WEIGHTS, 'seed': SEED, 'plan_steps': PLAN_STEPS,
++               'full_plan_sha256': sha(json.dumps(plan, separators=(',', ':')).encode()),
++               'scheduled_50': scheduled_50}
++    tokenizer = AutoTokenizer.from_pretrained(CONFIG['model_id'], revision=CONFIG['model_revision'])
++    tokenizer.pad_token = tokenizer.eos_token
++    prepared = {split: [prepare(tokenizer, r) for r in data]
++                for split, data in (('train', train), ('validation', val), ('heldout', held))}
++    model = AutoModelForCausalLM.from_pretrained(CONFIG['model_id'], revision=CONFIG['model_revision'],
++                dtype=torch.bfloat16, attn_implementation='sdpa')
++    model.config.use_cache = False
++    model.gradient_checkpointing_enable()
++    model.enable_input_require_grads()
++    model.to('cuda')
++    state_path = out / 'optimizer.pt'
++    adapter_path = out / 'last'
++    if args.resume and state_path.exists():
++        model = PeftModel.from_pretrained(model, adapter_path, is_trainable=True)
++    else:
++        model = get_peft_model(model, LoraConfig(r=L4['lora_rank'], lora_alpha=L4['lora_alpha'],
++            lora_dropout=L4['lora_dropout'], target_modules=['q_proj', 'v_proj'], bias='none',
++            task_type=TaskType.CAUSAL_LM))
++    model.train()
++    optimizer = torch.optim.AdamW((p for p in model.parameters() if p.requires_grad),
++                                  lr=L4['learning_rate'], weight_decay=L4['weight_decay'])
++    total_steps = 2 if args.smoke else L4['max_steps']
++    scheduler = get_linear_schedule_with_warmup(optimizer, max(1, round(total_steps * .1)), total_steps)
++    start = 0
++    best_val, worse = float('inf'), 0
++    dataset_hashes = {split: sha((ROOT / 'data/l3' / f'{split}.jsonl').read_bytes())
++                      for split in ('train', 'validation', 'heldout')}
++    manifest = {'base_id': CONFIG['model_id'], 'base_revision': CONFIG['model_revision'],
++                'l4_config': L4, 'sampler': sampler, 'dataset_hashes': dataset_hashes,
++                'train_examples': len(train), 'train_works': len({r['work_id'] for r in train}),
++                'validation_examples': len(val), 'heldout_examples': len(held),
++                'smoke': args.smoke, 'started_at_utc': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
++                'checkpoints': [], 'wall_time_seconds': 0.0}
++    if args.resume:
++        if not state_path.exists():
++            raise ValueError('No saved L4 optimizer state to resume')
++        state = torch.load(state_path, map_location='cpu', weights_only=False)
++        optimizer.load_state_dict(state['optimizer'])
++        scheduler.load_state_dict(state['scheduler'])
++        start = state['step']
++        best_val, worse = state['best_val'], state['worse']
++        torch.set_rng_state(state['torch_rng'])
++        torch.cuda.set_rng_state_all(state['cuda_rng'])
++        manifest = json.loads((out / 'run.json').read_text())
++        if manifest['dataset_hashes'] != dataset_hashes or manifest['sampler'] != sampler:
++            raise ValueError('L4 data or sampler changed before resume')
++    else:
++        write_json(out / 'run.json', manifest)
++    stop_at = 2 if args.smoke else args.stop_at
++    if stop_at <= start:
++        raise ValueError('Stop-at step is not beyond saved step')
++    phase_start = time.time()
++    log = out / 'metrics.jsonl'
++    trace = out / 'sample_trace.jsonl'
++    if args.resume:
++        if len(trace.read_text().splitlines()) != start:
++            raise ValueError('L4 sample trace does not match optimizer step')
++    elif trace.exists():
++        raise ValueError('L4 output directory already has a sample trace')
++
++    def mean_loss(examples):
++        model.eval()
++        losses = []
++        with torch.inference_mode():
++            for example in examples:
++                batch = batchify(tokenizer, [example], 'cuda')
++                with torch.autocast('cuda', dtype=torch.bfloat16):
++                    losses.append(float(model(**batch).loss))
++        model.train()
++        return sum(losses) / len(losses)
++
++    for step in range(start, stop_at):
++        optimizer.zero_grad(set_to_none=True)
++        losses = []
++        sampled_ids = []
++        for micro in range(L4['gradient_accumulation_steps']):
++            offset = (step * L4['gradient_accumulation_steps'] + micro) * L4['batch_size']
++            selected = plan[offset:offset + L4['batch_size']]
++            sampled_ids.extend(train[i]['id'] for i in selected)
++            batch = batchify(tokenizer, [prepared['train'][i] for i in selected], 'cuda')
++            with torch.autocast('cuda', dtype=torch.bfloat16):
++                loss = model(**batch).loss / L4['gradient_accumulation_steps']
++            loss.backward()
++            losses.append(float(loss.detach()) * L4['gradient_accumulation_steps'])
++        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
++        optimizer.step()
++        scheduler.step()
++        number = step + 1
++        checkpoint = args.smoke or number in L4['checkpoints'] or number == stop_at
++        record = {'step': number,
++                  'effective_epochs': round(number * L4['batch_size'] * L4['gradient_accumulation_steps'] / len(train), 3),
++                  'train_loss': round(sum(losses) / len(losses), 5),
++                  'lr': scheduler.get_last_lr()[0],
++                  'elapsed_seconds': round(manifest['wall_time_seconds'] + time.time() - phase_start, 2)}
++        if checkpoint:
++            record['validation_loss'] = round(mean_loss(prepared['validation']), 5)
++            record['heldout_loss'] = round(mean_loss(prepared['heldout']), 5)
++            record['gpu'] = gpu_snapshot()
++            record['peak_allocated_mib'] = round(torch.cuda.max_memory_allocated() / 2**20, 1)
++            if record['validation_loss'] < best_val:
++                best_val, worse = record['validation_loss'], 0
++            elif record['validation_loss'] > best_val + L4['early_stop_margin']:
++                worse += 1
++            else:
++                worse = 0
++            adapter = out / f'checkpoint-{number:03d}'
++            model.save_pretrained(adapter, safe_serialization=True)
++            model.save_pretrained(adapter_path, safe_serialization=True)
++            adapter_hash = sha((adapter / 'adapter_model.safetensors').read_bytes())
++            record['adapter_sha256'] = adapter_hash
++            manifest['checkpoints'].append({'step': number, 'adapter_sha256': adapter_hash,
++                'validation_loss': record['validation_loss'], 'heldout_loss': record['heldout_loss']})
++            write_json(out / 'run.json', manifest)
++            torch.save({'step': number, 'optimizer': optimizer.state_dict(),
++                        'scheduler': scheduler.state_dict(), 'torch_rng': torch.get_rng_state(),
++                        'cuda_rng': torch.cuda.get_rng_state_all(), 'best_val': best_val, 'worse': worse},
++                       state_path)
++        with log.open('a') as handle:
++            handle.write(json.dumps(record) + '\n')
++        with trace.open('a') as handle:
++            handle.write(json.dumps({'step': number, 'sampled_ids': sampled_ids}) + '\n')
++        if checkpoint:
++            print(json.dumps(record), flush=True)
++        if not args.smoke and checkpoint and number >= L4['min_early_stop_step'] and worse >= L4['early_stop_patience']:
++            print(f'early-stop at {number}: validation deterioration', flush=True)
++            break
++    manifest['completed_steps'] = number
++    manifest['wall_time_seconds'] = round(manifest['wall_time_seconds'] + time.time() - phase_start, 2)
++    manifest['last_phase_finished_at_utc'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
++    write_json(out / 'run.json', manifest)
++    print(f'complete phase {start + 1}-{number} in {manifest["wall_time_seconds"]} cumulative seconds', flush=True)
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/tests/test_l4.py b/tests/test_l4.py
+new file mode 100644
+index 0000000..94a6005
+--- /dev/null
++++ b/tests/test_l4.py
+@@ -0,0 +1,22 @@
++from scripts.l4_sampler import EXAMPLES_PER_STEP, sample_plan, summarize, training_rows
++from scripts.train_l3 import L3
++from scripts.train_l4 import L4
++
++
++def test_l4_only_changes_sampling_and_checkpoint_schedule():
++    assert {k: v for k, v in L4.items() if k != 'checkpoints'} == {
++        k: v for k, v in L3.items() if k != 'checkpoints'}
++
++
++def test_l4_sampler_deterministic_weighted_and_diverse():
++    rows = training_rows()
++    plan = sample_plan(rows)
++    assert plan == sample_plan(rows)
++    assert plan[:50 * EXAMPLES_PER_STEP] == sample_plan(rows, steps=50)
++    report = summarize(rows, plan[:50 * EXAMPLES_PER_STEP])
++    assert report['source_l3_examples'] == 224
++    assert report['unique_source_works_observed'] == 84
++    assert report['max_example_repetitions'] <= 5
++    assert report['sampled_bucket_proportions']['medium'] > .35
++    assert report['sampled_bucket_proportions']['longer'] > .18
++    assert report['sampled_bucket_proportions']['very_short'] < .10

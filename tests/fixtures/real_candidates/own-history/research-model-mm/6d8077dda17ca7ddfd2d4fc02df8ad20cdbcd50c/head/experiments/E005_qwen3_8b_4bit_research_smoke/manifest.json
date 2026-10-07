@@ -1,0 +1,135 @@
+{
+  "experiment_schema_version": "1.0",
+  "experiment_id": "E005_qwen3_8b_4bit_research_smoke",
+  "title": "Qwen3-8B-class 4-bit MLX 20-iteration research smoke",
+  "status": "completed",
+  "metadata_status": "reconstructed_after_fact",
+  "manifest_created_at": "2026-09-16T01:47:32Z",
+  "research_question": "Does a short 8B-class research-behavior adapter run alter protocol outputs on controlled cases?",
+  "hypothesis": null,
+  "experiment_type": "training_smoke",
+  "git": {
+    "commit": null,
+    "dirty": true,
+    "status_note": "Repository had no commit history when the pilot was run; this manifest is reconstructed after the fact."
+  },
+  "environment": {
+    "machine": {
+      "hostname": null,
+      "os": null,
+      "architecture": "arm64",
+      "cpu": "Apple M1 Max",
+      "gpu": "Apple M1 Max integrated GPU",
+      "gpu_count": 1,
+      "vram_gb": 32,
+      "ram_gb": 32,
+      "hardware_probe_note": "Recorded in the initial build report; unified memory is shared."
+    },
+    "software": {
+      "python": null,
+      "platform": "macOS (exact release not recorded)",
+      "packages": {
+        "mlx": "0.32.2",
+        "mlx-lm": "0.31.3"
+      },
+      "cuda": null
+    }
+  },
+  "dataset": {
+    "path": "data/generated/research-data-v0.1.jsonl",
+    "sha256": "6a316c79bed7eec801e231180df33ea3a3ea7951e7209cee0842a7b9204e6845",
+    "dataset_content_hash": "d894eaa8f60ac8272b6690cc662a1ace3ca52144d8c4a053b66114fb1da41ee4"
+  },
+  "benchmark": {
+    "path": "benchmarks/tasks/research_microbench.jsonl",
+    "sha256": "912ee3aa1e33bf7908bffa446bd01f0a01e8abee6878084f1b910e34112b34fe",
+    "benchmark_content_hash": "912ee3aa1e33bf7908bffa446bd01f0a01e8abee6878084f1b910e34112b34fe"
+  },
+  "model": {
+    "name": "mlx-community/Qwen3-8B-4bit",
+    "revision": null,
+    "tokenizer_revision": null,
+    "lineage_note": "Public MLX conversion; not the primary Qwen/Qwen3-8B-Base SFT result."
+  },
+  "training": {
+    "backend": "mlx",
+    "method": "lora",
+    "iters": 20,
+    "num_layers": 8,
+    "rank": 8,
+    "learning_rate": 5e-05,
+    "max_seq_length": 1024,
+    "mask_prompt": false,
+    "seed": 0,
+    "adapter_path": "outputs/qwen3-8b-4bit-research-smoke-v2",
+    "validation_loss": 0.958,
+    "test_loss": 0.984,
+    "perplexity": 2.675,
+    "peak_memory_gb": 8.823,
+    "duration_note": "approximately 9 minutes including model fetch and test"
+  },
+  "execution": {
+    "command": [
+      "uv run mlx_lm lora --model mlx-community/Qwen3-8B-4bit --data data/generated/mlx --train --adapter-path outputs/qwen3-8b-4bit-research-smoke-v2 --iters 20 --num-layers 8 --learning-rate 0.00005 --max-seq-length 1024 --seed 0 --test"
+    ],
+    "start_time": null,
+    "end_time": null,
+    "duration_seconds": null,
+    "duration_note": null,
+    "seed": 0,
+    "retries": [],
+    "deviations": [
+      "Manual run used seed=0; the versioned pilot configuration defaulted to seed=17."
+    ]
+  },
+  "artifacts": {
+    "adapter_config": "outputs/qwen3-8b-4bit-research-smoke-v2/adapter_config.json",
+    "adapter_config_sha256": "b1259977ec8188fde95beaf81af29f977250f22320b69aba69aae5e7d608f0ee",
+    "adapter_path": "outputs/qwen3-8b-4bit-research-smoke-v2/adapters.safetensors",
+    "adapter_path_sha256": "4421247b6e158a43e78b2f58a313f4cdefb8f0827ee3d3212459c7794ecbc949",
+    "prediction_path": "data/generated/qwen3-8b-4bit-smoke-microbench-v2.json",
+    "prediction_path_sha256": "64478f03f568418037d4c40b47a50d5ec44ec9a27b052dd1be56490fa3c3fb6a",
+    "summary_path": "/Volumes/Research/research-model-mm/experiments/E005_qwen3_8b_4bit_research_smoke/summary.md"
+  },
+  "results": {
+    "microbench": "data/generated/qwen3-8b-4bit-smoke-microbench-v2.json",
+    "comparison_baseline": "data/generated/qwen3-8b-4bit-untuned-microbench-v2.json",
+    "metrics": {
+      "structured_valid": 1.0,
+      "action_accuracy": 0.3,
+      "citation_precision": 0.1,
+      "citation_recall": 0.1,
+      "claim_status_f1": 0.2,
+      "evidence_recall": 0.9,
+      "unsupported_claim_rate": 0.0
+    },
+    "baseline_metrics": {
+      "structured_valid": 0.0,
+      "action_accuracy": 0.5,
+      "citation_precision": 0.45,
+      "citation_recall": 0.5,
+      "claim_status_f1": 0.2,
+      "evidence_recall": 0.8,
+      "unsupported_claim_rate": 0.3
+    }
+  },
+  "interpretation": "The short smoke improved structured validity and reduced unsupported outputs while degrading citation metrics; this mixed result is feasibility evidence, not evidence that specialization is generally beneficial.",
+  "limitations": [
+    "20 iterations on the 10-case controlled benchmark.",
+    "Instruct-derived quantized conversion rather than the primary base checkpoint.",
+    "No general-capability control was run."
+  ],
+  "conclusion": null,
+  "missing_metadata": [
+    "git_commit",
+    "exact_start_time",
+    "exact_end_time",
+    "model_revision",
+    "tokenizer_revision",
+    "peak_memory_measurement_method"
+  ],
+  "reconstruction_sources": [
+    "docs/initial_build_report.md",
+    "data/manifests/public_sources.json"
+  ]
+}

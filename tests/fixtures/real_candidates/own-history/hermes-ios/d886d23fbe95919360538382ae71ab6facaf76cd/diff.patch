@@ -1,0 +1,996 @@
+diff --git a/BRIDGE_API.md b/BRIDGE_API.md
+index 3041f05..1a07205 100644
+--- a/BRIDGE_API.md
++++ b/BRIDGE_API.md
+@@ -229,3 +229,35 @@ Files are bounded to 10 MiB each (or a lower configured limit). Staging, quotas,
+ MIME checks, expiration and native photo/camera/dictation behavior are detailed in
+ [Attachments and voice](ATTACHMENTS_AND_VOICE.md). A staged artifact has no run ID
+ until submit. Canonical upload/run paths retain the native bot profile boundary.
++
++## vNext Phase 1 contract additions
++
++These additions are development behavior on the Phase 1 branch, not a modified
++public v0.1.0 release. Existing endpoints remain compatible.
++
++| Method/path | Request | Response |
++|---|---|---|
++| POST /bots/{id}/conversations | `{title?,model?,provider?,reasoning_effort?,workspace?}` | 201 independent native-profile Conversation with `bot_id` |
++| POST /captures/uploads | `{name,content_type,content_base64}` | 201 `{upload_id,name,content_type,size}`; accepts `audio/mp4` |
++| POST /captures | `{client_capture_id,created_at,kind,text,attachment_ids?,context?}` | 201 `{capture_id,stored_at}` only after durable persistence |
++| GET /commands/{id} | UUID from this device's command | `{state,result?}`; missing receipt is `not_received`, never dispatches |
++
++Features advertise `botThreads` and `captures`. B1 permits creation-time
++workspace IDs from the configured allowlist. Native Agent sessions appear in
++`GET /conversations` and its Hermes-backed search; canonical `Bot Chat` stays
++separate. Capture context permits `thread_id`, `agent_id`, `tag` (strings) and
++`transcribed_on_device` (Boolean). Capture bytes never undergo summarization or
++normalization. A device-scoped capture ID rejects changed content.
++
++Only `/captures` and `/captures/uploads` may safely recover an interrupted
++receipt with the exact original key/body; no Ask/control command gains that
++exception. `GET /commands/{id}` requires read access and rejects another device's
++receipt. Talaria uses it to distinguish a recorded result from pending or
++uncertain execution, and requires an explicit tap for any permitted Ask retry.
++
++Kanban list rows include `supported_targets`; review includes `done`, `ready` and
++`todo` where the audited upstream permits them. Running work still requires
++reclaim. A completion summary is part of the original PATCH. A note on another
++transition is preserved as a comment before the PATCH (two non-atomic writes).
++Optional clarification `recommended`, `default` and `on_timeout` are observational
++metadata; the bridge does not fabricate a choice or postpone a deadline.
+diff --git a/hermes-mobile-bridge/README.md b/hermes-mobile-bridge/README.md
+index a3a4aa7..24b4d38 100644
+--- a/hermes-mobile-bridge/README.md
++++ b/hermes-mobile-bridge/README.md
+@@ -64,3 +64,33 @@ SQLite observations and command receipts persist indefinitely; events expire by
+ 
+ 
+ Desktop Bot Mode is available through an explicit `bot_mode_roster: true` backend grant. See [source audit and mobile contract](../BOT_MODE_AUDIT.md). This grants read access to all local bots, including newly created bots, to credentials authorized for that source backend; it does not grant control of their Desktop chats.
++
++## vNext Phase 1 additions
++
++`botThreads` enables `POST /mobile/v1/bots/{id}/conversations`. It creates an
++independent native profile session rather than reusing `Bot Chat`. The sessions
++appear in the ordinary conversation list/search with `bot_id`; the existing
++canonical-chat endpoints remain supported. Model/provider/reasoning/workspace
++overrides apply at creation, and an omitted override follows the profile config.
++
++`captures_root` is a dedicated bridge inbox, defaulting to `state_dir/captures`.
++Use an absolute canonical path on private local storage. Its directories are
++0700 and files 0600, owned by the service user; symlinks and hard links are
++rejected. Capture requires `read` and `chat.control`. Dated Markdown files contain
++only the exact captured UTF-8 text; JSON sidecars contain context and attachment
++references. Uploads support validated media and mono M4A (`audio/mp4`), up to
++10 MiB each, four per capture, with a 256 MiB per-device media limit. Text is
++limited to 200 KB. Back up this inbox with the journal; losing the journal loses
++receipt/ownership metadata. Capture creates no task and executes no Hermes turn.
++
++Capture and upload IDs are stable and replay-safe, including recovery after an
++interrupted receipt. Other uncertain mutations remain non-replayable. The new
++read-only `/commands/{id}` endpoint exposes only the authenticated device's
++receipt so Talaria can check an uncertain Ask without sending it again.
++
++Kanban lists now include `supported_targets`. Review supports completion with a
++summary. Send back writes a nonempty note through Hermes's existing comment
++endpoint before the status PATCH: these two upstream writes are not atomic. An
++interrupted command must be checked on the Mac and must not be replayed.
++Dangerous approvals remain Mac-only; optional clarification default/timeout
++metadata passes through only when Hermes actually supplies it.
+diff --git a/hermes-mobile-bridge/config.example.json b/hermes-mobile-bridge/config.example.json
+index 98edfcc..9c0fca6 100644
+--- a/hermes-mobile-bridge/config.example.json
++++ b/hermes-mobile-bridge/config.example.json
+@@ -2,6 +2,7 @@
+   "listen_host": "127.0.0.1",
+   "listen_port": 8787,
+   "state_dir": "/path/to/home/.local/state/hermes-mobile-bridge",
++  "captures_root": "/path/to/home/.local/state/hermes-mobile-bridge/captures",
+   "event_limit": 10000,
+   "run_event_limit": 2000,
+   "event_days": 7,
+diff --git a/hermes-mobile-bridge/src/hermes_mobile_bridge/api.py b/hermes-mobile-bridge/src/hermes_mobile_bridge/api.py
+index e1aee53..a99fc3d 100644
+--- a/hermes-mobile-bridge/src/hermes_mobile_bridge/api.py
++++ b/hermes-mobile-bridge/src/hermes_mobile_bridge/api.py
+@@ -61,10 +61,10 @@ async def contract(request, handler):
+                 raise Problem(400, "invalid_request", "JSON object required")
+             # Scope check precedes command journal access; cached mutations also
+             # respect revoked/reduced credentials.
+-            needed = "chat.control" if any(s in request.path for s in ("/conversations", "/runs", "/attachments", "/bots")) else "approvals.respond" if "/attention" in request.path else "tasks.manage"
++            needed = "chat.control" if any(s in request.path for s in ("/conversations", "/runs", "/attachments", "/bots", "/captures")) else "approvals.respond" if "/attention" in request.path else "tasks.manage"
+             if needed not in request[AUTH]["scopes"]:
+                 raise Problem(403, "forbidden", "Credential lacks action scope")
+-            old = service.store.command_begin(command_id, request[AUTH]["id"], {"method": request.method, "path": request.path, "query": list(request.query.items()), "body": request[BODY]})
++            old = service.store.command_begin(command_id, request[AUTH]["id"], {"method": request.method, "path": request.path, "query": list(request.query.items()), "body": request[BODY]}, replay_safe=request.path in {PREFIX + "/captures", PREFIX + "/captures/uploads"})
+             if old is not None:
+                 return web.json_response(old["body"], status=old["status"])
+         command_started = command_id is not None
+@@ -111,7 +111,7 @@ async def capabilities(request):
+         b = s.backends[p]
+         paths = b.paths
+         available = lambda route: b.connected and route in paths
+-        result[p] = {"health": b.health(), "features": {"sessions": b.connected, "runs": b.connected, "runReplay": True, "stop": b.connected, "steering": b.connected, "approvals": {"observe": b.connected, "respond": False, "reason": "upstream_fifo_without_exact_target", "clarifications": b.connected and (b.server_requests_supported or b.cfg.get("installed_commit") != "4bb9e57bfde8a0affb5553eff13ed6e1f14147f1")}, "profiles": True, "cron": available("/api/cron/jobs"), "kanban": bool(b.cfg["boards"]) and available("/api/plugins/kanban/board"), "usage": available("/api/analytics/usage"), "skills": available("/api/skills"), "tools": available("/api/tools/toolsets"), "mcp": available("/api/mcp/servers"), "artifacts": bool(b.cfg["artifact_roots"]), "botMode": b.connected and b.cfg.get("bot_mode_roster", False) and b.bot_mode_supported, "botChat": b.connected and b.cfg.get("bot_chat_control", False) and b.cfg.get("bot_mode_roster", False) and b.bot_mode_supported, "botRooms": False, "attachments": b.connected and b.cfg.get("installed_commit") in {"2a4c9afd7bd", "4bb9e57bfde8a0affb5553eff13ed6e1f14147f1"}, "imageUpload": b.connected and b.cfg.get("installed_commit") == "4bb9e57bfde8a0affb5553eff13ed6e1f14147f1"}, "desktop_contract_audited": 2, "audited_commit": b.cfg.get("installed_commit") or "2a4c9afd7bd", "installed_commit": b.cfg.get("installed_commit"), "boards": b.cfg["boards"], "workspaces": [{"id": k, "name": k} for k in b.cfg["workspaces"]]}
++        result[p] = {"health": b.health(), "features": {"sessions": b.connected, "runs": b.connected, "runReplay": True, "stop": b.connected, "steering": b.connected, "approvals": {"observe": b.connected, "respond": False, "reason": "upstream_fifo_without_exact_target", "clarifications": b.connected and (b.server_requests_supported or b.cfg.get("installed_commit") != "4bb9e57bfde8a0affb5553eff13ed6e1f14147f1")}, "profiles": True, "cron": available("/api/cron/jobs"), "kanban": bool(b.cfg["boards"]) and available("/api/plugins/kanban/board"), "usage": available("/api/analytics/usage"), "skills": available("/api/skills"), "tools": available("/api/tools/toolsets"), "mcp": available("/api/mcp/servers"), "artifacts": bool(b.cfg["artifact_roots"]), "botMode": b.connected and b.cfg.get("bot_mode_roster", False) and b.bot_mode_supported, "botChat": b.connected and b.cfg.get("bot_chat_control", False) and b.cfg.get("bot_mode_roster", False) and b.bot_mode_supported, "botThreads": b.connected and b.cfg.get("bot_chat_control", False) and b.cfg.get("bot_mode_roster", False) and b.bot_mode_supported, "captures": True, "botRooms": False, "attachments": b.connected and b.cfg.get("installed_commit") in {"2a4c9afd7bd", "4bb9e57bfde8a0affb5553eff13ed6e1f14147f1"}, "imageUpload": b.connected and b.cfg.get("installed_commit") == "4bb9e57bfde8a0affb5553eff13ed6e1f14147f1"}, "desktop_contract_audited": 2, "audited_commit": b.cfg.get("installed_commit") or "2a4c9afd7bd", "installed_commit": b.cfg.get("installed_commit"), "boards": b.cfg["boards"], "workspaces": [{"id": k, "name": k} for k in b.cfg["workspaces"]]}
+         result[p]["features"].update(BotMode(s, request[AUTH]).capabilities(p))
+     return web.json_response({"api_version": 1, "bridge_version": __version__, "journal_epoch": s.store.epoch, "cursor": s.store.cursor(), "scopes": request[AUTH]["scopes"], "profiles": result, "retention": {"global_events": s.cfg["event_limit"], "per_run_events": s.cfg["run_event_limit"], "days": s.cfg["event_days"]}, "coverage": "Controlled runs are bridge-owned desktop sessions; other-process activity is read-only and incomplete"})
+ 
+@@ -160,6 +160,35 @@ async def bot_conversation(request):
+     return web.json_response(await adapter.conversation(request.match_info["bid"]))
+ 
+ 
++async def command_status(request):
++    s = svc(request)
++    try: cid = str(uuid.UUID(request.match_info['cid']))
++    except ValueError: raise Problem(400, 'invalid_id', 'Provide a command UUID') from None
++    row = s.store.db.execute('SELECT credential,status,result FROM commands WHERE id=?', (cid,)).fetchone()
++    if not row: return web.json_response({'state': 'not_received'})
++    if row['credential'] != request[AUTH]['id']: raise Problem(403, 'forbidden', 'Command belongs to another credential')
++    return web.json_response({'state': row['status'], 'result': json.loads(row['result']) if row['result'] else None})
++
++
++async def capture_save(request):
++    from .captures import Captures
++    body = shape(request[BODY], {"client_capture_id": str, "created_at": str, "kind": str, "text": str, "attachment_ids": list, "context": dict},
++                 ("client_capture_id", "created_at", "kind", "text"), list_limits={"attachment_ids": 4})
++    return web.json_response(svc(request).captures.save(request[AUTH], body), status=201)
++
++
++async def capture_upload(request):
++    from .captures import Captures
++    body = shape(request[BODY], {"name": str, "content_type": str, "content_base64": str}, ("name", "content_type", "content_base64"))
++    return web.json_response(svc(request).captures.upload(request[AUTH], body, request.headers["Idempotency-Key"]), status=201)
++
++
++async def bot_threads(request):
++    fields = shape(request[BODY], {"title": str, "model": str, "provider": str, "reasoning_effort": str, "workspace": str})
++    return web.json_response(await BotMode(svc(request), request[AUTH]).create_thread(
++        request.match_info["bid"], fields, request.headers["Idempotency-Key"]), status=201)
++
++
+ async def conversations(request):
+     s = svc(request)
+     p, b = profile(request, "chat.control" if request.method == "POST" else "read")
+@@ -190,11 +219,33 @@ async def conversations(request):
+             c = s.store.get("conversations", row[0])
+             if c["id"] not in seen and not c["data"].get("canonical") and not c["data"].get("deleted") and s.store.db.execute("SELECT COUNT(*) FROM runs WHERE conversation_id=?", (c["id"],)).fetchone()[0] == 0:
+                 output.append(s.conversation_view(c) | {"draft": True})
+-    if not request.query.get("q") and query["offset"] == 0 and b.cfg.get("bot_mode_roster") and b.bot_mode_supported:
++    if query["offset"] == 0 and b.cfg.get("bot_mode_roster") and b.bot_mode_supported:
+         adapter = BotMode(s, request[AUTH])
+         _, roster = await adapter.roster(p)
+         for bot in roster:
+-            if bot.get("canonical_session"):
++            native = bot['name']
++            if request.query.get('q'):
++                found = await b.rest('GET', '/api/sessions/search', query={'profile': native, 'q': request.query['q'], 'limit': query['limit']})
++                native_rows = found.get('results', [])
++            else:
++                raw_sessions = await b.rpc('session.list', {'profile': native, 'include_hidden': True})
++                native_rows = raw_sessions.get('sessions', [])
++            for row in native_rows:
++                if row.get('title') == 'Bot Chat':
++                    continue
++                sid = row.get('resolved_id') or row.get('session_id') or row.get('id')
++                if not sid:
++                    continue
++                cid = opaque(p, sid)
++                previous = s.store.db.execute('SELECT id FROM conversations WHERE profile=? AND stored_id=?', (p, sid)).fetchone()
++                cid = previous[0] if previous else cid
++                old = s.store.get('conversations', cid) if previous else None
++                s.store.save_conversation(cid, p, sid, old['live_id'] if old else None, old['owned'] if old else False,
++                    only(row, 'title model provider archived started_at message_count last_active preview source') |
++                    {'bot_id': opaque(p,native), 'bot_profile': native, 'canonical': False})
++                output = [r for r in output if r['id'] != cid]
++                output.append(s.conversation_view(s.store.get('conversations', cid)))
++            if bot.get("canonical_session") and not request.query.get("q"):
+                 chat = (await adapter.conversation(opaque(p, bot['name'])))["conversation"]
+                 output = [r for r in output if r["id"] != chat["id"]]
+                 output.append(chat)
+@@ -223,7 +274,7 @@ async def conversation_detail(request):
+     if request.method == "GET":
+         snapshot_cursor = s.store.cursor()
+         try:
+-            detail, history = await asyncio.gather(b.rest("GET", f"/api/sessions/{sid}", query={"profile": c["profile"]}), b.rest("GET", f"/api/sessions/{sid}/messages", query={"profile": c["profile"]}))
++            detail, history = await asyncio.gather(b.rest("GET", f"/api/sessions/{sid}", query={"profile": s.session_profile(c)}), b.rest("GET", f"/api/sessions/{sid}/messages", query={"profile": s.session_profile(c)}))
+         except Problem as err:
+             count = s.store.db.execute("SELECT COUNT(*) FROM runs WHERE conversation_id=?", (c["id"],)).fetchone()[0]
+             if err.status == 404 and c["owned"] and count == 0:
+@@ -237,7 +288,7 @@ async def conversation_detail(request):
+             raise Problem(400, "invalid_request", "Provide title or archived")
+         if "title" in body and len(body["title"]) > 200:
+             raise Problem(400, "invalid_request", "Title is too long")
+-        result = await b.rest("PATCH", f"/api/sessions/{sid}", body=body | {"profile": c["profile"]})
++        result = await b.rest("PATCH", f"/api/sessions/{sid}", body=body | {"profile": s.session_profile(c)})
+         s.store.save_conversation(c["id"], c["profile"], sid, c["live_id"], c["owned"], body)
+         return web.json_response(s.conversation_view(s.store.get("conversations", c["id"])))
+     shape(request[BODY], {})
+@@ -526,17 +577,36 @@ def board(request, scope="read"):
+     return p, b, slug
+ 
+ 
++def task_row(service, raw, source, slug):
++    row = task(raw, source, slug)
++    assigned = raw.get('assignee')
++    if assigned and assigned not in service.backends and service.backends[source].cfg.get('bot_mode_roster'):
++        row['assignee'] = opaque(source, assigned)
++    return row
++
++
++async def task_assignee(service, auth, source, value):
++    if value in service.backends:
++        service.require(auth, value, 'tasks.manage')
++        return value
++    actual, name, _, _ = await BotMode(service, auth).resolve(value)
++    if actual != source:
++        raise Problem(403, 'profile_forbidden', 'Assign a native Agent from this board host')
++    service.require(auth, actual, 'tasks.manage')
++    return name
++
++
+ async def kanban_list(request):
+     s = svc(request)
+     p, b, slug = board(request, "read" if request.method == "GET" else "tasks.manage")
+     if request.method == "GET":
+         raw, workers = await asyncio.gather(b.rest("GET", "/api/plugins/kanban/board", query={"board": slug}), b.rest("GET", "/api/plugins/kanban/workers/active", query={"board": slug}))
+         rows = [r for col in raw.get("columns", []) for r in col.get("tasks", [])]
+-        return web.json_response({"board": slug, "tasks": [task(r, p, slug) | only(r, "progress link_counts comment_count diagnostics warnings") for r in rows], "workers": [only(w, "run_id task_title profile started_at last_heartbeat_at max_runtime_seconds") | {"status": w.get("task_status", w.get("status")), "assignee": w.get("task_assignee", w.get("assignee"))} | {"task_id": opaque(p, slug + "." + w["task_id"]) if w.get("task_id") else None} for w in workers.get("workers", [])], "workers_checked_at": workers.get("checked_at")})
++        return web.json_response({"board": slug, "tasks": [task_row(s, r, p, slug) | {"supported_targets": task_targets(r)} | only(r, "progress link_counts comment_count diagnostics warnings") for r in rows], "workers": [only(w, "run_id task_title profile started_at last_heartbeat_at max_runtime_seconds") | {"status": w.get("task_status", w.get("status")), "assignee": w.get("task_assignee", w.get("assignee"))} | {"task_id": opaque(p, slug + "." + w["task_id"]) if w.get("task_id") else None} for w in workers.get("workers", [])], "workers_checked_at": workers.get("checked_at")})
+     body = shape(request[BODY], {"title": str, "body": str, "assignee": str, "priority": int, "parents": list, "triage": bool, "skills": list, "max_runtime_seconds": int, "workspace": str}, ("title",))
+     workspace(s, p, body)
+     if body.get("assignee"):
+-        s.require(request[AUTH], body["assignee"], "tasks.manage")
++        body["assignee"] = await task_assignee(s, request[AUTH], p, body["assignee"])
+     payload = {k: v for k, v in body.items() if k != "workspace"}
+     if payload.get("parents"):
+         normalized = []
+@@ -553,7 +623,7 @@ async def kanban_list(request):
+         payload.update(workspace_kind="dir", workspace_path=b.cfg["workspaces"][body["workspace"]])
+     raw = await b.rest("POST", "/api/plugins/kanban/tasks", payload, {"board": slug})
+     row = raw.get("task", raw)
+-    return web.json_response(task(row, p, slug), status=201)
++    return web.json_response(task_row(s, row, p, slug), status=201)
+ 
+ 
+ def task_targets(row):
+@@ -567,7 +637,7 @@ def task_targets(row):
+         targets.append("scheduled")
+     if state == "ready":
+         targets.append("blocked")
+-    if state in {"ready", "blocked"}:
++    if state in {"ready", "blocked", "review"}:
+         targets.append("done")
+     return [x for x in targets if x != state]
+ 
+@@ -584,7 +654,7 @@ async def kanban_detail(request):
+     path = "/api/plugins/kanban/tasks/" + identifier(tid)
+     if request.method == "GET":
+         raw = await b.rest("GET", path, query={"board": slug})
+-        return web.json_response({"task": task(raw["task"], p, slug), "links": {kind: [opaque(p, slug + "." + str(x)) for x in raw.get("links", {}).get(kind, [])] for kind in ("parents", "children")}, "diagnostics": raw["task"].get("diagnostics", []), "comments": [only(x, "id author body created_at") for x in raw.get("comments", [])], "attempts": [only(x, "id task_id profile status started_at ended_at outcome summary error last_heartbeat_at max_runtime_seconds") for x in raw.get("runs", [])], "attachments": [only(x, "id filename content_type size created_at") for x in raw.get("attachments", [])], "recent_activity": [only(x, "id kind created_at run_id") | {"details": only(x.get("payload") or {}, "status from to reason summary assignee")} for x in raw.get("events", [])], "supported_targets": task_targets(raw["task"]), "artifact_downloads": "kanban task-scoped endpoint"})
++        return web.json_response({"task": task_row(s, raw["task"], p, slug), "links": {kind: [opaque(p, slug + "." + str(x)) for x in raw.get("links", {}).get(kind, [])] for kind in ("parents", "children")}, "diagnostics": raw["task"].get("diagnostics", []), "comments": [only(x, "id author body created_at") for x in raw.get("comments", [])], "attempts": [only(x, "id task_id profile status started_at ended_at outcome summary error last_heartbeat_at max_runtime_seconds") for x in raw.get("runs", [])], "attachments": [only(x, "id filename content_type size created_at") for x in raw.get("attachments", [])], "recent_activity": [only(x, "id kind created_at run_id") | {"details": only(x.get("payload") or {}, "status from to reason summary assignee")} for x in raw.get("events", [])], "supported_targets": task_targets(raw["task"]), "artifact_downloads": "kanban task-scoped endpoint"})
+     if request.method == "PATCH":
+         current = await b.rest("GET", path, query={"board": slug})
+         if current["task"].get("status") == "running" and request[BODY].get("status"):
+@@ -595,7 +665,12 @@ async def kanban_detail(request):
+         if "assignee" in body and len(body) != 1:
+             raise Problem(400, "separate_assignment", "Change assignment separately; upstream compound updates are not atomic")
+         if body.get("assignee"):
+-            s.require(request[AUTH], body["assignee"], "tasks.manage")
++            body["assignee"] = await task_assignee(s, request[AUTH], p, body["assignee"])
++        # Hermes preserves a completion summary. Other transitions ignore it;
++        # retain the note as an existing canonical comment before the transition.
++        # This is not atomic; the command receipt forbids replay if interrupted.
++        if body.get("summary") and body.get("status") != "done":
++            await b.rest("POST", path + "/comments", {"body": body.pop("summary"), "author": "Talaria"}, {"board": slug})
+         raw = await b.rest("PATCH", path, body, {"board": slug})
+         return web.json_response({"acknowledged": True, "task_id": request.match_info["tid"], "refresh_required": True})
+     shape(request[BODY], {})
+@@ -733,7 +808,7 @@ def create_app(cfg):
+     app = web.Application(middlewares=[contract], client_max_size=cfg["upload_limit"] * 2 + 4096)
+     app[SERVICE] = s
+     routes = [
+-        web.get(PREFIX + "/bots/inventory", bot_inventory), web.post(PREFIX + "/bots", bot_create), web.patch(PREFIX + "/bots/{bid}", bot_update), web.post(PREFIX + "/bots/{bid}/hide", bot_hide), web.post(PREFIX + "/bots/{bid}/duplicate", bot_duplicate), web.get(PREFIX + "/bots", bots), web.get(PREFIX + "/bots/{bid}", bot_detail), web.get(PREFIX + "/bots/{bid}/conversation", bot_conversation), web.post(PREFIX + "/bots/{bid}/conversation", bot_conversation),
++        web.get(PREFIX + "/bots/inventory", bot_inventory), web.post(PREFIX + "/bots", bot_create), web.patch(PREFIX + "/bots/{bid}", bot_update), web.post(PREFIX + "/bots/{bid}/hide", bot_hide), web.post(PREFIX + "/bots/{bid}/duplicate", bot_duplicate), web.get(PREFIX + "/bots", bots), web.get(PREFIX + "/bots/{bid}", bot_detail), web.get(PREFIX + "/bots/{bid}/conversation", bot_conversation), web.post(PREFIX + "/bots/{bid}/conversations", bot_threads), web.post(PREFIX + "/bots/{bid}/conversation", bot_conversation),
+         web.get(PREFIX + "/capabilities", capabilities), web.get(PREFIX + "/home", home), web.get(PREFIX + "/profiles", profiles), web.get(PREFIX + "/profiles/{pid}", profile_detail),
+         web.get(PREFIX + "/conversations", conversations), web.post(PREFIX + "/conversations", conversations),
+         web.get(PREFIX + "/conversations/{cid}", conversation_detail), web.patch(PREFIX + "/conversations/{cid}", conversation_detail), web.delete(PREFIX + "/conversations/{cid}", conversation_detail),
+@@ -743,7 +818,7 @@ def create_app(cfg):
+         web.get(PREFIX + "/inventory/{resource}", inventory), web.get(PREFIX + "/cron", cron_jobs), web.post(PREFIX + "/cron", cron_jobs),
+         web.get(PREFIX + "/cron/{jid}", cron_detail), web.patch(PREFIX + "/cron/{jid}", cron_detail), web.delete(PREFIX + "/cron/{jid}", cron_detail), web.post(PREFIX + "/cron/{jid}/{action}", cron_detail),
+         web.get(PREFIX + "/kanban/tasks", kanban_list), web.post(PREFIX + "/kanban/tasks", kanban_list), web.get(PREFIX + "/kanban/tasks/{tid}", kanban_detail), web.patch(PREFIX + "/kanban/tasks/{tid}", kanban_detail), web.delete(PREFIX + "/kanban/tasks/{tid}", kanban_detail), web.get(PREFIX + "/kanban/tasks/{tid}/attachment", kanban_attachment), web.post(PREFIX + "/kanban/tasks/{tid}/{action}", kanban_action),
+-        web.post(PREFIX + "/attachments", attachment_upload), web.get(PREFIX + "/conversations/{cid}/artifacts", artifact_list), web.get(PREFIX + "/artifacts/{aid}", artifact_download), web.get(PREFIX + "/artifacts/{aid}/{download:download}", artifact_download),
++        web.get(PREFIX + "/commands/{cid}", command_status), web.post(PREFIX + "/captures", capture_save), web.post(PREFIX + "/captures/uploads", capture_upload), web.post(PREFIX + "/attachments", attachment_upload), web.get(PREFIX + "/conversations/{cid}/artifacts", artifact_list), web.get(PREFIX + "/artifacts/{aid}", artifact_download), web.get(PREFIX + "/artifacts/{aid}/{download:download}", artifact_download),
+     ]
+     app.add_routes(routes)
+     async def lifecycle(app):
+diff --git a/hermes-mobile-bridge/src/hermes_mobile_bridge/bots.py b/hermes-mobile-bridge/src/hermes_mobile_bridge/bots.py
+index c1ea3cc..e2fdb8c 100644
+--- a/hermes-mobile-bridge/src/hermes_mobile_bridge/bots.py
++++ b/hermes-mobile-bridge/src/hermes_mobile_bridge/bots.py
+@@ -153,6 +153,39 @@ class BotMode:
+         from .bot_management import BotManagement
+         return await BotManagement(self.service, self.auth).duplicate(bid)
+ 
++    async def create_thread(self, bid, fields, command_id):
++        source, name, backend, bot = await self.resolve(bid)
++        self.service.require(self.auth, source, 'chat.control')
++        if not self.can_control(backend):
++            raise Problem(403, 'bot_conversation_unavailable', 'Agent thread control is not enabled')
++        title = fields.get('title') or ('New ask · ' + command_id[:8])
++        if len(title) > 200 or title == 'Bot Chat':
++            raise Problem(400, 'invalid_title', 'Choose a work title, not the canonical Bot Chat title')
++        overrides = only(fields, 'model provider reasoning_effort')
++        if bool(fields.get('model')) != bool(fields.get('provider')):
++            raise Problem(400, 'invalid_model', 'Supply model and provider together')
++        if fields.get('reasoning_effort') not in {None, 'none', 'minimal', 'low', 'medium', 'high', 'xhigh'}:
++            raise Problem(400, 'invalid_reasoning', 'Unsupported reasoning effort')
++        params = {'profile': name, 'title': title, 'source': 'mobile',
++                  'follow_profile_config': not bool(overrides), 'close_on_disconnect': False,
++                  'idempotency_key': command_id, **overrides}
++        if fields.get('workspace'):
++            if fields['workspace'] not in backend.cfg['workspaces']:
++                raise Problem(400, 'unknown_workspace', 'Choose a configured Studio workspace')
++            params['cwd'] = backend.cfg['workspaces'][fields['workspace']]
++        result = await backend.rpc('session.create', params)
++        sid = identifier(result['stored_session_id'])
++        live = identifier(result['session_id'])
++        cid = opaque(source, sid)
++        data = only(result.get('info', {}), 'model provider reasoning_effort cwd') | {
++            'title': title, 'source': 'mobile', 'canonical': False, 'bot_id': bid,
++            'bot_profile': name, 'bot_name': bot_row(source, bot)['name'],
++            'follow_profile_config': params['follow_profile_config']}
++        self.service.store.save_conversation(cid, source, sid, live, True, data)
++        # Eagerly persist the empty session, as canonical chat does, without a model turn.
++        await backend.rpc('session.title', {'session_id': live, 'title': title})
++        return self.service.conversation_view(self.service.store.get('conversations', cid))
++
+     async def conversation(self, bid):
+         source, name, backend, bot = await self.resolve(bid)
+         row = await self.lookup(backend, name, bot)
+@@ -184,7 +217,7 @@ class BotMode:
+     def bind(self, bid, source, name, bot, row, live=None, owned=False):
+         store = self.service.store
+         sid = identifier(row.get('resolved_id') or row['id'])
+-        existing = store.db.execute("SELECT id FROM conversations WHERE profile=? AND json_extract(data,'$.bot_id')=?", (source, bid)).fetchone()
++        existing = store.db.execute("SELECT id FROM conversations WHERE profile=? AND json_extract(data,'$.bot_id')=? AND json_extract(data,'$.canonical')=1", (source, bid)).fetchone()
+         alias = store.db.execute('SELECT conversation_id FROM aliases WHERE profile=? AND stored_id=?', (source, sid)).fetchone()
+         cid = existing[0] if existing else alias[0] if alias else 'botchat.' + bid
+         old = store.db.execute('SELECT live_id FROM conversations WHERE id=?', (cid,)).fetchone()
+diff --git a/hermes-mobile-bridge/src/hermes_mobile_bridge/captures.py b/hermes-mobile-bridge/src/hermes_mobile_bridge/captures.py
+new file mode 100644
+index 0000000..987afc4
+--- /dev/null
++++ b/hermes-mobile-bridge/src/hermes_mobile_bridge/captures.py
+@@ -0,0 +1,165 @@
++"""Verbatim, device-owned capture inbox. No execution, vault or task coupling."""
++import base64
++import hashlib
++import json
++import os
++import stat
++import uuid
++from datetime import datetime, timezone
++from pathlib import Path
++from .core import Problem
++from .uploads import MIMES, TEXT_EXT
++
++
++class Captures:
++    def __init__(self, service):
++        self.s = service
++        self.root = Path(service.cfg.get('captures_root') or Path(service.cfg['state_dir']) / 'captures')
++        if not self.root.is_absolute():
++            raise ValueError('captures_root must be absolute')
++        # Reject symlinks in every existing component, including a selected parent.
++        for component in (self.root, *self.root.parents):
++            if component.is_symlink():
++                raise ValueError('captures_root may not contain symlinks')
++        self.root.mkdir(mode=0o700, parents=True, exist_ok=True)
++        st = self.root.stat()
++        if st.st_uid != os.getuid() or not stat.S_ISDIR(st.st_mode):
++            raise ValueError('Unsafe captures_root owner/type')
++        self.root.chmod(0o700)
++        self.sync_directory(self.root.parent)
++        self.s.store.db.execute('CREATE TABLE IF NOT EXISTS captures(owner TEXT, client_id TEXT, digest TEXT, response TEXT, PRIMARY KEY(owner,client_id))')
++        self.s.store.db.execute('CREATE TABLE IF NOT EXISTS capture_uploads(id TEXT PRIMARY KEY, owner TEXT, data TEXT)')
++        self.s.store.db.commit()
++
++    def directory(self, owner):
++        directory = self.root / hashlib.sha256(owner.encode()).hexdigest()[:32]
++        if directory.is_symlink():
++            raise Problem(409, 'capture_rejected', 'Unsafe capture directory')
++        directory.mkdir(mode=0o700, exist_ok=True)
++        directory.chmod(0o700)
++        self.sync_directory(self.root)
++        return directory
++
++    @staticmethod
++    def sync_directory(path):
++        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
++        try: os.fsync(fd)
++        finally: os.close(fd)
++
++    @staticmethod
++    def write(path, data):
++        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
++        with os.fdopen(fd, 'wb') as f:
++            f.write(data)
++            f.flush()
++            os.fsync(f.fileno())
++
++    def upload(self, auth, body, command_id=None):
++        owner = auth['id']
++        name, mime = body['name'], body['content_type']
++        if not name or len(name) > 200 or name in {'.','..'} or any(c in name for c in '/\\') or any(ord(c) < 32 for c in name):
++            raise Problem(400, 'invalid_filename', 'Use a simple capture filename')
++        if mime not in MIMES | {'audio/mp4'}:
++            raise Problem(415, 'unsupported_type', 'Unsupported capture media')
++        limit = min(self.s.cfg.get('upload_limit', 10*1024*1024), 10*1024*1024)
++        if len(body['content_base64']) > ((limit+2)//3)*4:
++            raise Problem(413, 'capture_too_large', 'Capture media exceeds 10 MiB')
++        try:
++            data = base64.b64decode(body['content_base64'], validate=True)
++        except ValueError:
++            raise Problem(400, 'capture_rejected', 'Invalid base64 media') from None
++        if not 0 < len(data) <= limit:
++            raise Problem(413, 'capture_too_large', 'Capture media exceeds 10 MiB')
++        valid = True
++        if mime == 'audio/mp4':
++            valid = len(data) >= 12 and data[4:8] == b'ftyp'
++        elif mime == 'image/png': valid = data.startswith(b'\x89PNG\r\n\x1a\n')
++        elif mime == 'image/jpeg': valid = data.startswith(b'\xff\xd8\xff')
++        elif mime == 'image/gif': valid = data.startswith((b'GIF87a',b'GIF89a'))
++        elif mime == 'image/webp': valid = data.startswith(b'RIFF') and data[8:12] == b'WEBP'
++        elif mime == 'application/pdf': valid = data.startswith(b'%PDF-')
++        else:
++            try:
++                text = data.decode('utf-8')
++                valid = '\x00' not in text and Path(name).suffix.lstrip('.').lower() in TEXT_EXT
++                if mime == 'application/json': json.loads(text)
++            except (UnicodeError, ValueError): valid = False
++        if not valid:
++            raise Problem(415, 'content_type_mismatch', 'Capture bytes do not match their type')
++        db = self.s.store.db
++        uid = uuid.uuid5(uuid.NAMESPACE_URL, owner + ":" + command_id).hex if command_id else uuid.uuid4().hex
++        old = db.execute("SELECT owner,data FROM capture_uploads WHERE id=?", (uid,)).fetchone()
++        meta = {"id": uid, "name": name, "content_type": mime, "size": len(data)}
++        if old:
++            if old[0] != owner or json.loads(old[1]) != meta:
++                raise Problem(409, "capture_conflict", "Upload ID already contains different content")
++            return {"upload_id": uid, **meta}
++        used = sum(json.loads(r[0])['size'] for r in db.execute('SELECT data FROM capture_uploads WHERE owner=?', (owner,)))
++        if used + len(data) > self.s.cfg.get('capture_media_quota', 256*1024*1024):
++            raise Problem(413, 'capture_too_large', 'Capture media storage is full')
++        path = self.directory(owner) / uid
++        try: self.write(path, data)
++        except FileExistsError:
++            fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
++            with os.fdopen(fd, "rb") as f:
++                st = os.fstat(f.fileno())
++                if not stat.S_ISREG(st.st_mode) or st.st_uid != os.getuid() or st.st_nlink != 1 or st.st_mode & 0o077 or f.read() != data:
++                    raise Problem(409, "capture_conflict", "Upload persistence conflicts with this ID")
++        self.sync_directory(path.parent)
++        meta = {'id': uid, 'name': name, 'content_type': mime, 'size': len(data)}
++        db.execute('INSERT INTO capture_uploads VALUES (?,?,?)', (uid, owner, json.dumps(meta)))
++        db.commit()
++        return {'upload_id': uid, **meta}
++
++    def save(self, auth, body):
++        owner = auth['id']
++        try:
++            client_id = str(uuid.UUID(body['client_capture_id']))
++            date = datetime.fromisoformat(body['created_at'].replace('Z', '+00:00'))
++            if date.tzinfo is None: raise ValueError()
++        except (ValueError, TypeError):
++            raise Problem(400, 'capture_rejected', 'Provide a UUID and a timestamp with timezone') from None
++        if body['kind'] not in {'note','idea','task','link','photo','file','voice'}:
++            raise Problem(400, 'capture_rejected', 'Invalid capture kind')
++        text = body['text']
++        if len(text.encode('utf-8')) > 200000:
++            raise Problem(413, 'capture_too_large', 'Capture text exceeds 200 KB')
++        ids = body.get('attachment_ids', [])
++        if len(ids) > 4 or len(ids) != len(set(ids)) or (not text and not ids):
++            raise Problem(400, 'capture_rejected', 'Provide content and at most four distinct attachments')
++        context = body.get('context', {})
++        if not isinstance(context, dict) or set(context) - {'thread_id','agent_id','tag','transcribed_on_device'}:
++            raise Problem(400, 'capture_rejected', 'Invalid capture context')
++        if any((not isinstance(v,bool) if k == 'transcribed_on_device' else not isinstance(v,str) or len(v)>1000) for k,v in context.items()):
++            raise Problem(400, 'capture_rejected', 'Invalid capture metadata')
++        digest = hashlib.sha256(json.dumps(body, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
++        db = self.s.store.db
++        old = db.execute('SELECT digest,response FROM captures WHERE owner=? AND client_id=?', (owner, client_id)).fetchone()
++        if old:
++            if old[0] != digest: raise Problem(409, 'capture_conflict', 'Capture ID already contains different content')
++            return json.loads(old[1])
++        attachments = []
++        for uid in ids:
++            row = db.execute('SELECT owner,data FROM capture_uploads WHERE id=?', (uid,)).fetchone()
++            if not row or row[0] != owner:
++                raise Problem(403, 'capture_rejected', 'Capture upload belongs to another device or is missing')
++            attachments.append(json.loads(row[1]))
++        directory = self.directory(owner)
++        stem = date.strftime('%Y-%m-%d') + '-' + client_id
++        metadata = {'client_capture_id': client_id, 'created_at': body['created_at'], 'kind': body['kind'], 'context': context, 'attachments': attachments}
++        # Files precede confirmation. An interrupted write is reconciled by exact
++        # bytes, never overwritten with a different request.
++        for suffix, payload in [('.md', text.encode('utf-8')), ('.json', json.dumps(metadata, ensure_ascii=False, sort_keys=True).encode())]:
++            path = directory / (stem + suffix)
++            try: self.write(path, payload)
++            except FileExistsError:
++                fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
++                with os.fdopen(fd,'rb') as f:
++                    st = os.fstat(f.fileno())
++                    if not stat.S_ISREG(st.st_mode) or st.st_uid != os.getuid() or st.st_nlink != 1 or st.st_mode & 0o077 or f.read() != payload:
++                        raise Problem(409, 'capture_conflict', 'Capture persistence conflicts with this ID')
++        self.sync_directory(directory)
++        response = {'capture_id': client_id, 'stored_at': datetime.now(timezone.utc).isoformat()}
++        db.execute('INSERT INTO captures VALUES (?,?,?,?)', (owner, client_id, digest, json.dumps(response)))
++        db.commit()
++        return response
+diff --git a/hermes-mobile-bridge/src/hermes_mobile_bridge/service.py b/hermes-mobile-bridge/src/hermes_mobile_bridge/service.py
+index e463254..8a0b6cd 100644
+--- a/hermes-mobile-bridge/src/hermes_mobile_bridge/service.py
++++ b/hermes-mobile-bridge/src/hermes_mobile_bridge/service.py
+@@ -20,6 +20,8 @@ class Service:
+         self.backends = {name: Backend(name, b, self.event, self.health_changed) for name, b in cfg["backends"].items()}
+         from .uploads import Uploads
+         self.uploads = Uploads(self)
++        from .captures import Captures
++        self.captures = Captures(self)
+         self.locks = {}
+         self.changed = asyncio.Condition()
+         self.maintenance = set()
+@@ -74,7 +76,7 @@ class Service:
+ 
+     def conversation_view(self, row):
+         data = row["data"]
+-        result = {"id": row["id"], "profile": data.get("bot_id") or row["profile"], "owned": bool(row["owned"]),
++        result = {"id": row["id"], "profile": data.get("bot_id") or row["profile"], "owned": bool(row["owned"]), "is_bot_chat": bool(data.get("canonical")),
+                   **only(data, "title model provider reasoning_effort cwd source archived started_at message_count last_active preview canonical bot_id bot_name bot_profile")}
+         if data.get("canonical"):
+             result.update(title=data["bot_name"], read_only=not self.backends[row["profile"]].cfg.get("bot_chat_control", False))
+@@ -86,6 +88,15 @@ class Service:
+ 
+     async def refresh_bot_binding(self, conv, control=False):
+         if not conv["data"].get("canonical"):
++            if conv["data"].get("bot_id"):
++                from .bots import BotMode
++                source = conv["profile"]
++                adapter = BotMode(self, {"profiles": [source], "scopes": ["read", "chat.control"]})
++                actual, name, backend, _ = await adapter.resolve(conv["data"]["bot_id"])
++                if actual != source or name != self.session_profile(conv):
++                    raise Problem(409, "bot_identity_mismatch", "Agent thread identity changed")
++                if control and not adapter.can_control(backend):
++                    raise Problem(403, "bot_chat_read_only", "Agent thread control disabled")
+             return conv
+         from .bots import BotMode
+         source = conv["profile"]
+@@ -211,11 +222,11 @@ class Service:
+             if kind == "approval.request":
+                 for existing in self.store.db.execute("SELECT data FROM attention WHERE run_id=?", (rid,)).fetchall():
+                     item = json.loads(existing[0])
+-                    if item["kind"] == "approval" and item["state"] == "pending" and item["generation"] == self.backends[profile].generation and item["details"] == only(payload, "command description pattern_key pattern_keys allow_permanent question choices"):
++                    if item["kind"] == "approval" and item["state"] == "pending" and item["generation"] == self.backends[profile].generation and item["details"] == only(payload, "command description pattern_key pattern_keys allow_permanent question choices recommended default on_timeout"):
+                         return
+             aid = uuid.uuid4().hex
+             exact = kind == "clarify.request" and bool(payload.get("request_id"))
+-            item = {"id": aid, "run_id": rid, "conversation_id": run["conversation_id"], "profile": profile, "kind": "clarification" if exact else "approval" if kind == "approval.request" else "local_terminal_input" if kind == "terminal.read.request" else "local_secret_input", "state": "pending", "observed_at": now(), "expires_at": now() + 290, "can_respond": exact, "limitation": None if exact else "upstream_fifo_without_exact_target" if kind == "approval.request" else "local_terminal_buffer_required" if kind == "terminal.read.request" else "local_only_secret_input", "details": only(payload, "command description pattern_key pattern_keys allow_permanent question choices"), "request_id": payload.get("request_id"), "generation": self.backends[profile].generation}
++            item = {"id": aid, "run_id": rid, "conversation_id": run["conversation_id"], "profile": profile, "kind": "clarification" if exact else "approval" if kind == "approval.request" else "local_terminal_input" if kind == "terminal.read.request" else "local_secret_input", "state": "pending", "observed_at": now(), "expires_at": now() + 290, "can_respond": exact, "limitation": None if exact else "upstream_fifo_without_exact_target" if kind == "approval.request" else "local_terminal_buffer_required" if kind == "terminal.read.request" else "local_only_secret_input", "details": only(payload, "command description pattern_key pattern_keys allow_permanent question choices recommended default on_timeout"), "request_id": payload.get("request_id"), "generation": self.backends[profile].generation}
+             self.store.db.execute("INSERT INTO attention VALUES (?,?,?,?)", (aid, rid, profile, json.dumps(item)))
+             self.store.db.commit()
+             latest = self.store.get("runs", rid)
+@@ -248,7 +259,7 @@ class Service:
+             item.update(kind="clarification" if method == "clarify" else "approval", state="responded" if locked else "pending",
+                         can_respond=method == "clarify" and not locked and item["expires_at"] > now(),
+                         limitation=None if method == "clarify" else "local_client_required", generation=self.backends[profile].generation,
+-                        details=only(question, "question choices multi_select") if method == "clarify" else only(params, "command description"))
++                        details=only(question, "question choices multi_select recommended default on_timeout") if method == "clarify" else only(params, "command description"))
+             self.store.db.execute("INSERT INTO attention VALUES (?,?,?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data", (item["id"], run["id"], profile, json.dumps(item)))
+             self.store.db.commit()
+             self.store.update_run(run["id"], "waiting_for_input")
+@@ -321,7 +332,7 @@ class Service:
+                 # Only reconnect to the SAME previously owned live handle. Do
+                 # not build a replacement agent or automatically replay a prompt.
+                 try:
+-                    res = await backend.rpc("session.resume", {"session_id": conv["stored_id"], **({"profile": self.session_profile(conv), "close_on_disconnect": False} if conv["data"].get("canonical") else {})})
++                    res = await backend.rpc("session.resume", {"session_id": conv["stored_id"], **({"profile": self.session_profile(conv), "close_on_disconnect": False} if conv["data"].get("bot_profile") else {})})
+                 except Problem:
+                     continue
+                 if res.get("session_id") != row["live_id"] or (conv["data"].get("canonical") and not self.profile_matches(res, self.session_profile(conv))):
+@@ -366,7 +377,7 @@ class Service:
+             raise Problem(410, "conversation_deleted", "Conversation was deleted")
+         if not backend.connected:
+             raise Problem(503, "upstream_unavailable", "Hermes is offline")
+-        if conv["data"].get("canonical"):
++        if conv["data"].get("bot_profile"):
+             name = self.session_profile(conv)
+             # Explicit-profile resume matches (profile_home, stored key), unlike active_list's unscoped keys.
+             result = await backend.rpc("session.resume", {"session_id": conv["stored_id"], "profile": name, "close_on_disconnect": False})
+@@ -389,7 +400,7 @@ class Service:
+             raise Problem(409, "conversation_busy", "Conversation is executing or awaiting input")
+         if matching:
+             return conv["live_id"]
+-        result = await backend.rpc("session.resume", {"session_id": conv["stored_id"], **({"profile": self.session_profile(conv), "close_on_disconnect": False} if conv["data"].get("canonical") else {})})
++        result = await backend.rpc("session.resume", {"session_id": conv["stored_id"], **({"profile": self.session_profile(conv), "close_on_disconnect": False} if conv["data"].get("bot_profile") else {})})
+         stored = result.get("session_key") or result.get("stored_session_id") or conv["stored_id"]
+         self.store.save_conversation(conv["id"], conv["profile"], stored, result["session_id"], True, only(result.get("info", {}), "model provider reasoning_effort cwd"))
+         return result["session_id"]
+@@ -423,7 +434,7 @@ class Service:
+                 attached_refs = await self.uploads.attach(conv, sid, run, selected)
+                 if attached_refs: text += "\n\n" + "\n".join(attached_refs)
+                 self.store.update_run(run["id"], run["state"], prompt=text, attachment_ids=list(attachment_ids))
+-                await self.backends[conv["profile"]].rpc("prompt.submit", {"session_id": sid, "text": text, **({"profile": self.session_profile(current)} if current["data"].get("canonical") else {})})
++                await self.backends[conv["profile"]].rpc("prompt.submit", {"session_id": sid, "text": text, **({"profile": self.session_profile(current)} if current["data"].get("bot_profile") else {})})
+             except Problem as err:
+                 state = "unknown" if err.code in {"upstream_uncertain", "upstream_unavailable"} else "failed"
+                 run = self.store.update_run(run["id"], state, reason=err.code)
+@@ -437,7 +448,7 @@ class Service:
+         backend = self.backends[run["profile"]]
+         # Reject stale handles immediately before sending a control.
+         conv = self.store.get("conversations", run["conversation_id"])
+-        if conv["data"].get("canonical"):
++        if conv["data"].get("bot_profile"):
+             conv = await self.refresh_bot_binding(conv, control=True)
+             resumed = await backend.rpc("session.resume", {"session_id": conv["stored_id"], "profile": self.session_profile(conv), "omit_messages": True, "close_on_disconnect": False})
+             valid = resumed.get("session_id") == run["live_id"] and self.profile_matches(resumed, self.session_profile(conv)) and resumed.get("running")
+diff --git a/hermes-mobile-bridge/src/hermes_mobile_bridge/store.py b/hermes-mobile-bridge/src/hermes_mobile_bridge/store.py
+index 43e75e8..8426bf1 100644
+--- a/hermes-mobile-bridge/src/hermes_mobile_bridge/store.py
++++ b/hermes-mobile-bridge/src/hermes_mobile_bridge/store.py
+@@ -183,13 +183,15 @@ class Store:
+         rows = self.db.execute(sql, args).fetchall()
+         return {"events": [json.loads(r["data"]) for r in rows if r["profile"] in profiles], "cursor": f"{self.epoch}:{rows[-1]['seq'] if rows else int(self.cursor().split(':')[1])}", "has_more": len(rows) == limit}
+ 
+-    def command_begin(self, cid, credential, body):
++    def command_begin(self, cid, credential, body, replay_safe=False):
+         digest = hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+         old = self.db.execute("SELECT * FROM commands WHERE id=?", (cid,)).fetchone()
+         if old:
+             if old["credential"] != credential or old["digest"] != digest:
+                 raise Problem(409, "command_conflict", "Command ID was used for another request")
+             if old["status"] in {"pending", "uncertain"}:
++                if replay_safe:
++                    return None
+                 raise Problem(409, "command_uncertain", "Command may have reached Hermes; inspect state before retrying")
+             return json.loads(old["result"])
+         self.db.execute("INSERT INTO commands VALUES (?,?,?,'pending',NULL)", (cid, credential, digest))
+diff --git a/hermes-mobile-bridge/tests/conftest.py b/hermes-mobile-bridge/tests/conftest.py
+index 2242bbf..a00157a 100644
+--- a/hermes-mobile-bridge/tests/conftest.py
++++ b/hermes-mobile-bridge/tests/conftest.py
+@@ -23,6 +23,7 @@ async def serve(app, port=0):
+ 
+ class FakeHermes:
+     def __init__(self, root):
++        self.comments = {}
+         self.root = root
+         root.mkdir()
+         self.sessions, self.jobs, self.cards = {}, {}, {}
+@@ -63,7 +64,10 @@ class FakeHermes:
+                 result = {'found': False}
+             elif method == 'session.list':
+                 row = next((x for x in self.bot_roster if x['name'] == p.get('profile')), {})
+-                result = {'sessions': [row['canonical_session']] if row.get('canonical_session') else []}
++                if p.get('title'):
++                    result = {'sessions': [row['canonical_session']] if row.get('canonical_session') else []}
++                else:
++                    result = {'sessions': [{'id': x['stored'], 'resolved_id': x['stored'], 'title': x['title']} for x in self.sessions.values() if self.profile_of(x) == p.get('profile')]}
+                 if self.fail_registry:
+                     error = {'code': -32000, 'message': 'registry unavailable'}
+             elif method == 'session.active_list':
+@@ -79,11 +83,11 @@ class FakeHermes:
+                 row = next((r for r in self.bot_roster if r['name'] == self.profile_of(x)), None)
+                 if self.fail_title:
+                     error = {'code': -32000, 'message': 'title write unavailable'}
+-                elif row and row.get('canonical_session') and row['canonical_session']['id'] != x['stored']:
++                elif p['title'] == 'Bot Chat' and row and row.get('canonical_session') and row['canonical_session']['id'] != x['stored']:
+                     error = {'code': 4022, 'message': 'title taken'}
+                 else:
+                     x['title'] = p['title']
+-                    if row:
++                    if row and p['title'] == 'Bot Chat':
+                         row['canonical_session'] = {'id': x['stored'], 'resolved_id': x['stored'], 'title': p['title']}
+                     result = {'ok': True, 'title': p['title']}
+             elif method == 'client.capabilities':
+@@ -222,6 +226,9 @@ class FakeHermes:
+             tid = path.split('/')[5]
+             if tid not in self.cards:
+                 raise web.HTTPNotFound()
++            if path.endswith('/comments') and method == 'POST':
++                self.comments.setdefault(tid,[]).append(await request.json())
++                return web.json_response({'ok':True})
+             if method == 'PATCH':
+                 self.cards[tid].update(await request.json())
+                 return web.json_response({'ok': True})
+@@ -252,8 +259,9 @@ class Harness:
+         self.client = aiohttp.ClientSession(headers={'Authorization': 'Bearer ' + self.token})
+         await eventually(lambda: self.service.backends['default'].connected)
+ 
+-    async def request(self, method, path, body=None, key=None, expected=200):
++    async def request(self, method, path, body=None, key=None, expected=200, token=None):
+         headers = {'Idempotency-Key': key or str(uuid.uuid4())} if method != 'GET' else {}
++        if token: headers['Authorization'] = 'Bearer ' + token
+         async with self.client.request(method, f'http://127.0.0.1:{self.port}/mobile/v1' + path, json=body if method != 'GET' else None, headers=headers) as res:
+             data = await res.json()
+             assert res.status == expected, data
+diff --git a/hermes-mobile-bridge/tests/test_installed_hermes.py b/hermes-mobile-bridge/tests/test_installed_hermes.py
+index 635552e..9c14f00 100644
+--- a/hermes-mobile-bridge/tests/test_installed_hermes.py
++++ b/hermes-mobile-bridge/tests/test_installed_hermes.py
+@@ -143,6 +143,13 @@ memory:
+                 out = await res.json()
+                 assert res.status == expected, out
+                 return out
++        # B2 is independent of Hermes and preserves the exact input bytes.
++        capture_id = str(uuid.uuid4())
++        capture_text = "  verbatim *capture*\n\nNo rewriting.\n"
++        capture = await request('POST', '/captures', {'client_capture_id': capture_id, 'created_at': '2026-10-05T15:00:00Z', 'kind': 'note', 'text': capture_text}, 201)
++        repeated = await request('POST', '/captures', {'client_capture_id': capture_id, 'created_at': '2026-10-05T15:00:00Z', 'kind': 'note', 'text': capture_text}, 201)
++        assert capture == repeated
++        assert next((tmp_path / 'bridge-state' / 'captures').rglob('*.md')).read_bytes() == capture_text.encode()
+         if cfg['backends']['default']['bot_mode_roster']:
+             bots = (await request('GET', '/bots'))['bots']
+             assert {b['name'] for b in bots} == {'Hermes', 'Research Orchestrator', 'Research Worker'}
+@@ -160,6 +167,20 @@ memory:
+             assert service.store.get('conversations',new_chat['id'])['stored_id']
+             await request('POST','/bots/'+created['id']+'/hide',{'hidden':False})
+             assert (await request('GET','/bots/'+created['id']))['name'] == 'Edited fixture bot'
++            # B1: two independent, persisted native-profile sessions, streamed
++            # against the isolated real Hermes backend and local model fixture.
++            for_thread = next(b for b in bots if b['name'] == 'Research Worker')
++            first = await request('POST', '/bots/' + for_thread['id'] + '/conversations', {}, 201)
++            second = await request('POST', '/bots/' + for_thread['id'] + '/conversations', {}, 201)
++            assert first['id'] != second['id'] and first['is_bot_chat'] is False
++            assert first['bot_id'] == second['bot_id'] == for_thread['id']
++            listing = (await request('GET', '/conversations'))['conversations']
++            assert {first['id'], second['id']} <= {c['id'] for c in listing}
++            for independent in [first, second]:
++                turn = await request('POST', '/conversations/' + independent['id'] + '/runs', {'text': 'Reply with a short safe greeting.'}, 202)
++                await eventually(lambda: service.store.get('runs', turn['id'])['state'] in {'complete','failed'}, timeout=30)
++                assert service.store.get('runs', turn['id'])['state'] == 'complete'
++                assert (await request('GET', '/conversations/' + independent['id']))['messages']
+             bot = next(b for b in bots if b['name'] == 'Research Orchestrator')
+             detail = await request('GET', '/bots/' + bot['id'])
+             assert {v['name'] for v in detail['skills']} == set(SKILLS)
+@@ -274,6 +295,21 @@ memory:
+             reclaimed = await request('GET', f"/kanban/tasks/{card['id']}")
+             assert reclaimed['task']['raw_state'] == 'ready'
+             assert reclaimed['attempts'][0]['outcome'] == 'reclaimed'
++            if cfg['backends']['default']['bot_mode_roster']:
++                review_code = "from hermes_cli import kanban_db as kb; from hermes_cli.kanban_db_connect import connect; c=connect(board='default'); assert kb.request_review(c," + repr(card['upstream_id']) + ",summary='Review local evidence',force=True); c.close()"
++                review_args = json.loads(subprocess.check_output([str(python), '-I', '-c', resolver, str(SOURCE), review_code], env=dict(env, HERMES_HOME=str(SOURCE.parent)), text=True))
++                seeded_review = await asyncio.to_thread(subprocess.run, review_args, cwd=SOURCE, env=env, capture_output=True, timeout=30)
++                assert seeded_review.returncode == 0, 'Canonical review setup failed'
++                review_detail = await request('GET', f"/kanban/tasks/{card['id']}")
++                assert {'done','ready','todo'} <= set(review_detail['supported_targets'])
++                listed = await request('GET', '/kanban/tasks')
++                assert 'done' in next(x for x in listed['tasks'] if x['id'] == card['id'])['supported_targets']
++                await request('PATCH', f"/kanban/tasks/{card['id']}", {'status':'ready','summary':'Revise local evidence'})
++                assert any(x['body'] == 'Revise local evidence' for x in (await request('GET', f"/kanban/tasks/{card['id']}"))['comments'])
++                seeded_review = await asyncio.to_thread(subprocess.run, review_args, cwd=SOURCE, env=env, capture_output=True, timeout=30)
++                assert seeded_review.returncode == 0
++                await request('PATCH', f"/kanban/tasks/{card['id']}", {'status':'done','summary':'Evidence checked on Talaria'})
++                assert (await request('GET', f"/kanban/tasks/{card['id']}"))['task']['raw_state'] == 'done'
+             await request('POST', f"/kanban/tasks/{card['id']}/reassign", {'profile': ''})
+             await request('DELETE', f"/kanban/tasks/{child['id']}", {})
+             await request('DELETE', f"/kanban/tasks/{card['id']}", {})
+diff --git a/hermes-mobile-bridge/tests/test_vnext.py b/hermes-mobile-bridge/tests/test_vnext.py
+new file mode 100644
+index 0000000..2c240a7
+--- /dev/null
++++ b/hermes-mobile-bridge/tests/test_vnext.py
+@@ -0,0 +1,169 @@
++import base64
++import json
++import stat
++import uuid
++from pathlib import Path
++import pytest
++from test_bot_chat import prepare_bot, rpc_requests
++pytestmark = pytest.mark.asyncio
++
++async def test_agent_threads_are_distinct_and_listed(harness):
++    h = harness
++    _, bid = prepare_bot(h)
++    a = await h.request('POST', f'/bots/{bid}/conversations', {'title': 'Find suppliers'},expected=201)
++    b = await h.request('POST', f'/bots/{bid}/conversations', {'title': 'Compare models'},expected=201)
++    assert a['id'] != b['id'] and a['bot_id'] == b['bot_id'] == bid
++    assert not a['is_bot_chat'] and not b['is_bot_chat']
++    assert all(r['follow_profile_config'] for r in rpc_requests(h,'session.create'))
++    listed = await h.request('GET','/conversations')
++    assert {a['id'], b['id']} <= {r['id'] for r in listed['conversations']}
++    await h.request('POST', f"/conversations/{a['id']}/runs", {'text':'Fresh ask'},expected=202)
++    assert rpc_requests(h,'prompt.submit')[-1]['profile'] == 'research-orchestrator'
++
++async def test_agent_thread_cannot_break_canonical_chat_or_read_only_grant(harness):
++    h = harness
++    _, bid = prepare_bot(h,control=False)
++    await h.request('POST',f'/bots/{bid}/conversations',{},expected=403)
++    h.service.backends['default'].cfg['bot_chat_control'] = True
++    await h.request('POST',f'/bots/{bid}/conversations',{'title':'Bot Chat'},expected=400)
++
++async def test_capture_verbatim_persistence_and_idempotency(harness):
++    h = harness
++    body = {'client_capture_id':str(uuid.uuid4()),'created_at':'2026-10-05T12:00:00-05:00','kind':'note','text':'  exact\n# text\n\ntrailing  ', 'context':{'tag':'metadata only'}}
++    a = await h.request('POST','/captures',body,expected=201)
++    b = await h.request('POST','/captures',body,expected=201)
++    assert a == b
++    root = Path(h.service.cfg['state_dir'])/'captures'
++    files = list(root.rglob('*.md'))
++    assert len(files) == 1 and files[0].read_bytes() == body['text'].encode()
++    assert json.loads(files[0].with_suffix('.json').read_text())['context'] == body['context']
++    for path in [root, files[0].parent]: assert stat.S_IMODE(path.stat().st_mode) == 0o700
++    for path in [files[0],files[0].with_suffix('.json')]: assert stat.S_IMODE(path.stat().st_mode) == 0o600
++    await h.request('POST','/captures',body | {'text':'changed'},expected=409)
++    h.service.backends['default'].connected = False
++    await h.request('POST','/captures',body | {'client_capture_id':str(uuid.uuid4())},expected=201)
++
++async def test_capture_audio_upload_and_metadata(harness):
++    h = harness
++    audio = b'\x00\x00\x00\x18ftypM4A '+b'\x00'*20
++    upload = await h.request('POST','/captures/uploads',{'name':'Voice.m4a','content_type':'audio/mp4','content_base64':base64.b64encode(audio).decode()},expected=201)
++    body = {'client_capture_id':str(uuid.uuid4()),'created_at':'2026-10-05T12:00:00Z','kind':'voice','text':'spoken exactly','attachment_ids':[upload['upload_id']]}
++    await h.request('POST','/captures',body,expected=201)
++    root = Path(h.service.cfg['state_dir'])/'captures'
++    assert json.loads(next(root.rglob('*.json')).read_text())['attachments'][0]['content_type'] == 'audio/mp4'
++    assert next(root.rglob(upload['upload_id'])).read_bytes() == audio
++    await h.request('POST','/captures/uploads',{'name':'../bad','content_type':'audio/mp4','content_base64':base64.b64encode(audio).decode()},expected=400)
++    await h.request('POST','/captures/uploads',{'name':'bad.m4a','content_type':'audio/mp4','content_base64':base64.b64encode(b'bad').decode()},expected=415)
++
++async def test_capture_interrupted_receipt_is_recoverable_but_ask_is_not(harness):
++    h = harness
++    body = {'client_capture_id': str(uuid.uuid4()), 'created_at': '2026-10-05T12:00:00Z', 'kind':'note','text':'durable'}
++    key = str(uuid.uuid4())
++    first = await h.request('POST','/captures',body,expected=201,key=key)
++    h.service.store.db.execute("UPDATE commands SET status='uncertain', result=NULL WHERE id=?",(key,)); h.service.store.db.commit()
++    assert await h.request('POST','/captures',body,expected=201,key=key) == first
++    assert len(list(h.service.captures.root.rglob('*.md'))) == 1
++    assert (await h.request('GET','/commands/'+key))['state'] == 'done'
++    assert (await h.request('GET','/commands/'+str(uuid.uuid4())))['state'] == 'not_received'
++    await h.request('POST','/captures',body | {'text':'different'}, expected=409,key=key)
++
++async def test_capture_owner_and_scope_isolation(harness):
++    h = harness
++    _, other = h.service.store.token('other',['read','chat.control'],['default'])
++    _, reader = h.service.store.token('reader',['read'],['default'])
++    key = str(uuid.uuid4())
++    payload = {'name':'Voice.m4a','content_type':'audio/mp4','content_base64':base64.b64encode(b'\x00\x00\x00\x18ftypM4A '+b'\x00'*20).decode()}
++    upload = await h.request('POST','/captures/uploads',payload,expected=201,key=key)
++    capture = {'client_capture_id':str(uuid.uuid4()),'created_at':'2026-10-05T12:00:00Z','kind':'voice','text':'exact','attachment_ids':[upload['upload_id']]}
++    await h.request('POST','/captures',capture,expected=403,token=other)
++    await h.request('POST','/captures',capture,expected=403,token=reader)
++    await h.request('GET','/commands/'+key,expected=403,token=other)
++
++async def test_audio_interrupted_upload_does_not_duplicate(harness):
++    h = harness
++    key = str(uuid.uuid4())
++    payload = {'name':'Voice.m4a','content_type':'audio/mp4','content_base64':base64.b64encode(b'\x00\x00\x00\x18ftypM4A '+b'\x00'*20).decode()}
++    first = await h.request('POST','/captures/uploads',payload,expected=201,key=key)
++    h.service.store.db.execute("UPDATE commands SET status='uncertain', result=NULL WHERE id=?",(key,));h.service.store.db.commit()
++    assert await h.request('POST','/captures/uploads',payload,expected=201,key=key) == first
++    assert h.service.store.db.execute('SELECT COUNT(*) FROM capture_uploads').fetchone()[0] == 1
++
++async def test_capture_quota_is_owner_scoped_and_replay_safe_at_limit(harness):
++    h = harness
++    data = b'quota'
++    h.service.cfg['capture_media_quota'] = len(data)
++    payload = {'name':'note.txt','content_type':'text/plain','content_base64':base64.b64encode(data).decode()}
++    key = str(uuid.uuid4())
++    first = await h.request('POST','/captures/uploads',payload,expected=201,key=key)
++    h.service.store.db.execute("UPDATE commands SET status='uncertain', result=NULL WHERE id=?",(key,));h.service.store.db.commit()
++    assert await h.request('POST','/captures/uploads',payload,expected=201,key=key) == first
++    await h.request('POST','/captures/uploads',payload,expected=413)
++    _, other = h.service.store.token('other',['read','chat.control'],['default'])
++    second = await h.request('POST','/captures/uploads',payload,expected=201,token=other)
++    assert second['upload_id'] != first['upload_id']
++
++async def test_agent_override_and_receipt_preserve_creation_contract(harness):
++    h = harness
++    _, bid = prepare_bot(h)
++    key = str(uuid.uuid4())
++    fields = {'model':'fixture/model','provider':'custom','reasoning_effort':'low'}
++    c = await h.request('POST',f'/bots/{bid}/conversations',fields,expected=201,key=key)
++    assert await h.request('POST',f'/bots/{bid}/conversations',fields,expected=201,key=key) == c
++    created = rpc_requests(h,'session.create')
++    assert len(created) == 1 and created[0]['follow_profile_config'] is False
++    assert created[0]['model'] == 'fixture/model' and created[0]['reasoning_effort'] == 'low'
++
++async def test_review_targets_and_note_preservation(harness):
++    h = harness
++    from hermes_mobile_bridge.core import opaque
++    tid = 'review-fixture'
++    h.fake.cards[tid] = {'id':tid,'title':'Review shortlist','status':'review'}
++    bid = opaque('default','default.'+tid)
++    board = await h.request('GET','/kanban/tasks')
++    row = next(t for t in board['tasks'] if t['id'] == bid)
++    assert {'done','ready','todo'} <= set(row['supported_targets'])
++    await h.request('PATCH','/kanban/tasks/'+bid,{'status':'done','summary':'Checked evidence'})
++    assert h.fake.cards[tid]['summary'] == 'Checked evidence'
++    h.fake.cards[tid]['status'] = 'review'
++    key = str(uuid.uuid4())
++    await h.request('PATCH','/kanban/tasks/'+bid,{'status':'ready','summary':'Revise supplier two'},key=key)
++    assert h.fake.comments[tid] == [{'body':'Revise supplier two','author':'Talaria'}]
++    await h.request('PATCH','/kanban/tasks/'+bid,{'status':'ready','summary':'Revise supplier two'},key=key)
++    assert len(h.fake.comments[tid]) == 1
++
++async def test_agent_workspace_is_creation_only_and_allowlisted(harness):
++    h = harness
++    _, bid = prepare_bot(h)
++    h.service.backends['default'].cfg['workspaces']['fixture'] = str(h.fake.root)
++    await h.request('POST',f'/bots/{bid}/conversations',{'workspace':'fixture'},expected=201)
++    assert rpc_requests(h,'session.create')[-1]['cwd'] == str(h.fake.root)
++    await h.request('POST',f'/bots/{bid}/conversations',{'workspace':'/etc'},expected=400)
++
++async def test_capture_confirmation_waits_for_directory_durability(harness,monkeypatch):
++    from hermes_mobile_bridge.captures import Captures
++    h = harness
++    original = Captures.sync_directory
++    def interrupted(path):
++        if path != h.service.captures.root: raise OSError('simulated directory flush failure')
++        original(path)
++    monkeypatch.setattr(Captures,'sync_directory',staticmethod(interrupted))
++    key = str(uuid.uuid4())
++    body = {'client_capture_id':str(uuid.uuid4()),'created_at':'2026-10-05T12:00:00Z','kind':'note','text':'exact durable text','context':{'tag':'true'}}
++    await h.request('POST','/captures',body,key=key,expected=500)
++    assert h.service.store.db.execute('SELECT COUNT(*) FROM captures').fetchone()[0] == 0
++    monkeypatch.setattr(Captures,'sync_directory',staticmethod(original))
++    result = await h.request('POST','/captures',body,key=key,expected=201)
++    assert result['capture_id'] == body['client_capture_id']
++    files = list(h.service.captures.root.rglob('*.md'))
++    assert len(files) == 1 and files[0].read_bytes() == body['text'].encode()
++    assert json.loads(files[0].with_suffix('.json').read_text())['context']['tag'] == 'true'
++
++async def test_kanban_native_agent_assignment_preserves_identity(harness):
++    h = harness
++    _, bid = prepare_bot(h)
++    card = await h.request('POST','/kanban/tasks',{'title':'Native Agent card','assignee':bid},expected=201)
++    assert card['assignee'] == bid
++    raw = h.fake.cards[card['upstream_id']]
++    assert raw['assignee'] == 'research-orchestrator'
++    await h.request('PATCH','/kanban/tasks/'+card['id'],{'assignee':bid})
++    assert (await h.request('GET','/kanban/tasks/'+card['id']))['task']['assignee'] == bid
+diff --git a/scripts/local_integration_stack.py b/scripts/local_integration_stack.py
+index bc59cb0..93f6a1c 100644
+--- a/scripts/local_integration_stack.py
++++ b/scripts/local_integration_stack.py
+@@ -33,6 +33,9 @@ class Stack:
+         self.calls = []; self.runners = []
+         self.env = {k:v for k,v in os.environ.items() if not any(x in k.upper() for x in ('API_KEY','TOKEN','SECRET','HERMES_','ANTHROPIC_','OPENAI_','OPENROUTER_','NOUS_')) and k not in {'PYTHONPATH','PYTHONHOME'}}
+         self.env.update(HERMES_HOME=str(self.home),HERMES_DASHBOARD_SESSION_TOKEN='isolated-dashboard-'+'u'*32,HERMES_TUI_TOOLSETS='terminal,file',PYTHONUNBUFFERED='1')
++        # Optional private dependency overlay; never installs into Hermes's runtime.
++        if dependencies := os.environ.get('HERMES_TEST_DEPENDENCIES'):
++            self.env['PYTHONPATH'] = str(Path(dependencies).resolve(strict=True))
+         self.logs = []
+ 
+     def launch(self, which):
+@@ -78,7 +81,9 @@ class Stack:
+         return web.json_response({'model_requests':len(self.calls),'steering_consumed':any('safe-steering-evidence' in json.dumps(c['messages']) for c in self.calls), 'commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=SOURCE,text=True).strip()})
+ 
+     async def start(self):
+-        commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=SOURCE,text=True).strip(); assert commit.startswith('2a4c9afd7bd')
++        commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=SOURCE,text=True).strip()
++        from hermes_mobile_bridge.bots import AUDITED_COMMITS
++        assert any(commit.startswith(c) for c in AUDITED_COMMITS)
+         (self.home/'config.yaml').write_text(f'''model:
+   default: bridge-local-test
+   provider: custom
+@@ -98,10 +103,19 @@ memory:
+   memory_enabled: false
+   user_profile_enabled: false
+ ''')
++        if commit == '4bb9e57bfde8a0affb5553eff13ed6e1f14147f1':
++            self.env['HERMES_RUNTIME_DIR'] = str(SOURCE.parent / 'tools')
++            self.env['HERMES_DISABLE_LAZY_INSTALLS'] = '1'
++            for name,title in [('research-orchestrator','Research Orchestrator'),('research-worker','Research Worker')]:
++                profile = self.home / 'profiles' / name
++                profile.mkdir(parents=True)
++                (profile / 'config.yaml').write_text((self.home / 'config.yaml').read_text())
++                (profile / 'profile.yaml').write_text('display_name: ' + title + '\nui_meta:\n  hermes-bots:\n    title: ' + title + '\n')
++                (profile / 'SOUL.md').write_text('Isolated mobile integration fixture. Reply briefly; only safe fixture work.')
+         token_file=self.directory/'upstream-token';token_file.write_text(self.env['HERMES_DASHBOARD_SESSION_TOKEN'])
+         state=self.directory/'state'
+         store=Store({'state_dir':str(state)},lock=False);_,self.token=store.token('simulator',['read','chat.control','tasks.manage','approvals.respond'],['default']);store.close()
+-        cfg={'state_dir':str(state),'listen_port':self.bp,'backends':{'default':{'url':f'http://127.0.0.1:{self.hp}','token_file':str(token_file),'source_dir':str(SOURCE),'boards':['default'],'workspaces':{'test':str(self.work)},'artifact_roots':[str(self.work/'.hermes/desktop-attachments')]}}}
++        cfg={'state_dir':str(state),'listen_port':self.bp,'backends':{'default':{'url':f'http://127.0.0.1:{self.hp}','token_file':str(token_file),'source_dir':str(SOURCE),'boards':['default'],'workspaces':{'test':str(self.work)},'artifact_roots':[str(self.work/'.hermes/desktop-attachments')], 'bot_mode_roster': commit == '4bb9e57bfde8a0affb5553eff13ed6e1f14147f1', 'bot_chat_control':True, 'installed_commit':commit}}}
+         (self.directory/'bridge.json').write_text(json.dumps(cfg))
+         modelapp=web.Application();modelapp.router.add_post('/v1/chat/completions',self.model);modelapp.router.add_get('/v1/models',lambda r:web.json_response({'data':[{'id':'bridge-local-test'}]}))
+         control=web.Application();control.router.add_post('/restart/{which:hermes|bridge}',self.control);control.router.add_get('/evidence',self.control)

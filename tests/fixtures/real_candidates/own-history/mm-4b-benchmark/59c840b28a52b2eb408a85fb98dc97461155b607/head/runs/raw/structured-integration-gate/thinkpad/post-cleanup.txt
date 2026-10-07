@@ -1,0 +1,14 @@
+2026-09-18T18:07:15Z
+== server absent ==
+84680 bash -c base=/tmp/mm-agent-structured-gate; { date -u +%Y-%m-%dT%H:%M:%SZ; echo "== server absent =="; pgrep -af "[l]lama-server" || true; echo "== server build =="; sha256sum /tmp/mm-agent-llama-server-structured/bin/llama-server; echo "== post cleanup memory =="; /usr/bin/free -b; echo "== swap =="; command -v swapon || true; /sbin/swapon --show 2>&1 || true; } >$base/raw/post-cleanup.txt
+== server build ==
+1aa78b25d08c47125521132a05faa6b964347a2aaca496371a99968ab97f47b1  /tmp/mm-agent-llama-server-structured/bin/llama-server
+== post cleanup memory ==
+               total        used        free      shared  buff/cache   available
+Mem:     15517904896  3820965888  8951595008    19628032  3775279104 11696939008
+Swap:    19812306944  2209083392 17603223552
+== swap ==
+/usr/sbin/swapon
+NAME       TYPE       SIZE USED PRIO
+/dev/dm-0  partition    4G 6.5M   -1
+/dev/zram0 partition 14.5G 2.1G 1000

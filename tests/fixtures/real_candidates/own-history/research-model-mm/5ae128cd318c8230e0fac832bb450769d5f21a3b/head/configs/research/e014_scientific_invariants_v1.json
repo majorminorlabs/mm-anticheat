@@ -1,0 +1,196 @@
+{
+  "schema_version": "1.0",
+  "record_type": "frozen_scientific_invariants",
+  "experiment_id": "E014_qwen3_8b_primary_qlora",
+  "status": "frozen_before_primary_results",
+  "frozen_at_commit": "bc27f558b6c0cd6d0c27206ee5e4fff851b7f12f",
+  "source_manifest": "experiments/E014_qwen3_8b_primary_qlora/manifest.json",
+  "source_manifest_sha256": "0958d3fa63dcad2d2f93bd019d77c036b1174cdcc4ee4afb8568a9dc2204e5c0",
+  "source_training_config": "configs/training/qwen3_8b_v0.1_qlora.toml",
+  "source_training_config_sha256": "efe00566bb8ef12a31c76f8dd4f88986643b53a964d8540f19484e1f7bd920bf",
+  "source_hypothesis_config": "configs/research/primary_v0.1.json",
+  "source_hypothesis_config_sha256": "c73e8c65a57b24b9898561f2cb1a3d06b1c5a0b189973f20073346b0b7baf356",
+  "source_research_evaluation_config": "configs/evaluation/research_benchmark_v0.1.toml",
+  "source_research_evaluation_config_sha256": "051543f4b654ce64a1064dac0423841681859015eea5addefb8fe49fbac23e32",
+  "source_lockfile": "uv.lock",
+  "source_lockfile_sha256": "82e0e70b44474c2ac0f2211664b6352b870171481ca1e6167faf95333e572825",
+  "scientific_invariants": {
+    "question": "Does research-behavior specialization improve Qwen3-8B-Base on unseen research tasks while preserving useful general capabilities?",
+    "hypothesis_h1": "The tuned 8B model will have higher macro-averaged structured validity and research-action accuracy than the untouched base on the frozen research benchmark.",
+    "model": {
+      "name": "Qwen/Qwen3-8B-Base",
+      "revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
+      "tokenizer_revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4"
+    },
+    "training_data": {
+      "version": "research-data-v0.1-expanded",
+      "path": "data/generated/research-data-v0.1-expanded.jsonl",
+      "file_sha256": "703aceae7a28450fe9dca35be29c09cf0e64aceeda49f60e7f626b6e3708a91f",
+      "content_sha256": "75283e511cb120bbb29fb95e13b7a26fa5f6b4f887ddf41079c50c4a96505cf1",
+      "row_count": 25269,
+      "split_counts": {"train": 19626, "validation": 2816, "test": 2827},
+      "split_content_sha256": {
+        "train": "aa28f649c2c460f8c692512eabab4c17fb59c0f500d9630c639957c89c220055",
+        "validation": "35d5e764675252779dae6879927d0ebf45b5f656558af734a65c138be827d73b",
+        "test": "d08d005a21dc4ca953ad06be582b46b6c7bfa78776732a2e02dd91a32d3aea92"
+      }
+    },
+    "benchmark": {
+      "version": "research-bench-v0.1",
+      "path": "benchmarks/releases/research-bench-v0.1.jsonl",
+      "file_sha256": "3f1f859a10f1bb34ebb22197fadfeba08f2f812c2346a9d75c2b1b7e97b878c4",
+      "content_sha256": "d44b8226ed8d5122ffedcb353761a9624917fb0bd6f6be60e5595799a0a5eb3e",
+      "case_count": 248,
+      "task_family_count": 31,
+      "cases_per_task_family": 8,
+      "contaminated_at_preregistration": false
+    },
+    "general_capability_control": {
+      "version": "general-control-v0.1",
+      "path": "benchmarks/control/general-capability-v0.1.jsonl",
+      "file_sha256": "b9ff1050dd05eeaf062aba8e8fce1f0a39ffc7da68754d02f011779780628636",
+      "content_sha256": "1be2dc5298066bb645ec49f48157de81c09a05579bab8679d87fa86723efbad5",
+      "case_count": 12,
+      "interpretation_limit": "Keyword-based narrow regression guard; not a general-intelligence measure."
+    },
+    "training_treatment": {
+      "method": "QLoRA supervised fine-tuning",
+      "backend": "Transformers SFTTrainer",
+      "context_length": 4608,
+      "microbatch_per_device": 1,
+      "gradient_accumulation_steps": 16,
+      "effective_global_batch_size": 16,
+      "epochs": 2,
+      "optimizer_steps": 2454,
+      "planned_training_tokens": 46810376,
+      "seed": 17,
+      "data_seed": 17,
+      "quantization": {
+        "load_in_4bit": true,
+        "type": "NF4",
+        "double_quantization": true,
+        "compute_dtype": "bfloat16",
+        "base_weight_dtype": "bfloat16"
+      },
+      "lora": {
+        "rank": 16,
+        "alpha": 32,
+        "dropout": 0.05,
+        "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+      },
+      "optimizer": "adamw_torch_fused",
+      "learning_rate": 0.0002,
+      "weight_decay": 0.01,
+      "scheduler": "cosine",
+      "warmup_ratio": 0.05,
+      "warmup_steps": 123,
+      "gradient_checkpointing": true,
+      "loss": "causal language-model SFT over serialized research prompt plus expected JSON output; EOS appended by TRL",
+      "training_config_values": {
+        "base_model": "Qwen/Qwen3-8B-Base",
+        "model_revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
+        "tokenizer_revision": "49e3418fbbbca6ecbdf9608b4d22e5a407081db4",
+        "dataset_path": "data/generated/research-data-v0.1-expanded.jsonl",
+        "dataset_file_sha256": "703aceae7a28450fe9dca35be29c09cf0e64aceeda49f60e7f626b6e3708a91f",
+        "dataset_content_hash": "75283e511cb120bbb29fb95e13b7a26fa5f6b4f887ddf41079c50c4a96505cf1",
+        "output_dir": "outputs/qwen3-8b-research-v0.1-qlora",
+        "seed": 17,
+        "method": "qlora",
+        "backend": "transformers",
+        "max_seq_length": 4608,
+        "per_device_train_batch_size": 1,
+        "gradient_accumulation_steps": 16,
+        "learning_rate": 0.0002,
+        "num_train_epochs": 2,
+        "warmup_ratio": 0.05,
+        "weight_decay": 0.01,
+        "lr_scheduler_type": "cosine",
+        "optim": "adamw_torch_fused",
+        "gradient_checkpointing": true,
+        "bf16": true,
+        "load_in_4bit": true,
+        "lora_r": 16,
+        "lora_alpha": 32,
+        "lora_dropout": 0.05,
+        "lora_target_modules": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+        "logging_steps": 10,
+        "eval_strategy": "steps",
+        "eval_steps": 500,
+        "save_strategy": "steps",
+        "save_steps": 500,
+        "save_total_limit": 5,
+        "load_best_model_at_end": true,
+        "metric_for_best_model": "eval_loss",
+        "greater_is_better": false,
+        "include_num_input_tokens_seen": true
+      }
+    },
+    "checkpoint_policy": {
+      "save_every_steps": 500,
+      "evaluate_every_steps": 500,
+      "maximum_checkpoints": 5,
+      "select_by": "validation eval_loss, lower is better",
+      "test_split_for_selection": false,
+      "early_stopping": false,
+      "resume": "latest atomically marked, valid Trainer checkpoint"
+    },
+    "evaluation": {
+      "base_before_training": true,
+      "test_after_training_only": true,
+      "test_for_checkpoint_selection": false,
+      "base_and_tuned_model_quantization": "NF4 4-bit, double quantization, BF16 compute",
+      "research_prompt": "Same frozen research_model.research_protocol.build_prompt protocol for base and tuned models; no tuned-only prompt or chat template.",
+      "research_generation": {"temperature": 0.0, "max_new_tokens": 512},
+      "control_generation": {"temperature": 0.0, "max_new_tokens": 256},
+      "primary_metrics": ["structured_valid", "action_accuracy"],
+      "primary_success_rule": "Both tuned-minus-base paired mean deltas must be positive and both two-sided 95% paired percentile-bootstrap confidence intervals must exclude zero.",
+      "secondary_or_descriptive_metrics": [
+        "citation_precision", "citation_recall", "claim_status_f1", "evidence_recall",
+        "unsupported_claim_rate", "insufficient_evidence_accuracy", "by_task", "by_domain", "control_benchmark_score"
+      ],
+      "bootstrap": {
+        "samples": 20000,
+        "seed": 17,
+        "interval": "paired percentile 95% CI",
+        "research_id_key": "example_id",
+        "control_id_key": "control_id",
+        "undefined_metric_policy": "pair only rows with the metric defined in both conditions"
+      },
+      "no_post_hoc_composite": true
+    }
+  },
+  "execution_backend_details": {
+    "currently_preregistered_execution": "Linux x86_64 NVIDIA CUDA with one BF16-capable A100 80 GB or H100 80 GB (planning profile; not measured)",
+    "amd_candidate": "Linux x86_64, one AMD Instinct MI300X (gfx942), ROCm 7.14 / TheRock PyTorch wheel",
+    "same_version_pins_required_for_case_a": {
+      "python": "3.13",
+      "torch": "2.14.0",
+      "transformers": "5.17.0",
+      "peft": "0.21.0",
+      "trl": "1.13.0",
+      "bitsandbytes": "0.50.2",
+      "accelerate": "1.15.0",
+      "datasets": "5.0.1"
+    },
+    "permitted_recorded_backend_variations": [
+      {"item": "CUDA to ROCm/HIP runtime", "scientific_effect": "Not inherently a treatment change if the same pinned PyTorch version, model, quantization and training operations execute; kernel numerics and determinism can differ, so record runtime and qualify loss/finite updates."},
+      {"item": "SDPA kernel dispatch", "scientific_effect": "Flash Attention is not required; default SDPA may select a backend-specific kernel. It can affect speed, numerical roundoff and memory, but not the declared objective or batch. Record the effective attention implementation."},
+      {"item": "bitsandbytes ROCm kernels", "scientific_effect": "Backend implementation may differ while retaining NF4, double quantization and BF16 compute. This is not presumed equivalent until the actual pinned load, backward, optimizer and checkpoint smoke passes."},
+      {"item": "single-GPU placement and allocator", "scientific_effect": "Device placement and allocator are execution details; record device/HBM/peaks. The MI300X run remains one GPU with microbatch 1 and effective batch 16."},
+      {"item": "fused AdamW kernel implementation", "scientific_effect": "The optimizer family and configured name stay adamw_torch_fused. Different ROCm implementation can affect floating-point order; require a successful finite update and record actual optimizer class."}
+    ],
+    "not_permitted_without_new_experiment_id": [
+      "NF4 QLoRA to BF16 LoRA or another quantization/training method",
+      "change to base model or revision, tokenizer, data, benchmark, prompt, loss, target modules, rank, alpha, dropout, sequence length, effective batch, optimizer family, learning rate, scheduler, warmup, epochs/steps, seed, checkpoint selection, evaluation, metrics, or stopping rule"
+    ],
+    "qualification_status": "READY_FOR_AMD_QUALIFICATION",
+    "literal_amd_execution_classification": "Not yet classified; hardware smoke is required before choosing CASE A, B, C or D. No AMD device/session/credits were visible in the local environment at preparation time."
+  },
+  "validation_policy": {
+    "required_before_smoke": "scripts/validate_e014_invariants.py must verify all frozen file hashes, dataset/benchmark canonical content hashes, split hashes/counts, manifest/config equality and locked package versions.",
+    "mismatch_action": "Stop without modifying frozen experiment artifacts or creating an AMD qualification run directory.",
+    "smoke_is_model_quality_evaluation": false,
+    "smoke_may_use_test_or_benchmark": false,
+    "full_training_started": false
+  }
+}

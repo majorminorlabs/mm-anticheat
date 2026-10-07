@@ -1,0 +1,67 @@
+[
+  {
+    "rule_id": "GH008",
+    "rule_name": "exception-swallowed",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "src/pipeline/orchestrator.mjs",
+    "line": 13,
+    "title": "Catch handler discards failures",
+    "evidence": "catch { return false; }",
+    "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+    "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH008",
+    "rule_name": "exception-swallowed",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "src/pipeline/research-router.mjs",
+    "line": 25,
+    "title": "Catch handler discards failures",
+    "evidence": "catch { return []; }",
+    "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+    "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH008",
+    "rule_name": "exception-swallowed",
+    "severity": "medium",
+    "confidence": "normal",
+    "file": "src/pipeline/research-router.mjs",
+    "line": 77,
+    "title": "Catch handler discards failures",
+    "evidence": "catch { return null; }",
+    "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+    "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH008",
+    "rule_name": "exception-swallowed",
+    "severity": "low",
+    "confidence": "normal",
+    "file": "src/app.mjs",
+    "line": 915,
+    "title": "Catch handler discards failures",
+    "evidence": "catch {}",
+    "why_flagged": "A broad exception handler silently converts failures into apparent success.",
+    "legit_if": "The operation is best effort, and discarding this failure is intentional.",
+    "allowed": false
+  },
+  {
+    "rule_id": "GH000",
+    "rule_name": "parse-skipped",
+    "severity": "info",
+    "confidence": "normal",
+    "file": "public/app.js",
+    "line": 1,
+    "title": "Content could not be parsed",
+    "evidence": "Line exceeds the 20,000 character analysis limit",
+    "why_flagged": "This content could not be analyzed completely; review it separately.",
+    "legit_if": "Binary content, unsupported encoding, or an incomplete patch is intentional.",
+    "allowed": false
+  }
+]

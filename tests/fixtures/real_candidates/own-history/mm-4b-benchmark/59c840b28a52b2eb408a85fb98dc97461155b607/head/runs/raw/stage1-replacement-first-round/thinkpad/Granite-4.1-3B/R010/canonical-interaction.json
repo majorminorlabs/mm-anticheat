@@ -1,0 +1,44 @@
+[
+  {
+    "arguments": {
+      "application": "4.7",
+      "database_schema": "17"
+    },
+    "response": {
+      "application": "4.7",
+      "healthy": true
+    },
+    "tool": "inspect_service",
+    "turn": 1,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {},
+    "response": {
+      "backup": "b-001"
+    },
+    "tool": "create_backup",
+    "turn": 2,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "application": "5.0",
+      "database_schema": "19"
+    },
+    "response": {
+      "arguments": {
+        "application": "5.0",
+        "database_schema": "19"
+      },
+      "invalid": true,
+      "ok": false,
+      "response": "malformed_arguments:KeyError:'version'",
+      "tool": "deploy_application",
+      "type": "tool_call"
+    },
+    "tool": "deploy_application",
+    "turn": 3,
+    "type": "tool_call"
+  }
+]

@@ -1,10 +1,13 @@
 """Deleted tests and renames away from test paths."""
 
+import ast
+import posixpath
 from pathlib import PurePosixPath
 
 from goodhart.classify import matches
 from goodhart.diffmodel import FileChange
 from goodhart.engine import ScanContext
+from goodhart.lang import jsts, python
 from goodhart.lang.moves import destinations, names
 from goodhart.rules.base import Finding, RuleBase
 from goodhart.util import first_line
@@ -52,6 +55,54 @@ class TestFileDeleted(RuleBase):
             and "source" in item.old_kinds
             and PurePosixPath(item.path).stem == subject
         ]
+        content = change.base_content or "" if ctx.mode == "full" else change.visible("base")
+        imports = []
+        if change.path.endswith(".py"):
+            for node in ast.walk(python.parse(content)):
+                if isinstance(node, ast.ImportFrom) and node.level:
+                    directory = posixpath.dirname(change.path)
+                    for _ in range(node.level - 1):
+                        directory = posixpath.dirname(directory)
+                    modules = [node.module] if node.module else [alias.name for alias in node.names]
+                    imports.extend(
+                        posixpath.join(directory, module.replace(".", "/")) for module in modules
+                    )
+        else:
+            tokens = [token for token in jsts.tokens(content) if token.kind != "comment"]
+            for index, token in enumerate(tokens):
+                if token.kind != "string":
+                    continue
+                previous = [item.value for item in tokens[max(0, index - 2) : index]]
+                if not (
+                    previous
+                    and (previous[-1] in {"from", "import"} or previous == ["require", "("])
+                ):
+                    continue
+                module = jsts.string_value(token.value)
+                if module and module.startswith("."):
+                    imports.append(
+                        posixpath.normpath(posixpath.join(posixpath.dirname(change.path), module))
+                    )
+        deleted = {
+            item.path
+            for item in ctx.changes
+            if item.new_path is None and "source" in item.old_kinds
+        }
+        import_matches = [
+            next(
+                (
+                    path
+                    for path in deleted
+                    if path == module
+                    or path.rsplit(".", 1)[0] == module
+                    or path == module + "/__init__.py"
+                ),
+                "",
+            )
+            for module in imports
+        ]
+        if import_matches and all(import_matches):
+            matching = sorted(set(matching + import_matches))
         why = self.why_flagged + moves.explanation()
         if matching:
             severity = "low" if severity != "info" else severity

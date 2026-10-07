@@ -6,10 +6,12 @@ explanation to consider; they do not prove intent. The scanner is deterministic,
 makes no network or LLM calls, and collects no telemetry. It supports Python and
 JS/TS, uses Python 3.11+, and has one runtime dependency: `unidiff`.
 
-**Gate 2 remains open** after REVIEW_02. M12/M13 fix config and inline approvals;
-the local benchmark runner is ready, but real runs need the model and repository
-inputs. Gate 1 passed REVIEW_01b's M11 conditions. See
-[PROGRESS.md](PROGRESS.md), [Gate 2](docs/GATE_2.md) and [the handoff](docs/HANDOFF.md).
+Gate 2 is released with reduced scope by Dippo. B1 is invalid and excluded from
+metrics; 54 own-history candidates await independent labels. Local integration and
+fresh-install checks pass; stopped for Gate 3 review. Hosted Action validation
+awaits a private remote. See [PROGRESS.md](PROGRESS.md),
+[integrations](docs/integrations.md), [Gate 3](docs/GATE_3.md) and
+[the handoff](docs/HANDOFF.md).
 
 ## Install
 
@@ -70,7 +72,8 @@ analysis coverage even when rule selection is restricted.
 ## Configuration and reviewed exceptions
 
 Git range scans load the root `.goodhart.toml` from the resolved merge base.
-Working and staged scans load it from HEAD. Patch scans use defaults unless
+Working and staged scans load it from HEAD; `--working --base <ref>` loads it
+from that base and includes committed session work. Patch scans use defaults unless
 `--config path` selects a file relative to the current directory. The header and
 JSON report `base:<sha>`, `HEAD`, `--config path`, or `defaults` as the source.
 When `.goodhart.toml` changes in the diff, a stderr notice names that change and
@@ -133,7 +136,7 @@ example `high: 1 (1 allowed)`.
 | GH003 | skip-marker-added | high |
 | GH004 | assertion-count-decreased | medium |
 | GH005 | assertion-weakened | medium |
-| GH006 | hardcoded-test-expectation | high (literal-only matches: medium) |
+| GH006 | hardcoded-test-expectation | high (literal-only: medium; same-diff expectations one level lower) |
 | GH007 | test-config-tampered | high |
 | GH008 | exception-swallowed | medium |
 | GH009 | test-environment-detection | high |
@@ -172,6 +175,35 @@ Full explanations are generated from the rule metadata in
   added elsewhere in the diff. Empty stubs cannot corroborate movement; full-mode
   destinations with fewer assertions yield medium.
 
+## Integrations and blocked-scan captures
+
+Use the shipped GitHub Action, pre-commit registration and native Claude Code or
+Codex Stop hook: [setup and validation](docs/integrations.md). The Action has
+fail-on, config and optional comment inputs; PR comments are disabled by default.
+Agent hooks record a SessionStart base, scan commits plus working changes, and
+block at high. Continued stops rescan and warn about unresolved findings.
+
+`goodhart scan --working --capture-on-block` saves the exact diff and complete
+findings JSON to `.goodhart/captures/<timestamp>-<id>/` on exit 1. Hooks enable
+this automatically. Captures stay local, use private file permissions and are
+excluded from subsequent Git scans. First save writes `.goodhart/.gitignore`
+with `*`; capture.json records unresolved continuation state.
+Storage failure emits a diagnostic and preserves the findings block.
+
+To record the terminal demo, run:
+
+```sh
+GOODHART_PYTHON="$PWD/.venv/bin/python" scripts/demo.sh
+```
+
+The script applies classic-cheat in an isolated scratch repo, verifies exit 1,
+then reverts and verifies exit 0. Use a terminal recorder or screenshot tool if
+needed; it does not edit this checkout.
+
+Contributions should include relevant positive/negative fixtures and preserve
+the pinned noise budget. Run Ruff and pytest before proposing a change. Detector
+findings require human review; corpus labels are assigned independently.
+
 ## Development and review
 
 ```sh
@@ -202,10 +234,14 @@ for manual labeling and preserves existing candidate directories. Observed
 findings are not expected-result oracles. See the pinned
 [noise baseline](docs/noise-baseline.md): 10 of 680 commits flag high and GH006
 highs are zero, passing REVIEW_01b's release limit of at most ten. The original
-eight-commit target was waived. Gate 2 awaits review and Dippo's labeled corpus.
+eight-commit target was waived. Gate 2 is released with reduced scope. B2 has
+independent labels; no confirmed-cheat recall sample exists. Candidate-only false
+positives are selection-biased; the report also shows blocks per full history window.
 
 The [local ImpossibleBench runner](docs/impossiblebench-local.md) uses a separate
 environment and Ollama through Inspect. It exports complete snapshots and
 benchmark-defined labels without adding model libraries to the scanner runtime.
-History candidates remain unreviewed for the independent reviewer. Current
+The 2026-10-06 B1 campaign is invalid (tools protocol, Docker and disk-pressure
+failures); its runner is retained and is not rerun. History candidates were
+reviewed independently: 52 legitimate and 2 suspicious (0 confirmed cheats). Current
 case counts and metrics are in [real-world-eval.md](docs/real-world-eval.md).

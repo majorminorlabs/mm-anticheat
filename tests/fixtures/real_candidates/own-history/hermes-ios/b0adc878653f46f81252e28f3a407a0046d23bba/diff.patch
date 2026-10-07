@@ -1,0 +1,399 @@
+diff --git a/BOT_MANAGEMENT.md b/BOT_MANAGEMENT.md
+index d4fbdca..17400a2 100644
+--- a/BOT_MANAGEMENT.md
++++ b/BOT_MANAGEMENT.md
+@@ -15,6 +15,11 @@ profile RPCs used by Hermes Desktop and never writes profile files itself:
+ - Hiding sets `ui_meta['hermes-bots'].hidden`. It only removes a bot from the
+   Bot Mode roster. The Hermes profile and canonical `Bot Chat` history remain.
+   Unhide clears that flag. The default profile cannot be hidden.
++- Duplicating calls `profiles.create` with the source profile as `clone_from`.
++  Hermes copies profile configuration, instructions, and installed skills into
++  a new profile; it does not copy session history. The bridge chooses a free
++  `-2`, `-3`, … identity and a matching `(copy)` display title, then reads the
++  clone back from Hermes. Each duplicate starts without a canonical `Bot Chat`.
+ 
+ The phone supplies a display title. The bridge derives a Unicode-aware Hermes
+ profile slug, checks it against all profiles including hidden ones, and lets
+@@ -30,7 +35,9 @@ The live inventory is available as `GET /mobile/v1/bots/inventory`. Pass
+ ID>` to retrieve that bot's profile-specific installed capabilities for edit.
+ Inventory entries contain selector metadata only; provider credentials, API
+ keys, base URLs, MCP commands, environment values, and filesystem paths are
+-excluded.
++excluded. Credential-like values in bot titles, descriptions, or SOUL text are
++rejected on writes and obvious token/private-key forms are withheld from mobile
++detail responses.
+ 
+ ## Capability and permission gates
+ 
+@@ -42,8 +49,8 @@ Mutations require all of the following:
+ - The connected Hermes backend advertises the Bot Mode protocol and is running
+   the audited `4bb9e57bfde8a0affb5553eff13ed6e1f14147f1` lifecycle contract.
+ 
+-The bridge reports per-backend `botCreate`, `botEdit`, `botHide`, and
+-`botInventory` capabilities. Older or disconnected backends return these as
++The bridge reports per-backend `botCreate`, `botEdit`, `botHide`, `botDuplicate`,
++and `botInventory` capabilities. Older or disconnected backends return these as
+ unavailable so clients can hide management controls. Bot Chat access alone
+ does not enable profile mutation.
+ 
+@@ -51,6 +58,9 @@ Hermes may require a confirmation before applying a guarded model change. The
+ bridge returns that confirmation requirement without reporting the model as
+ saved; a client should show Hermes' message and retry only after the user
+ confirms. A successful edit is re-read from Hermes and returned to the client.
++If Hermes creates a profile but rejects a later Bot Mode metadata or capability
++write, the bridge reports an explicit partial-create error and profile ID so the
++client can refresh. It does not auto-delete the profile or its host state.
+ 
+ ## Deletion and history
+ 
+diff --git a/hermes-mobile-bridge/src/hermes_mobile_bridge/bot_management.py b/hermes-mobile-bridge/src/hermes_mobile_bridge/bot_management.py
+index 6664322..b8e96de 100644
+--- a/hermes-mobile-bridge/src/hermes_mobile_bridge/bot_management.py
++++ b/hermes-mobile-bridge/src/hermes_mobile_bridge/bot_management.py
+@@ -7,7 +7,7 @@ the bridge reports the normalized bot.
+ import re
+ import unicodedata
+ 
+-from .bots import BOT_MANAGEMENT_COMMIT
++from .bots import BOT_MANAGEMENT_COMMIT, contains_credential_value
+ from .core import Problem, identifier, opaque, unopaque, only
+ 
+ _BOT_META = 'hermes-bots'
+@@ -27,6 +27,8 @@ def _clean_title(value):
+     if (not title or len(title) > _MAX_TITLE or '/' in title or '\\' in title
+             or any(unicodedata.category(c).startswith('C') for c in title)):
+         raise Problem(400, 'invalid_bot_name', 'Name must be 1 to 96 characters without control characters')
++    if contains_credential_value(title):
++        raise Problem(400, 'invalid_bot_name', 'Name cannot contain credential-like text')
+     return title
+ 
+ 
+@@ -65,6 +67,8 @@ def _text(fields, name, *, required=False, maximum):
+     value = fields[name]
+     if not isinstance(value, str) or len(value) > maximum or '\x00' in value:
+         raise Problem(400, 'invalid_bot_field', f'Invalid {name}', field=name)
++    if name in {'description', 'soul'} and contains_credential_value(value):
++        raise Problem(400, 'invalid_bot_field', f'{name} cannot contain credential-like text', field=name)
+     value = value.strip() if name != 'soul' else value
+     if required and not value:
+         raise Problem(400, 'invalid_bot_field', f'{name} is required', field=name)
+@@ -235,9 +239,10 @@ class BotManagement:
+         applied = applied if isinstance(applied, dict) else {}
+         failed = [field for field in required if applied.get(field) is not True]
+         if failed:
++            applied_fields = [field for field in required if applied.get(field) is True]
+             raise Problem(502, 'bot_configuration_not_applied', 'Hermes did not apply every requested bot field',
+-                          fields=failed, applied={key: applied.get(key) for key in required if key in applied},
+-                          partial=partial)
++                          fields=failed, applied_fields=applied_fields,
++                          partial=partial or bool(applied_fields))
+         return applied
+ 
+     async def _check_unique_title(self, profiles, title, *, except_name=None):
+@@ -275,21 +280,31 @@ class BotManagement:
+ 
+         configured = {'name': slug, 'ui_meta': {_BOT_META: {'title': title}}}
+         required = ['ui_meta']
+-        if selections['skills'] is not None:
+-            new_detail = await self._describe(backend, slug)
+-            installed = {item.get('name') for item in new_detail.get('skills', []) if isinstance(item, dict)}
+-            if not set(selections['skills']) <= installed:
+-                raise Problem(400, 'invalid_bot_capability', 'A selected skill is not installed in the new profile', field='skills')
+-            configured['disabled_skills'] = sorted(installed - set(selections['skills']))
+-            required.append('skills')
+-        if selections['toolsets'] is not None:
+-            configured['enabled_toolsets'] = selections['toolsets']
+-            required.append('toolsets')
+-        if selections['mcp_servers'] is not None:
+-            configured['enabled_mcp_servers'] = selections['mcp_servers']
+-            required.append('mcp_servers')
+-        result = await backend.rpc('profiles.configure', configured)
+-        self._configure_result(result, required)
++        try:
++            if selections['skills'] is not None:
++                new_detail = await self._describe(backend, slug)
++                installed = {item.get('name') for item in new_detail.get('skills', []) if isinstance(item, dict)}
++                if not set(selections['skills']) <= installed:
++                    raise Problem(502, 'bot_create_partially_applied',
++                                  'Hermes created the bot but a selected skill is not present in the cloned profile; refresh the Bots list',
++                                  profile_id=slug, fields=['skills'])
++                configured['disabled_skills'] = sorted(installed - set(selections['skills']))
++                required.append('skills')
++            if selections['toolsets'] is not None:
++                configured['enabled_toolsets'] = selections['toolsets']
++                required.append('toolsets')
++            if selections['mcp_servers'] is not None:
++                configured['enabled_mcp_servers'] = selections['mcp_servers']
++                required.append('mcp_servers')
++            result = await backend.rpc('profiles.configure', configured)
++            self._configure_result(result, required)
++        except Problem as exc:
++            if exc.code == 'bot_create_partially_applied':
++                raise
++            raise Problem(502, 'bot_create_partially_applied',
++                          'Hermes created the bot profile but did not complete every requested setting; refresh the Bots list before retrying',
++                          profile_id=slug, failed_fields=exc.details.get('fields', []),
++                          applied_fields=exc.details.get('applied_fields', [])) from None
+         return await self._read_bot(source, slug)
+ 
+     async def _read_bot(self, source, profile_id):
+@@ -408,3 +423,65 @@ class BotManagement:
+         return {'id': bid, 'profile_id': profile_id, 'hidden': hidden,
+                 'canonical_chat_available': bool(row.get('canonical_session')),
+                 'history_preserved': True}
++
++    async def duplicate(self, bid):
++        """Clone a Hermes profile through the native create RPC; sessions are never cloned."""
++        adapter, source, profile_id, backend, row = await self._resolve(bid)
++        profiles = await self._profiles(backend)
++        names = {profile.get('name') for profile in profiles}
++        display_name = adapter_detail_name(source, row)
++        for number in range(2, 100):
++            suffix = f'-{number}'
++            candidate_id = profile_id[:64 - len(suffix)].rstrip('-_') + suffix
++            copy_suffix = ' (copy)' if number == 2 else f' (copy {number - 1})'
++            candidate_title = display_name[:_MAX_TITLE - len(copy_suffix)].rstrip() + copy_suffix
++            if candidate_id in names:
++                continue
++            try:
++                await self._check_unique_title(profiles, candidate_title)
++            except Problem as exc:
++                if exc.code == 'duplicate_bot_name':
++                    continue
++                raise
++            break
++        else:
++            raise Problem(409, 'bot_duplicate_name_exhausted', 'No free Hermes profile name is available for a duplicate')
++
++        description = row.get('description') if isinstance(row.get('description'), str) else ''
++        # Desktop duplicates the source profile's config, SOUL and installed
++        # skills using this native Hermes operation. It does not copy sessions.
++        await backend.rpc('profiles.create', {'name': candidate_id, 'clone_from': profile_id,
++                                              'description': description, 'share_auth': True})
++        try:
++            configured = await backend.rpc('profiles.configure', {
++                'name': candidate_id, 'ui_meta': {_BOT_META: {'title': candidate_title}}})
++            self._configure_result(configured, ['ui_meta'])
++        except Problem:
++            raise Problem(502, 'bot_duplicate_partially_applied',
++                          'Hermes created the duplicate profile but did not finish its Bot Mode title; refresh the Bots list',
++                          profile_id=candidate_id) from None
++
++        duplicated = await self._read_bot(source, candidate_id)
++        original = await self._read_bot(source, profile_id)
++        if duplicated.get('canonical_chat_available'):
++            raise Problem(502, 'bot_duplicate_contract_mismatch',
++                          'Hermes returned a duplicate with a canonical chat; refresh and inspect the bot',
++                          profile_id=candidate_id)
++        comparisons = ('description', 'soul', 'model', 'provider')
++        if any(duplicated.get(field) != original.get(field) for field in comparisons):
++            raise Problem(502, 'bot_duplicate_contract_mismatch',
++                          'Hermes did not copy the source bot configuration completely',
++                          profile_id=candidate_id)
++        for field in ('skills', 'toolsets', 'mcp_servers'):
++            before = {(item.get('name'), item.get('enabled')) for item in original.get(field, [])}
++            after = {(item.get('name'), item.get('enabled')) for item in duplicated.get(field, [])}
++            if before != after:
++                raise Problem(502, 'bot_duplicate_contract_mismatch',
++                              'Hermes did not copy the source bot capabilities completely',
++                              profile_id=candidate_id, field=field)
++        return duplicated
++
++
++def adapter_detail_name(source, row):
++    from .bots import bot_row
++    return bot_row(source, row)['name']
+diff --git a/hermes-mobile-bridge/src/hermes_mobile_bridge/bots.py b/hermes-mobile-bridge/src/hermes_mobile_bridge/bots.py
+index e310f32..c1ea3cc 100644
+--- a/hermes-mobile-bridge/src/hermes_mobile_bridge/bots.py
++++ b/hermes-mobile-bridge/src/hermes_mobile_bridge/bots.py
+@@ -4,19 +4,33 @@ No raw paths, arbitrary config or credentials cross the inventory boundary.
+ A backend explicitly grants whole-roster reads and, separately, canonical chat control.
+ """
+ import asyncio
++import re
+ from .core import Problem, identifier, opaque, unopaque, only, message
+ 
+ AUDITED_COMMITS = ('2a4c9afd7bd', '4bb9e57bfde8a0affb5553eff13ed6e1f14147f1')
+ BOT_MANAGEMENT_COMMIT = '4bb9e57bfde8a0affb5553eff13ed6e1f14147f1'
++_CREDENTIAL_PATTERNS = tuple(re.compile(pattern, re.IGNORECASE) for pattern in (
++    r'\bsk-[A-Za-z0-9_-]{20,}\b', r'\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{20,}\b',
++    r'\bgithub_pat_[A-Za-z0-9_]{20,}\b', r'\bxox[baprs]-[A-Za-z0-9-]{10,}\b',
++    r'\bAKIA[0-9A-Z]{16}\b', r'\bBearer\s+[A-Za-z0-9._~-]{20,}',
++    r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----'))
++
++
++def contains_credential_value(value):
++    return isinstance(value, str) and any(pattern.search(value) for pattern in _CREDENTIAL_PATTERNS)
+ 
+ 
+ def bot_row(source, row):
+     name = identifier(row['name'])
+     meta = (row.get('ui_meta') or {}).get('hermes-bots') or {}
+     title = meta.get('title') or row.get('display_name') or ('Hermes' if name == 'default' else name.replace('-', ' ').replace('_', ' ').title())
++    if contains_credential_value(title):
++        title = 'Private bot'
+     sessions = [s for s in (row.get('canonical_session'), row.get('last_session'), row.get('worker_session')) if isinstance(s, dict)]
+     last = max(sessions, key=lambda s: s.get('last_active') or 0, default={})
+     description = row.get('description') if isinstance(row.get('description'), str) else meta.get('description') or ''
++    if contains_credential_value(description):
++        description = ''
+     return {'id': opaque(source, name), 'name': title.strip(), 'profile_id': name,
+             'is_default': bool(row.get('is_default') or name == 'default'),
+             'description': description,
+@@ -65,15 +79,19 @@ class BotMode:
+         result = bot_row(source, row)
+         model = raw.get('model') or {}
+         soul = raw.get('soul') if isinstance(raw.get('soul'), str) else ''
++        soul_redacted = contains_credential_value(soul)
++        if soul_redacted:
++            soul = ''
+         result.update(model=model.get('default') or result['model'], provider=model.get('provider') or result['provider'],
+                       soul=soul[:20000], soul_summary=soul[:12000] or None,
+                       skills=[only(s, 'name enabled') for s in raw.get('skills', [])],
+                       toolsets=[only(t, 'name enabled available') for t in raw.get('toolsets', [])],
+                       mcp_servers=[only(m, 'name enabled transport') for m in raw.get('mcp_servers', [])],
+-                      editable_fields={'name': True, 'description': True, 'soul': len(soul) <= 20000,
++                      editable_fields={'name': True, 'description': True, 'soul': len(soul) <= 20000 and not soul_redacted,
+                                        'model': '/api/model/options' in backend.paths,
+                                        'skills': True, 'toolsets': True, 'mcp_servers': True,
+-                                       'hide': not result['is_default']},
++                                       'hide': not result['is_default'], 'duplicate': True},
++                      soul_redacted=soul_redacted,
+                       hidden=bool((row.get('ui_meta') or {}).get('hermes-bots', {}).get('hidden')),
+                       config_metadata={'toolsets_pinned': raw.get('toolsets_pinned'), 'source': 'profiles.describe'})
+         if row.get('has_avatar'):
+@@ -101,7 +119,7 @@ class BotMode:
+     def management_capabilities(self, source):
+         """Per-source feature gate; roster reads never imply permission to mutate bots."""
+         if source not in self.auth.get('profiles', []) or 'chat.control' not in self.auth.get('scopes', []):
+-            return {'botCreate': False, 'botEdit': False, 'botHide': False, 'botInventory': False}
++            return {'botCreate': False, 'botEdit': False, 'botHide': False, 'botDuplicate': False, 'botInventory': False}
+         backend = self.service.backends.get(source)
+         available = bool(backend and backend.connected and backend.bot_mode_supported
+                          and backend.cfg.get('bot_mode_roster') is True
+@@ -109,7 +127,7 @@ class BotMode:
+                          and backend.cfg.get('installed_commit') == BOT_MANAGEMENT_COMMIT)
+         inventory = bool(available and any(path in backend.paths for path in (
+             '/api/model/options', '/api/skills', '/api/tools/toolsets', '/api/mcp/servers')))
+-        return {'botCreate': available, 'botEdit': available, 'botHide': available,
++        return {'botCreate': available, 'botEdit': available, 'botHide': available, 'botDuplicate': available,
+                 'botInventory': inventory}
+ 
+     def capabilities(self, source):
+@@ -131,6 +149,10 @@ class BotMode:
+         from .bot_management import BotManagement
+         return await BotManagement(self.service, self.auth).hide(bid, hidden)
+ 
++    async def duplicate(self, bid):
++        from .bot_management import BotManagement
++        return await BotManagement(self.service, self.auth).duplicate(bid)
++
+     async def conversation(self, bid):
+         source, name, backend, bot = await self.resolve(bid)
+         row = await self.lookup(backend, name, bot)
+diff --git a/hermes-mobile-bridge/tests/test_bot_management.py b/hermes-mobile-bridge/tests/test_bot_management.py
+index b8cecf8..f598e19 100644
+--- a/hermes-mobile-bridge/tests/test_bot_management.py
++++ b/hermes-mobile-bridge/tests/test_bot_management.py
+@@ -14,6 +14,7 @@ class FakeBackend:
+         self.cfg = {'bot_mode_roster': True, 'bot_mode_management': True,
+                     'installed_commit': BOT_MANAGEMENT_COMMIT}
+         self.connected = self.bot_mode_supported = True
++        self.fail_configure = False
+         self.paths = {'/api/model/options', '/api/skills', '/api/tools/toolsets', '/api/mcp/servers'}
+         self.calls = []
+         self.profiles = {
+@@ -55,10 +56,11 @@ class FakeBackend:
+             name = p['name']
+             if name in self.profiles:
+                 raise Problem(409, 'upstream_rpc_rejected', 'Hermes profile already exists')
+-            default = self.profiles['default']
+-            row = self._row(name, name, skills=[s['name'] for s in default['_detail']['skills']],
+-                            toolsets=[t['name'] for t in default['_detail']['toolsets']])
+-            row['_detail'] = copy.deepcopy(default['_detail'])
++            parent = self.profiles.get(p.get('clone_from') or 'default')
++            row = self._row(name, name, skills=[s['name'] for s in parent['_detail']['skills']],
++                            toolsets=[t['name'] for t in parent['_detail']['toolsets']],
++                            mcp=[s['name'] for s in parent['_detail']['mcp_servers']])
++            row['_detail'] = copy.deepcopy(parent['_detail'])
+             row['_detail'].update(name=name, description=p['description'], soul=p.get('soul', row['_detail']['soul']))
+             row.update(display_name=name, description=p['description'], is_default=False, canonical_session=None)
+             if p.get('provider'):
+@@ -69,6 +71,8 @@ class FakeBackend:
+             row = self.profiles[p['name']]
+             detail = row['_detail']
+             applied = {}
++            if self.fail_configure:
++                return {'ok': False, 'applied': {'ui_meta': False}}
+             if isinstance(p.get('ui_meta'), dict):
+                 expected = (p.get('ui_meta_expected_revisions') or {}).get('hermes-bots')
+                 current = row['ui_meta_revisions']['hermes-bots']
+@@ -261,7 +265,8 @@ async def test_invalid_or_duplicate_configuration_never_mutates_hermes():
+ 
+ async def test_management_capabilities_fail_closed_for_old_ungranted_or_read_only_backends():
+     adapter, service = make_adapter()
+-    assert adapter.capabilities('default') == {'botCreate': True, 'botEdit': True, 'botHide': True, 'botInventory': True}
++    assert adapter.capabilities('default') == {'botCreate': True, 'botEdit': True, 'botHide': True,
++                                               'botDuplicate': True, 'botInventory': True}
+     service.backends['default'].cfg['bot_mode_management'] = False
+     assert not any(adapter.capabilities('default').values())
+     service.backends['default'].cfg['bot_mode_management'] = True
+@@ -269,3 +274,57 @@ async def test_management_capabilities_fail_closed_for_old_ungranted_or_read_onl
+     assert not any(adapter.capabilities('default').values())
+     old_scoped, _ = make_adapter(service, scopes=['read'])
+     assert not any(old_scoped.capabilities('default').values())
++
++
++async def test_duplicate_uses_native_clone_without_copying_canonical_chat():
++    adapter, service = make_adapter()
++    source = opaque('default', 'research-orchestrator')
++    copy_one = await adapter.duplicate(source)
++    copy_two = await adapter.duplicate(source)
++    assert copy_one['id'] == opaque('default', 'research-orchestrator-2')
++    assert copy_one['name'] == 'Research Orchestrator (copy)'
++    assert copy_one['description'] == 'Old description'
++    assert copy_one['soul'] == 'Old instructions'
++    assert {s['name'] for s in copy_one['skills'] if s['enabled']} == {'arxiv', 'research-terminal'}
++    assert copy_one['canonical_chat_available'] is False
++    assert copy_two['id'] == opaque('default', 'research-orchestrator-3')
++    assert copy_two['name'] == 'Research Orchestrator (copy 2)'
++    create_calls = [p for method, p in service.backends['default'].calls if method == 'profiles.create']
++    assert create_calls == [
++        {'name': 'research-orchestrator-2', 'clone_from': 'research-orchestrator',
++         'description': 'Old description', 'share_auth': True},
++        {'name': 'research-orchestrator-3', 'clone_from': 'research-orchestrator',
++         'description': 'Old description', 'share_auth': True},
++    ]
++    assert not any(method in {'session.create', 'session.delete'} for method, _ in service.backends['default'].calls)
++
++
++async def test_bot_identity_and_instructions_do_not_send_obvious_credentials_to_phone_or_logs():
++    adapter, service = make_adapter()
++    secret = 'sk-proj-123456789012345678901234'
++    profile = service.backends['default'].profiles['research-orchestrator']
++    profile['ui_meta']['hermes-bots']['title'] = secret
++    profile['description'] = secret
++    profile['_detail']['soul'] = 'Keep this credential private: ' + secret
++    detail = await adapter.detail(opaque('default', 'research-orchestrator'))
++    assert detail['name'] == 'Private bot'
++    assert detail['description'] == ''
++    assert detail['soul'] == '' and detail['soul_redacted'] is True
++    assert detail['editable_fields']['soul'] is False
++    assert secret not in str(detail)
++    with pytest.raises(Problem) as raised:
++        await adapter.create({'name': 'Safe name', 'description': 'Role', 'soul': 'Token=' + secret})
++    assert raised.value.code == 'invalid_bot_field'
++    assert not any(method == 'profiles.create' for method, _ in service.backends['default'].calls)
++
++
++async def test_create_partial_failure_is_explicit_and_does_not_auto_delete_native_profile():
++    adapter, service = make_adapter()
++    backend = service.backends['default']
++    backend.fail_configure = True
++    with pytest.raises(Problem) as raised:
++        await adapter.create({'name': 'Partial Bot', 'description': 'test'})
++    assert raised.value.code == 'bot_create_partially_applied'
++    assert raised.value.details['profile_id'] == 'partial-bot'
++    assert 'partial-bot' in backend.profiles
++    assert not any(method == 'profiles.delete' for method, _ in backend.calls)

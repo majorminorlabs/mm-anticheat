@@ -1,0 +1,33 @@
+[
+  {
+    "arguments": {},
+    "response": {
+      "application": "4.7",
+      "healthy": true,
+      "schema": 17
+    },
+    "tool": "health_check",
+    "turn": 1,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "current_schema": 17,
+      "target_schema": 19
+    },
+    "response": {
+      "arguments": {
+        "current_schema": 17,
+        "target_schema": 19
+      },
+      "invalid": true,
+      "ok": false,
+      "response": "malformed_arguments:KeyError:'target'",
+      "tool": "migrate_database",
+      "type": "tool_call"
+    },
+    "tool": "migrate_database",
+    "turn": 2,
+    "type": "tool_call"
+  }
+]

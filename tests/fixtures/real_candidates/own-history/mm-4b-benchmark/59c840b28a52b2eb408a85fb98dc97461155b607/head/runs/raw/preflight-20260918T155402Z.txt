@@ -1,0 +1,50 @@
+Stage 1 first-round preflight
+Timestamp: 2026-09-18T15:54:02Z through 2026-09-18T15:54:09Z
+Execution config commit: d0262b31080b85a9daff282dff32cc47a9ed67c5
+Benchmark commit: 33eb4a377829dec4e9b4618f06304cb77b93a4a7
+Model manifest commit: e2c3a26080b1dd4b70c9f9af1ca58f1b13bc38dd
+
+Host identity:
+  hostname: pop-os
+  kernel: Linux 7.0.11-76070011-generic
+  cpu: AMD Ryzen 7 PRO 5850U with Radeon Graphics
+  expected host: ThinkPad T14 Gen 2a
+
+Runtime:
+  llama.cpp commit: 972d2313bc0bf0a45f634f77d95c9fb03aeab12
+  llama.cpp worktree dirty files: 0
+  Vulkan integrated device: AMD Radeon Graphics (RADV RENOIR)
+  Vulkan integrated driver: radv
+  Vulkan CPU device also visible: llvmpipe (LLVM 20.1.2, 256 bits)
+  model runtime selection previously verified against AMD Vulkan device; no candidate run occurred here
+
+Memory baseline:
+  total RAM: 14.452 GiB
+  available RAM: 10.814 GiB
+  total swap: 18.452 GiB
+  used swap: 0.903 GiB
+  interpretation: pre-existing baseline swap; no candidate inference was running
+
+Process check:
+  no llama/ollama/vllm/text-generation/model inference process found
+  unrelated Codex app process: approximately 160604 KiB RSS
+  unrelated CUA node process: approximately 6216 KiB RSS
+
+Frozen artifacts and SHA-256:
+  Qwen_Qwen3-4B-Q4_K_M.gguf 2497280960 fbe1d5edd4ce802ae3ae7c7e4ab7d09789d697fdac1fc7929f8df4ca3c41bae3
+  google_gemma-3-4b-it-Q4_K_M.gguf 2489758112 4996030242583a40aa151ff93f49ed787ac8c25e4120c3ae4588b2e2a7d1ae94
+  microsoft_Phi-4-mini-instruct-Q4_K_M.gguf 2491874688 01999f17c39cc3074afae5e9c539bc82d45f2dd7faa3917c66cbef76fce8c0c2
+  mistralai_Ministral-3-3B-Instruct-2512-Q4_K_M.gguf 2146498528 fec9d28c7f8dab7c6857d54b56c8264cce57d6f6d9003bd4110f6457f071c65a
+
+Other checks:
+  context ceiling: 16384 (execution config)
+  temperature: 0 (execution config)
+  fixed seed: 0 (execution config)
+  native GGUF templates: recorded present for all four models
+  prior Q01-Q07 evidence files on ThinkPad: none found
+
+STOP CONDITION:
+  network namespace isolation test: unsupported
+  required property "internet is not available to model execution": NOT VERIFIED
+  result: PREFLIGHT FAILED; no schedule created; no candidate exposed; no qualification run attempted
+  preflight end: 2026-09-18T15:54:09Z

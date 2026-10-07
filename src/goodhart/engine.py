@@ -110,6 +110,24 @@ def scan(
                             )
                         )
     apply_allows(findings, data.changes, config, data.mode == "full")
+    # Index-integrity findings cannot be hidden by inline/path allows or rule selection.
+    from goodhart.rules.base import Finding
+
+    for path in data.hidden_paths:
+        findings.append(
+            Finding(
+                "GH007",
+                "test-config-tampered",
+                "high",
+                "normal",
+                path,
+                1,
+                "Index flags hide working-tree changes",
+                path,
+                "skip-worktree or assume-unchanged concealed content differing from the index.",
+                "Review the edit and clear the index flag before accepting the change.",
+            )
+        )
     findings.sort(
         key=lambda item: (
             SEVERITY_ORDER[item.severity],

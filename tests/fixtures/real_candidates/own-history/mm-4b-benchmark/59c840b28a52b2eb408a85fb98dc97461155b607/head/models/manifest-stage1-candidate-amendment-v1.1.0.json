@@ -1,0 +1,75 @@
+{
+  "manifest_version": "stage1-model-manifest-v1.1.0-candidate-amendment",
+  "status": "frozen_pre_exposure_amendment",
+  "parent_manifest": "models/manifest.json",
+  "parent_manifest_version": "stage1-model-manifest-v1.0.0",
+  "amended_at": "2026-09-18T19:08:41Z",
+  "protocol_version": "qualification-v1.0.0",
+  "llama_cpp_commit": "972d2313bc0bf0a45f634f77d95c9fb03aeab12",
+  "weights_outside_repository": true,
+  "selection_rule": "Only public Q4_K_M artifacts whose exact provenance is recorded and whose native template passes the frozen neutral structured integration gate may enter the active field.",
+  "active_candidates": [
+    {
+      "benchmark_model_id": "ministral-3b-instruct-2512",
+      "source": "parent manifest; retained unchanged",
+      "runtime_compatibility": "retained prior PASS: verified_with_neutral_structured_gate"
+    },
+    {
+      "benchmark_model_id": "qwen3-4b",
+      "source": "parent manifest; retained unchanged",
+      "runtime_compatibility": "retained prior PASS: verified_with_neutral_structured_gate",
+      "execution_config": {"enable_thinking": false}
+    },
+    {
+      "benchmark_model_id": "qwen2.5-3b-instruct",
+      "upstream_repository_id": "Qwen/Qwen2.5-3B-Instruct",
+      "upstream_revision": "aa8e72537993ba99e69dfaafa59ed015b17504d1",
+      "upstream_license": "Qwen Research License",
+      "architecture": "dense decoder-only Transformer; 3.09B parameters",
+      "gguf_repository_id": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+      "gguf_repository_revision": "7dabda4d13d513e3e842b20f0d435c732f172cbe",
+      "gguf_file_commit": "cc1e68eea5f05f88f41a6de1fc73110178f23715",
+      "gguf_filename": "qwen2.5-3b-instruct-q4_k_m.gguf",
+      "quantization": "Q4_K_M",
+      "file_size_bytes": 2104932768,
+      "upstream_file_oid": "01230798622073dd9fd68ed22ee1a81ddbb00892",
+      "upstream_lfs_oid": "626b4a6678b86442240e33df819e00132d3ba7dddfe1cdc4fbb18e0a9615c62d",
+      "filesystem_path": "/home/dippo/research-inference/models/mm-agent/Qwen_Qwen2.5-3B-Instruct-Q4_K_M.gguf",
+      "sha256": "626b4a6678b86442240e33df819e00132d3ba7dddfe1cdc4fbb18e0a9615c62d",
+      "downloaded_at": "2026-09-18T14:05:47-05:00",
+      "access_requirements": {"public": true, "token_used": false},
+      "chat_template_audit": {"supports_tools": true, "supports_tool_calls": true, "supports_tool_role": true},
+      "runtime_compatibility": {"status": "PASS", "gate": "neutral_structured_integration_v1", "backend": "Vulkan/RADV", "observed_model_alias": "Qwen2.5-3B-Instruct"},
+      "evidence": "runs/raw/candidate-amendment-integration-gate/thinkpad/Qwen2.5-3B-Instruct"
+    },
+    {
+      "benchmark_model_id": "granite-3.3-2b-instruct",
+      "upstream_repository_id": "ibm-granite/granite-3.3-2b-instruct",
+      "upstream_revision": "707f574c62054322f6b5b04b6d075f0a8f05e0f0",
+      "upstream_license": "Apache-2.0",
+      "architecture": "dense decoder-only Transformer; 2B class; 128K context",
+      "gguf_repository_id": "ibm-granite/granite-3.3-2b-instruct-GGUF",
+      "gguf_repository_revision": "7cdf86ccd1f1bb3491c9b7017b033f2e51367397",
+      "gguf_file_commit": "b6bbcef70d411c61b1593b30f50333c8ae267c16",
+      "gguf_filename": "granite-3.3-2b-instruct-Q4_K_M.gguf",
+      "quantization": "Q4_K_M",
+      "file_size_bytes": 1545303328,
+      "upstream_file_oid": "deca9fb6b8f32488fd5529d63b094c07a3f29beb",
+      "upstream_lfs_oid": "ac71e9e32c0bea9191b409c5918f69ca74339854b0319c5065e4e9fb6d95c4852",
+      "filesystem_path": "/home/dippo/research-inference/models/mm-agent/ibm-granite_granite-3.3-2b-instruct-Q4_K_M.gguf",
+      "sha256": "ac71e9e32c0bea9191b409c5918f69ca74339854b0319c5065e4e9fb6d95c4852",
+      "downloaded_at": "2026-09-18T14:07:21-05:00",
+      "access_requirements": {"public": true, "token_used": false},
+      "chat_template_audit": {"supports_tools": true, "supports_tool_calls": false, "notes": "Template emits textual <|tool_call|> content; no structured assistant tool_calls/tool response continuation."},
+      "runtime_compatibility": {"status": "FAIL", "gate": "neutral_structured_integration_v1", "backend": "Vulkan/RADV", "failure": "missing_structured_message_tool_calls", "observed_model_alias": "Granite-3.3-2B-Instruct"},
+      "evidence": "runs/raw/candidate-amendment-integration-gate/thinkpad/Granite-3.3-2B-Instruct"
+    }
+  ],
+  "removed_pre_exposure_candidates": [
+    {"benchmark_model_id": "phi-4-mini-instruct", "status": "removed_pre_exposure_interface_incompatible", "reason": "native/template path lacks frozen structured tool-call contract", "original_evidence": "runs/raw/first-round/"},
+    {"benchmark_model_id": "gemma-3-4b-it", "status": "removed_pre_exposure_interface_incompatible", "reason": "native/template path lacks frozen structured tool-call contract", "original_evidence": "runs/raw/first-round/"}
+  ],
+  "unchanged_settings": ["protocol", "task_set", "scoring", "resource_rules", "model_quantization_rule", "execution_config", "provenance_policy"],
+  "qualification_runs_authorized": false,
+  "note": "This amendment records compatibility only. No Q01-Q07 qualification runs were executed and the parent frozen manifest remains unchanged."
+}

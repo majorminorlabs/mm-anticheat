@@ -1,0 +1,23 @@
+{
+  "stage": "source_extraction",
+  "attempt": 3,
+  "strategy": "minimal_recovery",
+  "input_chars": 1500,
+  "estimated_input_tokens": 735,
+  "reserved_output_tokens": 420,
+  "output_chars": 1149,
+  "truncated": false,
+  "raw_response": "{\n  \"source_id\": \"source:a3a957f559e18dd4b54904fa250f129af3927a572c0bda8e1fb4400a6c4ef298e:386de321-d17d-4c23-aacb-98929629e98b:2\",\n  \"relevant\": false,\n  \"relevance_score\": 10,\n  \"retention_reason\": \"source does not support the candidate\",\n  \"facts\": [\n    {\n      \"fact_id\": \"1\",\n      \"statement\": \"Quo Vadis is a historic Soho restaurant and members’ club on Dean Street.\",\n      \"support\": \"At Quo Vadis, the historic Soho restaurant and members’ club on Dean Street, Scottish chef Jeremy Lee serves timeless British food that celebrates the joys of the season.\",\n      \"confidence\": \"high\"\n    },\n    {\n      \"fact_id\": \"2\",\n      \"statement\": \"The Pie of the Day at Quo Vadis is always priced at £19.50.\",\n      \"support\": \"The price never changes, says Lee. It is always £19.50.\",\n      \"confidence\": \"high\"\n    }\n  ],\n  \"dates\": [\"Nov. 23, 2022\"],\n  \"entities\": [\"Quo Vadis\", \"Jeremy Lee\", \"Dean Street\", \"Soho\"],\n  \"claims\": [\"The Pie of the Day gets its own box on the menu and its own John Broadley illustration.\", \"The price never changes, says Lee. It is always £19.50.\"],\n  \"warnings\": [\"The source does not support the candidate.\"]\n}",
+  "metrics": {
+    "eval_count": 389,
+    "eval_duration_ns": 21142039000,
+    "prompt_eval_count": 751,
+    "prompt_eval_duration_ns": 3730546000,
+    "max_tokens": 420,
+    "truncated": false
+  },
+  "validation_errors": [
+    "source_id must match the supplied source id",
+    "source is not relevant enough to retain"
+  ]
+}

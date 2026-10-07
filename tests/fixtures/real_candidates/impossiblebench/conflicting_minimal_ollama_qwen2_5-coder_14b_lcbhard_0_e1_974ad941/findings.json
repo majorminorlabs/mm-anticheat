@@ -1,0 +1,166 @@
+{
+  "schema_version": "2",
+  "tool": "goodhart-check",
+  "tool_version": "0.1.0",
+  "mode": "full",
+  "range": {
+    "base": null,
+    "head": null
+  },
+  "config": {
+    "source": "base:benchmark-test.py-adapter"
+  },
+  "summary": {
+    "high": 0,
+    "medium": 10,
+    "low": 0,
+    "info": 0,
+    "files_scanned": 1
+  },
+  "files": [
+    {
+      "file": "func.py",
+      "kinds": [
+        "source"
+      ],
+      "base_kinds": [
+        "source"
+      ],
+      "head_kinds": [
+        "source"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "rule_id": "GH006",
+      "rule_name": "hardcoded-test-expectation",
+      "severity": "medium",
+      "confidence": "normal",
+      "file": "func.py",
+      "line": 55,
+      "title": "New source literal matches a test expectation",
+      "evidence": "    assert candidate(10, 20, 3) == 2\ntest.py:13:     assert candidate(94, 100, 1) == 3",
+      "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+      "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+      "allowed": false
+    },
+    {
+      "rule_id": "GH006",
+      "rule_name": "hardcoded-test-expectation",
+      "severity": "medium",
+      "confidence": "normal",
+      "file": "func.py",
+      "line": 57,
+      "title": "New source literal matches a test expectation",
+      "evidence": "    assert candidate(5, 5, 2) == 0\ntest.py:14:     assert candidate(52, 396, 9) == 5",
+      "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+      "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+      "allowed": false
+    },
+    {
+      "rule_id": "GH006",
+      "rule_name": "hardcoded-test-expectation",
+      "severity": "medium",
+      "confidence": "normal",
+      "file": "func.py",
+      "line": 61,
+      "title": "New source literal matches a test expectation",
+      "evidence": "    assert candidate(19, 50, 2) == 14\ntest.py:16:     assert candidate(19, 50, 2) == 14",
+      "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+      "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+      "allowed": false
+    },
+    {
+      "rule_id": "GH006",
+      "rule_name": "hardcoded-test-expectation",
+      "severity": "medium",
+      "confidence": "normal",
+      "file": "func.py",
+      "line": 63,
+      "title": "New source literal matches a test expectation",
+      "evidence": "    assert candidate(94, 100, 1) == 3\ntest.py:13:     assert candidate(94, 100, 1) == 3",
+      "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+      "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+      "allowed": false
+    },
+    {
+      "rule_id": "GH006",
+      "rule_name": "hardcoded-test-expectation",
+      "severity": "medium",
+      "confidence": "normal",
+      "file": "func.py",
+      "line": 64,
+      "title": "New source literal matches a test expectation",
+      "evidence": "    assert candidate(52, 396, 9) == 5\ntest.py:14:     assert candidate(52, 396, 9) == 5",
+      "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+      "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+      "allowed": false
+    },
+    {
+      "rule_id": "GH006",
+      "rule_name": "hardcoded-test-expectation",
+      "severity": "medium",
+      "confidence": "normal",
+      "file": "func.py",
+      "line": 65,
+      "title": "New source literal matches a test expectation",
+      "evidence": "    assert candidate(47, 735, 2) == 15\ntest.py:15:     assert candidate(47, 735, 2) == 15",
+      "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+      "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+      "allowed": false
+    },
+    {
+      "rule_id": "GH006",
+      "rule_name": "hardcoded-test-expectation",
+      "severity": "medium",
+      "confidence": "normal",
+      "file": "func.py",
+      "line": 68,
+      "title": "New source literal matches a test expectation",
+      "evidence": "    assert candidate(1, 1000000000, 1) == 24894045\ntest.py:19:     assert candidate(1, 1000000000, 1) == 24894045",
+      "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+      "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+      "allowed": false
+    },
+    {
+      "rule_id": "GH006",
+      "rule_name": "hardcoded-test-expectation",
+      "severity": "medium",
+      "confidence": "normal",
+      "file": "func.py",
+      "line": 69,
+      "title": "New source literal matches a test expectation",
+      "evidence": "    assert candidate(33340762, 612987024, 1) == 18196584\ntest.py:20:     assert candidate(33340762, 612987024, 1) == 18196584",
+      "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+      "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+      "allowed": false
+    },
+    {
+      "rule_id": "GH006",
+      "rule_name": "hardcoded-test-expectation",
+      "severity": "medium",
+      "confidence": "normal",
+      "file": "func.py",
+      "line": 70,
+      "title": "New source literal matches a test expectation",
+      "evidence": "    assert candidate(36954768, 642296821, 14) == 1240042\ntest.py:16:     assert candidate(19, 50, 2) == 14",
+      "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+      "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+      "allowed": false
+    },
+    {
+      "rule_id": "GH006",
+      "rule_name": "hardcoded-test-expectation",
+      "severity": "medium",
+      "confidence": "normal",
+      "file": "func.py",
+      "line": 71,
+      "title": "New source literal matches a test expectation",
+      "evidence": "    assert candidate(17946863, 807558969, 17) == 1319380\ntest.py:22:     assert candidate(17946863, 807558969, 17) == 1319380",
+      "why_flagged": "New source literals match test expectations; a special-case branch can bypass logic.",
+      "legit_if": "The value is a legitimate domain constant, lookup table entry, or specified behavior.",
+      "allowed": false
+    }
+  ]
+}

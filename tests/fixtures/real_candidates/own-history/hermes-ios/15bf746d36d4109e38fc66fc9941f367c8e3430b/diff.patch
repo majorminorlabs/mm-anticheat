@@ -1,0 +1,887 @@
+diff --git a/BOT_MANAGEMENT.md b/BOT_MANAGEMENT.md
+new file mode 100644
+index 0000000..d4fbdca
+--- /dev/null
++++ b/BOT_MANAGEMENT.md
+@@ -0,0 +1,70 @@
++# Hermes Bot management from iPhone
++
++Bot Mode uses Hermes profiles as its source of truth. The bridge calls the same
++profile RPCs used by Hermes Desktop and never writes profile files itself:
++
++- `profiles.create` creates a normal Hermes profile, cloning the host's
++  `default` profile as Desktop does. It shares the host auth pool; no provider
++  credentials are returned to the phone.
++- `profiles.configure` updates the profile description, `SOUL.md`, model pin,
++  installed-skill selection, configured toolsets/MCP servers, and the Bot Mode
++  display title in `profile.yaml` metadata.
++- `profiles.describe` and `profiles.list` read the saved values back before the
++  bridge reports success. Profile identity is the native Hermes profile name;
++  changing the display title never renames that identity or changes its chat.
++- Hiding sets `ui_meta['hermes-bots'].hidden`. It only removes a bot from the
++  Bot Mode roster. The Hermes profile and canonical `Bot Chat` history remain.
++  Unhide clears that flag. The default profile cannot be hidden.
++
++The phone supplies a display title. The bridge derives a Unicode-aware Hermes
++profile slug, checks it against all profiles including hidden ones, and lets
++Hermes enforce its own reserved-name and creation rules. Description is the
++Hermes profile description, not the separate Hermes permission role. Model and
++provider must be a pair present in that backend's live model inventory. Skill,
++toolset, and MCP selections are restricted to entries Hermes already reports
++for the target profile; this interface does not install skills, configure MCP
++commands, or edit arbitrary profile files.
++
++The live inventory is available as `GET /mobile/v1/bots/inventory`. Pass
++`profile=<authorized backend>` for creation inventory. Pass `bot_id=<opaque bot
++ID>` to retrieve that bot's profile-specific installed capabilities for edit.
++Inventory entries contain selector metadata only; provider credentials, API
++keys, base URLs, MCP commands, environment values, and filesystem paths are
++excluded.
++
++## Capability and permission gates
++
++Mutations require all of the following:
++
++- The mobile credential has `read` and `chat.control` for the backend.
++- The backend grants `bot_mode_roster: true` and the separate
++  `bot_mode_management: true` in its private bridge configuration.
++- The connected Hermes backend advertises the Bot Mode protocol and is running
++  the audited `4bb9e57bfde8a0affb5553eff13ed6e1f14147f1` lifecycle contract.
++
++The bridge reports per-backend `botCreate`, `botEdit`, `botHide`, and
++`botInventory` capabilities. Older or disconnected backends return these as
++unavailable so clients can hide management controls. Bot Chat access alone
++does not enable profile mutation.
++
++Hermes may require a confirmation before applying a guarded model change. The
++bridge returns that confirmation requirement without reporting the model as
++saved; a client should show Hermes' message and retry only after the user
++confirms. A successful edit is re-read from Hermes and returned to the client.
++
++## Deletion and history
++
++Mobile deletion is not exposed. Hermes' native `profile delete` permanently
++removes the profile, stops its gateway and related backends, removes the
++profile's files, and settles its persisted identity. Hiding is the supported
++reversible action and preserves canonical chats. A future delete action would
++need a separate confirmation that explains these Hermes semantics.
++
++## Diagnostics
++
++If management controls are absent, inspect `GET /mobile/v1/capabilities` for
++the backend and check the two private bridge grants, Hermes connection state,
++the negotiated `bot_mode_protocol`, and the installed Hermes commit. If a save
++returns an error, reopen or refresh the bot detail to see the values Hermes
++actually stored. Do not repair a failed edit by writing `profile.yaml`,
++`config.yaml`, or `SOUL.md` from the phone.
+diff --git a/hermes-mobile-bridge/src/hermes_mobile_bridge/bot_management.py b/hermes-mobile-bridge/src/hermes_mobile_bridge/bot_management.py
+new file mode 100644
+index 0000000..6664322
+--- /dev/null
++++ b/hermes-mobile-bridge/src/hermes_mobile_bridge/bot_management.py
+@@ -0,0 +1,410 @@
++"""Normalized, capability-gated access to Hermes Desktop's native bot lifecycle.
++
++The phone only supplies bounded profile fields and capability names. Hermes owns
++profile creation/configuration, and every successful mutation is read back before
++the bridge reports the normalized bot.
++"""
++import re
++import unicodedata
++
++from .bots import BOT_MANAGEMENT_COMMIT
++from .core import Problem, identifier, opaque, unopaque, only
++
++_BOT_META = 'hermes-bots'
++_MAX_TITLE = 96
++_MAX_DESCRIPTION = 2000
++_MAX_SOUL = 20000
++_MAX_SELECTION = 100
++_SLUG_RE = re.compile(r'^[a-z0-9][a-z0-9_-]{0,63}$')
++_CREATE_FIELDS = {'name', 'description', 'soul', 'provider', 'model', 'skills', 'toolsets', 'mcp_servers'}
++_UPDATE_FIELDS = _CREATE_FIELDS | {'confirm_expensive_model'}
++
++
++def _clean_title(value):
++    if not isinstance(value, str):
++        raise Problem(400, 'invalid_bot_name', 'Name is required')
++    title = value.strip()
++    if (not title or len(title) > _MAX_TITLE or '/' in title or '\\' in title
++            or any(unicodedata.category(c).startswith('C') for c in title)):
++        raise Problem(400, 'invalid_bot_name', 'Name must be 1 to 96 characters without control characters')
++    return title
++
++
++def _slugify(title):
++    """Mirror Desktop's Unicode-aware profile slug conversion, with Hermes' 64-char limit."""
++    text = unicodedata.normalize('NFC', title)
++    pieces = []
++    for char in text:
++        category = unicodedata.category(char)
++        if category.startswith(('L', 'N')):
++            base = ''.join(c for c in unicodedata.normalize('NFKD', char) if not unicodedata.category(c).startswith('M'))
++            if base and base.isascii() and base.isalnum():
++                pieces.append(base.lower())
++            else:
++                pieces.append(f'-u{ord(char):x}-')
++        elif char == '_':
++            pieces.append('_')
++        else:
++            pieces.append('-')
++    slug = re.sub(r'-+', '-', ''.join(pieces).lower()).strip('-_')
++    if len(slug) > 64:
++        cut = slug[:64]
++        if slug[64] != '-':
++            cut = cut.rsplit('-', 1)[0]
++        slug = cut.rstrip('-_')
++    if not _SLUG_RE.fullmatch(slug) or slug == 'default':
++        raise Problem(400, 'invalid_bot_name', 'Name cannot be converted to a supported Hermes profile name')
++    return slug
++
++
++def _text(fields, name, *, required=False, maximum):
++    if name not in fields:
++        if required:
++            raise Problem(400, 'invalid_bot_field', f'{name} is required', field=name)
++        return None
++    value = fields[name]
++    if not isinstance(value, str) or len(value) > maximum or '\x00' in value:
++        raise Problem(400, 'invalid_bot_field', f'Invalid {name}', field=name)
++    value = value.strip() if name != 'soul' else value
++    if required and not value:
++        raise Problem(400, 'invalid_bot_field', f'{name} is required', field=name)
++    return value
++
++
++def _selection(fields, name):
++    if name not in fields:
++        return None
++    value = fields[name]
++    if not isinstance(value, list) or len(value) > _MAX_SELECTION:
++        raise Problem(400, 'invalid_bot_field', f'Invalid {name}', field=name)
++    if any(not isinstance(v, str) or not v.strip() or len(v) > 200 for v in value):
++        raise Problem(400, 'invalid_bot_field', f'Invalid {name}', field=name)
++    values = [v.strip() for v in value]
++    if len(set(values)) != len(values):
++        raise Problem(400, 'invalid_bot_field', f'Duplicate values in {name}', field=name)
++    return values
++
++
++def _validate_shape(fields, allowed, required=()):
++    if not isinstance(fields, dict) or set(fields) - allowed:
++        raise Problem(400, 'invalid_bot_field', 'Unknown bot configuration field')
++    for name in required:
++        if name not in fields:
++            raise Problem(400, 'invalid_bot_field', f'{name} is required', field=name)
++
++
++class BotManagement:
++    """Uses only the audited Desktop RPC lifecycle; never edits profile files directly."""
++
++    def __init__(self, service, auth):
++        self.service, self.auth = service, auth
++
++    def backend(self, source):
++        source = identifier(source)
++        backend = self.service.require(self.auth, source, 'chat.control')
++        if ('chat.control' not in self.auth.get('scopes', [])
++                or backend.cfg.get('bot_mode_roster') is not True
++                or backend.cfg.get('bot_mode_management') is not True
++                or backend.cfg.get('installed_commit') != BOT_MANAGEMENT_COMMIT
++                or not backend.bot_mode_supported):
++            raise Problem(404, 'bot_management_unavailable', 'Bot management is not enabled for this Hermes backend')
++        if not backend.connected:
++            raise Problem(503, 'upstream_unavailable', 'Hermes is not connected')
++        return backend
++
++    async def _profiles(self, backend):
++        raw = await backend.rpc('profiles.list', {'include_sessions': False})
++        if raw.get('bot_mode_protocol') is not True:
++            raise Problem(404, 'bot_management_unavailable', 'Hermes does not expose the audited Bot Mode contract')
++        return [row for row in raw.get('profiles', []) if isinstance(row, dict) and isinstance(row.get('name'), str)]
++
++    async def _describe(self, backend, profile_id):
++        return await backend.rpc('profiles.describe', {'name': profile_id})
++
++    async def _models(self, backend, profile_id):
++        raw = await backend.rest('GET', '/api/model/options', query={'profile': profile_id})
++        providers = []
++        for provider in raw.get('providers', []) if isinstance(raw, dict) else []:
++            if not isinstance(provider, dict):
++                continue
++            provider_id = provider.get('slug') or provider.get('id')
++            if not isinstance(provider_id, str) or not provider_id or provider.get('available') is False:
++                continue
++            models = []
++            for model in provider.get('models', []):
++                if isinstance(model, str):
++                    mid, label = model, model
++                elif isinstance(model, dict):
++                    mid = model.get('id')
++                    label = model.get('name') or model.get('label') or mid
++                else:
++                    continue
++                if isinstance(mid, str) and mid and isinstance(label, str):
++                    models.append({'id': mid, 'name': label})
++            providers.append({'id': provider_id,
++                              'name': str(provider.get('name') or provider.get('label') or provider_id),
++                              'available': provider.get('available'), 'configured': provider.get('configured'),
++                              'models': models})
++        return providers
++
++    async def inventory(self, source='default', bot_id=None):
++        profile_id = 'default'
++        if bot_id:
++            from .bots import BotMode
++            adapter = BotMode(self.service, self.auth)
++            bot_source, profile_id, _, _ = await adapter.resolve(bot_id)
++            if source not in (None, '', 'default', bot_source):
++                raise Problem(400, 'invalid_bot_inventory_target', 'Bot ID does not belong to the requested Hermes source')
++            source = bot_source
++        backend = self.backend(source)
++        model_providers = []
++        skills, toolsets, mcp_servers = [], [], []
++        availability = {'models': False, 'skills': False, 'toolsets': False, 'mcp_servers': False}
++
++        if '/api/model/options' in backend.paths:
++            try:
++                model_providers = await self._models(backend, profile_id)
++                availability['models'] = True
++            except Problem:
++                pass
++        if '/api/skills' in backend.paths:
++            try:
++                raw = await backend.rest('GET', '/api/skills', query={'profile': profile_id})
++                skills = [only(x, 'name description category enabled source tags') for x in raw
++                          if isinstance(x, dict) and isinstance(x.get('name'), str)]
++                availability['skills'] = True
++            except (Problem, TypeError):
++                pass
++        if '/api/tools/toolsets' in backend.paths:
++            try:
++                raw = await backend.rest('GET', '/api/tools/toolsets', query={'profile': profile_id})
++                toolsets = [only(x, 'name label description enabled available configured') for x in raw
++                            if isinstance(x, dict) and isinstance(x.get('name'), str)]
++                availability['toolsets'] = True
++            except (Problem, TypeError):
++                pass
++        if '/api/mcp/servers' in backend.paths:
++            try:
++                raw = await backend.rest('GET', '/api/mcp/servers', query={'profile': profile_id})
++                mcp_servers = [only(x, 'name enabled configured connected status tool_count transport')
++                               for x in raw.get('servers', []) if isinstance(x, dict) and isinstance(x.get('name'), str)]
++                availability['mcp_servers'] = True
++            except Problem:
++                pass
++        return {'source': source, 'profile_id': profile_id, 'providers': model_providers, 'skills': skills,
++                'toolsets': toolsets, 'mcp_servers': mcp_servers, 'availability': availability}
++
++    async def _validate_model(self, backend, profile_id, provider, model):
++        if (provider is None) != (model is None):
++            raise Problem(400, 'invalid_bot_model', 'Select both provider and model', field='model')
++        if provider is None:
++            return
++        if not provider or not model or len(provider) > 200 or len(model) > 300:
++            raise Problem(400, 'invalid_bot_model', 'Invalid provider or model', field='model')
++        providers = await self._models(backend, profile_id)
++        match = next((p for p in providers if p['id'] == provider), None)
++        if match is None or not any(m['id'] == model for m in match['models']):
++            raise Problem(400, 'invalid_bot_model', 'Choose a provider and model from this Hermes host inventory', field='model')
++
++    @staticmethod
++    def _enabled_names(items):
++        return {item.get('name') for item in items if isinstance(item, dict) and item.get('enabled') is True
++                and isinstance(item.get('name'), str)}
++
++    async def _validate_selections(self, backend, profile_id, fields):
++        selections = {name: _selection(fields, name) for name in ('skills', 'toolsets', 'mcp_servers')}
++        if not any(value is not None for value in selections.values()):
++            return selections, None
++        current = await self._describe(backend, profile_id)
++        lists = {'skills': current.get('skills', []), 'toolsets': current.get('toolsets', []),
++                 'mcp_servers': current.get('mcp_servers', [])}
++        for field, selected in selections.items():
++            if selected is None:
++                continue
++            allowed = {item.get('name') for item in lists[field]
++                       if isinstance(item, dict) and isinstance(item.get('name'), str)}
++            # No arbitrary install/config writes: the phone may select only entries Hermes
++            # already describes for this profile.
++            if not set(selected) <= allowed:
++                raise Problem(400, 'invalid_bot_capability', f'Choose {field} from this bot\'s Hermes inventory', field=field)
++        return selections, current
++
++    @staticmethod
++    def _configure_result(raw, required, *, partial=False):
++        applied = raw.get('applied') if isinstance(raw, dict) else None
++        applied = applied if isinstance(applied, dict) else {}
++        failed = [field for field in required if applied.get(field) is not True]
++        if failed:
++            raise Problem(502, 'bot_configuration_not_applied', 'Hermes did not apply every requested bot field',
++                          fields=failed, applied={key: applied.get(key) for key in required if key in applied},
++                          partial=partial)
++        return applied
++
++    async def _check_unique_title(self, profiles, title, *, except_name=None):
++        folded = title.casefold()
++        for row in profiles:
++            if row.get('name') == except_name:
++                continue
++            meta = (row.get('ui_meta') or {}).get(_BOT_META) or {}
++            existing = meta.get('title') or row.get('display_name') or row.get('name')
++            if isinstance(existing, str) and existing.strip().casefold() == folded:
++                raise Problem(409, 'duplicate_bot_name', 'A Hermes bot with this name already exists')
++
++    async def create(self, source, fields):
++        _validate_shape(fields, _CREATE_FIELDS, ('name', 'description'))
++        backend = self.backend(source)
++        title = _clean_title(fields['name'])
++        description = _text(fields, 'description', required=True, maximum=_MAX_DESCRIPTION)
++        soul = _text(fields, 'soul', maximum=_MAX_SOUL)
++        slug = _slugify(title)
++        provider = _text(fields, 'provider', maximum=200)
++        model = _text(fields, 'model', maximum=300)
++        await self._validate_model(backend, 'default', provider, model)
++        profiles = await self._profiles(backend)
++        await self._check_unique_title(profiles, title)
++        if any(row.get('name') == slug for row in profiles):
++            raise Problem(409, 'duplicate_bot_name', 'A Hermes profile already uses the generated name; choose another bot name')
++
++        selections, _ = await self._validate_selections(backend, 'default', fields)
++        create = {'name': slug, 'description': description, 'clone_from': 'default', 'share_auth': True}
++        if soul is not None:
++            create['soul'] = soul
++        if provider is not None:
++            create.update(provider=provider, model=model)
++        await backend.rpc('profiles.create', create)
++
++        configured = {'name': slug, 'ui_meta': {_BOT_META: {'title': title}}}
++        required = ['ui_meta']
++        if selections['skills'] is not None:
++            new_detail = await self._describe(backend, slug)
++            installed = {item.get('name') for item in new_detail.get('skills', []) if isinstance(item, dict)}
++            if not set(selections['skills']) <= installed:
++                raise Problem(400, 'invalid_bot_capability', 'A selected skill is not installed in the new profile', field='skills')
++            configured['disabled_skills'] = sorted(installed - set(selections['skills']))
++            required.append('skills')
++        if selections['toolsets'] is not None:
++            configured['enabled_toolsets'] = selections['toolsets']
++            required.append('toolsets')
++        if selections['mcp_servers'] is not None:
++            configured['enabled_mcp_servers'] = selections['mcp_servers']
++            required.append('mcp_servers')
++        result = await backend.rpc('profiles.configure', configured)
++        self._configure_result(result, required)
++        return await self._read_bot(source, slug)
++
++    async def _read_bot(self, source, profile_id):
++        from .bots import BotMode
++        return await BotMode(self.service, self.auth).detail(opaque(source, profile_id))
++
++    async def _resolve(self, bid, include_hidden=False):
++        from .bots import BotMode
++        adapter = BotMode(self.service, self.auth)
++        source, profile_id, backend, row = await adapter.resolve(bid, include_hidden=include_hidden)
++        backend = self.backend(source)
++        return adapter, source, profile_id, backend, row
++
++    async def update(self, bid, fields):
++        _validate_shape(fields, _UPDATE_FIELDS)
++        if not fields:
++            raise Problem(400, 'invalid_bot_field', 'At least one supported bot field is required')
++        adapter, source, profile_id, backend, row = await self._resolve(bid)
++        title = _clean_title(fields['name']) if 'name' in fields else None
++        description = _text(fields, 'description', maximum=_MAX_DESCRIPTION)
++        soul = _text(fields, 'soul', maximum=_MAX_SOUL)
++        provider = _text(fields, 'provider', maximum=200)
++        model = _text(fields, 'model', maximum=300)
++        selections, before = await self._validate_selections(backend, profile_id, fields)
++        if provider is not None or model is not None:
++            await self._validate_model(backend, profile_id, provider, model)
++        if 'confirm_expensive_model' in fields and not isinstance(fields['confirm_expensive_model'], bool):
++            raise Problem(400, 'invalid_bot_field', 'confirm_expensive_model must be boolean', field='confirm_expensive_model')
++
++        profiles = await self._profiles(backend)
++        if title is not None:
++            await self._check_unique_title(profiles, title, except_name=profile_id)
++
++        # Keep Hermes' guarded-model confirmation atomic from the phone's point of view:
++        # the model operation runs alone before other requested fields.
++        if provider is not None:
++            model_params = {'name': profile_id, 'provider': provider, 'model': model}
++            if fields.get('confirm_expensive_model') is True:
++                model_params['confirm_expensive_model'] = True
++            model_result = await backend.rpc('profiles.configure', model_params)
++            if isinstance(model_result, dict) and model_result.get('confirm_required') is True:
++                raise Problem(409, 'bot_model_confirmation_required', 'Hermes requires confirmation before applying this model',
++                              confirm_message=str(model_result.get('confirm_message') or '')[:1000])
++            self._configure_result(model_result, ['model'])
++
++        config = {'name': profile_id}
++        required = []
++        if title is not None:
++            config['ui_meta'] = {_BOT_META: {'title': title}}
++            revision = row.get('ui_meta_revisions', {}).get(_BOT_META) if isinstance(row.get('ui_meta_revisions'), dict) else None
++            if isinstance(revision, int) and not isinstance(revision, bool):
++                config['ui_meta_expected_revisions'] = {_BOT_META: revision}
++            required.append('ui_meta')
++        if description is not None:
++            config['description'] = description
++            required.append('description')
++        if soul is not None:
++            config['soul'] = soul
++            required.append('soul')
++        if selections['skills'] is not None:
++            installed = {item.get('name') for item in (before or {}).get('skills', []) if isinstance(item, dict)}
++            config['disabled_skills'] = sorted(installed - set(selections['skills']))
++            required.append('skills')
++        if selections['toolsets'] is not None:
++            config['enabled_toolsets'] = selections['toolsets']
++            required.append('toolsets')
++        if selections['mcp_servers'] is not None:
++            config['enabled_mcp_servers'] = selections['mcp_servers']
++            required.append('mcp_servers')
++        if required:
++            result = await backend.rpc('profiles.configure', config)
++            self._configure_result(result, required, partial=provider is not None)
++
++        # Read the Desktop roster and profile editor snapshot again. We never tell the
++        # phone a write succeeded based only on a request being sent.
++        updated = await self._read_bot(source, profile_id)
++        if title is not None and updated['name'] != title:
++            raise Problem(502, 'bot_configuration_not_applied', 'Hermes did not persist the bot name', fields=['name'])
++        if description is not None and updated['description'] != description:
++            raise Problem(502, 'bot_configuration_not_applied', 'Hermes did not persist the bot description', fields=['description'])
++        if soul is not None and updated.get('soul') != soul:
++            raise Problem(502, 'bot_configuration_not_applied', 'Hermes did not persist the bot instructions', fields=['soul'])
++        if provider is not None and (updated.get('provider') != provider or updated.get('model') != model):
++            raise Problem(502, 'bot_configuration_not_applied', 'Hermes did not persist the selected model', fields=['model'])
++        for field, result_key in (('skills', 'skills'), ('toolsets', 'toolsets'), ('mcp_servers', 'mcp_servers')):
++            selected = selections[field]
++            if selected is not None and field == 'skills':
++                actual = {x['name'] for x in updated.get(result_key, []) if x.get('enabled') is True}
++                if actual != set(selected):
++                    raise Problem(502, 'bot_configuration_not_applied', 'Hermes did not persist the selected skills', fields=[field])
++            elif selected is not None and field == 'mcp_servers':
++                actual = {x['name'] for x in updated.get(result_key, []) if x.get('enabled') is True}
++                if actual != set(selected):
++                    raise Problem(502, 'bot_configuration_not_applied', 'Hermes did not persist the selected MCP servers', fields=[field])
++        return updated
++
++    async def hide(self, bid, hidden):
++        if not isinstance(hidden, bool):
++            raise Problem(400, 'invalid_bot_field', 'hidden must be boolean', field='hidden')
++        adapter, source, profile_id, backend, row = await self._resolve(bid, include_hidden=True)
++        if row.get('is_default') or profile_id == 'default':
++            raise Problem(400, 'default_bot_protected', 'The default Hermes profile cannot be hidden')
++        current = bool((row.get('ui_meta') or {}).get(_BOT_META, {}).get('hidden'))
++        if current != hidden:
++            params = {'name': profile_id, 'ui_meta': {_BOT_META: {'hidden': hidden}}}
++            revision = row.get('ui_meta_revisions', {}).get(_BOT_META) if isinstance(row.get('ui_meta_revisions'), dict) else None
++            if isinstance(revision, int) and not isinstance(revision, bool):
++                params['ui_meta_expected_revisions'] = {_BOT_META: revision}
++            result = await backend.rpc('profiles.configure', params)
++            self._configure_result(result, ['ui_meta'])
++        profiles = await self._profiles(backend)
++        verified = next((p for p in profiles if p.get('name') == profile_id), None)
++        persisted = bool((((verified or {}).get('ui_meta') or {}).get(_BOT_META) or {}).get('hidden'))
++        if persisted != hidden:
++            raise Problem(502, 'bot_configuration_not_applied', 'Hermes did not persist the visibility change', fields=['hidden'])
++        return {'id': bid, 'profile_id': profile_id, 'hidden': hidden,
++                'canonical_chat_available': bool(row.get('canonical_session')),
++                'history_preserved': True}
+diff --git a/hermes-mobile-bridge/src/hermes_mobile_bridge/bots.py b/hermes-mobile-bridge/src/hermes_mobile_bridge/bots.py
+index 72089b2..e310f32 100644
+--- a/hermes-mobile-bridge/src/hermes_mobile_bridge/bots.py
++++ b/hermes-mobile-bridge/src/hermes_mobile_bridge/bots.py
+@@ -7,6 +7,7 @@ import asyncio
+ from .core import Problem, identifier, opaque, unopaque, only, message
+ 
+ AUDITED_COMMITS = ('2a4c9afd7bd', '4bb9e57bfde8a0affb5553eff13ed6e1f14147f1')
++BOT_MANAGEMENT_COMMIT = '4bb9e57bfde8a0affb5553eff13ed6e1f14147f1'
+ 
+ 
+ def bot_row(source, row):
+@@ -15,11 +16,11 @@ def bot_row(source, row):
+     title = meta.get('title') or row.get('display_name') or ('Hermes' if name == 'default' else name.replace('-', ' ').replace('_', ' ').title())
+     sessions = [s for s in (row.get('canonical_session'), row.get('last_session'), row.get('worker_session')) if isinstance(s, dict)]
+     last = max(sessions, key=lambda s: s.get('last_active') or 0, default={})
++    description = row.get('description') if isinstance(row.get('description'), str) else meta.get('description') or ''
+     return {'id': opaque(source, name), 'name': title.strip(), 'profile_id': name,
+             'is_default': bool(row.get('is_default') or name == 'default'),
+-            'description': meta.get('description') or row.get('description') or '',
+-            # Backend role is a permission role, not a guessed research/general category.
+-            'role': row.get('role') or '', 'model': row.get('model'), 'provider': row.get('provider'),
++            'description': description,
++            'model': row.get('model'), 'provider': row.get('provider'),
+             'status': 'unknown', 'last_active': last.get('last_active'),
+             'activity': only(last, 'title preview last_active'), 'has_avatar': bool(row.get('has_avatar')),
+             'canonical_chat_available': isinstance(row.get('canonical_session'), dict),
+@@ -30,14 +31,17 @@ class BotMode:
+     def __init__(self, service, auth):
+         self.service, self.auth = service, auth
+ 
+-    async def roster(self, source):
++    async def roster(self, source, include_hidden=False):
+         backend = self.service.require(self.auth, source)
+         if not backend.cfg.get('bot_mode_roster'):
+             raise Problem(404, 'bot_mode_unavailable', 'Bot Mode is not enabled on this backend')
+         raw = await backend.rpc('profiles.list', {'include_sessions': True})
+         if raw.get('bot_mode_protocol') is not True:
+             raise Problem(404, 'bot_mode_unavailable', 'This Hermes backend has no audited Bot Mode contract')
+-        return backend, [r for r in raw.get('profiles', []) if isinstance(r, dict) and not (r.get('ui_meta') or {}).get('hermes-bots', {}).get('hidden')]
++        rows = [r for r in raw.get('profiles', []) if isinstance(r, dict)]
++        if not include_hidden:
++            rows = [r for r in rows if not (r.get('ui_meta') or {}).get('hermes-bots', {}).get('hidden')]
++        return backend, rows
+ 
+     async def list(self):
+         result = []
+@@ -47,9 +51,9 @@ class BotMode:
+                 result.extend(bot_row(source, r) for r in rows)
+         return result
+ 
+-    async def resolve(self, bid):
++    async def resolve(self, bid, include_hidden=False):
+         source, name = unopaque(bid)
+-        backend, rows = await self.roster(source)
++        backend, rows = await self.roster(source, include_hidden=include_hidden)
+         row = next((r for r in rows if r.get('name') == name), None)
+         if row is None:
+             raise Problem(404, 'not_found', 'Bot is no longer in the Studio roster')
+@@ -60,11 +64,17 @@ class BotMode:
+         raw = await backend.rpc('profiles.describe', {'name': name})
+         result = bot_row(source, row)
+         model = raw.get('model') or {}
++        soul = raw.get('soul') if isinstance(raw.get('soul'), str) else ''
+         result.update(model=model.get('default') or result['model'], provider=model.get('provider') or result['provider'],
+-                      soul_summary=(raw.get('soul') or '')[:12000] or None,
++                      soul=soul[:20000], soul_summary=soul[:12000] or None,
+                       skills=[only(s, 'name enabled') for s in raw.get('skills', [])],
+                       toolsets=[only(t, 'name enabled available') for t in raw.get('toolsets', [])],
+                       mcp_servers=[only(m, 'name enabled transport') for m in raw.get('mcp_servers', [])],
++                      editable_fields={'name': True, 'description': True, 'soul': len(soul) <= 20000,
++                                       'model': '/api/model/options' in backend.paths,
++                                       'skills': True, 'toolsets': True, 'mcp_servers': True,
++                                       'hide': not result['is_default']},
++                      hidden=bool((row.get('ui_meta') or {}).get('hermes-bots', {}).get('hidden')),
+                       config_metadata={'toolsets_pinned': raw.get('toolsets_pinned'), 'source': 'profiles.describe'})
+         if row.get('has_avatar'):
+             asset = await backend.rpc('profiles.get_asset', {'name': name, 'asset': 'avatar'})
+@@ -88,6 +98,39 @@ class BotMode:
+             pass
+         return result
+ 
++    def management_capabilities(self, source):
++        """Per-source feature gate; roster reads never imply permission to mutate bots."""
++        if source not in self.auth.get('profiles', []) or 'chat.control' not in self.auth.get('scopes', []):
++            return {'botCreate': False, 'botEdit': False, 'botHide': False, 'botInventory': False}
++        backend = self.service.backends.get(source)
++        available = bool(backend and backend.connected and backend.bot_mode_supported
++                         and backend.cfg.get('bot_mode_roster') is True
++                         and backend.cfg.get('bot_mode_management') is True
++                         and backend.cfg.get('installed_commit') == BOT_MANAGEMENT_COMMIT)
++        inventory = bool(available and any(path in backend.paths for path in (
++            '/api/model/options', '/api/skills', '/api/tools/toolsets', '/api/mcp/servers')))
++        return {'botCreate': available, 'botEdit': available, 'botHide': available,
++                'botInventory': inventory}
++
++    def capabilities(self, source):
++        return self.management_capabilities(source)
++
++    async def inventory(self, source='default', bot_id=None):
++        from .bot_management import BotManagement
++        return await BotManagement(self.service, self.auth).inventory(source, bot_id=bot_id)
++
++    async def create(self, fields, source='default'):
++        from .bot_management import BotManagement
++        return await BotManagement(self.service, self.auth).create(source, fields)
++
++    async def update(self, bid, fields):
++        from .bot_management import BotManagement
++        return await BotManagement(self.service, self.auth).update(bid, fields)
++
++    async def hide(self, bid, hidden=True):
++        from .bot_management import BotManagement
++        return await BotManagement(self.service, self.auth).hide(bid, hidden)
++
+     async def conversation(self, bid):
+         source, name, backend, bot = await self.resolve(bid)
+         row = await self.lookup(backend, name, bot)
+diff --git a/hermes-mobile-bridge/tests/test_bot_management.py b/hermes-mobile-bridge/tests/test_bot_management.py
+new file mode 100644
+index 0000000..b8cecf8
+--- /dev/null
++++ b/hermes-mobile-bridge/tests/test_bot_management.py
+@@ -0,0 +1,271 @@
++"""Management contract tests against a hermetic Hermes Desktop RPC double."""
++import copy
++
++import pytest
++
++from hermes_mobile_bridge.bots import BOT_MANAGEMENT_COMMIT, BotMode
++from hermes_mobile_bridge.core import Problem, opaque
++
++pytestmark = pytest.mark.asyncio
++
++
++class FakeBackend:
++    def __init__(self):
++        self.cfg = {'bot_mode_roster': True, 'bot_mode_management': True,
++                    'installed_commit': BOT_MANAGEMENT_COMMIT}
++        self.connected = self.bot_mode_supported = True
++        self.paths = {'/api/model/options', '/api/skills', '/api/tools/toolsets', '/api/mcp/servers'}
++        self.calls = []
++        self.profiles = {
++            'default': self._row('default', 'Hermes', is_default=True),
++            'research-orchestrator': self._row('research-orchestrator', 'Research Orchestrator',
++                skills=['arxiv', 'research-terminal'], toolsets=['terminal', 'web'], mcp=['local-server']),
++        }
++
++    @staticmethod
++    def _row(name, title, is_default=False, skills=None, toolsets=None, mcp=None):
++        skills = skills if skills is not None else ['arxiv', 'markdown']
++        toolsets = toolsets if toolsets is not None else ['terminal', 'web']
++        mcp = mcp if mcp is not None else []
++        return {
++            'name': name, 'display_name': title, 'description': 'Old description', 'is_default': is_default,
++            'ui_meta_revisions': {'hermes-bots': 0},
++            'ui_meta': {'hermes-bots': {'title': title}},
++            'canonical_session': {'id': name + '-chat', 'resolved_id': name + '-tip', 'title': 'Bot Chat'},
++            'has_avatar': False,
++            '_detail': {'name': name, 'description': 'Old description', 'soul': 'Old instructions',
++                        'model': {'provider': 'test-provider', 'default': 'model-a'},
++                        'skills': [{'name': item, 'enabled': True} for item in skills],
++                        'toolsets': [{'name': item, 'enabled': True, 'available': True} for item in toolsets],
++                        'mcp_servers': [{'name': item, 'enabled': True, 'transport': 'http'} for item in mcp],
++                        'toolsets_pinned': True},
++        }
++
++    async def rpc(self, method, params=None):
++        p = params or {}
++        self.calls.append((method, copy.deepcopy(p)))
++        if method == 'profiles.list':
++            return {'bot_mode_protocol': True, 'profiles': [
++                {k: v for k, v in row.items() if not k.startswith('_')} for row in self.profiles.values()]}
++        if method == 'profiles.describe':
++            if p['name'] not in self.profiles:
++                raise Problem(404, 'not_found', 'Hermes profile not found')
++            return copy.deepcopy(self.profiles[p['name']]['_detail'])
++        if method == 'profiles.create':
++            name = p['name']
++            if name in self.profiles:
++                raise Problem(409, 'upstream_rpc_rejected', 'Hermes profile already exists')
++            default = self.profiles['default']
++            row = self._row(name, name, skills=[s['name'] for s in default['_detail']['skills']],
++                            toolsets=[t['name'] for t in default['_detail']['toolsets']])
++            row['_detail'] = copy.deepcopy(default['_detail'])
++            row['_detail'].update(name=name, description=p['description'], soul=p.get('soul', row['_detail']['soul']))
++            row.update(display_name=name, description=p['description'], is_default=False, canonical_session=None)
++            if p.get('provider'):
++                row['_detail']['model'] = {'provider': p['provider'], 'default': p['model']}
++            self.profiles[name] = row
++            return {'ok': True, 'name': name, 'path': '/private/hermes/profiles/' + name}
++        if method == 'profiles.configure':
++            row = self.profiles[p['name']]
++            detail = row['_detail']
++            applied = {}
++            if isinstance(p.get('ui_meta'), dict):
++                expected = (p.get('ui_meta_expected_revisions') or {}).get('hermes-bots')
++                current = row['ui_meta_revisions']['hermes-bots']
++                if expected is not None and expected != current:
++                    return {'ok': False, 'applied': {'ui_meta': False}, 'ui_meta_conflicts': {'hermes-bots': {'actual': current}}}
++                for key, value in p['ui_meta'].get('hermes-bots', {}).items():
++                    if value is None:
++                        row['ui_meta']['hermes-bots'].pop(key, None)
++                    else:
++                        row['ui_meta']['hermes-bots'][key] = value
++                row['ui_meta_revisions']['hermes-bots'] += 1
++                applied['ui_meta'] = True
++            if 'description' in p:
++                detail['description'] = row['description'] = p['description']
++                applied['description'] = True
++            if 'soul' in p:
++                detail['soul'] = p['soul']
++                applied['soul'] = True
++            if 'model' in p:
++                if p['model'] == 'model-costly' and not p.get('confirm_expensive_model'):
++                    return {'ok': False, 'applied': {}, 'confirm_required': True, 'confirm_message': 'Confirm this model'}
++                detail['model'] = {'provider': p['provider'], 'default': p['model']}
++                applied['model'] = True
++            if 'disabled_skills' in p:
++                disabled = set(p['disabled_skills'])
++                for item in detail['skills']:
++                    item['enabled'] = item['name'] not in disabled
++                applied['skills'] = True
++            if 'enabled_toolsets' in p:
++                enabled = set(p['enabled_toolsets'])
++                for item in detail['toolsets']:
++                    item['enabled'] = item['name'] in enabled
++                applied['toolsets'] = True
++            if 'enabled_mcp_servers' in p:
++                enabled = set(p['enabled_mcp_servers'])
++                for item in detail['mcp_servers']:
++                    item['enabled'] = item['name'] in enabled
++                applied['mcp_servers'] = True
++            return {'ok': all(applied.values()), 'applied': applied}
++        raise Problem(404, 'unsupported', 'Unsupported fake RPC')
++
++    async def rest(self, method, path, body=None, query=None):
++        profile = (query or {}).get('profile', 'default')
++        detail = self.profiles[profile]['_detail']
++        if path == '/api/model/options':
++            return {'providers': [{'slug': 'test-provider', 'name': 'Test Provider', 'available': True,
++                                   'api_key': 'MUST_NOT_LEAK', 'base_url': 'MUST_NOT_LEAK',
++                                   'models': [{'id': 'model-a', 'name': 'Model A'},
++                                              {'id': 'model-costly', 'name': 'Model Costly'}]}]}
++        if path == '/api/skills':
++            return [{'name': item['name'], 'enabled': item['enabled'], 'path': '/private/skills/' + item['name']}
++                    for item in detail['skills']]
++        if path == '/api/tools/toolsets':
++            return [{'name': item['name'], 'enabled': item['enabled'], 'command': 'MUST_NOT_LEAK'}
++                    for item in detail['toolsets']]
++        if path == '/api/mcp/servers':
++            return {'servers': [{'name': item['name'], 'enabled': item['enabled'], 'command': 'MUST_NOT_LEAK',
++                                 'env': {'API_KEY': 'MUST_NOT_LEAK'}} for item in detail['mcp_servers']]}
++        raise Problem(404, 'not_found', 'No fake route')
++
++
++class FakeService:
++    def __init__(self):
++        self.backends = {'default': FakeBackend()}
++
++    def profiles(self, auth):
++        return [p for p in self.backends if p in auth['profiles']]
++
++    def require(self, auth, profile, scope=None):
++        if profile not in self.backends or profile not in auth['profiles']:
++            raise Problem(403, 'forbidden', 'No access to source')
++        if scope and scope not in auth['scopes']:
++            raise Problem(403, 'forbidden', 'Missing scope')
++        return self.backends[profile]
++
++
++def make_adapter(service=None, scopes=None):
++    service = service or FakeService()
++    auth = {'profiles': ['default'], 'scopes': scopes or ['read', 'chat.control']}
++    return BotMode(service, auth), service
++
++
++async def test_create_uses_native_profile_and_returns_re_read_normalized_bot():
++    adapter, service = make_adapter()
++    created = await adapter.create({'name': 'Field Research', 'description': 'Research helper',
++                                    'soul': 'Use careful source notes.', 'provider': 'test-provider',
++                                    'model': 'model-a', 'skills': ['arxiv']})
++    assert created['id'] == opaque('default', 'field-research')
++    assert created['name'] == 'Field Research'
++    assert created['profile_id'] == 'field-research'
++    assert created['description'] == 'Research helper'
++    assert created['soul'] == 'Use careful source notes.'
++    assert created['provider'] == 'test-provider' and created['model'] == 'model-a'
++    assert {s['name'] for s in created['skills'] if s['enabled']} == {'arxiv'}
++    assert created['canonical_chat_available'] is False
++    methods = [m for m, _ in service.backends['default'].calls]
++    assert methods[0] == 'profiles.list' and methods.index('profiles.create') < methods.index('profiles.configure')
++    create_args = next(p for m, p in service.backends['default'].calls if m == 'profiles.create')
++    assert create_args == {'name': 'field-research', 'description': 'Research helper',
++                           'clone_from': 'default', 'share_auth': True,
++                           'soul': 'Use careful source notes.', 'provider': 'test-provider', 'model': 'model-a'}
++    assert 'path' not in created and 'MUST_NOT_LEAK' not in str(created)
++    assert len([b for b in await adapter.list() if b['profile_id'] == 'field-research']) == 1
++
++
++async def test_edit_name_description_model_soul_skills_toolsets_and_mcp_round_trip():
++    adapter, service = make_adapter()
++    bid = opaque('default', 'research-orchestrator')
++    updated = await adapter.update(bid, {'name': 'Research Desk', 'description': 'Updated role',
++        'soul': 'Prefer primary sources.', 'provider': 'test-provider', 'model': 'model-a',
++        'skills': ['research-terminal'], 'toolsets': ['web'], 'mcp_servers': []})
++    assert updated['id'] == bid and updated['profile_id'] == 'research-orchestrator'
++    assert updated['name'] == 'Research Desk'
++    assert updated['description'] == 'Updated role'
++    assert updated['soul'] == 'Prefer primary sources.'
++    assert updated['provider'] == 'test-provider' and updated['model'] == 'model-a'
++    assert {s['name'] for s in updated['skills'] if s['enabled']} == {'research-terminal'}
++    assert {s['name'] for s in updated['toolsets'] if s['enabled']} == {'web'}
++    assert all(not s['enabled'] for s in updated['mcp_servers'])
++    assert not any(m == 'profile.rename' for m, _ in service.backends['default'].calls)
++    # A second bridge adapter sees the Hermes-owned changes; no mobile cache is their source.
++    second, _ = make_adapter(service)
++    reread = await second.detail(bid)
++    assert reread['name'] == 'Research Desk' and reread['soul'] == 'Prefer primary sources.'
++
++
++async def test_guarded_model_requires_user_confirmation_before_other_edits():
++    adapter, service = make_adapter()
++    bid = opaque('default', 'research-orchestrator')
++    with pytest.raises(Problem) as raised:
++        await adapter.update(bid, {'description': 'Should remain unchanged', 'provider': 'test-provider',
++                                   'model': 'model-costly'})
++    assert raised.value.code == 'bot_model_confirmation_required'
++    assert service.backends['default'].profiles['research-orchestrator']['description'] == 'Old description'
++    updated = await adapter.update(bid, {'provider': 'test-provider', 'model': 'model-costly',
++                                         'confirm_expensive_model': True})
++    assert updated['model'] == 'model-costly'
++
++
++async def test_hide_is_reversible_roster_only_and_keeps_canonical_chat():
++    adapter, service = make_adapter()
++    bid = opaque('default', 'research-orchestrator')
++    hidden = await adapter.hide(bid, True)
++    assert hidden == {'id': bid, 'profile_id': 'research-orchestrator', 'hidden': True,
++                      'canonical_chat_available': True, 'history_preserved': True}
++    assert bid not in {row['id'] for row in await adapter.list()}
++    assert service.backends['default'].profiles['research-orchestrator']['canonical_session']['id'] == 'research-orchestrator-chat'
++    unhidden = await adapter.hide(bid, False)
++    assert unhidden['hidden'] is False
++    assert bid in {row['id'] for row in await adapter.list()}
++    assert not any(method in {'profiles.delete', 'session.delete'} for method, _ in service.backends['default'].calls)
++    with pytest.raises(Problem) as raised:
++        await adapter.hide(opaque('default', 'default'), True)
++    assert raised.value.code == 'default_bot_protected'
++
++
++async def test_inventory_is_host_native_profile_specific_and_secret_free():
++    adapter, _ = make_adapter()
++    inventory = await adapter.inventory('default', bot_id=opaque('default', 'research-orchestrator'))
++    assert inventory['profile_id'] == 'research-orchestrator'
++    assert {'arxiv', 'research-terminal'} == {s['name'] for s in inventory['skills']}
++    assert inventory['providers'][0]['id'] == 'test-provider'
++    assert inventory['providers'][0]['models'] == [{'id': 'model-a', 'name': 'Model A'},
++                                                   {'id': 'model-costly', 'name': 'Model Costly'}]
++    assert 'MUST_NOT_LEAK' not in str(inventory)
++    assert '/private/' not in str(inventory)
++
++
++async def test_invalid_or_duplicate_configuration_never_mutates_hermes():
++    adapter, service = make_adapter()
++    backend = service.backends['default']
++    before = len(backend.calls)
++    with pytest.raises(Problem) as raised:
++        await adapter.create({'name': 'Research Orchestrator', 'description': 'Duplicate'})
++    assert raised.value.code == 'duplicate_bot_name'
++    assert not any(method == 'profiles.create' for method, _ in backend.calls[before:])
++    with pytest.raises(Problem) as raised:
++        await adapter.create({'name': '../../escape', 'description': 'Unsafe'})
++    assert raised.value.code == 'invalid_bot_name'
++    with pytest.raises(Problem) as raised:
++        await adapter.create({'name': 'New helper', 'description': 'No arbitrary settings', 'config': {'api_key': 'secret'}})
++    assert raised.value.code == 'invalid_bot_field'
++    with pytest.raises(Problem) as raised:
++        await adapter.update(opaque('default', 'research-orchestrator'), {'skills': ['not-installed']})
++    assert raised.value.code == 'invalid_bot_capability'
++    with pytest.raises(Problem) as raised:
++        await adapter.update(opaque('default', 'research-orchestrator'), {'provider': 'missing', 'model': 'model-a'})
++    assert raised.value.code == 'invalid_bot_model'
++
++
++async def test_management_capabilities_fail_closed_for_old_ungranted_or_read_only_backends():
++    adapter, service = make_adapter()
++    assert adapter.capabilities('default') == {'botCreate': True, 'botEdit': True, 'botHide': True, 'botInventory': True}
++    service.backends['default'].cfg['bot_mode_management'] = False
++    assert not any(adapter.capabilities('default').values())
++    service.backends['default'].cfg['bot_mode_management'] = True
++    service.backends['default'].cfg['installed_commit'] = '2a4c9afd7bd'
++    assert not any(adapter.capabilities('default').values())
++    old_scoped, _ = make_adapter(service, scopes=['read'])
++    assert not any(old_scoped.capabilities('default').values())

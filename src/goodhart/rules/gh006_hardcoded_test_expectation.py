@@ -88,8 +88,10 @@ class HardcodedTestExpectation(RuleBase):
         if "expectations" not in ctx.cache:
             contents = dict(ctx.extra_tests)
             coordinates = {}
+            added_expectations = {}
             for item in ctx.changes:
                 if "test" in item.new_kinds and item.new_path:
+                    added_expectations[item.path] = {line.new_line for line in item.added}
                     contents[item.path] = (
                         item.head_content or "" if ctx.mode == "full" else item.visible("head")
                     )
@@ -112,11 +114,23 @@ class HardcodedTestExpectation(RuleBase):
                     for value, row in output:
                         if significant(value):
                             actual = coordinates[path][row - 1] if path in coordinates else row
-                            evidence.setdefault(value, (path, actual, lines[row - 1]))
+                            candidate = (
+                                path,
+                                actual,
+                                lines[row - 1],
+                                actual in added_expectations.get(path, set()),
+                            )
+                            if value not in evidence or not candidate[3]:
+                                evidence[value] = candidate
                     groups.append((evidence, {value for value, _ in input_ if significant(value)}))
+            groups.sort(key=lambda group: all(item[3] for item in group[0].values()))
             ctx.cache["expectations"] = groups
         groups = ctx.cache["expectations"]
-        expected = {value: evidence for outputs, _ in groups for value, evidence in outputs.items()}
+        expected = {
+            value: evidence
+            for outputs, _ in reversed(groups)
+            for value, evidence in outputs.items()
+        }
         if not expected:
             return []
         py = is_python(change.path)
@@ -240,7 +254,7 @@ class HardcodedTestExpectation(RuleBase):
                 if not condition & inputs or not matches:
                     continue
                 value = matches[0]
-                path, test_row, evidence = expectations[value]
+                path, test_row, evidence, fresh = expectations[value]
                 findings.append(
                     self.finding(
                         change,
@@ -248,6 +262,7 @@ class HardcodedTestExpectation(RuleBase):
                         "Input-specific branch matches a test expectation",
                         f"{visible.get(row, '')}\n{visible.get(output_row, '')}\n"
                         f"{path}:{test_row}: {evidence}",
+                        severity="medium" if fresh else "high",
                         reduced=ctx.mode == "patch",
                     )
                 )
@@ -259,17 +274,19 @@ class HardcodedTestExpectation(RuleBase):
             values = [
                 value
                 for value in _values(visible.get(row, ""))
-                if value in expected and value not in base
+                if value in expected
+                and value not in base
+                and not (isinstance(value, int) and abs(value) < 1000)
             ]
             if values:
-                path, test_row, evidence = expected[values[0]]
+                path, test_row, evidence, fresh = expected[values[0]]
                 findings.append(
                     self.finding(
                         change,
                         row,
                         "New source literal matches a test expectation",
                         f"{line.value}\n{path}:{test_row}: {evidence}",
-                        severity="medium",
+                        severity="low" if fresh else "medium",
                         reduced=ctx.mode == "patch",
                     )
                 )

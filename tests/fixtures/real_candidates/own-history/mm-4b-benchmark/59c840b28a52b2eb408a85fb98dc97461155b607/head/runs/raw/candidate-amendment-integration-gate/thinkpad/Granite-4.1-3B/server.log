@@ -1,0 +1,32 @@
+0.00.034.074 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.034.154 I srv          init: The UI is disabled
+0.00.034.155 I srv          init: Use --ui/--no-ui (or deprecated --webui/--no-webui) to enable/disable
+0.00.034.211 W srv  llama_server: -----------------
+0.00.034.212 W srv  llama_server: CORS is set to allow all origins ('*') and no API key is set
+0.00.034.212 W srv  llama_server: this can be a security risk (cross-origin attacks)
+0.00.034.212 W srv  llama_server: more info: https://github.com/ggml-org/llama.cpp/pull/25655
+0.00.034.212 W srv  llama_server: -----------------
+0.00.035.495 I srv    load_model: loading model '/home/dippo/research-inference/models/mm-agent/granite-4.1-3b-Q4_K_M.gguf'
+0.01.413.612 I cmn          init: llama threadpool init, n_threads = 8
+0.02.116.196 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 16384, kv_unified = 'true'
+0.02.122.551 I srv  llama_server: model loaded
+0.02.122.556 I srv  llama_server: listening on http://127.0.0.1:8080
+0.02.122.556 W srv  llama_server: NOTICE: server default port will be changed to :9931 in a future release
+0.02.122.557 W srv  llama_server:         ref: https://github.com/ggml-org/llama.cpp/pull/26508
+0.03.187.824 I slot get_availabl: id  3 | task -1 | selected slot by LRU, t_last = -1
+0.03.188.045 I slot launch_slot_: id  3 | task 0 | processing task, is_child = 0
+0.06.899.700 I slot print_timing: id  3 | task 0 | prompt eval time =    1655.84 ms /   209 tokens (    7.92 ms per token,   126.22 tokens per second)
+0.06.899.706 I slot print_timing: id  3 | task 0 |        eval time =    2055.75 ms /    21 tokens (  102.79 ms per token,     9.73 tokens per second)
+0.06.899.707 I slot print_timing: id  3 | task 0 |       total time =    3711.59 ms /   230 tokens
+0.06.899.713 I slot print_timing: id  3 | task 0 |    graphs reused =         20
+0.06.899.802 I slot      release: id  3 | task 0 | stop processing: n_tokens = 229, truncated = 0
+0.06.907.716 I slot get_availabl: id  3 | task -1 | selected slot by LCP similarity, f_sim_best = 0.888 (> 0.100 thold), f_keep = 1.000
+0.06.907.879 I slot launch_slot_: id  3 | task 22 | processing task, is_child = 0
+0.09.683.283 I slot print_timing: id  3 | task 22 | prompt eval time =     332.41 ms /    29 tokens (   11.46 ms per token,    87.24 tokens per second)
+0.09.683.293 I slot print_timing: id  3 | task 22 |        eval time =    2442.93 ms /    25 tokens (  101.79 ms per token,     9.82 tokens per second)
+0.09.683.295 I slot print_timing: id  3 | task 22 |       total time =    2775.34 ms /    54 tokens
+0.09.683.297 I slot print_timing: id  3 | task 22 |    graphs reused =         43
+0.09.683.388 I slot      release: id  3 | task 22 | stop processing: n_tokens = 282, truncated = 0
+
+Session terminated, killing shell...0.09.717.630 I srv    operator(): operator(): cleaning up before exit...
+ ...killed.

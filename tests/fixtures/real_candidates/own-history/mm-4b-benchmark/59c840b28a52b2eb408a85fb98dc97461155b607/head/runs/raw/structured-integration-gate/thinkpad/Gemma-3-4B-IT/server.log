@@ -1,0 +1,24 @@
+0.00.038.184 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.038.275 I srv          init: The UI is disabled
+0.00.038.277 I srv          init: Use --ui/--no-ui (or deprecated --webui/--no-webui) to enable/disable
+0.00.038.336 W srv  llama_server: -----------------
+0.00.038.338 W srv  llama_server: CORS is set to allow all origins ('*') and no API key is set
+0.00.038.338 W srv  llama_server: this can be a security risk (cross-origin attacks)
+0.00.038.339 W srv  llama_server: more info: https://github.com/ggml-org/llama.cpp/pull/25655
+0.00.038.339 W srv  llama_server: -----------------
+0.00.039.586 I srv    load_model: loading model '/home/dippo/research-inference/models/mm-agent/google_gemma-3-4b-it-Q4_K_M.gguf'
+0.00.608.644 W load: control-looking token:    212 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+0.02.729.297 I cmn          init: llama threadpool init, n_threads = 8
+0.03.341.377 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 16384, kv_unified = 'true'
+0.03.344.991 I srv  llama_server: model loaded
+0.03.345.002 I srv  llama_server: listening on http://127.0.0.1:8080
+0.03.345.003 W srv  llama_server: NOTICE: server default port will be changed to :9931 in a future release
+0.03.345.007 W srv  llama_server:         ref: https://github.com/ggml-org/llama.cpp/pull/26508
+0.04.138.045 I slot get_availabl: id  3 | task -1 | selected slot by LRU, t_last = -1
+0.04.138.128 I slot launch_slot_: id  3 | task 0 | processing task, is_child = 0
+0.09.302.226 I slot print_timing: id  3 | task 0 | prompt eval time =     622.79 ms /    29 tokens (   21.48 ms per token,    46.56 tokens per second)
+0.09.302.235 I slot print_timing: id  3 | task 0 |        eval time =    4541.21 ms /    39 tokens (  119.51 ms per token,     8.37 tokens per second)
+0.09.302.237 I slot print_timing: id  3 | task 0 |       total time =    5164.00 ms /    68 tokens
+0.09.302.247 I slot print_timing: id  3 | task 0 |    graphs reused =         38
+0.09.302.313 I slot      release: id  3 | task 0 | stop processing: n_tokens = 67, truncated = 0
+0.09.331.855 I srv    operator(): operator(): cleaning up before exit...

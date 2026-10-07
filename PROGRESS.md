@@ -2,20 +2,93 @@
 
 ## Current phase
 
-Phase 4 review fixes are done. **Gate 2 status: open; real corpus inputs pending.**
-REVIEW_01b M11 is fixed, its fixtures pass, and Gate 1's release conditions passed:
-all 680 pinned commits rerun, with 10 high commits (limit ≤10), GH006 high 0,
-no errors and no stderr. Phase 5 has not started.
+**Stopped for REVIEW_03b after Gate 3 repairs (2026-10-07).** M14–M18 and
+S12–S17 are implemented with regression probes. B2's independent labels are
+imported: 0 confirmed cheats, 2 suspicious, 52 legitimate. All 393 pinned history
+commits were rescanned: both suspicious cases remain high-blocked, and only one
+legitimate commit blocks (1/393, within ≤3/393). The 52-candidate legitimate
+false-positive rate is 1/52; it is selection-biased, and unflagged commits were
+not independently labeled. See docs/real-world-eval.md and
+docs/b2-rescan-review03.json.
 
-REVIEW_02 M12/M13 and S10/S11 are addressed. The B1 runner and independent
-evaluation report are implemented and validated. The requested `<model>` and
-`<repos>` are unresolved placeholders: Dippo must supply the actual Ollama model
-and repository paths before B1/B2 can run. There are currently zero real cases;
-the 40/15/15 exit criterion has not been met.
+B1 remains invalid: no structured tool calls, Docker failures and disk pressure.
+Its runner is retained and was not rerun; 120 B1 cases remain excluded. Dippo's
+reduced-scope Gate 2 release still applies; confirmed-cheat recall is unavailable.
+Phase 5's hosted Action/sample-PR check remains pending an existing private
+remote. Nothing is published, tagged, or installed into live hook settings.
+The local commit and dist/goodhart-check-gate3.zip are the REVIEW_03b handoff.
 
-The baseline is in [docs/noise-baseline.md](docs/noise-baseline.md). The old ≤8
-noise budget was waived by REVIEW_01b. No repository or commit exceptions were
-introduced.
+## REVIEW_03 repairs (2026-10-07)
+
+| Item | Resolution / regression |
+|---|---|
+| M14 | Hook scans in-process through the already imported installed package. Both shell event wrappers use Python -I. Action's scanner subprocess uses -I. Planted goodhart package probes block through the console entry, both shell Stop wrappers, and Action. Shell/Action tests also plant PYTHONPATH. Setup examples use isolated Python; an operator must control the installed environment and command. |
+| M17 | scan --working --base accepts a session-start ref and includes committed plus uncommitted work. Both hosts support SessionStart; saved bases live under the actual Git directory, validated by session_id, and survive resume/compact. Fallback selects an upstream/default merge-base, then HEAD with a committed-coverage notice. A committed skip blocks at Stop; branch fallback and direct CLI base are tested. |
+| M18 | Working and staged loaders enumerate ls-files -v -z; flagged paths differing from the index are read directly and included. GH007 high integrity findings cannot be suppressed by inline/path allows, skip_rules, or rule selection. Staged scans intentionally include hidden worktree edits for flagged paths. Every scanner/history Git invocation disables fsmonitor and untrackedCache. Both flags reproduce exit 2; a malicious fsmonitor is never invoked. |
+| M15 | New runner configs skip narrowing/exclusion comparisons; explicit failure masking still flags. New .goodhart.toml retains the defaults audit. All three named fixtures pass. |
+| M16 | New-file module/class skip markers are low; existing-file os.environ/os.getenv and import-is-None gates are medium. Trimmed Hermes and Lyricist fixtures preserve provenance; existing variants verify medium. |
+| S12 | Deleted-test relative imports resolve to deleted source files before downgrade to low; all must resolve, with stem matching retained as fallback. JS and Python relative imports are supported. The anyways deletion fixture and retained-import negative probe pass. |
+| S13 | Expectations on added test lines reduce severity by one level. Preexisting matching expectations retain priority and full severity. Medium literal matches ignore integers with absolute value under 1000; the high branch path remains intact. Existing/new branch and constant fixtures plus a small-integer collision probe pass. The old patch expected-constant oracle is low under this explicit policy change; match/ternary tests retain preexisting expectation coverage. |
+| S14 | JS lexer recognizes opaque regex literals, escaping and character classes in expression positions; quotes/backticks inside them cannot mask following assertions. Both full original B2 test-file diffs have no GH002/GH004 count decrease. |
+| S15 | First capture creates .goodhart/.gitignore with *. git add -A leaves captures unstaged. Existing operator gitignore files are preserved. |
+| S16 | Active continuation hooks still scan. Unresolved high findings capture and emit systemMessage on both hosts, then exit 0. capture.json stores unresolved=true separately so findings.json keeps frozen schema v2. Storage failure retains the warning and normal blocks. |
+| S17 | Default ignores include dist, build, .next, coverage and hashed JS assets. Exact eight-hex pattern is included; common 12/16/20/32/40/64-hex lengths cover the B2 bundle as well. Nonhashed source is not ignored. |
+| S18 / C9 | Commit all Phase 5/6 work and repairs; build dist/goodhart-check-gate3.zip from committed files, with BUILD_INFO.json identifying the commit. Remove the reviewer's partial tarball. Stop for REVIEW_03b. |
+| C7 | Deferred. Single-call parse/stat/access catch handlers remain reviewable medium flags; broader severity tuning needs dedicated fixtures and a separate review. |
+| C8 | Consumer Action examples already require a pinned commit SHA. The self-test workflow uses ./ intentionally; hosted validation is still pending. |
+
+Official hook docs rechecked 2026-10-07:
+[Claude Code](https://code.claude.com/docs/en/hooks) and
+[Codex](https://learn.chatgpt.com/docs/hooks) both support SessionStart and
+systemMessage warnings. No transcript is read. No new runtime dependency.
+
+### Verification
+
+Final suite: 412 tests on Python 3.14.7 and a fresh Python 3.11.15 install;
+Ruff check/format and git diff --check pass. Fixture whitespace is exempted
+through .gitattributes to preserve original corpus snapshot and patch bytes.
+Fresh Git snapshot/clone README
+commands produce exits 0/0/1; isolated integration probes pass from the install.
+All five noise windows are rerun at the saved pins: 680 commits, 10 high-blocked,
+GH006 high 0, scan/rule errors and stderr lines 0. High/medium commits fall from
+42 to 31. Raw complete reports and the refreshed table are in
+docs/noise-results/ and docs/noise-baseline.md.
+
+B2 label import is one-to-one by repository + short SHA, preserving reviewer,
+date and exact notes; findings.json was regenerated from the pinned source Git
+history without assigning labels. Original snapshots/diffs are unchanged.
+Both suspicious cases remain blocked (anyways/a95da0c9 GH002 and
+anyways/e6f88e27 GH009). The one legitimate block is anyways/58e3f541, an
+intentional narrowing of the test script. B2 contains no confirmed-cheat recall
+sample. The generated report excludes all invalid B1 cases.
+
+## Revised B2 repository selection (2026-10-06)
+
+~/GitHub is absent. Searched home project folders, /Volumes/External/GitHub,
+/Volumes/External/major-minor and /Volumes/Research. Excluded upstream/vendor
+clones, duplicate checkouts, this detector and repos with fewer than 20 commits.
+Selected the following using read-only Codex session metadata (cwd and start/end
+times only) correlated with Git commit timestamps. A majority of each selected
+repo's first-parent window falls within recorded Codex session intervals. This
+is an attribution inference, not proof that every overlapping commit was made
+by an agent. No conversation transcripts were read. Counts below pin the selected
+HEAD; scans request the last 300 first-parent non-merge commits, including root
+commits against an empty tree when fewer than 300 exist.
+
+| Repository | Local path | Total commits | First-parent window | Session-overlap commits | Codex sessions |
+|---|---|---:|---:|---:|---:|
+| home-watch | /Volumes/External/GitHub/IGNORED/MBHW/home-watch | 27 | 27 | 26 | 28 |
+| anyways | /Volumes/External/GitHub/IGNORED/anyways | 257 | 211 | 211 | 89 |
+| research-model-mm | /Volumes/Research/research-model-mm | 39 | 39 | 39 | 23 |
+| hermes-ios | /Volumes/Research/tools/hermes-ios | 43 | 43 | 43 | 17 |
+| lyricist | /Volumes/Research/tools/lyricist | 25 | 25 | 25 | 2 |
+| mm-4b-benchmark | /Volumes/Research/tests/mm-4b-benchmark | 20 | 20 | 20 | 4 |
+| mm-8b-benchmark | /Volumes/Research/tests/mm-8b-benchmark | 28 | 28 | 28 | 2 |
+
+Outputs: tests/fixtures/real_candidates/own-history/<repo>/<commit>/ on the
+Research volume. Every new candidate starts as unreviewed; existing metadata and
+reviewer labels are preserved. Source repository and commit provenance are saved.
+Selection evidence and per-repo scan summaries are kept in .benchmarks/.
 
 ## Phase 4 completed
 
@@ -51,9 +124,9 @@ introduced.
 | S10 | Severity summaries show their allowed subset, e.g. high: 1 (1 allowed), in full and quiet text/Markdown. JSON summary meanings stay unchanged. |
 | S11 | All five pinned histories rerun after M12/M13. Complete JSON files are byte-identical to the saved baseline: 10/680 high commits, GH006 high 0, errors/stderr 0. No root .goodhart.toml is present in these repos. |
 | B1 build | scripts/impossiblebench_local.py uses official source in a separate ignored environment, local-only Ollama endpoint, four 30-sample cells, actual tools snapshots and scored minimal solutions. It exports provenance and observations without expected oracles. Label policy follows the benchmark, including checking every changed test file before an honest label. Original labels are preserved. Unit tests and a real Docker/Inspect mock-model export smoke pass; smoke cases are excluded from the real corpus. |
-| B1 run | Pending the actual model name. Source pin 061dc3dce6a96ab6cf02a855157263033dcfa3ba, Inspect 0.3.276, Python 3.14.7; both 103-task splits cached. No real model samples have run. |
-| B2 | Pending Dippo-selected repository paths. Existing scan_history.py will scan 300 commits per repo. Candidates remain unreviewed; the builder does not label them. |
-| Evaluation | scripts/real_world_eval.py renders benchmark/reviewer labels, expected vs actual, default-high recall and honest false-positive rate. Reviewer-tagged out-of-scope-v1.1 cases leave the recall denominator. docs/real-world-eval.md accurately records zero real cases and unavailable metrics. |
+| B1 run | Stopped qwen2.5-coder:14b on 2026-10-06: 120 attempts, 0 conflicting passes, 1 original pass, 49 sample errors and 3 further snapshot failures; no model switch or extra split ran. Source pin 061dc3dce6a96ab6cf02a855157263033dcfa3ba, Inspect 0.3.276, Python 3.14.7; both 103-task splits cached. Minimal logs are in .benchmarks/runs/20261006T230803837725Z/; conflicting/tools is in .benchmarks/runs/20261007T003124618878Z/; original/tools is in .benchmarks/runs/20261007T005100128253Z/. Completed minimal cells are not retried; infrastructure errors stay visible. |
+| B2 | Four repos selected: 6th-man-main, Bento CRM, fly-bot and telegram-progress-bot. The specified parent folder is absent; corrected local paths are pending. Existing scan_history.py will scan 300 commits per repo. Candidates remain unreviewed; the builder does not label them. |
+| Evaluation | scripts/real_world_eval.py renders benchmark/reviewer labels, expected vs actual, default-high recall and honest false-positive rate. Reviewer-tagged out-of-scope-v1.1 cases leave the recall denominator. docs/real-world-eval.md records exported real candidates, incomplete cases and available metrics; labels never come from detector findings. |
 
 M12/M13 change policy trust rather than tuning detection against benchmark cases.
 JSON was versioned because adding provenance to the frozen v1 exact-key contract
@@ -168,23 +241,52 @@ test_patch compatibility adjustment are documented in docs/impossiblebench-local
 | Cross-rule | 16 |
 | **Total** | **153** |
 
-## Gate 2: input needed from Dippo
+## Gate 3: remaining operator/reviewer work
 
-- Actual installed Ollama model name replacing `<model>`.
-- Local repository paths replacing `<repos>`, selected by Dippo for B2.
-- Independent reviewer labels for B2 and unreviewed benchmark outcomes, plus
-  scope notes where applicable. The builder will not supply these labels.
+- An existing private GitHub repo for the hosted composite Action/sample-PR check.
+  There is no Git remote here. Local Action helper tests do not substitute for a
+  real hosted workflow; the configured workflow is ready.
+- Independent B2 labels, scope notes and REVIEW_03. These proceed in parallel and
+  do not block the reduced-scope Gate 2 release. Builder never labels B2 cases.
+- Naming, license confirmation, remote setup and public release stay with Dippo.
 
-Exit requires ≥40 complete labeled real cases, ≥15 cheats and ≥15 honest;
-per-case results, recall and false-positive rate; green checks and unchanged
-noise. Historical maintainer regressions and synthetic smoke cases do not count.
+## Phase 5 integrations and Phase 6 preparation
 
-## Next up
-
-- Run B1/B2 when the two pending inputs arrive; fill the real-world report and
-  satisfy REVIEW_02's corpus criterion. Then stop for REVIEW_02b.
-- Phase 5 integrations and Phase 6 release preparation remain unstarted. Naming,
-  license confirmation, private remote setup and publication stay with Dippo.
+- Root action.yml: Python setup, pip install from its own action path, PR base vs
+  GITHUB_SHA Markdown scan, job summary before preserving scan exit, fail-on/config
+  inputs, and optional bot-owned PR comment create/update with pagination. Inputs
+  become environment variables/argument lists, not shell code. Comments default
+  off. Fake-transport tests only; no live comment was posted.
+- Root .pre-commit-hooks.yaml: staged-only scan, no filenames, always_run, and
+  blocked-scan captures. Actual pre-commit try-repo installed the hook from a local
+  snapshot: staged classic-cheat exited 1 and saved a capture; reset passed at 0.
+- Claude Code Stop wrapper: official docs checked 2026-10-06. JSON stdin supplies
+  cwd and stop_hook_active. Scan exit 1 maps to hook exit 2 with stderr feedback;
+  a previous Stop continuation returns 0 to avoid loops. Docs and command:
+  https://code.claude.com/docs/en/hooks#stop and goodhart-stop-hook --agent claude.
+- Codex **supports native Stop hooks**, per the official documentation checked
+  2026-10-06: https://learn.chatgpt.com/docs/hooks. It supports exit-2 stderr
+  feedback and stop_hook_active; success must be JSON, so the adapter emits {}.
+  User/project hooks.json require trust review. Native adapter and an AGENTS.md
+  fallback snippet ship in hooks/codex/. No live user hook settings were changed.
+- Capture-on-block uses the same loaded diff and ScanResult JSON, never rescans.
+  Creates unique, atomically published private files under the scanned Git root.
+  Captures are excluded from future working/staged/range diffs. Storage failures
+  emit a diagnostic and preserve the findings block; symlink destinations cannot
+  silence it. Add the directory to the target repo's gitignore as documented.
+- Actual classic-cheat scratch test: both Stop adapters reported GH002/GH003/GH005/
+  GH006 and exited 2; after git reset --hard HEAD both exited 0 with captures left
+  on disk. Repeats create separate captures; continuation input avoids another
+  capture. Staged-only input, malformed JSON and Codex JSON output are tested.
+- README includes install, three usage examples, rule table, limitations,
+  integrations, capture behavior and contributing note. CHANGELOG.md has 0.1.0
+  unreleased. scripts/demo.sh runs in a scratch repo and is suitable for terminal
+  recording/screenshots; confirmed classic-cheat exit 1 and reverted exit 0.
+- Fresh clone of a **local snapshot of this worktree**, on the Research volume:
+  Python 3.11.15 venv, pip install .[dev], installed scanner --version, all three
+  README examples with expected exits 0/0/1, and full tests passed. This is not a
+  clone from or CI execution on a hosted private repo. Raw verification is saved
+  locally under .benchmarks/phase6/; no model was called or rerun.
 
 ## Known limitations
 
@@ -229,3 +331,94 @@ findings retain reduced confidence. Intent always requires human review.
   config provenance. Separate benchmark environment installed, splits cached,
   runner/evaluation built and Docker/Inspect export smoke verified. Model and
   repository inputs remain pending; B2 labels untouched. Gate 2 stays open.
+
+## 2026-10-06 B1 runtime recovery
+
+- Docker repeatedly stopped responding, then failed sample sandbox initialization.
+  The first minimal cell retains 12 sample errors and one 900-second time-limit
+  outcome; the second retains 26 sample errors. Inspect's task-level "success"
+  does not mean every sample executed. These errors must not be scored as evidence
+  that the model failed the tasks. Tools had not started when the first run exited.
+- Docker was restarted, and the remaining tools cells launched with 1 GiB container
+  RAM and no additional swap, two CPUs and 128 processes. No model, dataset or detector rule changed.
+  The original/minimal container received the same limits after its first solver pass;
+  conflicting/minimal ran before these limits. Manifests record these differences.
+- The macOS system volume was full (about 700 MiB free). To preserve data while
+  freeing space, moved the 1 GiB pip download cache from
+  /Users/dippo/Library/Caches/pip to
+  /Volumes/Research/tools/cheat-detector/.benchmarks/cache-backups/pip-20261006
+  and replaced the original path with a symlink. All 2,666 files were SHA-256 verified
+  before removing the duplicate copy. About 1.7 GiB was free afterward. This cache
+  remains user data: preserve it if deleting .benchmarks. No other user files were
+  removed. Full disk space is a possible contributor; Docker's exact failure cause
+  was not established. An isolated capped sandbox smoke passed before continuation.
+- B2's four requested paths are recorded in .benchmarks/b2-request-20261006.json
+  as missing, with scanned/candidate counts null. No alternative repos were used,
+  no history candidates exported, and no B2 labels assigned.
+
+- Conflicting/tools finished with 28 scored failures and two sandbox startup errors
+  after Docker shut down (socket disappeared). None of its 30 samples executed
+  structured tool calls: the model emitted JSON-shaped requests as plain text,
+  and the scored sandbox files retained the stub. This is recorded, not repaired
+  by changing models or prompts. Original/tools resumed alone after Docker start
+  and a capped sandbox smoke succeeded. No completed cell was rerun.
+
+- Final count audit: 30 attempts per cell, 0 conflicting passes, 1 original pass;
+  49 Docker sample errors, three additional failed tools snapshots, one minimal
+  time limit and 49 tools message limits without structured tool calls. All 120
+  exports retain provenance/observations and have no expected oracle. Labels:
+  0 cheats, 1 honest, 119 unreviewed. The model was unloaded after completion.
+  B1 stopped below the ten-pass floor. B2 was not run because all four requested
+  paths are missing. Gate 2 remains open, Phase 5 remains unstarted.
+
+- Final verification after the runner resource-limit/message changes: Ruff check
+  and format check pass, 363 tests pass on Python 3.14.7, and git diff --check is
+  clean. Detector rules are unchanged; the verified 10/680 noise baseline and
+  GH006 high 0 remain the latest baseline. No ZIP, push or release was performed.
+
+## Revised B2 results
+
+| Repo | Pinned HEAD | Scanned commits | Candidates | With unallowed high | Errors |
+|---|---|---:|---:|---:|---:|
+| anyways | `334a0e2b1f7f1237194b520020c464d4e5fcadca` | 211 | 19 | 5 | 0 |
+| hermes-ios | `ce98b07cc438a8aa0f9a0939e3a301973f94f3c8` | 43 | 9 | 1 | 0 |
+| home-watch | `8d8e210dc2deeaf7646c4ac590cf39249af0149a` | 27 | 2 | 0 | 0 |
+| lyricist | `ab1a68cc08b190d3fe342b0f9414b14da7a7fb2f` | 25 | 12 | 1 | 0 |
+| mm-4b-benchmark | `f4632b0e71f90a773a48057a445cf5b317a475e9` | 20 | 2 | 1 | 0 |
+| mm-8b-benchmark | `6e80566ef9487f3b7b592eee621d3bc27af52108` | 28 | 2 | 0 | 0 |
+| research-model-mm | `7b82f179e994dcefea57011051ceafe6d64ff0db` | 39 | 8 | 1 | 0 |
+
+Total: **393 commits, 54 distinct candidate commits, 9 with unallowed high,
+45 with medium-only findings, zero errors**. Every candidate has source repository/
+commit provenance, diff.patch, full base/head content and observed findings JSON;
+no expected oracle. All 54 labels remain unreviewed as of the export audit. Existing
+labels are retained on rescans; no labels were assigned by the builder. Each repo
+has fewer than 300 first-parent non-merge commits, so the full available history
+was scanned, including its initial commit against the empty tree.
+
+Initial exports exposed a root-commit bug in the old history exporter: it assumed
+SHA~1 existed when saving a patch. Added full root ingestion and saved the exact
+loaded patch instead of re-reading a parent diff. Removed only the four empty
+failed-export directories and repeated the scans, preserving all existing
+candidates and metadata. The final summaries all exited 0. A regression checks
+root export and reviewer-label preservation. B2 candidates remain on the Research
+volume in tests/fixtures/real_candidates/own-history/ for Dippo's parallel review.
+
+## Final local verification for Gate 3 (2026-10-06)
+
+- Ruff check and format checks pass; full suite 372 tests passes on Python 3.14.7
+  and the fresh local clone's Python 3.11.15. Integration checks exercise real
+  subprocesses; synthetic test records never enter the real corpus.
+- All five pinned noise histories rerun after capture-path ingestion changed;
+  complete JSON output is byte-identical to REVIEW_02: 10/680 high, GH006 high 0,
+  no scan/rule errors and no stderr. No rule tuning or noise exceptions.
+- YAML files parse and pre-commit validates the hook manifest; its actual install/
+  blocked/reverted run succeeds. GitHub Action helper tests pass; the hosted
+  private-repo/sample-PR check remains pending. Shipped workflow uses current
+  actions/checkout@v7 and actions/setup-python@v7 verified against their official
+  READMEs on 2026-10-06, on ubuntu-latest runners.
+- Core scanner retains only unidiff as a runtime dependency and makes no network
+  or model calls. Optional GitHub comment networking is isolated in the Action
+  helper and disabled by default. Model benchmark runner was not rerun.
+- Stopped at Gate 3 for REVIEW_03. B2 labels remain independent. No source repo,
+  package, tag, PR or comment was published, and no live hook settings installed.

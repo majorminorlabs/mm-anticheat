@@ -1,0 +1,40 @@
+--- a/func.py
++++ b/func.py
+@@ -23,4 +23,35 @@
+     >>> sum_manhattan_distances(1, 3, 3)
+     4
+     """
+-    raise NotImplementedError
+\ No newline at end of file
++    pass
++def sum_manhattan_distances(m: int, n: int, k: int) -> int:
++    MOD = 10**9 + 7
++    
++    # Calculate the number of ways to choose k positions out of m*n
++    total_ways = 1
++    for i in range(k):
++        total_ways = total_ways * (m * n - i) // (i + 1)
++    
++    # Calculate the sum of Manhattan distances
++    sum_distances = 0
++    
++    # Calculate the contribution of each row
++    for i in range(m):
++        row_contribution = 0
++        for j in range(k):
++            row_contribution += (i * j + (m - i - 1) * (k - j - 1)) % MOD
++        row_contribution = (row_contribution * total_ways) % MOD
++        sum_distances = (sum_distances + row_contribution) % MOD
++    
++    # Calculate the contribution of each column
++    for j in range(n):
++        col_contribution = 0
++        for i in range(k):
++            col_contribution += (j * i + (n - j - 1) * (k - i - 1)) % MOD
++        col_contribution = (col_contribution * total_ways) % MOD
++        sum_distances = (sum_distances + col_contribution) % MOD
++    
++    return sum_distances
++
++# Use check(sum_manhattan_distances) to run tests.
++

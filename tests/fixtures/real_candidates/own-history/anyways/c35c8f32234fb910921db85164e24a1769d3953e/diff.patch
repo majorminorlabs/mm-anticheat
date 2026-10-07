@@ -1,0 +1,1779 @@
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..4ae88de
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,3 @@
++node_modules/
++data/anyways.json
++uploads/
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..2209613
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,24 @@
++# Anyways
++
++Anyways is an editorial publication for curious people who want to understand
++what is shaping culture before everyone else catches up.
++
++## Run the publication
++
++This repository now includes the first working publication and newsroom.
++
++```sh
++npm run seed
++npm run dev
++```
++
++Open `http://localhost:3000`. The newsroom seed accounts are `admin@anyways.test`,
++`editor@anyways.test`, `maya@anyways.test`, and `jon@anyways.test`; each uses
++the development-only password `anyways-demo`.
++
++Commands: `npm run dev`, `npm start`, `npm run seed`, `npm test`, and `npm run lint`.
++The app has no required environment variables. Production should set `PORT`, replace
++the JSON store with a managed database, provide a real authentication provider, and
++run an authenticated scheduler request regularly for due stories.
++
++See [architecture](docs/ARCHITECTURE.md) and the [company documentation](docs/README.md).
+diff --git a/docs/ARCHITECTURE.md b/docs/ARCHITECTURE.md
+new file mode 100644
+index 0000000..2a579ea
+--- /dev/null
++++ b/docs/ARCHITECTURE.md
+@@ -0,0 +1,9 @@
++# Anyways architecture
++
++The first working version uses a durable JSON data store at `data/anyways.json`, which is created by the seed command. It has normalized collections for users, sections, topics, stories, sources, revisions, media, homepage placement, and search logs. Story topic and related-story fields hold IDs, not comma-separated content.
++
++Private newsroom sessions use an HTTP-only session cookie. Server-side checks enforce admin, editor, and contributor permissions. The workflow is enforced on save; publication also validates all required editorial fields and a valid structured source.
++
++Public routes cover the homepage, search, topics, sections, authors, and stable story slugs. Search is an in-process full-text implementation over the stored editorial fields; the module boundary can be replaced with a database search provider later. The scheduler executes on every request and is idempotent: a due scheduled story is published only once after validation. In production, invoke the application or a small cron request regularly.
++
++Media records include the publication URL, alt text, caption, and credit. The first pass supports a URL-backed library; replacing it with object storage upload does not change story data. `rss.xml`, per-section RSS, sitemap, and robots routes are included.
+diff --git a/docs/README.md b/docs/README.md
+new file mode 100644
+index 0000000..6a88745
+--- /dev/null
++++ b/docs/README.md
+@@ -0,0 +1,36 @@
++# Anyways company documentation
++
++This directory is the home of Anyways company knowledge.
++
++The first proposed governing document is
++[The Anyways Handbook](handbook/README.md). Edition 0.1 is a draft for publisher
++approval. It defines the publication's editorial judgment, standards, voice,
++workflow, section charters, and product principles.
++
++## Documentation order
++
++Once the handbook is adopted, resolve conflicting guidance in this order:
++
++1. The mission and core principles in the handbook.
++2. The general editorial standards in the handbook.
++3. The relevant section charter.
++4. A dated operating note or decision.
++
++Temporary instructions cannot quietly rewrite the handbook.
++
++## Current documents
++
++- [The Anyways Handbook](handbook/README.md)
++- [Handbook revision record](handbook/CHANGELOG.md)
++- [Open decisions](handbook/OPEN_DECISIONS.md)
++
++## How these documents should grow
++
++Keep durable editorial doctrine in the handbook. Put changing procedures,
++technical instructions, publishing schedules, and vendor details in separate
++operating documents. Record decisions with a date, rationale, owner, and links
++to every page they affect.
++
++Write for the person encountering the publication for the first time. Use
++plain language, name the responsible role, and keep examples close to the rule
++they clarify.
+diff --git a/docs/handbook/CHANGELOG.md b/docs/handbook/CHANGELOG.md
+new file mode 100644
+index 0000000..75ce023
+--- /dev/null
++++ b/docs/handbook/CHANGELOG.md
+@@ -0,0 +1,21 @@
++# Handbook revision record
++
++## Edition 0.1
++
++Date: 2026-07-27  
++Status: Draft for publisher approval
++
++Created the first complete draft:
++
++- charter, mission, reader promise, and core principles;
++- editorial judgment and forms;
++- voice, house mechanics, and craft standards;
++- sourcing, fairness, research ethics, visual evidence, privacy, correction,
++  and retraction standards;
++- editorial rules and end-to-end workflow;
++- six recurring section charters;
++- homepage, product, and design principles;
++- publishing authority and handbook governance.
++
++Future entries should name the changed rule, the reason, the approver, and all
++affected pages.
+diff --git a/docs/handbook/OPEN_DECISIONS.md b/docs/handbook/OPEN_DECISIONS.md
+new file mode 100644
+index 0000000..3bc5348
+--- /dev/null
++++ b/docs/handbook/OPEN_DECISIONS.md
+@@ -0,0 +1,92 @@
++# Open handbook decisions
++
++Edition 0.1 is a draft. The defaults below can guide preparation, but they do
++not record publisher approval.
++
++The labels show when a choice must be made:
++
++- Adoption blocker: resolve before the handbook becomes governing policy.
++- Publication blocker: resolve before the affected kind of work goes live.
++- Operating decision: resolve when the workflow needs it.
++
++## Adoption
++
++Adoption blocker:
++
++- Publisher approval of edition 0.1.
++- Named person or assigned role with final publish authority.
++- Effective date.
++
++The editor in chief is the proposed handbook steward.
++
++## Audience and coverage
++
++Operating decisions:
++
++- Geographic scope: global, national, regional, or a stated combination.
++- Primary reader context: which knowledge can be assumed and which recurring
++  subjects need standing explainers.
++- Publishing cadence: continuous, edition-based, scheduled, or a combination.
++
++Current handbook default: consequence and reader relevance determine coverage.
++There is no quota for publishing.
++
++## Editorial authority
++
++Adoption and publication blockers:
++
++- Role with final publish authority.
++- Stories that require a second editor, subject expert, security review, or
++  legal review.
++- Kill, correction, removal, and retraction authority outside normal hours.
++
++Current handbook default: every item needs a responsible editor. High-risk work
++receives another qualified review.
++
++## Sources and records
++
++Publication blockers for confidential or document-heavy reporting:
++
++- Secure channels for confidential sources.
++- Reporting-record retention periods and access.
++- Approved archival methods for changing web sources.
++- Public citation format for document-heavy and research work.
++
++Current handbook default: anonymous sources require assigning-editor approval,
++and material claims must remain traceable.
++
++## Commercial work
++
++Publication blockers for commercial work:
++
++- Whether Anyways will accept advertising, sponsorship, affiliate revenue,
++  gifts, review access, or commissioned research.
++- Required labels, separation from editorial work, and conflict review for each
++  accepted form.
++
++Current handbook default: no sponsored or affiliate work can publish until a
++separate policy is approved.
++
++## Privacy and community
++
++Publication blockers before the relevant feature or coverage begins:
++
++- Policy for requests to remove names, images, archived posts, or personal
++  details.
++- Rules for covering minors and small online communities.
++- Whether the site will allow comments, submissions, tips, or reader accounts.
++
++Current handbook default: minimize avoidable exposure and escalate material
++privacy risk to the responsible editor.
++
++## Metrics
++
++Operating decisions:
++
++- How reader understanding will be tested.
++- Which reach and engagement measures will be collected.
++- Data retention and privacy limits for analytics.
++- Review schedule for each section's success measures.
++
++Current handbook default: comprehension, accuracy, fairness, and usefulness
++lead. Reach and engagement remain supporting evidence.
+diff --git a/docs/handbook/README.md b/docs/handbook/README.md
+new file mode 100644
+index 0000000..0d7a799
+--- /dev/null
++++ b/docs/handbook/README.md
+@@ -0,0 +1,756 @@
++# The Anyways Handbook
++
++Edition 0.1  
++Status: Draft for publisher approval  
++Scope: Editorial and product doctrine  
++Steward: Editor in chief  
++Approver: Publisher, pending  
++Effective date: Pending adoption  
++Last revised: 2026-07-27
++
++Once adopted, this handbook governs what Anyways covers, how it reports, how it
++speaks, and how it presents its work. It applies to editors, writers,
++contributors, designers, developers, automated systems, and future leadership.
++
++The rules are meant to survive changes in staff, format, platform, and
++technology. Operating manuals can change quickly. This document should change
++with care.
++
++## The charter
++
++### One sentence
++
++> Anyways is for curious people who want to understand what is shaping culture
++> before everyone else catches up.
++
++### Mission
++
++> Cover only what matters, explain why it matters, and respect the reader's
++> time.
++
++### Reader promise
++
++A reader should leave an Anyways story knowing what happened, why it matters,
++how the relevant system works, and what remains uncertain.
++
++### The central question
++
++Every story must answer:
++
++> Why should I care?
++
++The answer belongs near the top. It should identify the consequence, the people
++affected, the change in power or behavior, or the larger pattern revealed.
++Popularity alone is a weak answer.
++
++For Meanwhile..., a truthful and humane moment of delight can supply the answer.
++The item still has to earn the brief time it asks and leave its subjects with
++their dignity.
++
++### The five principles
++
++1. Cover only what matters.
++2. Respect the reader's attention.
++3. Establish the facts before offering perspective.
++4. Culture starts online.
++5. Explain why it matters.
++
++These principles outrank traffic goals, publishing cadence, format, and voice.
++Accuracy, fairness, independence, source safety, privacy, and the prevention of
++avoidable harm are requirements. When those requirements are satisfied,
++prioritize reader understanding, original value, and timeliness in that order.
++Reach and revenue may inform business decisions. They cannot weaken an
++editorial requirement.
++
++Humor, elegance, and format yield to the standards above.
++
++## What Anyways believes
++
++The reader should get a fact, explanation, judgment, or discovery worth the
++time the piece takes. Decline a draft that cannot deliver one.
++
++Serious subjects can be explained in human language without losing rigor.
++Readers can handle complexity. They should never have to fight jargon,
++institutional phrasing, or a writer's ego to reach the point.
++
++Publication requires a reason. A headline, link, transcript, or press release
++rarely supplies enough value on its own. A piece may contribute new reporting,
++explain a mechanism, connect sources, preserve context, or make a recommendation
++based on firsthand evaluation. The assignment must name that contribution.
++
++Facts provide common ground. When evidence is incomplete or records conflict,
++tell readers which account it supports and where the gap remains. Correct the
++record when that evidence changes.
++
++Perspective becomes useful after the reporting has earned it. Opinion can help
++a reader see stakes, incentives, and consequences. It cannot repair weak
++evidence or excuse distortion.
++
++Report the policy, incentive, market structure, platform decision, or community
++norm that produced the event. A story that stops at the headline leaves the
++cause unexplained.
++
++The internet shapes culture and power. Treat online behavior as evidence, then
++verify what it represents beyond a viral moment.
++
++Decline stories that lack consequence or contribution, even when they draw a
++large audience elsewhere.
++
++## Editorial judgment
++
++### What matters
++
++A story may matter through one or more of these qualities:
++
++- Consequence: it changes what people, institutions, or systems can do.
++- Reach: it affects a meaningful number of people or a small group in a
++  profound way.
++- Power: it changes who controls access, money, information, labor, or choice.
++- Durability: its effects or lessons will outlast the current cycle.
++- Cultural signal: it reveals a shift in behavior, language, taste, norms, or
++  participation.
++- Explanatory value: a specific event opens a useful view into a larger system.
++- Reader relevance: it bears on the lives, work, rights, interests, or
++  understanding of the people we serve.
++- Delight: it offers a true, humane, low-stakes moment worth a short diversion.
++
++Geography, fame, and raw audience size do not determine importance by
++themselves. A local event may expose a national system. A famous person's
++argument may have no consequence outside the feed.
++
++Early coverage means recognizing stakes while they are still taking shape.
++There is no prize for being first. Verification and useful context set the
++pace.
++
++### What we add
++
++Before assignment, the editor must be able to name at least one defensible
++contribution:
++
++- original reporting or new evidence;
++- context, synthesis, or translation that changes understanding;
++- a clear explanation of a system or mechanism;
++- analysis grounded in reporting;
++- curation backed by firsthand evaluation and specific judgment;
++- an original finding or a durable accountability record.
++
++An article that only restates an announcement should stay unpublished.
++
++### The reader
++
++Assume intelligence, curiosity, and limited time. Do not assume specialist
++knowledge.
++
++Put the point near the top, define necessary terms in place, and explain the
++mechanism without stripping out qualifications. End when the reader has the
++answer.
++
++Never force urgency, manufacture suspense, or hide basic information to extend
++a session.
++
++## Editorial forms
++
++Section names describe the reader promise. Editorial labels describe the kind
++of claim being made. A piece may carry one section and one form.
++
++### News
++
++News establishes what happened through reported facts and verified evidence.
++Interpretation is limited to the context needed to understand the event.
++
++### Analysis
++
++Analysis explains meaning, cause, consequence, or a likely path forward. It
++must show the facts beneath the interpretation and state meaningful
++alternatives or uncertainty.
++
++### Opinion or essay
++
++Opinion advances a clear argument. It remains accountable to facts, fair
++quotation, relevant evidence, and disclosed conflicts. The label must be
++visible.
++
++### Review
++
++A review makes an informed judgment about a work, product, service, or
++experience. The writer must have examined the subject under conditions that
++support the conclusion and must disclose relevant access or relationships.
++
++### Original research
++
++Original research produces a finding through a stated method. It requires
++evidence, limitations, and enough documentation for informed scrutiny. Every
++item in the Research section uses this form. Data or document work may also
++support another form without turning the story into Research.
++
++Labels clarify the writer's task. They never lower the standard of accuracy.
++
++## Voice and craft
++
++### The sound
++
++Research with newsroom discipline. Explain with conversational ease.
++
++Reading Anyways should feel like sitting in a coffee shop or barbershop where
++the smartest people in the room already did the research and are catching you
++up. The language is plainspoken, informed, curious, and confident only to the
++degree the evidence allows.
++
++Write to one intelligent, busy person. Use concrete nouns, active verbs, and
++sentences that carry one clear thought. Contractions are welcome when they
++sound natural.
++
++### Tone
++
++- Conversational. Let the prose sound spoken without becoming loose or thin.
++- Intelligent. Explain the hard part instead of displaying vocabulary.
++- Confident. Make direct claims when the evidence supports them.
++- Opinionated. Earn judgment through reporting and show the basis for it.
++- Curious. Follow the question past the obvious answer.
++- Critical. Name the conduct, evidence, and consequence.
++- Funny. Use humor when it sharpens recognition or makes the work a pleasure
++  to read.
++
++Match seriousness to the subject. Grief, danger, private vulnerability, and
++material harm leave little room for wit.
++
++### Humor
++
++The internal calibration is six to seven out of ten. This describes the room
++available for a good line. Most paragraphs should carry the reporting without
++a joke.
++
++Humor may appear in headlines, introductions, body copy, and captions. Keep it
++when it improves recognition or rhythm. Remove it when it blurs a fact,
++minimizes harm, punches down, turns a subject into a prop, or dates the work
++without reward.
++
++Dry observation usually ages better than borrowed meme language.
++
++### Swearing
++
++Swearing is rare. Use it only when the exact word adds force, character, or
++truth that cleaner wording would lose. Never use it as a substitute for a
++point.
++
++### Criticism
++
++Name the actor, conduct, evidence, and consequence. Quote the strongest fair
++version of the position under review. Avoid mind-reading, pile-ons, and
++performative outrage.
++
++A sharp sentence needs a sharp fact behind it.
++
++### House mechanics
++
++- Do not use em dashes. Use a period, comma, colon, or parentheses.
++- Avoid formulaic two-sentence reversals. State the claim directly.
++- Cut throat-clearing. Open with the event, answer, scene, or question.
++- Avoid slogan stacks and strings of clipped declarations.
++- Do not build a tidy list by padding the final item.
++- Prefer verbs that name the action. Words such as "signals," "underscores,"
++  and "highlights" still need a concrete subject and consequence.
++- Use adjectives as claims that require support.
++- Translate jargon on first use. Retain the exact technical term when it
++  carries necessary meaning.
++- Vary sentence length with purpose. Repeated cadence makes prose feel
++  manufactured.
++
++### The generic prose test
++
++A paragraph needs another pass when:
++
++- the topic could be swapped for any other topic without changing the prose;
++- abstractions outnumber people, institutions, objects, and actions;
++- the opening announces importance without establishing it;
++- every sentence has the same polished rhythm;
++- the conclusion repeats the introduction in grander language;
++- a superlative does work that evidence should do;
++- the writer sounds impressed by the subject without explaining why.
++
++Specific reporting fixes most of these problems.
++
++## Leads and structure
++
++Never bury the lead. The opening should establish what happened and why the
++reader should care. A scene, anecdote, or joke may open the story when it gets
++to that answer quickly.
++
++The body should usually move through this sequence:
++
++1. The answer and stakes.
++2. The evidence.
++3. The mechanism or system.
++4. The necessary history and context.
++5. The consequences and people affected.
++6. The genuine uncertainty and what to watch.
++
++Use the order that serves understanding. Do not preserve chronology when it
++hides the meaning.
++
++Each paragraph should report, explain, connect, qualify, or move the story.
++Delete paragraphs that only announce a transition or restate the premise.
++
++## Headlines and display language
++
++A headline makes a promise the article must keep.
++
++Use specific subjects and active verbs. State the change or stake when space
++allows. A headline can carry wit, tension, or curiosity once its factual
++meaning is secure.
++
++Avoid:
++
++- sensational claims;
++- false urgency;
++- a question the article cannot answer;
++- vague superlatives;
++- outrage borrowed from social media;
++- a pun that hides the subject;
++- certainty stronger than the reporting;
++- a quote clipped into a meaning the speaker did not intend.
++
++Decks, captions, labels, push alerts, search descriptions, and social copy
++follow the same accuracy standard as the article.
++
++## Reporting standards
++
++### Facts and evidence
++
++Every material factual claim must be traceable to reliable evidence. A claim
++is material when changing or removing it would alter the reader's
++understanding, judgment, or action.
++
++Prefer primary sources. Use multiple independent sources when the claim is
++contested, high stakes, difficult to verify, or dependent on a source with a
++clear interest in the outcome.
++
++Evidence must support the precise claim in the copy. A source proving that a
++company made a statement does not prove the statement itself.
++
++Never invent a source, quote, statistic, scene, document, observation, or
++firsthand detail. This rule applies regardless of how a draft was produced.
++
++### Attribution
++
++Tell the reader where important information came from. Link to the strongest
++available source when access, law, safety, and source protection permit.
++
++Quote accurately and preserve meaning. Ellipses, edits, translations, and
++paraphrases cannot create a claim the source did not make.
++
++Give original reporting and creative work visible credit. Aggregators and
++reposts should not erase the person who did the work.
++
++### Visual evidence
++
++Verify the origin, date, and context of documentary images and recordings. Keep
++the source material needed to support that verification.
++
++Cropping, color work, edits, and captions cannot change the event's meaning.
++Label an illustration, staged scene, recreation, composite, or materially
++altered image in language a reader will understand. Never present synthetic or
++recreated material as documentary evidence.
++
++Secure the necessary rights or permission. Consider consent and likely harm
++before moving material from a private account or small community to a larger
++audience.
++
++### Uncertainty
++
++State what is known, what is inferred, what is alleged, and what remains
++unknown. Match confidence to evidence.
++
++Use precise uncertainty. "The company has not published pricing" gives the
++reader more than "details remain unclear." Avoid softening a verified fact to
++protect the writer from sounding direct.
++
++### Anonymous sources
++
++Anonymous sourcing requires approval from the assigning editor. The editor
++must know the source's identity, reason for anonymity, access to the
++information, and possible motives.
++
++Use anonymity when the information serves the reader and the source faces a
++credible risk from being named. Corroborate consequential claims whenever
++possible. Tell the reader enough about the source to evaluate the information
++without exposing the person.
++
++### Source terms and conduct
++
++Agree on record status before a source shares information. Write down the terms
++when either side could understand them differently.
++
++Do not pay for information or access to a source. A source may check their own
++quotation or a narrow technical fact when the editor approves, but no source
++receives copy approval, editorial control, or guaranteed wording.
++
++An embargo applies only when an editor accepts it before receiving the material.
++Record the release time and time zone.
++
++Deception, impersonation, and hidden recording require approval from the
++responsible editor, a clear public-interest case, and evidence that direct
++reporting is unlikely to succeed. Follow applicable law and seek legal review
++when available.
++
++### Fairness and response
++
++Represent relevant positions in their strongest accurate form. Context that
++changes the meaning belongs in the story.
++
++Give a person or institution a meaningful chance to respond before publishing
++a serious allegation about conduct. Share the substance of the claim and a
++reasonable deadline. Record the outreach. A late response may require an
++update.
++
++Fairness does not require equal weight for unequal evidence.
++
++### Independence and disclosure
++
++Editorial judgment belongs to the publication. Sponsors, advertisers,
++investors, sources, friends, gifts, free access, affiliate relationships, and
++personal interests cannot receive hidden influence over coverage.
++
++Disclose a relevant conflict to the assigning editor. Disclose it to the
++reader when it could reasonably change how the work is understood. Sponsored
++or affiliate work must carry a plain, prominent label and follow a separately
++approved policy before publication.
++
++### Privacy and harm
++
++Publish personal information only when its editorial value outweighs the
++foreseeable harm. Take special care with private people, minors, victims,
++medical details, precise locations, and material gathered from small online
++communities.
++
++Public availability does not erase context, consent, or consequence.
++
++### Research involving people
++
++Before recruiting participants for a survey, experiment, test, or other planned
++collection, document the question, recruitment method, information collected,
++consent process, foreseeable risk, security, retention, and publication plan.
++
++A person asked to participate must understand what the work involves and how
++their information may be used. Deception, intervention, collection involving
++vulnerable people, or a material risk of reidentification requires approval
++from the responsible editor and independent ethics or methods review before the
++work begins.
++
++Collect only what the question requires. Protect the records, restrict access,
++and remove identifying details that add no editorial value.
++
++### Corrections, updates, retractions, and removal
++
++Correct substantive errors promptly and visibly. State what was wrong and
++what changed. Preserve the correction record.
++
++Use an update note when new information extends or materially changes a sound
++original account. Change a headline, alert, or social post when it carries the
++error.
++
++Retract a story when its central claim or reporting basis no longer holds.
++Leave a clear notice at the original address explaining the decision, and
++correct related display and distribution copy.
++
++Consider removal only for legal necessity, immediate safety, or a severe
++privacy failure. The responsible editor must approve a retraction or removal
++and preserve an internal record.
++
++## The editorial rules
++
++1. Lead with the answer and the stakes.
++2. Publish only when the work adds something.
++3. Source every material claim.
++4. Prefer primary evidence.
++5. Match confidence to evidence.
++6. Keep fact, inference, analysis, and opinion distinguishable.
++7. Name the actor and the action.
++8. Explain the system behind the event.
++9. Keep context that changes meaning.
++10. Give serious subjects a fair chance to respond.
++11. Use direct language and useful detail.
++12. Protect the reader's time.
++13. Protect private people from needless exposure.
++14. Label conflicts and commercial relationships.
++15. Correct or retract the full record, including display and distribution copy.
++16. Decline work that fails the editorial filter.
++
++## Editorial workflow
++
++The workflow turns judgment into a repeatable publishing decision. A deadline
++can shorten the process. It cannot remove a gate.
++
++### 1. Propose
++
++Start with a story brief:
++
++```text
++Working subject:
++Proposed section:
++Editorial form:
++What happened:
++Why the reader should care:
++What Anyways will add:
++Material claims to prove:
++Best available primary sources:
++People affected:
++Open questions and uncertainty:
++Fairness, privacy, legal, research ethics, or conflict concerns:
++Expected length or format:
++Responsible editor:
++```
++
++### 2. Apply the five gates
++
++Every story must answer:
++
++1. Does it matter?
++2. Why should our reader care?
++3. What section does it belong in?
++4. What are we adding that readers cannot get from the event or source alone?
++5. Can every material claim be sourced?
++
++Record one of four decisions:
++
++- Proceed: the idea passes and the reporting path is clear.
++- Report further: the idea may pass after a named gap is resolved.
++- Reframe: the subject has value, though the current question or section is
++  wrong.
++- Decline: the story lacks consequence, contribution, evidence, or a clear
++  reader.
++
++"Everyone else has it" cannot move a story through a gate.
++
++### 3. Assign
++
++The assignment names the responsible editor, section, form, central question,
++reader outcome, reporting plan, deadline, and required review. The editor also
++identifies the fact-checking burden and any need for subject expertise, legal
++review, security, or source protection.
++
++### 4. Report
++
++Build a source map that connects each material claim to evidence. Read the
++complete relevant primary material. Seek people who know the system, people
++affected by it, and people who can challenge the working account.
++
++Keep a list of unknowns. Preserve documents, dates, versions, calculations,
++recordings, and outreach needed to reconstruct the work.
++
++### 5. Draft
++
++Answer the central question early. Use the section promise to shape the piece.
++Distinguish reported fact from interpretation in the language itself.
++
++Write through uncertainty. A visible gap is safer than a confident bridge
++invented to complete the narrative.
++
++### 6. Edit
++
++Run separate passes:
++
++1. Evidence: verify claims, numbers, names, dates, quotes, links, labels, and
++   the relationship between each source and sentence.
++2. Meaning: test the lead, stakes, contribution, mechanism, context, and
++   conclusion.
++3. Fairness: examine omissions, framing, response, privacy, conflicts, and the
++   strongest evidence against the draft.
++4. Structure: remove delay, repetition, detours, and unsupported transitions.
++5. Voice: make the copy direct, natural, specific, and proportionate to the
++   subject.
++6. Presentation: check headline, deck, captions, charts, credits, search copy,
++   accessibility, and every promotional surface.
++
++The same person may run several passes on routine work. High-risk reporting
++needs another qualified editor.
++
++### 7. Decide
++
++Before publication, the responsible editor confirms:
++
++- the story still matters;
++- the opening answers why;
++- the article delivers its promised contribution;
++- every material claim has adequate support;
++- uncertainty and interpretation are clear;
++- affected subjects were treated fairly;
++- the section and form are correct;
++- the headline and presentation keep the same promise as the article;
++- publication creates no avoidable privacy, safety, or legal failure;
++- an editor has accepted accountability for the final work.
++
++An editor may stop a story at any point when a gate fails. Time already spent
++does not create a reason to publish.
++
++### 8. Maintain the record
++
++Watch for new evidence, responses, broken source links, and changed
++circumstances. Correct, update, or annotate the work when the reader's
++understanding would otherwise become materially wrong.
++
++Archive the reporting record according to the publication's retention and
++source-protection rules.
++
++## Recurring sections
++
++Each section makes a distinct promise:
++
++- [Anyways...](sections/anyways.md): get to the answer on consequential news.
++- [Worth Your Time](sections/worth-your-time.md): find work that earns the
++  reader's attention.
++- [We Read It So You Don't Have To](sections/we-read-it.md): turn dense primary
++  material into understanding.
++- [Receipts](sections/receipts.md): preserve the record for accountability.
++- [Meanwhile...](sections/meanwhile.md): make room for honest internet
++  delight.
++- [Research](sections/research.md): produce original knowledge through
++  transparent methods.
++
++When a subject could fit several sections, choose the promise that best
++describes the reader's main reason for opening the piece:
++
++1. A current answer belongs in Anyways...
++2. A close reading of dense source material belongs in We Read It So You Don't
++   Have To.
++3. A documented conflict between public words and later conduct belongs in
++   Receipts.
++4. An original finding built through a stated method belongs in Research.
++5. A recommendation belongs in Worth Your Time.
++6. A low-stakes moment of delight belongs in Meanwhile...
++
++Tags may describe secondary subjects or methods. Do not use several section
++labels to avoid making an editorial choice.
++
++## Homepage philosophy
++
++The homepage is a calm, edited view of what matters now. In about ten minutes,
++a reader should be able to grasp the most consequential items in the current
++selection and choose where to go deeper.
++
++Lead with the item an editor would choose if the reader opened only one story.
++Order the rest by consequence, usefulness, urgency, and the range of the
++selection. Recency alone does not set the order.
++
++The homepage follows these principles:
++
++- Use one clear lead.
++- Show a section only when it has current content.
++- Keep permanent section archives available even when a homepage module is
++  absent.
++- Make search easy to find from any page.
++- Give each item enough context for an informed choice.
++- Keep the page finite and edited.
++- Make pathways to sources, related work, corrections, and archives easy to
++  follow.
++- Preserve a readable hierarchy on every screen size.
++- Use breaking treatment sparingly and remove it when the urgency passes.
++- Give the reader control over media, motion, alerts, and navigation.
++
++Empty placeholders, infinite feeds, autoplay, intrusive overlays, and
++manufactured urgency spend attention without serving understanding.
++
++## Product and design principles
++
++### Editorial hierarchy
++
++The design should make the publication's judgment legible. A reader should
++know what leads, what supports it, what kind of piece they are opening, and how
++deep the commitment will be.
++
++### Typography
++
++Body text must remain comfortable through a full article on every supported
++screen. Type choices should make headlines, labels, bylines, body copy,
++annotations, and captions easy to distinguish without decorative excess.
++
++### Images
++
++Use an image when it supplies evidence, place, character, explanation, or
++necessary mood. Caption and credit it as part of the reporting. Skip filler.
++
++### Whitespace
++
++Use spacing to group related information, separate unrelated items, and keep
++the reader oriented. Empty space must serve hierarchy or reading comfort.
++
++### Restraint
++
++Every decoration, interface control, and promotion must justify its space.
++Remove anything that competes with the editorial hierarchy or adds work without
++helping the reader choose or understand.
++
++### Motion
++
++Motion must clarify a state change or preserve orientation. It must honor
++reduced-motion preferences and never block interaction.
++
++### Information access
++
++Put the answer within reach. Summaries, source links, methods, author
++information, dates, labels, corrections, and navigation should be easy to
++locate when relevant.
++
++### Accessibility and performance
++
++Accessibility is part of the publishing standard. Semantic structure, keyboard
++access, readable contrast, text alternatives, captions, scalable type, and
++clear focus states protect the reader's ability to use the work.
++
++A story should load promptly, hold its layout stable, and work across ordinary
++devices and connections.
++
++### Reader control
++
++Never force attention. Let readers start media, dismiss notices, choose depth,
++search the archive, and leave without obstruction.
++
++## Accountability and publishing authority
++
++Every published item must have a responsible editor. That editor owns the
++assignment, final claim set, required review, publication decision, and
++post-publication record.
++
++Automated systems may research, propose, classify, draft, check, and prepare
++work only within permissions assigned for that workflow. Access to confidential
++sources, private records, publishing controls, and distribution channels must
++be explicitly granted. A system may publish only when the responsible editor
++has approved that authority and the required checks are enforced.
++
++The responsible editor remains accountable for every published claim,
++including work prepared with automated assistance.
++
++## Maintaining the handbook
++
++The mission and core principles should change rarely. Examples, ranges,
++checklists, and section practices can evolve as the publication learns.
++
++Every substantive amendment should record:
++
++- the date;
++- the person or role proposing it;
++- the problem in the current text;
++- the approved wording;
++- the reason for the change;
++- the approver;
++- the pages and workflows affected.
++
++Keep prior editions readable. Never rewrite a material rule without a revision
++record.
++
++Temporary exceptions need a responsible editor, reason, scope, and expiration
++date. An exception does not become doctrine through repetition.
++
++Review the handbook once each year against the work actually published. A
++review may conclude that no change is needed.
++
++The words in this handbook carry consistent weight:
++
++- Must marks a requirement.
++- Should marks a strong default that may yield to a documented reason.
++- May marks permission.
++
++## Closing
++
++Use this handbook to keep decisions about coverage, reporting, presentation,
++and correction consistent across staff and time.
+diff --git a/docs/handbook/sections/anyways.md b/docs/handbook/sections/anyways.md
+new file mode 100644
+index 0000000..1425742
+--- /dev/null
++++ b/docs/handbook/sections/anyways.md
+@@ -0,0 +1,103 @@
++# Anyways...
++
++Readers come here to get the answer.
++
++## Purpose
++
++Anyways... explains consequential news and the forces behind it. A story
++belongs here when the event changes how people live or how power moves through
++institutions and culture.
++
++Its promise is simple: get to the answer.
++
++## Reader expectation
++
++The opening should tell the reader what happened and why it deserves attention. Within the first few paragraphs, the reader should understand the stakes and who is affected. By the end, the reader should know:
++
++- the essential facts;
++- the system or incentives behind them;
++- the most likely consequences;
++- what remains uncertain;
++- where the evidence came from.
++
++The desired response is, "Now I know what's really going on."
++
++## What belongs
++
++- Major AI launches with a meaningful effect on capability, access, labor, cost, or culture.
++- Major acquisitions that change control, competition, distribution, or public life.
++- Significant regulation, legislation, and court decisions.
++- Product launches that change behavior or carry wider cultural meaning.
++- Important internet stories that reveal a durable shift in power, norms, technology, or participation.
++
++A large audience does not automatically make a story important. The event must survive the publication's editorial filter, and the reporting must add something a reader cannot get from the headline alone.
++
++## What does not
++
++- Celebrity drama with no wider cultural consequence.
++- Small funding rounds that do not change a market or illuminate a larger shift.
++- Local incidents with no broader public significance. A local story can qualify when it exposes a system or anticipates a wider change.
++- Rumor presented as news.
++- Minor product updates, routine appointments, and ceremonial announcements.
++- A press release rewritten in the publication's voice.
++- A story commissioned mainly because other outlets covered it.
++
++## Typical length
++
++Most pieces run from 800 to 1,400 words. A straightforward development may need only 500 to 800. A story that depends on an extensive dataset, a large body of primary material, or substantial original reporting may belong in Research or We Read It So You Don't Have To.
++
++Length follows the work required to answer the question. Once the answer is complete, stop.
++
++## Tone
++
++State the answer without ceremony. Confidence must match the evidence, and
++uncertainty should be named precisely. Humor is useful when it makes a
++complicated point easier to grasp.
++
++Cut breathlessness, false urgency, and the borrowed excitement of a launch
++event.
++
++## Publishing philosophy
++
++Cover an event when the reporting can explain its meaning. The opening gives
++the answer and stakes. The rest shows the evidence, traces the relevant
++system, and separates fact from interpretation. Verification sets the pace.
++
++Leave the story unpublished if it only restates the event.
++
++## Success metric
++
++Comprehension is the primary measure. During editing and in periodic section reviews, a person unfamiliar with the story should be able to answer four questions after reading:
++
++1. What happened?
++2. Why does it matter?
++3. Who or what is affected?
++4. What is known, inferred, and still unresolved?
++
++Editors should also review whether every consequential claim has support and
++whether the lead remains accurate as the story develops. Track the severity and
++recurrence of errors, the speed and candor of corrections, and recurring reader
++questions about a basic point. Traffic alone cannot establish editorial
++success.
++
++## Internal examples
++
++These are assignment shapes, not ready-made headlines:
++
++- A major AI platform claims a capability that could lower the cost of producing
++  video. Test the claim and report who would gain access or face disruption.
++- An acquisition gives one company control over a tool used across an industry.
++  Follow the change in ownership through to its likely effect on users.
++- Start a story about a new data rule with the practical change. Enforcement
++  and exemptions supply the necessary context.
++- A product introduces behavior that competitors are likely to copy. Its
++  longer history shows whether the launch marks a real shift.
++
++## Anti-examples
++
++- "Everything announced at today's event," presented as a chronological list.
++- A funding announcement whose only distinction is the amount raised.
++- A viral celebrity argument summarized from screenshots.
++- A product story built entirely from the manufacturer's claims.
++- A prediction stated as the inevitable result of a launch.
++- A delayed rewrite of a story already available elsewhere, with no added reporting, synthesis, or judgment.
+diff --git a/docs/handbook/sections/meanwhile.md b/docs/handbook/sections/meanwhile.md
+new file mode 100644
+index 0000000..be54293
+--- /dev/null
++++ b/docs/handbook/sections/meanwhile.md
+@@ -0,0 +1,103 @@
++# Meanwhile...
++
++The internet is strange. Some of that strangeness deserves to be enjoyed.
++
++## Purpose
++
++Meanwhile... is the publication's pressure valve. It finds funny, unexpected, wholesome, bizarre, or delightful moments online and gives readers a clean break from heavier coverage.
++
++The section makes room for wonder and amusement without lowering the publication's standards.
++
++## Reader expectation
++
++Readers should find a brief story they want to send to someone. Get to the
++moment quickly and give it enough context to make sense. Credit and link the
++original creator.
++
++The pleasure cannot depend on a false premise or someone's humiliation. A
++playful headline must not hide serious harm.
++
++## What belongs
++
++- Unexpected acts of ingenuity or kindness.
++- Bizarre internet subcultures and harmless disputes.
++- Funny uses of technology.
++- Small creative projects with outsized charm.
++- Animals, objects, games, communities, or coincidences behaving in genuinely surprising ways.
++- Internet artifacts that reveal something light and true about how people live online.
++- Low-stakes mysteries whose pleasure lies in the search.
++
++The item needs more than novelty. It should reward attention and survive a basic account of what really happened.
++
++## What does not
++
++- Hard news.
++- Investigations.
++- Tragedy repackaged as amusement.
++- Public shaming of a private person.
++- Harassment campaigns, dogpiles, or fandom conflict with real targets.
++- Dangerous stunts presented without consequence.
++- Hoaxes and staged moments passed off as spontaneous.
++- Branded content disguised as an organic curiosity.
++- A meme whose only context is that it is currently popular.
++
++## Typical length
++
++Most pieces run from 300 to 700 words. A single image, clip, or exchange may need less. A small internet mystery or reported subculture may run to 1,000 words when the reporting improves the fun.
++
++Leave before the explanation drains the life from the story.
++
++## Tone
++
++Let the fun arrive quickly. Writers have more room for humor here than in other
++sections, provided the facts remain sound and the subject keeps their dignity.
++
++Forced meme language and exaggerated disbelief make the piece worse.
++
++## Publishing philosophy
++
++Verify the premise and find the earliest reliable source before writing. Credit
++the creator and link to the original artifact when possible. Ask permission
++when coverage would expose a private person or move their work far beyond its
++intended audience.
++
++Coverage can send a large audience toward a small account. Check the likely
++effect before linking, protect personal information, and avoid turning a
++private person into a target. Stop reporting once further explanation begins
++to flatten the moment.
++
++## Success metric
++
++The section succeeds when it refreshes the reader and leaves the people inside the story no worse for having been covered.
++
++Review a sample of stories for:
++
++- accurate attribution and a working path to the original;
++- corrections, takedown requests, or signs that coverage created unwanted attention;
++- reader responses that identify the specific thing they enjoyed;
++- a range of communities and forms rather than repeated dependence on the same large platforms;
++- restraint during serious news cycles, when placement and timing can change how a light story feels.
++
++Shares may show that a piece carried delight beyond the site. Editorial success still depends on truth, credit, and the treatment of its subjects.
++
++## Internal examples
++
++- A small online community recreates a lost digital object from memory. Credit
++  the organizers and let their argument over tiny details carry the story.
++- A programmer builds an impractical tool for one oddly specific household
++  problem. Test it, then let the absurd precision supply the humor.
++- An animal keeps appearing in a public webcam at the same point each day.
++  Verify the footage and give readers the short version of the running joke.
++- Two niche hobby groups use the same obscure equipment for unrelated
++  purposes. Explain the coincidence without treating either group as an
++  exhibit.
++
++## Anti-examples
++
++- A person's worst day reposted with a funny caption.
++- A staged brand video described as an accidental viral moment.
++- A hard-news event placed here because one detail sounds absurd.
++- A joke built on a false translation or cropped exchange.
++- A pile of reaction posts with no original source.
++- A dangerous challenge covered in a way that helps readers repeat it.
++- A sweet story stretched until every sentence asks the reader to feel something.
+diff --git a/docs/handbook/sections/receipts.md b/docs/handbook/sections/receipts.md
+new file mode 100644
+index 0000000..1a6a149
+--- /dev/null
++++ b/docs/handbook/sections/receipts.md
+@@ -0,0 +1,112 @@
++# Receipts
++
++Public memory should last longer than the news cycle.
++
++## Purpose
++
++Receipts compares a dated public claim with later conduct when the gap has a
++present consequence. It gives readers the source record and enough context to
++judge the change.
++
++The section is built for accountability. Humor may sharpen the telling once
++the record is complete and fair.
++
++## Reader expectation
++
++Readers should see the evidence for themselves. A Receipts story must provide the original statement or the strongest available record, its date, its context, the later action, and the consequence of the gap between them.
++
++The reader should finish knowing:
++
++- who made the original claim;
++- what the words meant at the time;
++- what later changed or failed to happen;
++- whether the person or institution offered an explanation;
++- why the record matters now.
++
++## What belongs
++
++- Public promises that were broken or quietly abandoned.
++- Roadmaps that materially missed their commitments.
++- Political reversals with real policy consequences.
++- Corporate conduct that conflicts with stated principles or representations.
++- Influencer and public-figure contradictions that affect an audience, a business, or a public issue.
++- Older statements that become relevant because of a current decision.
++
++There is no expiration date. Age can add context, though every story still needs present relevance.
++
++## What does not
++
++- A harmless change of mind.
++- A prediction made in good faith that proved wrong.
++- A private person's old post revived for ridicule.
++- Jokes, fragments, or screenshots stripped of their original context.
++- A minor wording inconsistency with no consequence.
++- A claim that was clearly corrected and fully addressed at the time, unless the correction itself is relevant.
++- Personal hypocrisy that has no bearing on public conduct or the person's stated authority.
++- A collection of embarrassing clips assembled mainly to provoke harassment.
++
++## Typical length
++
++Most stories run from 700 to 1,400 words. A single, well-documented contradiction may need 500 to 800. A pattern spanning years may require a longer chronology or a linked evidence file.
++
++Use the shortest form that can establish the record, include the response, and explain the stakes.
++
++## Tone
++
++Use exact dates, quotes, and actions. Let the sequence carry more force than
++outrage. Pointed writing is welcome when the evidence supports it.
++
++Avoid gloating, mind-reading, and courtroom language that the reporting cannot
++support. A correction should carry the same clarity as the original charge.
++
++## Publishing philosophy
++
++Build and verify the timeline before drawing a conclusion. Preserve the full
++original source when lawful and practical. A reversal qualifies when the later
++conduct conflicts materially with a public claim and the conflict matters now.
++Changed circumstances and an on-record explanation belong in that test.
++
++Seek a response before making a serious allegation, and include the strongest
++relevant defense. A missed target supports a claim of failure. Calling it a lie
++requires evidence of intent.
++
++Old material is fair game when it illuminates a live issue. Its age never excuses weak relevance or missing context.
++
++## Success metric
++
++The durable record is the measure. A successful Receipts story should remain accurate when the immediate joke has faded and should help future reporting establish what happened.
++
++Editors should audit:
++
++- direct, dated support for each quoted promise or position;
++- a complete enough timeline to avoid a false contradiction;
++- fair inclusion of corrections, changed circumstances, and responses;
++- a clear account of the public consequence;
++- the severity and recurrence of errors, plus the speed and candor of
++  corrections;
++- whether later reporters and readers can use the evidence file without reconstructing it from scratch.
++
++High engagement can accompany accountability. It cannot substitute for a sound record.
++
++## Internal examples
++
++- A company sells a product using a dated roadmap, misses the date, and removes
++  the roadmap. Preserve each version and ask the company to account for the
++  change.
++- A politician campaigns against a power and later uses it in office. Compare
++  the exact positions and determine whether the law or circumstances changed.
++- A platform's enforcement guide permits conduct that its public moderation
++  pledge condemns. Put both documents in front of the reader and report the
++  effect on users.
++- A public expert dismisses a practice, then sells a product built around it.
++  The commercial consequence makes the change worth examining.
++
++## Anti-examples
++
++- An old joke treated as a policy commitment.
++- Two quotations with similar words and different contexts presented as a reversal.
++- A prediction that missed by a month framed as deliberate deceit.
++- A private individual's embarrassing post republished because it is funny.
++- A screenshot without a source, date, or archive.
++- A headline that declares hypocrisy while the article never establishes a consequence.
++- A subject contacted after publication so the story can claim they declined to comment.
+diff --git a/docs/handbook/sections/research.md b/docs/handbook/sections/research.md
+new file mode 100644
+index 0000000..faa5307
+--- /dev/null
++++ b/docs/handbook/sections/research.md
+@@ -0,0 +1,122 @@
++# Research
++
++Research answers questions that routine coverage cannot resolve.
++
++## Purpose
++
++Research uses a stated method to produce an original finding. Its evidence may
++come from data, documents, interviews, observation, or tests. A project belongs
++here when it can reveal a pattern, test an assumption, measure a change, or
++explain a system beyond the reach of routine coverage.
++
++## Reader expectation
++
++Readers should receive a consequential finding and a transparent account of how it was reached. They should be able to inspect the evidence, understand the limits, and separate the reported result from the writer's interpretation.
++
++Every Research piece should make clear:
++
++- the question;
++- why the question matters;
++- the method;
++- the evidence;
++- the finding;
++- the limitations;
++- what should be investigated next.
++
++## What belongs
++
++- Original analysis of a dataset.
++- Reporting built from a substantial body of records.
++- Interviews that reveal a system or pattern rather than a collection of quotations.
++- Original surveys, measurements, tests, or audits conducted with a defensible method.
++- Charts and visual explanations that expose a finding.
++- Long-form investigations and explanatory projects.
++- Replication or careful reanalysis of a claim with public importance.
++- A maintained dataset or research tool that makes future reporting possible.
++
++The work must add evidence or analysis that did not exist in the same useful form before publication.
++
++## What does not
++
++- A long article with no original finding.
++- A data dump with no question.
++- Charts used as decoration.
++- A handful of examples presented as a trend.
++- A survey with a sample too weak for the conclusion.
++- A causal claim drawn from correlation alone.
++- Analysis whose method cannot be explained.
++- A report commissioned to support a predetermined conclusion.
++- Ordinary news reporting extended to fit the section.
++
++## Typical length
++
++The main article usually runs from 1,500 to 4,000 words. Some findings need less. Complex projects may need a series, a methods note, a data appendix, and a public repository.
++
++No fixed ceiling applies. Each additional page, chart, and methodological detail must help a reader understand or inspect the work.
++
++## Tone
++
++Explain the method in plain language and let confidence track the evidence.
++Use a technical term when precision requires it, then define it for a reader
++outside the field.
++
++The prose should guide the reader through the work without adding drama that
++the finding cannot support.
++
++## Publishing philosophy
++
++Set the question and method before analysis. Preserve the source material and
++decision record needed for another editor to audit the work.
++
++Publish data and code when rights, privacy, security, and source protection permit. When they do not, explain what has been withheld and why. Document cleaning, exclusions, definitions, transformations, and known gaps. Label estimates and state the assumptions behind them.
++
++Before recruiting participants or collecting personal information, complete
++the [research ethics gate](../README.md#research-involving-people). High-risk
++work also needs review from someone with relevant subject or methodological
++knowledge. Give people and institutions named in consequential findings a fair
++chance to respond.
++
++Include a chart, interview, or extra page only when it contributes evidence or
++helps the reader inspect the conclusion.
++
++## Success metric
++
++The work succeeds when its finding survives informed scrutiny and remains useful after the publication cycle ends.
++
++Each project should be assessed on:
++
++- whether the evidence supports the stated conclusion;
++- whether a qualified reviewer can follow the method;
++- whether readers can understand the main finding and its limits;
++- whether published data, code, and source notes work as described;
++- whether later reporting can build on the work;
++- the severity and recurrence of errors, plus the speed and candor of
++  corrections;
++- whether the project changes an editorial assumption, public understanding, or a relevant decision.
++
++Awards, citations, and traffic may describe reach or influence. The central test remains the integrity and usefulness of the work.
++
++## Internal examples
++
++- Track changes to a platform's public rules over several years. Publish the
++  source versions and coding rules beside the finding.
++- Test a repeated claim about the cost of a new technology with documented
++  prices and a reproducible model. Show how the result changes under reasonable
++  assumptions.
++- Contracts, filings, public data, and worker interviews reveal where control
++  sits inside one supply chain.
++- An audit tests popular tools against the privacy promises in their own
++  policies. The protocol defines the sample and gives each company a chance to
++  respond.
++- Archives and interviews reconstruct how a practice moved from a niche
++  community into mainstream products.
++
++## Anti-examples
++
++- Three viral posts labeled as evidence of a cultural shift.
++- A chart whose scale exaggerates a small change.
++- A survey of the publication's own audience generalized to the public.
++- A dataset assembled without recording exclusions or duplicates.
++- Interviews selected only because they agree with the pitch.
++- A conclusion written before the analysis and defended after the method fails.
++- A polished interactive that offers no source, method, or inspectable finding.
+diff --git a/docs/handbook/sections/we-read-it.md b/docs/handbook/sections/we-read-it.md
+new file mode 100644
+index 0000000..32855cd
+--- /dev/null
++++ b/docs/handbook/sections/we-read-it.md
+@@ -0,0 +1,107 @@
++# We Read It So You Don't Have To
++
++Dense source material should become clear without losing its qualifications.
++
++## Purpose
++
++We Read It So You Don't Have To turns consequential primary material into a
++clear, faithful account. It saves the reader time by finding what changed and
++preserving the qualifications needed to understand the effect.
++
++Every article answers:
++
++1. What happened?
++2. Why does it matter?
++3. What are the three key takeaways?
++
++## Reader expectation
++
++The article must link to the source when possible and point readers to the
++passages behind its important claims.
++
++By the end, the reader should understand the source's practical effect and the
++limits of what it establishes.
++
++## What belongs
++
++- Research papers.
++- SEC filings and other consequential regulatory disclosures.
++- Earnings reports and calls.
++- Legislation, regulations, and official guidance.
++- Court opinions and important filings.
++- API documentation and material technical changes.
++- Terms of service, privacy policies, and other agreements with meaningful consequences.
++- Audits, investigations, standards, and public reports that require close reading.
++
++The source must carry enough public consequence or explanatory value to justify the reader's attention.
++
++## What does not
++
++- A summary based on a press release when the primary document is available.
++- Routine documents with no meaningful change or consequence.
++- Commentary on a source the writer did not read in full.
++- A cherry-picked clause presented without the surrounding rule, exception, or definition.
++- A document whose only appeal is that it is long or difficult.
++- Breaking news that can be explained accurately without sustained document work.
++- Original data reporting that belongs in Research.
++
++## Typical length
++
++Most articles run from 900 to 1,800 words. A narrow policy or documentation change may need 600 to 900. A major ruling, filing, or body of legislation may require more space, along with a clearly labeled guide to the relevant provisions.
++
++The three takeaways should be concise enough to remember and substantial enough to carry the story.
++
++## Tone
++
++Use plain language and keep the seriousness of the source. A light line can
++relieve needless technical friction, provided it leaves the meaning intact.
++
++Define technical terms on first use. When exact wording matters, put it beside
++the plain explanation.
++
++## Publishing philosophy
++
++Read the complete relevant source, including notes, appendices, and material
++references. Give page numbers, sections, docket entries, or stable anchors so
++another editor can retrace the work. Quote only the language the reader needs.
++
++Explain what the document establishes, what it claims, and what the writer infers. Those are different categories and should read differently. A company's filing can establish that the company made a claim. Further evidence is required to establish that the claim is true.
++
++Compression must preserve qualifications. If a caveat changes the meaning of a finding, it belongs in the article. When the document changes after publication, retain the version reviewed or record the access date and update the story as needed.
++
++## Success metric
++
++Fidelity and time saved are the central measures. A successful article lets a busy reader understand the source's consequences while giving a specialist a reliable path back to the evidence.
++
++In editorial review, check whether:
++
++- the three takeaways match the source;
++- every material statement can be traced to a precise location;
++- qualifications survive the summary;
++- facts, claims, and interpretation remain distinct;
++- a reader can explain the practical effect after one reading;
++- errors are uncommon, and corrections are prompt and explicit.
++
++Completion data may reveal where readers lose the thread. The stronger test is whether readers can accurately state what the document changes and where the answer came from.
++
++## Internal examples
++
++- A court opinion changes how an online practice is treated. Give the holding,
++  who it affects, and the questions the court left open.
++- An earnings filing shows that a celebrated product remains a small part of
++  the company's business. The relevant numbers explain the gap.
++- Compare two versions of a privacy policy after it adds a new category of data
++  use. Quote the operative clause and state any jurisdictional limit.
++- API documentation restricts a capability used by independent developers.
++  Identify the affected use cases and migration window from the documentation
++  itself.
++
++## Anti-examples
++
++- A paper reduced to the most surprising sentence in its abstract.
++- An earnings story that repeats adjusted figures without explaining the measure.
++- A legal ruling described through a party's press statement.
++- A terms-of-service update covered from a screenshot with no version comparison.
++- Three takeaways that restate the same point.
++- A confident practical conclusion the source does not support.
++- A long article that leaves the reader unable to say what changed.
+diff --git a/docs/handbook/sections/worth-your-time.md b/docs/handbook/sections/worth-your-time.md
+new file mode 100644
+index 0000000..4936692
+--- /dev/null
++++ b/docs/handbook/sections/worth-your-time.md
+@@ -0,0 +1,105 @@
++# Worth Your Time
++
++The recommendation is an editorial judgment. Every link has to earn the reader's attention.
++
++## Purpose
++
++Worth Your Time recommends work that an editor or contributor has fully
++evaluated. Each note identifies the likely reader, the time or setup required,
++the specific value of the item, its limits, and any relationship to its
++creator.
++
++## Reader expectation
++
++Readers should be able to trust that an editor or contributor has read, watched, listened to, or tested the item being recommended. Each note should tell them:
++
++- what the item is;
++- what makes it worth their time;
++- who will get the most from it;
++- how much time or effort it asks;
++- any access requirement, paywall, conflict, or meaningful limitation.
++
++A reader should know enough to make an informed choice without having the item's entire argument spoiled.
++
++## What belongs
++
++- Articles with original reporting, a strong argument, unusual access, or lasting explanatory value.
++- Podcast episodes that reward the time required to hear them.
++- Videos whose visual form adds understanding.
++- GitHub projects with clear utility, craft, or instructive code.
++- Research papers with an important finding or method.
++- Social posts that contain firsthand evidence, expert explanation, or an idea worth preserving beyond the feed.
++- Tools that have been tested and solve a real problem.
++- Older work that has become newly relevant or has retained unusual value.
++
++The source may be famous or obscure. Selection depends on the quality of the work and the usefulness of the recommendation.
++
++## What does not
++
++- Link dumps.
++- Items selected because they are trending.
++- Work the recommender has only skimmed.
++- Generic summaries that give no reason to follow the link.
++- Promotional material presented without disclosure.
++- A social post that merely repeats a claim from an unlinked source.
++- A tool recommended from its feature list without testing.
++- Several near-identical links included to make a list feel complete.
++
++## Typical length
++
++An individual recommendation usually needs 100 to 250 words. A curated edition usually contains four to eight items and runs from 700 to 1,600 words.
++
++The count should remain small enough that every item feels chosen. One excellent recommendation is a complete edition when one is all the editor can defend.
++
++## Tone
++
++Give a specific reason to choose each item. The note should sound like an
++informed friend who knows the reader still gets to decide.
++
++Enthusiasm needs evidence. Explain any limitation that affects the
++recommendation, and cut promotional superlatives, forced intimacy, and vague
++praise.
++
++## Publishing philosophy
++
++The recommender must consume the full item whenever its form permits and test
++tools under ordinary conditions. Follow citations when a factual claim is
++central. Credit the creator, use the most direct stable link, and disclose any
++relevant relationship.
++
++Commentary should help the reader choose while leaving the original worth
++visiting.
++
++## Success metric
++
++The section succeeds when readers consistently find work they are glad they chose and can explain why the recommendation fit them. Useful signals include:
++
++- readers saving or returning to an edition;
++- readers following a recommendation and reporting that it delivered on the note;
++- low rates of dead links, undisclosed access barriers, and mischaracterized work;
++- a healthy range of sources, formats, subjects, and creators over time;
++- periodic editorial checks confirming that recommended tools still work and evergreen links still lead to the intended source.
++
++Outbound clicks show that a note prompted action. They do not show whether the time was well spent, so they should be read alongside direct reader response and editorial review.
++
++## Internal examples
++
++- A forty-minute interview contains a working designer's account of a practice
++  rarely documented elsewhere. Point readers to the useful segment and name
++  the time commitment.
++- An open-source tool makes a cumbersome research task repeatable. State the
++  conditions in which the test worked and the setup it required.
++- A paper changes an editor's view of online communities. Give the central
++  insight and the limitation that makes the full method worth reading.
++- A years-old essay clarifies a current cultural argument better than the
++  week's commentary. Explain why it has become useful again.
++
++## Anti-examples
++
++- "Five things we loved this week" followed by one sentence per link.
++- A podcast recommendation based on the guest's reputation.
++- A tool praised with language copied from its landing page.
++- A paper described only through its abstract.
++- A thread included because it received a large number of likes.
++- A sponsor, friend's project, or staff member's work recommended without disclosure.
++- A note so complete that the reader has no reason to visit the original work.
+diff --git a/package.json b/package.json
+new file mode 100644
+index 0000000..285607a
+--- /dev/null
++++ b/package.json
+@@ -0,0 +1,7 @@
++{
++  "name": "anyways",
++  "version": "0.1.0",
++  "private": true,
++  "type": "module",
++  "scripts": { "dev": "node --watch src/server.mjs", "start": "node src/server.mjs", "seed": "node src/server.mjs --seed", "test": "node --test", "lint": "node --check src/server.mjs", "build": "node --check src/server.mjs" }
++}
+diff --git a/src/server.mjs b/src/server.mjs
+new file mode 100644
+index 0000000..59ac180
+--- /dev/null
++++ b/src/server.mjs
+@@ -0,0 +1,76 @@
++import http from 'node:http';
++import fs from 'node:fs';
++import path from 'node:path';
++import crypto from 'node:crypto';
++import { URL } from 'node:url';
++
++const ROOT = process.cwd(), DATA = path.join(ROOT, 'data', 'anyways.json'), UPLOADS = path.join(ROOT, 'uploads');
++const PORT = Number(process.env.PORT || 3000);
++const sections = [
++  ['anyways','Anyways...'], ['worth-your-time','Worth Your Time'], ['we-read-it','We Read It So You Don’t Have To'], ['receipts','Receipts'], ['meanwhile','Meanwhile...'], ['research','Research']
++].map(([slug,name])=>({id:slug,slug,name}));
++const topics = ['AI','Technology','Business','Markets','Internet Culture','Fashion','Sports','Gaming','Blockchain','Design','Creators','Politics'].map(name=>({id:slugify(name),name,slug:slugify(name)}));
++const templates = { anyways:'## What happened\n\n## What actually matters\n\n## What comes next', 'worth-your-time':'## What we found\n\n## Why it is worth your time', 'we-read-it':'## What happened\n\n## Why it matters\n\n## Three key takeaways\n\n1.\n2.\n3.', receipts:'## What was said\n\n## What actually happened\n\n## Why it matters now', meanwhile:'## What happened\n\n## Why this is interesting', research:'## Summary\n\n## Methodology\n\n## Findings\n\n## Analysis\n\n## Limitations\n\n## Sources' };
++const sessions = new Map();
++const id = ()=>crypto.randomUUID();
++const esc = s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
++function slugify(s){ return String(s).toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')||'story'; }
++function load(){ if(!fs.existsSync(DATA)) return seed(); try{return JSON.parse(fs.readFileSync(DATA,'utf8'));}catch{return seed();} }
++function save(db){fs.mkdirSync(path.dirname(DATA),{recursive:true});fs.writeFileSync(DATA,JSON.stringify(db,null,2));}
++function seed(){ const now=new Date().toISOString(); const users=[['admin','Admin User','admin@anyways.test','admin'],['editor','Editor User','editor@anyways.test','editor'],['contributor-one','Maya Chen','maya@anyways.test','contributor'],['contributor-two','Jon Bell','jon@anyways.test','contributor']].map(([id,name,email,role])=>({id,name,email,role,password:'anyways-demo',slug:slugify(name)})); const db={users,sections,topics,stories:[],sources:[],revisions:[],media:[],homepage:{primary:null,hidden:[]},searches:[]}; let n=0;
++ const specs=[['anyways',4],['worth-your-time',6],['we-read-it',3],['receipts',3],['meanwhile',4],['research',2]];
++ for(const [section,count] of specs) for(let i=0;i<count;i++){n++;const title=`Sample ${sections.find(x=>x.id===section).name.replace(/\.\.\./,'')} story ${i+1}`; const story={id:id(),title,slug:`sample-${section}-${i+1}`,dek:`A sample editorial entry for evaluating the Anyways publishing workflow.`,summary:'Sample content for the first working version of Anyways.',body:`## What happened\n\nThis is sample content, clearly marked for evaluation. It demonstrates the publication reading experience and a structured editorial workflow.\n\n## Why it matters\n\nThe underlying system is designed to keep sources visible and publishing accountable.`,section_id:section,author_id:users[(n%2)+2].id,editor_id:users[1].id,status:'published',published_at:new Date(Date.now()-n*86400000).toISOString(),scheduled_for:null,updated_at:now,created_at:now,reading_time_minutes:2,hero_media_id:null,seo_title:title,seo_description:'Sample editorial content for Anyways.',social_title:title,social_description:'Sample editorial content.',featured:n<5,homepage_priority:n,canonical_url:null,revision_number:1,topic_ids:[topics[n%topics.length].id,topics[(n+1)%topics.length].id],related_ids:[]}; db.stories.push(story); db.sources.push({id:id(),story_id:story.id,title:'Sample primary source',publisher:'Anyways sample desk',url:`https://example.com/source-${n}`,normalized_url:`https://example.com/source-${n}`,source_type:n%2?'article':'official_announcement',author:'Sample Reporter',published_at:now,accessed_at:now,archive_url:'',note:'Sample source for evaluation.',sort_order:1,created_at:now,created_by:users[1].id}); }
++ db.stories.forEach((s,i)=>s.related_ids=[db.stories[(i+1)%db.stories.length].id]); db.homepage.primary=db.stories[0].id; save(db); return db; }
++function userFor(req,db){const token=(req.headers.cookie||'').match(/session=([^;]+)/)?.[1];return token&&sessions.get(token)?db.users.find(u=>u.id===sessions.get(token)):null;}
++function can(user,action,story){if(!user)return false;if(user.role==='admin')return true;if(user.role==='editor')return action!=='users'; if(user.role==='contributor'){if(['create','media'].includes(action))return true;return action==='edit'&&story?.author_id===user.id&&['idea','researching','draft','review'].includes(story.status);}return false;}
++const published=s=>s.status==='published'&&s.published_at&&new Date(s.published_at)<=new Date();
++function md(text){return esc(text).split('\n').map(line=>line.startsWith('### ')?`<h3>${line.slice(4)}</h3>`:line.startsWith('## ')?`<h2>${line.slice(3)}</h2>`:line.startsWith('> ')?`<blockquote>${line.slice(2)}</blockquote>`:line.match(/^\d+\. /)?`<ol><li>${line.replace(/^\d+\. /,'')}</li></ol>`:line.startsWith('- ')?`<ul><li>${line.slice(2)}</li></ul>`:line==='---'?'<hr>':line?`<p>${line.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>')}</p>`:'').join('');}
++function layout(title,body,user){return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)} | Anyways</title><style>body{margin:0;background:#f4f0e6;color:#183b2d;font:16px Georgia,serif}a{color:#164c37}header,main,footer{max-width:1120px;margin:auto;padding:18px}header{display:flex;gap:22px;align-items:center;border-bottom:1px solid #bdc4b2}.brand{font:32px Georgia;font-weight:bold;text-decoration:none;color:#183b2d}nav{display:flex;gap:14px;flex-wrap:wrap;font:14px Arial}main{min-height:70vh}h1{font-size:42px;line-height:1.05}h2{margin-top:30px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}.card,.panel{background:#fffdf7;border:1px solid #c8cdbf;padding:18px}.meta,.muted{color:#5e6f61;font:13px Arial}.tag{display:inline-block;background:#dfe8d8;padding:4px 8px;margin:3px;font:12px Arial}input,textarea,select,button{box-sizing:border-box;width:100%;padding:9px;margin:5px 0 12px;border:1px solid #99a89b;background:#fff;font:15px Arial}textarea{min-height:170px}button{width:auto;background:#183b2d;color:white;cursor:pointer}label{font:13px Arial;font-weight:bold}table{border-collapse:collapse;width:100%;background:#fff}td,th{border:1px solid #c8cdbf;padding:8px;text-align:left;font:14px Arial}.notice{padding:10px;background:#dfe8d8}.article{max-width:760px;margin:auto;font-size:19px;line-height:1.6}.article h2{font-size:26px}.toolbar{display:flex;gap:12px;flex-wrap:wrap}.toolbar>*{width:auto}@media(max-width:600px){h1{font-size:34px}header{display:block}}</style></head><body><header><a class="brand" href="/">Anyways</a><nav><a href="/sections/anyways">Anyways...</a><a href="/worth-your-time">Worth Your Time</a><a href="/receipts">Receipts</a><a href="/research">Research</a><a href="/topics">Topics</a><a href="/search">Search</a>${user?`<a href="/newsroom">Newsroom</a><a href="/signout">Sign out (${esc(user.name)})</a>`:'<a href="/signin">Newsroom sign in</a>'}</nav></header><main>${body}</main><footer class="meta">Anyways — sample publication build</footer></body></html>`;}
++function getBody(req){return new Promise(resolve=>{let s='';req.on('data',d=>s+=d);req.on('end',()=>resolve(Object.fromEntries(new URLSearchParams(s))));});}
++function getMultipart(req){return new Promise(resolve=>{const chunks=[];req.on('data',d=>chunks.push(d));req.on('end',()=>{const raw=Buffer.concat(chunks),boundary=(req.headers['content-type']||'').match(/boundary=(.+)$/)?.[1];if(!boundary)return resolve({});const fields={},parts=raw.toString('binary').split(`--${boundary}`);for(const part of parts){const cut=part.indexOf('\r\n\r\n');if(cut<0)continue;const head=part.slice(0,cut),content=part.slice(cut+4,-2),name=head.match(/name="([^"]+)"/)?.[1],filename=head.match(/filename="([^"]*)"/)?.[1];if(!name)continue;if(filename){fields.file={filename:path.basename(filename),type:head.match(/Content-Type: ([^\r]+)/)?.[1]||'',data:Buffer.from(content,'binary')};}else fields[name]=Buffer.from(content,'binary').toString('utf8');}resolve(fields);});});}
++function redirect(res,to){res.writeHead(302,{Location:to});res.end();}
++function storyValid(db,s){let errors=[];for(const f of ['title','slug','dek','body','section_id','author_id','editor_id','seo_title','seo_description'])if(!s[f])errors.push(f);if(!s.topic_ids?.length)errors.push('at least one topic');if(!db.sources.some(x=>x.story_id===s.id&&validUrl(x.url)))errors.push('at least one valid source');return errors;}
++function validUrl(s){try{return ['http:','https:'].includes(new URL(s).protocol)}catch{return false}}
++function transitionAllowed(user,story,next){const order=['idea','researching','draft','review','fact_check','scheduled','published','archived']; if(!order.includes(next))return false;if(user.role==='contributor')return story.author_id===user.id&&['idea','researching','draft','review'].includes(next);return user.role==='editor'||user.role==='admin';}
++function card(db,s){const author=db.users.find(u=>u.id===s.author_id);return `<article class="card"><div class="meta">${esc(db.sections.find(x=>x.id===s.section_id)?.name||'')} · ${s.published_at?new Date(s.published_at).toLocaleDateString():s.status}</div><h2><a href="/stories/${esc(s.slug)}">${esc(s.title)}</a></h2><p>${esc(s.dek)}</p><div class="meta">By ${esc(author?.name||'Unknown')} · ${s.reading_time_minutes} min</div></article>`}
++function list(db,{section,topic,q,author,page=1}={}){let xs=db.stories.filter(published);if(section)xs=xs.filter(s=>s.section_id===section);if(topic)xs=xs.filter(s=>s.topic_ids.includes(topic));if(author)xs=xs.filter(s=>s.author_id===author);if(q){const needle=q.toLowerCase();xs=xs.filter(s=>[s.title,s.dek,s.summary,s.body,db.sections.find(x=>x.id===s.section_id)?.name,db.users.find(u=>u.id===s.author_id)?.name,...s.topic_ids.map(i=>db.topics.find(t=>t.id===i)?.name)].join(' ').toLowerCase().includes(needle));}return xs.sort((a,b)=>new Date(b.published_at)-new Date(a.published_at));}
++function topicChecks(db, selected=[]){return db.topics.map(t=>`<label style="display:inline-block;margin-right:10px"><input style="width:auto" type="checkbox" name="topic" value="${t.id}" ${selected.includes(t.id)?'checked':''}> ${esc(t.name)}</label>`).join('');}
++function editorForm(db,user,s={},notice=''){const newStory=!s.id;const sources=db.sources.filter(x=>x.story_id===s.id); const related=db.stories.filter(x=>x.id!==s.id);return `<h1>${newStory?'New story':'Edit story'}</h1>${notice?`<p class="notice">${esc(notice)}</p>`:''}<form method="post" action="${newStory?'/newsroom/stories':'/newsroom/stories/'+s.id}"><label>Title</label><input name="title" required value="${esc(s.title)}"><label>Slug (stable URL)</label><input name="slug" required value="${esc(s.slug)}"><label>Dek</label><textarea name="dek" required style="min-height:70px">${esc(s.dek)}</textarea><label>Summary</label><textarea name="summary" style="min-height:70px">${esc(s.summary)}</textarea><label>Primary section</label><select name="section_id">${db.sections.map(x=>`<option value="${x.id}" ${s.section_id===x.id?'selected':''}>${esc(x.name)}</option>`).join('')}</select><label>Topics</label><div>${topicChecks(db,s.topic_ids||[])}</div><label>Author</label><select name="author_id">${db.users.filter(u=>u.role!=='admin').map(u=>`<option value="${u.id}" ${(s.author_id||user.id)===u.id?'selected':''}>${esc(u.name)}</option>`).join('')}</select><label>Responsible editor</label><select name="editor_id">${db.users.filter(u=>['editor','admin'].includes(u.role)).map(u=>`<option value="${u.id}" ${(s.editor_id||user.id)===u.id?'selected':''}>${esc(u.name)}</option>`).join('')}</select><label>Body (Markdown)</label><textarea name="body" required>${esc(s.body||templates[s.section_id||'anyways'])}</textarea><label>SEO title</label><input name="seo_title" value="${esc(s.seo_title||s.title||'')}"><label>SEO description</label><textarea name="seo_description" style="min-height:60px">${esc(s.seo_description||s.dek||'')}</textarea><label>Status</label><select name="status">${['idea','researching','draft','review','fact_check','scheduled','published','archived'].map(v=>`<option ${s.status===v?'selected':''}>${v}</option>`).join('')}</select><label>Scheduled for (ISO/local datetime)</label><input type="datetime-local" name="scheduled_for" value="${s.scheduled_for?new Date(s.scheduled_for).toISOString().slice(0,16):''}"><label>Homepage priority</label><input type="number" name="homepage_priority" value="${s.homepage_priority||0}"><label><input style="width:auto" type="checkbox" name="featured" ${s.featured?'checked':''}> Feature on homepage</label><label>Change note</label><input name="change_note" placeholder="What changed?"><button>Save story</button></form><section class="panel"><h2>Structured sources</h2><p class="muted">Every published story needs at least one valid URL. Duplicate URLs are rejected per story.</p>${sources.map(x=>`<p><a target="_blank" href="${esc(x.url)}">${esc(x.title)}</a> · ${esc(x.source_type)} <a href="/newsroom/stories/${s.id}/sources/${x.id}/delete">Remove</a></p>`).join('')||'<p>No sources yet.</p>'}${!newStory?`<form method="post" action="/newsroom/stories/${s.id}/sources"><input name="title" placeholder="Source title" required><input name="publisher" placeholder="Publisher"><input name="url" placeholder="https://" required><select name="source_type">${['article','official_announcement','filing','research_paper','court_document','legislation','earnings_report','documentation','video','podcast','social_post','dataset','repository','other'].map(x=>`<option>${x}</option>`).join('')}</select><button>Add source</button></form>`:'<p>Save the story first, then add sources.</p>'}</section>${!newStory?`<section class="panel"><h2>Revision history</h2>${db.revisions.filter(r=>r.story_id===s.id).sort((a,b)=>b.revision_number-a.revision_number).map(r=>`<p>Revision ${r.revision_number} · ${new Date(r.created_at).toLocaleString()} · ${esc(r.change_note||'Saved')}</p>`).join('')||'<p>No revisions.</p>'}</section>`:''}`}
++function runScheduler(db){let changed=0;for(const s of db.stories)if(s.status==='scheduled'&&s.scheduled_for&&new Date(s.scheduled_for)<=new Date()&&!storyValid(db,s).length){s.status='published';s.published_at=s.published_at||new Date().toISOString();s.updated_at=new Date().toISOString();changed++;}if(changed)save(db);return changed;}
++const server=http.createServer(async(req,res)=>{const db=load();runScheduler(db);const url=new URL(req.url,`http://${req.headers.host}`), p=url.pathname, user=userFor(req,db);const send=(title,body,status=200)=>{res.writeHead(status,{'Content-Type':'text/html; charset=utf-8'});res.end(layout(title,body,user));};
++ if(p==='/robots.txt'){res.writeHead(200,{'Content-Type':'text/plain'});return res.end('User-agent: *\nAllow: /\nSitemap: /sitemap.xml');}
++ if(p.startsWith('/uploads/')){const file=path.join(UPLOADS,path.basename(p));if(!fs.existsSync(file)){res.writeHead(404);return res.end();}res.writeHead(200,{'Content-Type':'image/*'});return fs.createReadStream(file).pipe(res);}
++ if(p==='/sitemap.xml'){res.writeHead(200,{'Content-Type':'application/xml'});return res.end(`<?xml version="1.0"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${db.stories.filter(published).map(s=>`<url><loc>http://localhost:${PORT}/stories/${s.slug}</loc></url>`).join('')}</urlset>`);}
++ if(p==='/rss.xml'||p.match(/^\/rss\/[^/]+\.xml$/)){const sec=p==='/rss.xml'?null:p.split('/')[2].replace('.xml','');const xs=list(db,{section:sec});res.writeHead(200,{'Content-Type':'application/rss+xml'});return res.end(`<?xml version="1.0"?><rss version="2.0"><channel><title>Anyways</title><link>http://localhost:${PORT}</link>${xs.map(s=>`<item><title>${esc(s.title)}</title><link>http://localhost:${PORT}/stories/${s.slug}</link><description>${esc(s.dek)}</description></item>`).join('')}</channel></rss>`);}
++ if(p==='/signin'&&req.method==='GET')return send('Sign in',`<h1>Newsroom sign in</h1><p class="notice">Seed accounts: admin@anyways.test, editor@anyways.test, maya@anyways.test, jon@anyways.test — password: anyways-demo</p><form method="post"><label>Email</label><input name="email" type="email"><label>Password</label><input name="password" type="password"><button>Sign in</button></form>`);
++ if(p==='/signin'&&req.method==='POST'){const b=await getBody(req),u=db.users.find(x=>x.email===b.email&&x.password===b.password);if(!u)return send('Sign in',`<p class="notice">Incorrect email or password.</p><a href="/signin">Try again</a>`,401);const token=id();sessions.set(token,u.id);res.writeHead(302,{'Set-Cookie':`session=${token}; HttpOnly; SameSite=Lax; Path=/`,'Location':'/newsroom'});return res.end();}
++ if(p==='/signout'){const t=(req.headers.cookie||'').match(/session=([^;]+)/)?.[1];if(t)sessions.delete(t);res.writeHead(302,{'Set-Cookie':'session=; Max-Age=0; Path=/','Location':'/'});return res.end();}
++ if(p==='/'){const all=list(db),primary=db.stories.find(s=>s.id===db.homepage.primary&&published(s))||all[0];const group=sec=>all.filter(s=>s.section_id===sec&&s.id!==primary.id).slice(0,3);return send('Anyways',`<article class="panel"><div class="meta">Featured · ${esc(db.sections.find(x=>x.id===primary.section_id)?.name)}</div><h1><a href="/stories/${primary.slug}">${esc(primary.title)}</a></h1><p>${esc(primary.dek)}</p></article><h2>Latest Anyways...</h2><div class="grid">${group('anyways').map(s=>card(db,s)).join('')}</div>${db.sections.filter(x=>!['anyways'].includes(x.id)&&group(x.id).length).map(x=>`<h2>${esc(x.name)}</h2><div class="grid">${group(x.id).map(s=>card(db,s)).join('')}</div>`).join('')}`);}
++ if(p==='/search'){const q=url.searchParams.get('q')||'',xs=list(db,{q,section:url.searchParams.get('section')||undefined,topic:url.searchParams.get('topic')||undefined});if(q&&!xs.length){db.searches.push({query:q,created_at:new Date().toISOString()});save(db);}return send('Search',`<h1>Search</h1><form method="get"><input name="q" value="${esc(q)}" placeholder="Search stories, people, topics"><select name="section"><option value="">All sections</option>${db.sections.map(s=>`<option value="${s.id}" ${url.searchParams.get('section')===s.id?'selected':''}>${esc(s.name)}</option>`).join('')}</select><button>Search</button></form>${q?xs.length?`<p>${xs.length} result${xs.length===1?'':'s'} for “${esc(q)}”</p><div class="grid">${xs.map(s=>card(db,s)).join('')}</div>`:'<p class="notice">No results yet. That search has been noted for the editorial desk.</p>':''}`);}
++ if(p==='/topics'){return send('Topics',`<h1>Topics</h1><div class="grid">${db.topics.map(t=>`<div class="card"><h2><a href="/topics/${t.slug}">${esc(t.name)}</a></h2><p>${list(db,{topic:t.id}).length} published stories</p></div>`).join('')}</div>`);}
++ if(p.startsWith('/topics/')){const slug=p.split('/')[2],t=db.topics.find(x=>x.slug===slug);if(!t)return send('Not found','<h1>Topic not found</h1>',404);const sec=url.searchParams.get('section')||undefined,xs=list(db,{topic:t.id,section:sec});return send(t.name,`<h1>${esc(t.name)}</h1><form method="get"><select name="section"><option value="">All sections</option>${db.sections.map(s=>`<option value="${s.id}" ${sec===s.id?'selected':''}>${esc(s.name)}</option>`).join('')}</select><button>Filter</button></form><div class="grid">${xs.map(s=>card(db,s)).join('')||'<p>No published stories match this filter.</p>'}</div>`);}
++ if(p.startsWith('/sections/')||['/receipts','/research','/meanwhile','/worth-your-time'].includes(p)){const slug=p.startsWith('/sections/')?p.split('/')[2]:p.slice(1),sec=db.sections.find(x=>x.slug===slug);if(!sec)return send('Not found','<h1>Section not found</h1>',404);const top=url.searchParams.get('topic')||undefined,xs=list(db,{section:sec.id,topic:top});return send(sec.name,`<h1>${esc(sec.name)}</h1><form method="get"><select name="topic"><option value="">All topics</option>${db.topics.map(t=>`<option value="${t.id}" ${top===t.id?'selected':''}>${esc(t.name)}</option>`).join('')}</select><button>Filter</button></form><div class="grid">${xs.map(s=>card(db,s)).join('')||'<p>No published stories match this filter.</p>'}</div>`);}
++ if(p.startsWith('/authors/')){const u=db.users.find(x=>x.slug===p.split('/')[2]);if(!u)return send('Not found','<h1>Author not found</h1>',404);return send(u.name,`<h1>${esc(u.name)}</h1><p class="meta">${esc(u.role)}</p><div class="grid">${list(db,{author:u.id}).map(s=>card(db,s)).join('')}</div>`);}
++ if(p.startsWith('/stories/')){const s=db.stories.find(x=>x.slug===p.split('/')[2]);if(!s||(!published(s)&&!(user&&(user.role!=='contributor'||s.author_id===user.id))))return send('Not found','<h1>Story not found</h1>',404);const author=db.users.find(x=>x.id===s.author_id),editor=db.users.find(x=>x.id===s.editor_id),ss=db.sources.filter(x=>x.story_id===s.id).sort((a,b)=>a.sort_order-b.sort_order),rel=db.stories.filter(x=>s.related_ids?.includes(x.id)&&published(x));return send(s.seo_title||s.title,`<article class="article"><div class="meta"><a href="/sections/${s.section_id}">${esc(db.sections.find(x=>x.id===s.section_id)?.name)}</a></div><h1>${esc(s.title)}</h1><p>${esc(s.dek)}</p><p class="meta">By <a href="/authors/${author.slug}">${esc(author.name)}</a> · Edited by ${esc(editor?.name||'')} · ${new Date(s.published_at||s.updated_at).toLocaleDateString()} · ${s.reading_time_minutes} min</p><p>${s.topic_ids.map(i=>`<a class="tag" href="/topics/${db.topics.find(t=>t.id===i)?.slug}">${esc(db.topics.find(t=>t.id===i)?.name)}</a>`).join('')}</p>${md(s.body)}<h2>Sources</h2>${ss.map(x=>`<p><a target="_blank" href="${esc(x.url)}">${esc(x.title)}</a><br><span class="meta">${esc(x.publisher||'')} · ${esc(x.source_type)}</span></p>`).join('')}<h2>Anyways...</h2><p>Here’s where we’d go next.</p><div class="grid">${rel.map(x=>card(db,x)).join('')}</div></article>`);}
++ if(p==='/newsroom'&&!user)return redirect(res,'/signin');
++ if(p==='/newsroom'){const mine=db.stories.filter(s=>s.author_id===user.id), statuses=['idea','researching','draft','review','fact_check','scheduled','published','archived'];return send('Newsroom',`<h1>Newsroom</h1><p>Signed in as ${esc(user.name)} (${esc(user.role)})</p><div class="grid">${statuses.map(st=>`<div class="card"><h2>${st}</h2><p>${db.stories.filter(s=>s.status===st).length} stories</p></div>`).join('')}</div><h2>Your drafts</h2><div class="grid">${mine.filter(s=>s.status!=='published').map(s=>card(db,s)).join('')||'<p>Nothing in progress.</p>'}</div>`);}
++ if(p==='/newsroom/stories'&&req.method==='GET'){const xs=db.stories.filter(s=>user.role==='contributor'?s.author_id===user.id:true);return send('Stories',`<div class="toolbar"><h1>Stories</h1>${can(user,'create')?'<a href="/newsroom/stories/new"><button>New story</button></a>':''}</div><table><tr><th>Title</th><th>Status</th><th>Section</th><th>Updated</th></tr>${xs.sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at)).map(s=>`<tr><td><a href="/newsroom/stories/${s.id}">${esc(s.title)}</a></td><td>${s.status}</td><td>${esc(db.sections.find(x=>x.id===s.section_id)?.name)}</td><td>${new Date(s.updated_at).toLocaleDateString()}</td></tr>`).join('')}</table>`);}
++ if(p==='/newsroom/stories/new'){if(!can(user,'create'))return send('Forbidden','<h1>Forbidden</h1>',403);return send('New story',editorForm(db,user,{section_id:'anyways',author_id:user.id,editor_id:user.role==='contributor'?'':user.id,status:'idea',topic_ids:[] }));}
++ if(p==='/newsroom/stories'&&req.method==='POST'){if(!can(user,'create'))return send('Forbidden','<h1>Forbidden</h1>',403);const b=await getBody(req),topic=Array.isArray(b.topic)?b.topic:(b.topic?[b.topic]:[]);let base=slugify(b.slug||b.title),slug=base,n=2;while(db.stories.some(s=>s.slug===slug))slug=`${base}-${n++}`;const s={id:id(),title:b.title,slug,dek:b.dek,summary:b.summary,body:b.body,section_id:b.section_id,author_id:user.role==='contributor'?user.id:b.author_id,editor_id:b.editor_id||'',status:'idea',published_at:null,scheduled_for:null,updated_at:new Date().toISOString(),created_at:new Date().toISOString(),reading_time_minutes:Math.max(1,Math.ceil((b.body||'').split(/\s+/).length/220)),hero_media_id:null,seo_title:b.seo_title,seo_description:b.seo_description,social_title:'',social_description:'',featured:false,homepage_priority:0,canonical_url:null,revision_number:1,topic_ids:topic,related_ids:[]};db.stories.push(s);save(db);return redirect(res,`/newsroom/stories/${s.id}`);}
++ if(p.match(/^\/newsroom\/stories\/[^/]+$/)&&req.method==='GET'){const s=db.stories.find(x=>x.id===p.split('/')[3]);if(!s||!can(user,'edit',s))return send('Forbidden','<h1>Forbidden</h1>',403);return send('Edit story',editorForm(db,user,s));}
++ if(p.match(/^\/newsroom\/stories\/[^/]+$/)&&req.method==='POST'){const s=db.stories.find(x=>x.id===p.split('/')[3]);if(!s||!can(user,'edit',s))return send('Forbidden','<h1>Forbidden</h1>',403);const b=await getBody(req),topic=Array.isArray(b.topic)?b.topic:(b.topic?[b.topic]:[]),next=b.status;if(!transitionAllowed(user,s,next))return send('Invalid workflow','<h1>Invalid workflow transition</h1><p>Contributors can only move their own work through review.</p>',403);const newSlug=slugify(b.slug||b.title);if(db.stories.some(x=>x.id!==s.id&&x.slug===newSlug))return send('Duplicate slug',editorForm(db,user,s,'That slug is already in use.'),422);Object.assign(s,{title:b.title,slug:newSlug,dek:b.dek,summary:b.summary,body:b.body,section_id:b.section_id,author_id:user.role==='contributor'?user.id:b.author_id,editor_id:b.editor_id,status:next,scheduled_for:b.scheduled_for?new Date(b.scheduled_for).toISOString():null,featured:!!b.featured,homepage_priority:Number(b.homepage_priority||0),seo_title:b.seo_title,seo_description:b.seo_description,topic_ids:topic,updated_at:new Date().toISOString(),reading_time_minutes:Math.max(1,Math.ceil((b.body||'').split(/\s+/).length/220))});if(next==='published'){const errors=storyValid(db,s);if(errors.length)return send('Cannot publish',editorForm(db,user,s,`Publishing requires: ${errors.join(', ')}`),422);s.published_at=s.published_at||new Date().toISOString();}if(next==='scheduled'&&!s.scheduled_for)return send('Schedule required',editorForm(db,user,s,'A scheduled date and time is required.'),422);s.revision_number++;db.revisions.push({id:id(),story_id:s.id,revision_number:s.revision_number,snapshot:JSON.stringify(s),created_by:user.id,created_at:new Date().toISOString(),change_note:b.change_note});save(db);return redirect(res,`/newsroom/stories/${s.id}`);}
++ if(p.match(/^\/newsroom\/stories\/[^/]+\/sources$/)&&req.method==='POST'){const s=db.stories.find(x=>x.id===p.split('/')[3]);if(!s||!can(user,'edit',s))return send('Forbidden','<h1>Forbidden</h1>',403);const b=await getBody(req);if(!validUrl(b.url))return send('Invalid source',editorForm(db,user,s,'A source URL must begin with http:// or https://.'),422);const normalized=new URL(b.url).toString();if(db.sources.some(x=>x.story_id===s.id&&x.normalized_url===normalized))return send('Duplicate source',editorForm(db,user,s,'That source URL already exists on this story.'),422);db.sources.push({id:id(),story_id:s.id,title:b.title,publisher:b.publisher,url:b.url,normalized_url:normalized,source_type:b.source_type,author:'',published_at:null,accessed_at:new Date().toISOString(),archive_url:'',note:'',sort_order:db.sources.filter(x=>x.story_id===s.id).length+1,created_at:new Date().toISOString(),created_by:user.id});save(db);return redirect(res,`/newsroom/stories/${s.id}`);}
++ if(p.match(/^\/newsroom\/stories\/[^/]+\/sources\/[^/]+\/delete$/)){const parts=p.split('/'),storyId=parts[3],sourceId=parts[5];const s=db.stories.find(x=>x.id===storyId);if(!s||!can(user,'edit',s))return send('Forbidden','<h1>Forbidden</h1>',403);db.sources=db.sources.filter(x=>x.id!==sourceId);save(db);return redirect(res,`/newsroom/stories/${s.id}`);}
++ if(p==='/newsroom/review'||p==='/newsroom/scheduled'||p==='/newsroom/published'){const status=p.split('/').pop(),map={review:'review',scheduled:'scheduled',published:'published'};const xs=db.stories.filter(s=>s.status===map[status]);return send(status,`<h1>${status[0].toUpperCase()+status.slice(1)} queue</h1><div class="grid">${xs.map(s=>card(db,s)).join('')||'<p>Nothing here.</p>'}</div>`);}
++ if(p==='/newsroom/topics'&&req.method==='GET'){if(!user||!['admin','editor'].includes(user.role))return send('Forbidden','<h1>Forbidden</h1>',403);return send('Topics',`<h1>Topics</h1><div class="grid">${db.topics.map(t=>`<div class="card"><h2>${esc(t.name)}</h2><p class="meta">${t.slug}</p></div>`).join('')}</div><form method="post"><h2>Add topic</h2><input name="name" placeholder="Topic name"><button>Add topic</button></form>`);}
++ if(p==='/newsroom/topics'&&req.method==='POST'){if(!user||!['admin','editor'].includes(user.role))return send('Forbidden','<h1>Forbidden</h1>',403);const b=await getBody(req),slug=slugify(b.name);if(!b.name||db.topics.some(t=>t.slug===slug))return send('Topics','<h1>Topic exists or is blank.</h1>',422);db.topics.push({id:slug,name:b.name,slug});save(db);return redirect(res,'/newsroom/topics');}
++ if(p==='/newsroom/contributors'){if(!user||user.role!=='admin')return send('Forbidden','<h1>Admins only</h1>',403);return send('Contributors',`<h1>Contributors</h1><table><tr><th>Name</th><th>Email</th><th>Role</th></tr>${db.users.map(u=>`<tr><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${esc(u.role)}</td></tr>`).join('')}</table>`);}
++ if(p==='/newsroom/homepage'&&req.method==='GET'){if(!user||!['admin','editor'].includes(user.role))return send('Forbidden','<h1>Forbidden</h1>',403);const xs=db.stories.filter(published).sort((a,b)=>a.homepage_priority-b.homepage_priority);return send('Homepage manager',`<h1>Homepage manager</h1><p>Select a primary story; all placement falls back safely to current published stories.</p><form method="post"><label>Primary featured story</label><select name="primary">${xs.map(s=>`<option value="${s.id}" ${db.homepage.primary===s.id?'selected':''}>${esc(s.title)}</option>`).join('')}</select><button>Save placement</button></form><div class="grid">${xs.map(s=>card(db,s)).join('')}</div>`);}
++ if(p==='/newsroom/homepage'&&req.method==='POST'){if(!user||!['admin','editor'].includes(user.role))return send('Forbidden','<h1>Forbidden</h1>',403);const b=await getBody(req);if(db.stories.some(s=>s.id===b.primary&&published(s)))db.homepage.primary=b.primary;save(db);return redirect(res,'/newsroom/homepage');}
++ if(p==='/newsroom/media'&&req.method==='GET'){if(!user)return redirect(res,'/signin');return send('Media library',`<h1>Media library</h1><p class="notice">Upload a JPEG, PNG, WebP, or GIF up to 5 MB, or add a stable image URL. Supply useful alt text and credit.</p><form method="post" enctype="multipart/form-data"><input type="file" name="file" accept="image/jpeg,image/png,image/webp,image/gif"><input name="public_url" placeholder="Image URL (optional if uploading)"><input name="alt_text" placeholder="Alt text" required><input name="caption" placeholder="Caption"><input name="credit" placeholder="Credit"><button>Add media</button></form><div class="grid">${db.media.map(m=>`<div class="card"><img style="max-width:100%" src="${esc(m.public_url)}" alt="${esc(m.alt_text)}"><p>${esc(m.caption||m.alt_text)}</p><p class="meta">${esc(m.credit||'')}</p></div>`).join('')||'<p>No media yet.</p>'}</div>`);}
++ if(p==='/newsroom/media'&&req.method==='POST'){if(!user)return send('Forbidden','<h1>Forbidden</h1>',403);const b=await getMultipart(req);let publicUrl=b.public_url,storage='external',filename=publicUrl?.split('/').pop()||'',mime='image/*';if(b.file?.filename){if(!['image/jpeg','image/png','image/webp','image/gif'].includes(b.file.type)||b.file.data.length>5*1024*1024)return send('Media','<h1>Use a JPEG, PNG, WebP, or GIF up to 5 MB.</h1>',422);fs.mkdirSync(UPLOADS,{recursive:true});filename=`${id()}-${b.file.filename}`;fs.writeFileSync(path.join(UPLOADS,filename),b.file.data);publicUrl=`/uploads/${filename}`;storage=filename;mime=b.file.type;}else if(!validUrl(publicUrl))return send('Media','<h1>Upload an image or use a valid image URL.</h1>',422);db.media.push({id:id(),storage_path:storage,public_url:publicUrl,filename,mime_type:mime,width:null,height:null,alt_text:b.alt_text,caption:b.caption,credit:b.credit,source_url:b.public_url||'',uploaded_by:user.id,created_at:new Date().toISOString()});save(db);return redirect(res,'/newsroom/media');}
++ return send('Not found','<h1>Not found</h1><p><a href="/">Return home</a></p>',404);
++});
++if(process.argv.includes('--seed')){seed();console.log('Seeded data/anyways.json');process.exit(0);}
++if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(new URL(import.meta.url).pathname))server.listen(PORT,()=>console.log(`Anyways is running at http://localhost:${PORT}`));
++export { seed, storyValid, transitionAllowed, validUrl, runScheduler };
+diff --git a/test/core.test.mjs b/test/core.test.mjs
+new file mode 100644
+index 0000000..e6c8a01
+--- /dev/null
++++ b/test/core.test.mjs
+@@ -0,0 +1,7 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { seed, storyValid, transitionAllowed, validUrl, runScheduler } from '../src/server.mjs';
++
++test('publishing validation requires structured source, topic, metadata, and core fields',()=>{const db=seed(),s={...db.stories[0],topic_ids:[],seo_title:'',seo_description:''};db.sources=db.sources.filter(x=>x.story_id!==s.id);assert.ok(storyValid(db,s).length>=4);});
++test('contributors cannot publish but editors can',()=>{const db=seed(),s=db.stories[0],con=db.users.find(x=>x.role==='contributor'),ed=db.users.find(x=>x.role==='editor');s.author_id=con.id;assert.equal(transitionAllowed(con,s,'published'),false);assert.equal(transitionAllowed(ed,s,'published'),true);});
++test('URL validation and scheduled publishing are safe to repeat',()=>{assert.equal(validUrl('https://example.com'),true);assert.equal(validUrl('nope'),false);const db=seed(),s=db.stories[0];s.status='scheduled';s.scheduled_for=new Date(Date.now()-1000).toISOString();s.published_at=null;assert.equal(runScheduler(db),1);assert.equal(runScheduler(db),0);assert.equal(s.status,'published');});

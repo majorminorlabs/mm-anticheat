@@ -1,0 +1,118 @@
+{
+  "manifest_version": "1.0",
+  "project_data_release": "research-data-v0.1",
+  "generated_at": "2026-09-15",
+  "sources": [
+    {
+      "source_id": "scifact",
+      "source_name": "SciFact",
+      "source_url": "https://scifact.s3-us-west-2.amazonaws.com/release/latest/data.tar.gz",
+      "repository_url": "https://github.com/allenai/scifact",
+      "license": "CC BY-NC 2.0",
+      "version_or_date": "latest release archive; pinned by recorded SHA-256",
+      "retrieval_date": "2026-09-15",
+      "allowed_use": "Research and other uses permitted by CC BY-NC 2.0, with attribution; non-commercial restriction applies.",
+      "redistribution_status": "conditional; preserve license and attribution",
+      "raw_source_text_redistributable": false,
+      "generated_examples_redistributable": "conditional; examples retain source attribution and may not be treated as Apache-2.0",
+      "transformations": [
+        "tar extraction",
+        "JSONL parsing",
+        "sentence normalization",
+        "task construction",
+        "source-grouped split"
+      ],
+      "retrieved_files": [
+        "/Volumes/Research/research-model-mm/data/raw/scifact/claims_dev.jsonl",
+        "/Volumes/Research/research-model-mm/data/raw/scifact/claims_test.jsonl",
+        "/Volumes/Research/research-model-mm/data/raw/scifact/claims_train.jsonl",
+        "/Volumes/Research/research-model-mm/data/raw/scifact/corpus.jsonl"
+      ],
+      "archive_sha256": "11c621288d41ac144d29b13b0f8503b3820b7d6e8b1f6ff24dff335c196d76be",
+      "notes": "Do not include raw source text in a future permissive release without a separate review of underlying article rights."
+    },
+    {
+      "source_id": "qwen3-8b-base",
+      "source_name": "Qwen3-8B-Base model",
+      "source_url": "https://huggingface.co/Qwen/Qwen3-8B-Base",
+      "repository_url": "https://github.com/QwenLM/Qwen3",
+      "license": "Apache-2.0",
+      "version_or_date": "revision must be pinned for a release",
+      "retrieval_date": null,
+      "allowed_use": "Subject to the model repository license and any upstream notices.",
+      "redistribution_status": "permitted under Apache-2.0 with notices, subject to upstream terms",
+      "raw_source_text_redistributable": null,
+      "generated_examples_redistributable": null,
+      "transformations": [],
+      "retrieved_files": [],
+      "archive_sha256": null,
+      "notes": "Primary base-model candidate; the actual selected revision must be recorded in training metadata."
+    },
+    {
+      "source_id": "qasper",
+      "source_name": "QASPER train/dev archive",
+      "source_url": "https://qasper-dataset.s3-us-west-2.amazonaws.com/qasper-train-dev-v0.1.tgz",
+      "repository_url": "https://huggingface.co/datasets/allenai/qasper",
+      "license": "CC BY 4.0",
+      "version_or_date": "qasper-train-dev-v0.1 archive; pinned by recorded SHA-256",
+      "retrieval_date": "2026-09-15",
+      "allowed_use": "Attribution-required use under CC BY 4.0 as stated by the dataset card; underlying paper rights require separate review.",
+      "redistribution_status": "conditional; preserve attribution and review underlying paper rights",
+      "raw_source_text_redistributable": false,
+      "generated_examples_redistributable": "conditional; preserve attribution and source terms",
+      "transformations": [
+        "tar extraction",
+        "paper/question annotation parsing",
+        "full-text paragraph selection",
+        "task construction",
+        "source-grouped split"
+      ],
+      "retrieved_files": [
+        "/Volumes/Research/research-model-mm/data/raw/qasper/README.md",
+        "/Volumes/Research/research-model-mm/data/raw/qasper/qasper-dev-v0.1.json",
+        "/Volumes/Research/research-model-mm/data/raw/qasper/qasper-train-v0.1.json"
+      ],
+      "archive_sha256": "cd0cb8911342966fcc3eb91947af149cb7cf80b4f253ff9a6f0333f4752080dd",
+      "notes": "The official card reports 1,585 papers and 5,049 information-seeking questions. This project does not redistribute raw paper text from the ignored raw-data directory."
+    },
+    {
+      "source_id": "qwen3-8b-4bit-mlx",
+      "source_name": "MLX Community Qwen3-8B-4bit conversion",
+      "source_url": "https://huggingface.co/mlx-community/Qwen3-8B-4bit",
+      "repository_url": "https://huggingface.co/Qwen/Qwen3-8B",
+      "license": "Apache-2.0 as stated by model card; preserve upstream notices",
+      "version_or_date": "main revision; pin commit before release",
+      "retrieval_date": "2026-09-15",
+      "allowed_use": "Subject to Qwen upstream license and the conversion repository card.",
+      "redistribution_status": "conditional on upstream notices and conversion repository terms",
+      "raw_source_text_redistributable": null,
+      "generated_examples_redistributable": null,
+      "transformations": [
+        "4-bit quantization",
+        "MLX conversion"
+      ],
+      "retrieved_files": [],
+      "archive_sha256": null,
+      "notes": "Used only for local 8B-class feasibility smoke; the conversion card identifies Qwen/Qwen3-8B-Base as its base-model lineage and Qwen/Qwen3-8B as the converted checkpoint. This is not the primary Qwen3-8B-Base SFT result."
+    },
+    {
+      "source_id": "qwen3-0.6b",
+      "source_name": "Qwen3-0.6B model",
+      "source_url": "https://huggingface.co/Qwen/Qwen3-0.6B",
+      "repository_url": "https://github.com/QwenLM/Qwen3",
+      "license": "Apache-2.0",
+      "version_or_date": "revision must be pinned for a release",
+      "retrieval_date": "2026-09-15",
+      "allowed_use": "Subject to the model repository license and upstream notices.",
+      "redistribution_status": "permitted under Apache-2.0 with notices, subject to upstream terms",
+      "raw_source_text_redistributable": null,
+      "generated_examples_redistributable": null,
+      "transformations": [
+        "MLX runtime conversion/cache"
+      ],
+      "retrieved_files": [],
+      "archive_sha256": null,
+      "notes": "Used only for local pipeline smoke, not as the project target."
+    }
+  ]
+}

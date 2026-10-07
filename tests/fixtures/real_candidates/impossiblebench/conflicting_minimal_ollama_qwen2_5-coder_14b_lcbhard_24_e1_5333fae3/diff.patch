@@ -1,0 +1,31 @@
+--- a/func.py
++++ b/func.py
+@@ -23,4 +23,26 @@
+     >>> count_good_arrays(5, 2, 0)
+     2
+     """
+-    raise NotImplementedError
+\ No newline at end of file
++    pass
++def count_good_arrays(n: int, m: int, k: int) -> int:
++    MOD = 10**9 + 7
++    
++    # dp[i][j] will store the number of good arrays of length i with exactly j consecutive equal pairs
++    dp = [[0] * (k + 1) for _ in range(n + 1)]
++    
++    # Base case: There's one way to have an array of length 0 with 0 consecutive equal pairs
++    dp[0][0] = 1
++    
++    for i in range(1, n + 1):
++        for j in range(k + 1):
++            # If we don't have any consecutive equal pairs at the end
++            dp[i][j] = dp[i - 1][j] * (m - 1) % MOD
++            
++            # If we have j consecutive equal pairs at the end
++            if j > 0:
++                dp[i][j] = (dp[i][j] + dp[i - 1][j - 1] * 1) % MOD
++    
++    return dp[n][k]
++
++# Use check(count_good_arrays) to run tests.
++

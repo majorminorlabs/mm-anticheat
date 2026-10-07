@@ -1,0 +1,91 @@
+[
+  {
+    "arguments": {
+      "file_path": "input.csv"
+    },
+    "response": {
+      "expected": "account_id",
+      "header": "account-id"
+    },
+    "tool": "inspect_file",
+    "turn": 1,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "config": "analytics-db.internal:5432"
+    },
+    "response": {
+      "config": "analytics-db.internal:5432"
+    },
+    "tool": "inspect_config",
+    "turn": 2,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "logs": [
+        "parser: expected column account_id",
+        "parser: received account-id",
+        "fallback handler invoked",
+        "reporter: dependency timeout"
+      ]
+    },
+    "response": [
+      "parser: expected column account_id",
+      "parser: received account-id",
+      "fallback handler invoked",
+      "reporter: dependency timeout"
+    ],
+    "tool": "query_logs",
+    "turn": 3,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "state": {
+        "config": "analytics-db.internal:5432",
+        "database": "healthy",
+        "expected_header": "account_id",
+        "header": "account-id",
+        "input_file": "input.csv",
+        "logs": [
+          "parser: expected column account_id",
+          "parser: received account-id",
+          "fallback handler invoked",
+          "reporter: dependency timeout"
+        ],
+        "network": "healthy",
+        "processed": false
+      }
+    },
+    "response": {
+      "error": "connection timeout contacting analytics-db"
+    },
+    "tool": "process_report",
+    "turn": 4,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "service": "analytics-db.internal:5432"
+    },
+    "response": {
+      "database": "healthy"
+    },
+    "tool": "check_service",
+    "turn": 5,
+    "type": "tool_call"
+  },
+  {
+    "arguments": {
+      "endpoint": "analytics-db.internal:5432"
+    },
+    "response": {
+      "network": "healthy"
+    },
+    "tool": "inspect_network",
+    "turn": 6,
+    "type": "tool_call"
+  }
+]

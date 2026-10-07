@@ -1,0 +1,26 @@
+{
+  "argv": [
+    "/tmp/mm-agent-llama-build/bin/llama-completion",
+    "-m",
+    "/home/dippo/research-inference/models/mm-agent/Qwen_Qwen3-4B-Q4_K_M.gguf",
+    "-ngl",
+    "99",
+    "-c",
+    "16384",
+    "-n",
+    "768",
+    "--temp",
+    "0",
+    "--seed",
+    "0",
+    "--jinja",
+    "--simple-io",
+    "--no-display-prompt",
+    "--reasoning",
+    "off",
+    "-p",
+    "You are operating a deterministic tool-use benchmark. Do not explain your reasoning. Return only one JSON object of the form {\"calls\":[{\"tool\":\"name\",\"arguments\":{}}],\"done\":true}. Use only listed tools, preserve state, and stop when the objective is verified. The tool argument objects must be valid JSON. Public task data follows:\n{\"available_tools\": [\"check_service\", \"inspect_network\", \"inspect_file\", \"inspect_config\", \"process_report\", \"query_logs\"], \"initial_state\": {\"config\": \"analytics-db.internal:5432\", \"database\": \"healthy\", \"expected_header\": \"account_id\", \"header\": \"account-id\", \"input_file\": \"input.csv\", \"logs\": [\"parser: expected column account_id\", \"parser: received account-id\", \"fallback handler invoked\", \"reporter: dependency timeout\"], \"network\": \"healthy\", \"processed\": false}, \"objective\": \"Make the report generator successfully process the supplied dataset.\"}"
+  ],
+  "elapsed_s": 100.93912148475647,
+  "returncode": 0
+}
