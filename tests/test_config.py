@@ -115,7 +115,7 @@ def test_missing_reason_does_not_suppress(reason):
     assert result.exit_code() == 1
 
 
-def test_allow_existing_comment_does_not_add_gh012():
+def test_allow_existing_comment_does_not_add_ac012():
     comment = '# anticheat: allow AC003 reason="reviewed"\n'
     result = changed_skip(
         before=comment + "def test_a():\n    assert 3 == 3\n",
@@ -147,7 +147,7 @@ def test_path_allow_and_rule_scope():
     assert not result.findings[0].allowed
 
 
-def test_gh012_cannot_allow_itself_inline_but_config_can():
+def test_ac012_cannot_allow_itself_inline_but_config_can():
     result = changed_skip(
         after='# anticheat: allow AC012 reason="approve itself"\ndef test_a():\n    assert 3 == 3\n'
     )

@@ -5,6 +5,10 @@ Builder: Sol 6.1
 Reviewer: Claude (reviews after each gate, writes a fix list, Sol fixes)
 Doc version: v1.1, 2026-10-04 (Gate 2 sources, section 8.2 wording)
 
+Current implementation follows REVIEW_04: mm-anticheat / mm_anticheat, schema 3,
+AC000–AC018, and the additional detection/study scope approved by Dippo.
+Historical phase requirements below are superseded by that review where specified.
+
 ---
 
 ## 0. How to use this document (read first, Sol)
