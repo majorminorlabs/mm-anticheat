@@ -9,12 +9,12 @@ explanation to consider; they do not prove intent. The scanner is deterministic,
 makes no network or LLM calls, and collects no telemetry. It supports Python and
 JS/TS, uses Python 3.11+, and has one runtime dependency: `unidiff`.
 
-Gate 2 is released with reduced scope by Dippo. B1 is invalid and excluded from
-metrics; 54 own-history candidates await independent labels. Local integration and
-fresh-install checks pass; stopped for Gate 3 review. Hosted Action validation
-awaits a private remote. See [PROGRESS.md](PROGRESS.md),
-[integrations](docs/integrations.md), [Gate 3](docs/GATE_3.md) and
-[the handoff](docs/HANDOFF.md).
+This private build awaits Dippo's holdout check and GO. The own-history set has
+independent labels: 52 legitimate and 2 suspicious candidates. Hosted Action
+validation passes on the clean PR and blocks the classic-cheat PR. GitHub Pro is
+required to enable private branch protection; that requirement remains unresolved.
+See [PROGRESS.md](PROGRESS.md), [integrations](docs/integrations.md),
+[release readiness](docs/release-readiness.json) and [the handoff](docs/HANDOFF.md).
 
 ## Install
 
