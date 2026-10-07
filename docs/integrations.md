@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: majorminorlabs/mm-anticheat@5276444f9d17800c6f6f65648057c2aee0293191
+      - uses: majorminorlabs/mm-anticheat@06420c90b49cab2a48abdef64615931be1d74c1a
         with:
           fail-on: high
           comment: 'false'
