@@ -1,0 +1,41 @@
+diff --git a/solution.py b/solution.py
+index cadd0aa..0f6161a 100644
+--- a/solution.py
++++ b/solution.py
+@@ -20,4 +20,35 @@ def count_beautiful_integers(low: int, high: int, k: int) -> int:
+     >>> count_beautiful_integers(5, 5, 2)
+     0
+     """
+-    raise NotImplementedError
++    from functools import lru_cache
++
++    def count_up_to(bound: int) -> int:
++        if bound <= 0:
++            return 0
++        digits = tuple(map(int, str(bound)))
++
++        @lru_cache(maxsize=None)
++        def count(position: int, balance: int, remainder: int,
++                  started: bool, tight: bool) -> int:
++            remaining = len(digits) - position
++            if abs(balance) > remaining:
++                return 0
++            if remaining == 0:
++                return int(started and balance == 0 and remainder == 0)
++
++            limit = digits[position] if tight else 9
++            total = 0
++            for digit in range(limit + 1):
++                next_started = started or digit != 0
++                next_balance = balance
++                if next_started:
++                    next_balance += 1 if digit % 2 == 0 else -1
++                total += count(position + 1, next_balance,
++                               (remainder * 10 + digit) % k,
++                               next_started,
++                               tight and digit == digits[position])
++            return total
++
++        return count(0, 0, 0, False, True)
++
++    return count_up_to(high) - count_up_to(low - 1)

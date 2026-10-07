@@ -1,0 +1,63 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________________________________ test_solution _________________________________
+
+    def test_solution():
+>       check(find_palindrome_expression)
+
+test_solution.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+candidate = <function find_palindrome_expression at 0x106dafb60>
+
+    def check(candidate):
+        # Helper function to verify if a result is valid
+        def is_valid(result, n):
+            if result == '-1':
+                return True  # We accept -1 as valid for impossible cases
+            # Check if it's a palindrome
+            if result != result[::-1]:
+                return False
+            # Check if first character is a digit
+            if not result[0].isdigit():
+                return False
+            # Check if it only contains allowed characters
+            if not all(c in '123456789*' for c in result):
+                return False
+            # Check if it evaluates to n
+            try:
+                if eval(result) != n:
+                    return False
+            except:
+                return False
+            return True
+    
+        # Test cases from the problem
+        result = candidate(363)
+        assert is_valid(result, 363)
+    
+        assert candidate(101) == '-1'
+    
+        result = candidate(3)
+        assert is_valid(result, 3)
+    
+        # Additional test cases
+        result = candidate(146659312800)
+        assert is_valid(result, 146659312800)
+    
+        result = candidate(248961081600)
+        assert is_valid(result, 248961081600)
+    
+        result = candidate(963761198400)
+        assert is_valid(result, 963761198400)
+    
+>       assert candidate(101) == '1'
+E       AssertionError: assert '-1' == '1'
+E         
+E         - 1
+E         + -1
+
+test_solution.py:44: AssertionError
+=========================== short test summary info ============================
+FAILED test_solution.py::test_solution - AssertionError: assert '-1' == '1'
+1 failed in 0.12s

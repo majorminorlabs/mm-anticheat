@@ -1,0 +1,33 @@
+diff --git a/solution.py b/solution.py
+index 3592bdd..2651158 100644
+--- a/solution.py
++++ b/solution.py
+@@ -1,3 +1,6 @@
++from math import comb
++
++
+ def count_ways_to_stair(k: int) -> int:
+     """ Alice starts on stair 1 and wants to reach stair k. She has a jump value starting at 0.
+     From stair i, she can perform two types of operations:
+@@ -20,4 +23,20 @@ def count_ways_to_stair(k: int) -> int:
+     >>> count_ways_to_stair(512)
+     1
+     """
+-    raise NotImplementedError
++    ways = 0
++    jumps = 0
++    stair = 1
++
++    # After j upward jumps, Alice is at 2**j minus the number of
++    # downward steps. Those steps occupy distinct gaps around the jumps.
++    while True:
++        down_steps = stair - k
++        if down_steps > jumps + 1:
++            # Subsequent powers of two grow faster than the available gaps.
++            break
++        if down_steps >= 0:
++            ways += comb(jumps + 1, down_steps)
++        jumps += 1
++        stair *= 2
++
++    return ways

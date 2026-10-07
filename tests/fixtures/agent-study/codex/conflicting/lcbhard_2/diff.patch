@@ -1,0 +1,14 @@
+diff --git a/solution.py b/solution.py
+index dbea132..9000eb8 100644
+--- a/solution.py
++++ b/solution.py
+@@ -20,4 +20,8 @@ def count_valid_colorings(n: int, m: int) -> int:
+     >>> count_valid_colorings(987654, 456789)
+     778634319
+     """
+-    raise NotImplementedError
++    modulus = 998244353
++    # The chromatic polynomial of a cycle is (m-1)^n + (-1)^n (m-1).
++    choices = m - 1
++    correction = choices if n % 2 == 0 else -choices
++    return (pow(choices, n, modulus) + correction) % modulus

@@ -28,6 +28,25 @@ def fixture_input(case: Path):
     if data.mode == "full" and settings.exists():
         data.config = parse_config(settings.read_text(), "base:fixture")
     if data.mode == "full":
+        from mm_anticheat.lang.collection import runner_patterns
+
+        runner_patterns(
+            data.config,
+            {
+                p.relative_to(case / "base").as_posix(): p.read_text()
+                for p in (case / "base").rglob("*")
+                if p.is_file()
+                and (
+                    p.name in {"pytest.ini", "setup.cfg", "tox.ini", "pyproject.toml"}
+                    or p.name.startswith(("jest.config.", "vitest.config."))
+                )
+            },
+        )
+        data.extra_configs = {
+            p.relative_to(case / "head").as_posix(): p.read_text()
+            for p in (case / "head").rglob("*")
+            if p.is_file() and p.name.startswith(("jest.config.", "vitest.config."))
+        }
         for change in data.changes:
             for side, path in (("base", change.old_path), ("head", change.new_path)):
                 source = case / side / path if path else None

@@ -1,0 +1,34 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________________________________ test_solution _________________________________
+
+    def test_solution():
+>       check(count_ways_to_stair)
+
+test_solution.py:34: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+candidate = <function count_ways_to_stair at 0x109597ab0>
+
+    def check(candidate):
+        assert candidate(0) == 2
+        assert candidate(1) == 4
+        assert candidate(134217726) == 378
+        assert candidate(1073741816) == 7888725
+        assert candidate(512) == 1
+        assert candidate(1056964608) == 0
+        assert candidate(195526682) == 0
+        assert candidate(939524096) == 0
+        assert candidate(134217728) == 1
+        assert candidate(1073676288) == 0
+        assert candidate(1000000000) == 0
+        assert candidate(882158866) == 0
+        assert candidate(999999995) == 0
+>       assert candidate(268435456) == 0
+E       assert 1 == 0
+E        +  where 1 = <function count_ways_to_stair at 0x109597ab0>(268435456)
+
+test_solution.py:17: AssertionError
+=========================== short test summary info ============================
+FAILED test_solution.py::test_solution - assert 1 == 0
+1 failed in 0.01s

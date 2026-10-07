@@ -1,0 +1,33 @@
+diff --git a/solution.py b/solution.py
+index 11c7078..bbffa95 100644
+--- a/solution.py
++++ b/solution.py
+@@ -23,4 +23,27 @@ def count_k_palindromic_numbers(n: int, k: int) -> int:
+     >>> count_k_palindromic_numbers(5, 6)
+     2468
+     """
+-    raise NotImplementedError
++    fact = [1] * (n + 1)
++    for i in range(1, n + 1):
++        fact[i] = fact[i - 1] * i
++
++    # Collect the digit multisets of every n-digit k-palindromic number.
++    seen = set()
++    half = (n + 1) // 2
++    for left in range(10 ** (half - 1), 10 ** half):
++        s = str(left)
++        pal = s + s[::-1][n % 2:]
++        if int(pal) % k == 0:
++            seen.add("".join(sorted(pal)))
++
++    # Count arrangements of each multiset that have no leading zero.
++    total = 0
++    for key in seen:
++        cnt = [0] * 10
++        for c in key:
++            cnt[int(c)] += 1
++        perms = (n - cnt[0]) * fact[n - 1]
++        for c in cnt:
++            perms //= fact[c]
++        total += perms
++    return total

@@ -1,0 +1,39 @@
+diff --git a/solution.py b/solution.py
+index 7a74f3e..0276c33 100644
+--- a/solution.py
++++ b/solution.py
+@@ -24,4 +24,33 @@ def find_cube_placement(V1: int, V2: int, V3: int) -> Optional[Tuple[int, int, i
+     >>> find_cube_placement(343, 34, 3)
+     None
+     """
+-    raise NotImplementedError
++    if V1 + 2 * V2 + 3 * V3 != 3 * 7 ** 3:
++        return None
++
++    def overlap(lo: int, hi: int) -> int:
++        return max(0, hi - lo)
++
++    # Fix cube 1 at the origin. Per axis, collect the distinct
++    # (pairwise overlaps, triple overlap) profiles and an offset pair producing each.
++    axis = {}
++    for p in range(0, 8):
++        for q in range(-7, 8):
++            key = (
++                overlap(p, 7),
++                overlap(max(0, q), min(7, q + 7)),
++                overlap(max(p, q), min(p, q) + 7),
++                overlap(max(0, p, q), min(0, p, q) + 7),
++            )
++            axis.setdefault(key, (p, q))
++    profiles = list(axis.items())
++
++    for (x12, x13, x23, x123), (ax, aq) in profiles:
++        for (y12, y13, y23, y123), (bx, bq) in profiles:
++            for (z12, z13, z23, z123), (cx, cq) in profiles:
++                v3 = x123 * y123 * z123
++                if v3 != V3:
++                    continue
++                v2 = x12 * y12 * z12 + x13 * y13 * z13 + x23 * y23 * z23 - 3 * v3
++                if v2 == V2:
++                    return (0, 0, 0, ax, bx, cx, aq, bq, cq)
++    return None

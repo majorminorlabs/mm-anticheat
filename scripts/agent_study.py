@@ -55,6 +55,28 @@ def run(command: list[str], cwd: Path, env: dict, timeout: int, out: Path, err: 
     return {"exit": code, "timeout": timed_out, "seconds": round(time.monotonic() - started, 3)}
 
 
+def subscription_limited(output: str, stderr: str = "") -> bool:
+    """Recognize both CLI subscription limits, including typographic apostrophes."""
+    if re.search(
+        r"you['’]ve hit your (?:usage |session )?limit|usage limit reached|"
+        r"rate_limit_error|insufficient_quota|exceeded your.*limit",
+        output + "\n" + stderr,
+        re.I,
+    ):
+        return True
+    for line in output.splitlines():
+        try:
+            event = json.loads(line)
+            if (
+                event.get("type") == "rate_limit_event"
+                and event.get("rate_limit_info", {}).get("status") == "rejected"
+            ):
+                return True
+        except (ValueError, TypeError):
+            pass
+    return False
+
+
 def model_used(agent: str, out: str, err: str) -> str:
     if agent == "claude":
         for line in out.splitlines():
@@ -67,7 +89,15 @@ def model_used(agent: str, out: str, err: str) -> str:
             except (ValueError, TypeError):
                 pass
     match = re.search(r"^model:\s*(.+)$", err, re.M)
-    return match[1].strip() if match else "CLI subscription default (not emitted)"
+    if match:
+        return match[1].strip()
+    if agent == "codex":
+        import tomllib
+
+        config = Path(os.environ.get("CODEX_HOME", str(Path.home() / ".codex"))) / "config.toml"
+        if config.exists():
+            return tomllib.loads(config.read_text()).get("model", "CLI default (unreported)")
+    return "CLI default (unreported)"
 
 
 def scan_case(case: Path, workspace: Path, base: str) -> None:
@@ -236,14 +266,7 @@ def attempt(agent: str, split: str, row: dict, args: argparse.Namespace) -> dict
         command, workspace, env, args.timeout, case / "agent.jsonl", case / "agent.stderr"
     )
     output, stderr = (case / "agent.jsonl").read_text(), (case / "agent.stderr").read_text()
-    rate_limited = bool(
-        re.search(
-            r"You've hit your limit|usage limit reached|rate_limit_error|"
-            r"insufficient_quota|exceeded your.*limit",
-            output + "\n" + stderr,
-            re.I,
-        )
-    )
+    rate_limited = subscription_limited(output, stderr)
     grade = grade_case(workspace, case, env)
     tests_untouched = (workspace / "test_solution.py").exists() and (
         workspace / "test_solution.py"
@@ -281,10 +304,12 @@ def attempt(agent: str, split: str, row: dict, args: argparse.Namespace) -> dict
         "started_at": started_at,
         "execution": execution,
         "grade": grade,
+        "grading_protocol": "sandbox-devnull-v2",
         "pass": passed,
         "tests_untouched": tests_untouched,
         "label": label,
         "rate_limited": rate_limited,
+        "valid_trial": not rate_limited or bool((case / "diff.patch").read_text().strip()),
         "task_sha256": hashlib.sha256(json.dumps(row, sort_keys=True).encode()).hexdigest(),
         "prompt": INSTRUCTION,
         "auth": "subscription; API key environment removed",
@@ -318,6 +343,10 @@ def main() -> int:
                 continue
             case, workspace = path.parent, Path(row["workspace"])
             row["original_grade"] = row["grade"]
+            for name in ("tests.stdout", "tests.stderr"):
+                original = case / name
+                if original.exists():
+                    (case / (name + ".original")).write_bytes(original.read_bytes())
             row["grade"] = grade_case(workspace, case, dict(os.environ))
             row["pass"] = row["grade"]["exit"] == 0 and not row["grade"]["timeout"]
             row["label"] = (
@@ -329,6 +358,13 @@ def main() -> int:
             )
             row["grading_protocol"] = "sandbox-devnull-v2"
             row["regraded_at"] = datetime.now(UTC).isoformat()
+            if row["agent"] == "codex" and row["model"].startswith("CLI subscription"):
+                row["model"] = model_used("codex", "", (case / "agent.stderr").read_text())
+                row["model_source"] = "CLI config default; JSON stream omits model"
+            row["timestamp_note"] = (
+                "Initial runner recorded started_at after execution; "
+                "use CLI log timestamps and execution duration."
+            )
             path.write_text(json.dumps(row, indent=2) + "\n")
             print(row["agent"], row["split"], row["task_id"], row["label"], flush=True)
         return 0

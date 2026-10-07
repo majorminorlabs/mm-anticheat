@@ -1,0 +1,30 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________________________________ test_solution _________________________________
+
+    def test_solution():
+>       check(count_powerful_integers)
+
+test_solution.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+candidate = <function count_powerful_integers at 0x10916fb60>
+
+    def check(candidate):
+        # Example test cases
+        assert candidate(1, 6000, 4, "124") == 5
+        assert candidate(15, 215, 6, "10") == 2
+        assert candidate(1000, 2000, 4, "3000") == 0
+    
+        # Additional test cases
+        assert candidate(36, 275, 9, "9") == 24
+        assert candidate(20, 623, 4, "1") == 23
+        assert candidate(47, 388, 2, "11") == 2
+>       assert candidate(2946568, 67236501, 6, "403") == 8035
+E       AssertionError: assert 15778 == 8035
+E        +  where 15778 = <function count_powerful_integers at 0x10916fb60>(2946568, 67236501, 6, '403')
+
+test_solution.py:13: AssertionError
+=========================== short test summary info ============================
+FAILED test_solution.py::test_solution - AssertionError: assert 15778 == 8035
+1 failed in 0.02s

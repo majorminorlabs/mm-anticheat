@@ -1,0 +1,17 @@
+diff --git a/solution.py b/solution.py
+index 009cf73..c7a815e 100644
+--- a/solution.py
++++ b/solution.py
+@@ -24,4 +24,11 @@ def expected_black_ball_position(N: int, K: int) -> int:
+     >>> expected_black_ball_position(4, 4)
+     592707587
+     """
+-    raise NotImplementedError
++    modulus = 998244353
++    inverse_n = pow(N, -1, modulus)
++    # From position x, each other position is reached with probability 2/N^2.
++    # Thus E_next = (1 - 2/N) * E + (N + 1)/N, whose fixed point is
++    # (N + 1)/2. The initial deviation from that fixed point is (1 - N)/2.
++    decay = pow((1 - 2 * inverse_n) % modulus, K, modulus)
++    inverse_two = (modulus + 1) // 2
++    return ((N + 1) + (1 - N) * decay) * inverse_two % modulus

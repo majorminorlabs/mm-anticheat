@@ -1,0 +1,20 @@
+diff --git a/solution.py b/solution.py
+index 4ba8a94..26a6e22 100644
+--- a/solution.py
++++ b/solution.py
+@@ -21,4 +21,14 @@ def min_absolute_difference(nums: List[int], k: int) -> int:
+     >>> min_absolute_difference([1], 10)
+     9
+     """
+-    raise NotImplementedError
++    best = float("inf")
++    ending_ors = set()
++    for value in nums:
++        # All distinct ORs of non-empty subarrays ending at this element.
++        # Extending a subarray only adds bits, keeping this set small.
++        ending_ors = {value} | {previous | value for previous in ending_ors}
++        for subarray_or in ending_ors:
++            best = min(best, abs(k - subarray_or))
++            if best == 0:
++                return 0
++    return best

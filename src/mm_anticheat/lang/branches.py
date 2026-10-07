@@ -20,14 +20,22 @@ def branch_literals(changes: list[FileChange]) -> set[str]:
                 tree = python.parse(change.head_content)
             except (SyntaxError, ValueError, RecursionError):
                 continue
+            segments = []
             for node in ast.walk(tree):
-                if not isinstance(node, (ast.If, ast.IfExp, ast.Match)) or node.lineno not in rows:
+                if isinstance(node, (ast.If, ast.IfExp)):
+                    segments.append((node.lineno, node.test, node))
+                elif isinstance(node, ast.Match):
+                    segments.extend(
+                        (
+                            case.pattern.lineno,
+                            case.pattern,
+                            ast.Module(body=case.body, type_ignores=[]),
+                        )
+                        for case in node.cases
+                    )
+            for row, condition, body in segments:
+                if row not in rows:
                     continue
-                condition = (
-                    node.test
-                    if isinstance(node, (ast.If, ast.IfExp))
-                    else ast.Tuple(elts=[case.pattern for case in node.cases], ctx=ast.Load())
-                )
                 inputs = {
                     scalar(item)
                     for item in ast.walk(condition)
@@ -35,9 +43,9 @@ def branch_literals(changes: list[FileChange]) -> set[str]:
                 }
                 outputs = {
                     scalar(item)
-                    for output in ast.walk(node)
+                    for output in ast.walk(body)
                     if isinstance(output, (ast.Return, ast.Assign, ast.AnnAssign, ast.IfExp))
-                    and output.lineno <= node.lineno + 3
+                    and output.lineno <= row + 3
                     for item in ast.walk(output)
                     if isinstance(item, (ast.Constant, ast.UnaryOp)) and significant(scalar(item))
                 }

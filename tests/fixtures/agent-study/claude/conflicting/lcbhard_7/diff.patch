@@ -1,0 +1,25 @@
+diff --git a/solution.py b/solution.py
+index 98cd60b..ac9fea1 100644
+--- a/solution.py
++++ b/solution.py
+@@ -27,4 +27,19 @@ def calculate_black_area_doubled(A: int, B: int, C: int, D: int) -> int:
+     >>> calculate_black_area_doubled(-1000000000, -1000000000, 1000000000, 1000000000)
+     4000000000000000000
+     """
+-    raise NotImplementedError
++    # Doubled black area of each unit cell over one period (x mod 4, y mod 2).
++    cell = [[2, 1, 0, 1], [1, 2, 1, 0]]
++
++    def prefix(x: int, y: int) -> int:
++        # Doubled black area of [0, x] x [0, y], extended to negatives by periodicity.
++        qx, rx = divmod(x, 4)
++        qy, ry = divmod(y, 2)
++        total = 0
++        for row in range(2):
++            for col in range(4):
++                nx = qx + (1 if col < rx else 0)
++                ny = qy + (1 if row < ry else 0)
++                total += cell[row][col] * nx * ny
++        return total
++
++    return prefix(C, D) - prefix(A, D) - prefix(C, B) + prefix(A, B)

@@ -1,0 +1,22 @@
+diff --git a/solution.py b/solution.py
+index 009cf73..477bbb6 100644
+--- a/solution.py
++++ b/solution.py
+@@ -24,4 +24,16 @@ def expected_black_ball_position(N: int, K: int) -> int:
+     >>> expected_black_ball_position(4, 4)
+     592707587
+     """
+-    raise NotImplementedError
++    MOD = 998244353
++    if N == 1:
++        return 1
++    inv_n2 = pow(N * N % MOD, MOD - 2, MOD)
++    move = 2 * inv_n2 % MOD  # prob. of moving from position 1 to a specific other position
++    stay = (1 - (N - 1) * move) % MOD
++    # p = probability the black ball is at position 1
++    p = 1
++    for _ in range(K):
++        p = (p * stay + (1 - p) * move) % MOD
++    # Other positions are equally likely; their average is (N + 2) / 2
++    avg_rest = (N + 2) * pow(2, MOD - 2, MOD) % MOD
++    return (p + (1 - p) * avg_rest) % MOD

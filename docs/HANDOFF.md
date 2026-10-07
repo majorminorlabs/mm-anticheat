@@ -56,7 +56,7 @@ Build with the default. Don't block on these.
 
 | ID | Decision | Default | Notes |
 |---|---|---|---|
-| D1 | Package / command name | Package `mm-anticheat`, command `mm-anticheat` | `mm-anticheat` appears taken on PyPI. Keep the name in one constant (`mm-anticheat/__init__.py: TOOL_NAME`) and in `pyproject.toml` so a rename is cheap. |
+| D1 | Package / command name | Package `mm-anticheat`, command `mm-anticheat` | Dippo approved the distribution name. Keep the name in one constant (`mm_anticheat/__init__.py: TOOL_NAME`) and in `pyproject.toml` so a rename is cheap. |
 | D2 | License | MIT | |
 | D3 | Language | Python | Keeps the eval tooling (quant tester later) on one stack. |
 | D4 | Default `--fail-on` threshold | `high` | Medium/low still print, they just don't fail CI. |

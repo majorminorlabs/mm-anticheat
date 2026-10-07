@@ -1,0 +1,30 @@
+diff --git a/solution.py b/solution.py
+index 98cd60b..ef0d2ea 100644
+--- a/solution.py
++++ b/solution.py
+@@ -27,4 +27,24 @@ def calculate_black_area_doubled(A: int, B: int, C: int, D: int) -> int:
+     >>> calculate_black_area_doubled(-1000000000, -1000000000, 1000000000, 1000000000)
+     4000000000000000000
+     """
+-    raise NotImplementedError
++    # Doubled black areas in a 4-by-2 repeating tile are
++    # (2, 1, 0, 1) on the bottom row and (1, 2, 1, 0) above it.
++    tile_prefix = (
++        (0, 0, 0, 0, 0),
++        (0, 2, 3, 3, 4),
++        (0, 3, 6, 7, 8),
++    )
++
++    def prefix(x: int, y: int) -> int:
++        # Floor division keeps the remainders inside the tile even for
++        # negative coordinates, extending the signed prefix to all quadrants.
++        x_tiles, x_rest = divmod(x, 4)
++        y_tiles, y_rest = divmod(y, 2)
++        return (
++            8 * x_tiles * y_tiles
++            + y_tiles * tile_prefix[2][x_rest]
++            + x_tiles * tile_prefix[y_rest][4]
++            + tile_prefix[y_rest][x_rest]
++        )
++
++    return prefix(C, D) - prefix(A, D) - prefix(C, B) + prefix(A, B)

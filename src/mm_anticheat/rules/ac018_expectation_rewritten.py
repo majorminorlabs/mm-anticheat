@@ -1,9 +1,11 @@
 import ast
 import re
 
+from mm_anticheat.diffmodel import FileChange
+from mm_anticheat.engine import ScanContext
 from mm_anticheat.lang import jsts
 from mm_anticheat.lang.review import added_rows, paired_tests
-from mm_anticheat.rules.base import RuleBase
+from mm_anticheat.rules.base import Finding, RuleBase
 
 
 class Detector(RuleBase):
@@ -16,7 +18,7 @@ class Detector(RuleBase):
     legit_if = "The behavior is intentional and independently reviewed."
     details = "Full-file syntax comparison; a review signal, not a verdict about intent."
 
-    def check(self, change, ctx):
+    def check(self, change: FileChange, ctx: ScanContext) -> list[Finding]:
         if ctx.mode != "full" or not any(
             "source" in c.kinds and c.added + c.removed for c in ctx.changes
         ):

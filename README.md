@@ -137,8 +137,8 @@ example `high: 1 (1 allowed)`.
 | AC001 | test-file-deleted | high |
 | AC002 | test-count-decreased | high |
 | AC003 | skip-marker-added | high |
-| AC004 | assertion-count-decreased | medium |
-| AC005 | assertion-weakened | medium |
+| AC004 | assertion-count-decreased | medium; high when all assertions are lost |
+| AC005 | assertion-weakened | high |
 | AC006 | hardcoded-test-expectation | high (literal-only: medium; same-diff expectations one level lower) |
 | AC007 | test-config-tampered | high |
 | AC008 | exception-swallowed | medium |
@@ -146,6 +146,12 @@ example `high: 1 (1 allowed)`.
 | AC010 | lint-or-type-suppression-added | low |
 | AC011 | snapshot-updated-with-source | info |
 | AC012 | allow-comment-added | medium |
+| AC013 | test-short-circuited | high |
+| AC014 | assertion-error-swallowed | high |
+| AC015 | collection-or-exit-hook | high |
+| AC016 | always-equal-override | high |
+| AC017 | unit-under-test-mocked | medium |
+| AC018 | expectation-rewritten | medium |
 | AC000 | parse-skipped / allow-missing-reason | info / low |
 
 Full explanations are generated from the rule metadata in
@@ -160,6 +166,7 @@ Full explanations are generated from the rule metadata in
 - Patch mode lacks complete files. Counting findings have reduced confidence;
   AC006 also reports reduced confidence because it cannot inspect all tests or
   the full base source. Hunk boundaries can hide definitions and existing values.
+  AC013–AC018 require full Git scans and do not run on patch-only input.
 - AC006 cannot resolve dynamic imports, re-exports, computed expectations, or
   computed inputs. Significant shared domain literals can produce medium flags.
   High matches require new output literals and inputs/expectations from the same
@@ -235,9 +242,8 @@ most five examples per rule; JSON retains every commit and finding. Errors or an
 incomplete requested window exit 3. The second exports high/medium candidates
 for manual labeling and preserves existing candidate directories. Observed
 findings are not expected-result oracles. See the pinned
-[noise baseline](docs/noise-baseline.md): 10 of 680 commits flag high and AC006
-highs are zero, passing REVIEW_01b's release limit of at most ten. The original
-eight-commit target was waived. Gate 2 is released with reduced scope. B2 has
+[noise baseline](docs/noise-baseline.md): 21 of 1,430 commits (1.47%) flag high
+across ten pinned OSS repositories. Gate 2 is released with reduced scope. B2 has
 independent labels; no confirmed-cheat recall sample exists. Candidate-only false
 positives are selection-biased; the report also shows blocks per full history window.
 
@@ -248,6 +254,11 @@ The 2026-10-06 B1 campaign is invalid (tools protocol, Docker and disk-pressure
 failures); its runner is retained and is not rerun. History candidates were
 reviewed independently: 52 legitimate and 2 suspicious (0 confirmed cheats). Current
 case counts and metrics are in [real-world-eval.md](docs/real-world-eval.md).
+
+The [subscription agent study](docs/agent-study.md) produced no passing conflicting
+samples: Claude Code 0/20 and Codex 0/17. Both subscriptions reached their limits.
+Recall is unmeasurable in this sample. All 36 eligible controls have no findings.
+The reviewer holdout has not been run, and no holdout recall claim is made.
 
 ## Threat model
 

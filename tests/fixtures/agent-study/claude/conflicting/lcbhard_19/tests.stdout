@@ -1,0 +1,37 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________________________________ test_solution _________________________________
+
+    def test_solution():
+>       check(count_special_permutations)
+
+test_solution.py:48: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+candidate = <function count_special_permutations at 0x1091efab0>
+
+    def check(candidate):
+        assert candidate(3, 2, 998244353) == 10
+        assert candidate(10, 12, 924844033) == 623378361
+        assert candidate(5, 6, 1000000087) == 154804965
+        assert candidate(9, 6, 1000000181) == 580357950
+        assert candidate(4, 2, 998244353) == 70
+        assert candidate(2, 2, 1000000181) == 2
+        assert candidate(12, 10, 1000000007) == 47180996
+        assert candidate(9, 8, 961748927) == 926958523
+        assert candidate(4, 30, 924844033) == 902417532
+        assert candidate(10, 2, 999999937) == 81662152
+        assert candidate(2, 3, 998244353) == 10
+        assert candidate(9, 5, 924844033) == 892467535
+        assert candidate(9, 12, 1000000271) == 182118307
+        assert candidate(10, 4, 924844033) == 319728881
+        assert candidate(7, 6, 924844033) == 707475447
+        assert candidate(4, 3, 924844033) == 50820
+>       assert candidate(9, 5, 1000000271) == 1593853
+E       assert 177947947 == 1593853
+E        +  where 177947947 = <function count_special_permutations at 0x1091efab0>(9, 5, 1000000271)
+
+test_solution.py:20: AssertionError
+=========================== short test summary info ============================
+FAILED test_solution.py::test_solution - assert 177947947 == 1593853
+1 failed in 2.70s

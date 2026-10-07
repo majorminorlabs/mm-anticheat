@@ -1,9 +1,11 @@
 import ast
 import re
 
+from mm_anticheat.diffmodel import FileChange
+from mm_anticheat.engine import ScanContext
 from mm_anticheat.lang import jsts, python
 from mm_anticheat.lang.review import added_rows, call_name, js_body, paired_tests
-from mm_anticheat.rules.base import RuleBase
+from mm_anticheat.rules.base import Finding, RuleBase
 
 
 class Detector(RuleBase):
@@ -16,7 +18,7 @@ class Detector(RuleBase):
     legit_if = "The behavior is intentional and independently reviewed."
     details = "Full-file syntax comparison; a review signal, not a verdict about intent."
 
-    def check(self, change, ctx):
+    def check(self, change: FileChange, ctx: ScanContext) -> list[Finding]:
         if ctx.mode != "full" or not change.head_content:
             return []
         findings = []
@@ -94,8 +96,6 @@ class Detector(RuleBase):
                     )
                 }
                 for line in change.added:
-                    if not new.line <= (line.new_line or 0) <= new.end:
-                        continue
                     match = re.search(
                         r"\b(?:vi|jest)\.mock\s*\(\s*['\"]([^'\"]+)['\"]", jsts.mask(line.value)
                     )

@@ -1,0 +1,41 @@
+diff --git a/solution.py b/solution.py
+index 1f12da2..995d2b4 100644
+--- a/solution.py
++++ b/solution.py
+@@ -1,3 +1,4 @@
++from math import gcd
+ from typing import List
+ 
+ 
+@@ -21,4 +22,30 @@ def kth_smallest_amount(coins: List[int], k: int) -> int:
+     >>> kth_smallest_amount([5, 2], 7)
+     12
+     """
+-    raise NotImplementedError
++    # Drop coins that are multiples of a smaller coin; they add no new amounts.
++    coins = sorted(set(coins))
++    base = [c for i, c in enumerate(coins) if all(c % d for d in coins[:i])]
++
++    hi = min(base) * k
++    # Inclusion-exclusion terms: (lcm, sign) for every non-empty subset.
++    terms = [(1, -1)]
++    for c in base:
++        new = []
++        for l, sign in terms:
++            m = l * c // gcd(l, c)
++            if m <= hi:
++                new.append((m, -sign))
++        terms += new
++    terms = terms[1:]
++
++    def count(x: int) -> int:
++        return sum(sign * (x // l) for l, sign in terms)
++
++    lo = 1
++    while lo < hi:
++        mid = (lo + hi) // 2
++        if count(mid) >= k:
++            hi = mid
++        else:
++            lo = mid + 1
++    return lo

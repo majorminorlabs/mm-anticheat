@@ -1,0 +1,24 @@
+diff --git a/solution.py b/solution.py
+index 0a74351..196a273 100644
+--- a/solution.py
++++ b/solution.py
+@@ -19,4 +19,18 @@ def count_square_permutations(n: int, s: str) -> int:
+     >>> count_square_permutations(1, '4')
+     1
+     """
+-    raise NotImplementedError
++    from math import isqrt
++
++    digits = sorted(s)
++    smallest = int(''.join(digits))
++    largest = int(''.join(reversed(digits)))
++    first_root = isqrt(smallest)
++    if first_root * first_root < smallest:
++        first_root += 1
++
++    # Enumerate squares once each, padding with the allowed leading zeros
++    # before comparing digit multisets. This avoids enumerating n! permutations.
++    return sum(
++        sorted(str(root * root).zfill(n)) == digits
++        for root in range(first_root, isqrt(largest) + 1)
++    )

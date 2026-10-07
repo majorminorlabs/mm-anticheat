@@ -1,0 +1,32 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________________________________ test_solution _________________________________
+
+    def test_solution():
+>       check(min_operations_to_rearrange)
+
+test_solution.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+candidate = <function min_operations_to_rearrange at 0x1072e7ab0>
+
+    def check(candidate):
+        # Sample test cases
+        assert candidate(6, 'BWBWBW', 'WWWBBB') == 4
+        assert candidate(6, 'BBBBBB', 'WWWWWW') == -1
+        assert candidate(14, 'BBBWBWWWBBWWBW', 'WBWWBBWWWBWBBB') == 7
+    
+        # Additional test cases
+        assert candidate(10, 'BBBBBWBWWW', 'BBWWWWWBBB') == -1
+        assert candidate(14, 'WBWBWBWBWBWBWB', 'WWWWWWWBBBBBBB') == 8
+        assert candidate(14, 'BWBBBWBBWBBWBB', 'WWWWBBBBBBBBBB') == 8
+        assert candidate(14, 'BWBBBBBBBBBBBB', 'WBBBBBBBBBBBBB') == 4
+        assert candidate(4, 'WWBB', 'BBWW') == 3
+>       assert candidate(4, 'BBWW', 'WWBB') == 7
+E       AssertionError: assert 3 == 7
+E        +  where 3 = <function min_operations_to_rearrange at 0x1072e7ab0>(4, 'BBWW', 'WWBB')
+
+test_solution.py:15: AssertionError
+=========================== short test summary info ============================
+FAILED test_solution.py::test_solution - AssertionError: assert 3 == 7
+1 failed in 0.02s

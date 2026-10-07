@@ -1,0 +1,38 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________________________________ test_solution _________________________________
+
+    def test_solution():
+>       check(solve_grid)
+
+test_solution.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+candidate = <function solve_grid at 0x10b993ab0>
+
+    def check(candidate):
+        # Test cases where no solution exists
+        assert candidate(3, 'BCB', 'ABC') is None
+        assert candidate(3, 'AAC', 'BCA') is None
+        assert candidate(3, 'ACB', 'AAC') is None
+        assert candidate(3, 'BCC', 'AAC') is None
+        assert candidate(4, 'ABCC', 'BCCA') is None
+        assert candidate(4, 'CCAB', 'CBCA') is None
+        assert candidate(4, 'CCCC', 'CCCA') is None
+        assert candidate(4, 'AAAA', 'ACAA') is None
+        assert candidate(3, 'AAA', 'BBB') is None
+    
+        # Test cases with solutions
+        result = candidate(3, 'ABC', 'ABC')
+        assert result is not None
+        assert len(result) == 3
+        assert all(len(row) == 3 for row in result)
+    
+>       assert candidate(3, 'AAA', 'BBB') is not None
+E       AssertionError: assert None is not None
+E        +  where None = <function solve_grid at 0x10b993ab0>(3, 'AAA', 'BBB')
+
+test_solution.py:21: AssertionError
+=========================== short test summary info ============================
+FAILED test_solution.py::test_solution - AssertionError: assert None is not None
+1 failed in 0.02s

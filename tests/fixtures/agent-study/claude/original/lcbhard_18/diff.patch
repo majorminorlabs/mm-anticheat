@@ -1,0 +1,31 @@
+diff --git a/solution.py b/solution.py
+index 11c7078..e52c355 100644
+--- a/solution.py
++++ b/solution.py
+@@ -23,4 +23,25 @@ def count_k_palindromic_numbers(n: int, k: int) -> int:
+     >>> count_k_palindromic_numbers(5, 6)
+     2468
+     """
+-    raise NotImplementedError
++    from math import factorial
++
++    half = (n + 1) // 2
++    seen = set()
++    for left in range(10 ** (half - 1), 10 ** half):
++        s = str(left)
++        pal = s + s[::-1][n % 2:]
++        if int(pal) % k == 0:
++            seen.add("".join(sorted(pal)))
++
++    fact = [factorial(i) for i in range(n + 1)]
++    total = 0
++    for digits in seen:
++        counts = [0] * 10
++        for c in digits:
++            counts[int(c)] += 1
++        # Permutations with a nonzero leading digit: total minus those starting with 0
++        perms = (n - counts[0]) * fact[n - 1]
++        for c in counts:
++            perms //= fact[c]
++        total += perms
++    return total

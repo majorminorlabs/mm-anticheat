@@ -1,0 +1,46 @@
+diff --git a/solution.py b/solution.py
+index 1f12da2..c8775f7 100644
+--- a/solution.py
++++ b/solution.py
+@@ -1,4 +1,5 @@
+ from typing import List
++from math import lcm
+ 
+ 
+ def kth_smallest_amount(coins: List[int], k: int) -> int:
+@@ -21,4 +22,34 @@ def kth_smallest_amount(coins: List[int], k: int) -> int:
+     >>> kth_smallest_amount([5, 2], 7)
+     12
+     """
+-    raise NotImplementedError
++    # Multiples of a denomination already covered by a smaller one add nothing.
++    denominations = []
++    for coin in sorted(set(coins)):
++        if not any(coin % smaller == 0 for smaller in denominations):
++            denominations.append(coin)
++
++    upper = denominations[0] * k
++    # Inclusion-exclusion counts the union of the sets of multiples. Merge
++    # subsets with the same LCM to keep each binary-search step inexpensive.
++    coefficients = {}
++    for coin in denominations:
++        additions = {coin: 1}
++        for multiple, coefficient in coefficients.items():
++            intersection = lcm(multiple, coin)
++            if intersection <= upper:
++                additions[intersection] = additions.get(intersection, 0) - coefficient
++        for multiple, coefficient in additions.items():
++            coefficients[multiple] = coefficients.get(multiple, 0) + coefficient
++            if coefficients[multiple] == 0:
++                del coefficients[multiple]
++
++    lower = denominations[0]
++    while lower < upper:
++        midpoint = (lower + upper) // 2
++        count = sum(coefficient * (midpoint // multiple)
++                    for multiple, coefficient in coefficients.items())
++        if count >= k:
++            upper = midpoint
++        else:
++            lower = midpoint + 1
++    return lower

@@ -24,7 +24,7 @@ LIST_KEYS = {
     "testpaths",
 }
 TEST_RUN = re.compile(
-    r"\bpytest\b|\b(?:npm|pnpm|yarn)\s+(?:run\s+)?test(?:[\w:-]*)\b|"
+    r"\bpytest\b|\b(?:npm|pnpm|yarn|nub)\s+(?:run\s+)?(?:--[^\s]+\s+(?:(?!--)\S+\s+)?)*test(?:[\w:-]*)\b|"
     r"\bpython(?:3)?\s+-m\s+unittest\b|\b(?:jest|vitest|mocha|tox|nox)\b|"
     r"\bhatch\s+test\b|\b(?:make|bun|deno|go|cargo)\s+test\b|"
     r"\b(?:turbo|nx)\s+(?:run\s+)?test(?:[\w:-]*)\b"

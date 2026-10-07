@@ -1,0 +1,28 @@
+diff --git a/solution.py b/solution.py
+index 58ce8c0..2fc8281 100644
+--- a/solution.py
++++ b/solution.py
+@@ -21,4 +21,22 @@ def count_powerful_integers(start: int, finish: int, limit: int, s: str) -> int:
+     >>> count_powerful_integers(1000, 2000, 4, "3000")
+     0
+     """
+-    raise NotImplementedError
++    if any(int(c) > limit for c in s):
++        return 0
++
++    def count_up_to(n: int) -> int:
++        digits = str(n)
++        if len(digits) < len(s):
++            return 0
++        p = len(digits) - len(s)
++        total = 0
++        for i in range(p):
++            d = int(digits[i])
++            total += min(d, limit + 1) * (limit + 1) ** (p - i - 1)
++            if d > limit:
++                return total
++        if int(digits[p:]) >= int(s):
++            total += 1
++        return total
++
++    return count_up_to(finish) - count_up_to(start - 1)

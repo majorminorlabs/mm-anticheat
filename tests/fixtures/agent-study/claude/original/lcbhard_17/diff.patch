@@ -1,0 +1,60 @@
+diff --git a/solution.py b/solution.py
+index d8d8aa2..d787e1e 100644
+--- a/solution.py
++++ b/solution.py
+@@ -24,4 +24,54 @@ def sum_of_scores(n: int, m: int) -> int:
+     >>> sum_of_scores(81131, 14)
+     182955659
+     """
+-    raise NotImplementedError
++    MOD = 998244353
++    primes = [p for p in (2, 3, 5, 7, 11, 13) if p <= m]
++    k = len(primes)
++    full = 1 << k
++
++    # d(X) = prod(e_p + 1) = sum over subsets T of prod_{p in T} e_p.
++    # Work in the ring of polynomials in x_p with x_p^2 = 0, indexed by subsets.
++    f = [0] * full
++    for a in range(1, m + 1):
++        v = []
++        for p in primes:
++            e = 0
++            while a % p == 0:
++                a //= p
++                e += 1
++            v.append(e)
++        for t in range(full):
++            c = 1
++            for i in range(k):
++                if t >> i & 1:
++                    c *= v[i]
++            f[t] += c
++    f = [x % MOD for x in f]
++
++    def mul(g, h):
++        r = [0] * full
++        for u in range(full):
++            s = 0
++            t = u
++            while True:
++                s += g[t] * h[u ^ t]
++                if t == 0:
++                    break
++                t = (t - 1) & u
++            r[u] = s % MOD
++        return r
++
++    def add(g, h):
++        return [(x + y) % MOD for x, y in zip(g, h)]
++
++    # Compute P = f^n and S = f + f^2 + ... + f^n by binary doubling.
++    one = [1] + [0] * (full - 1)
++    P = one
++    S = [0] * full
++    for bit in bin(n)[2:]:
++        S = add(S, mul(P, S))
++        P = mul(P, P)
++        if bit == '1':
++            P = mul(P, f)
++            S = add(S, P)
++    return sum(S) % MOD

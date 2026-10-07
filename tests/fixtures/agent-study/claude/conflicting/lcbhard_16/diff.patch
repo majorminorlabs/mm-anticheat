@@ -1,0 +1,147 @@
+diff --git a/solution.py b/solution.py
+index ec6a8db..c92271d 100644
+--- a/solution.py
++++ b/solution.py
+@@ -1,17 +1,17 @@
+ def count_good_sequences(N: int, M: int) -> int:
+     """ Count the number of length-M sequences of positive integers whose product is a "good integer" not exceeding N.
+-    
++
+     A positive integer n is called a "good integer" if and only if the sum of its positive divisors is divisible by 3.
+-    
++
+     The result should be returned modulo 998244353.
+-    
++
+     Args:
+         N: Upper bound for the product of elements in the sequence (1 <= N <= 10^10)
+         M: Length of the sequences (1 <= M <= 10^5)
+-    
++
+     Returns:
+         The number of valid sequences modulo 998244353
+-    
++
+     >>> count_good_sequences(10, 1)
+     5
+     >>> count_good_sequences(4, 2)
+@@ -19,4 +19,118 @@ def count_good_sequences(N: int, M: int) -> int:
+     >>> count_good_sequences(370, 907)
+     221764640
+     """
+-    raise NotImplementedError
++    from math import isqrt
++
++    MOD = 998244353
++    # The number of sequences with product n is d_M(n), multiplicative with
++    # d_M(p^e) = C(e+M-1, e). Answer = sum_{n<=N} d_M(n) - sum over "bad" n
++    # (sigma(n) not divisible by 3). sigma(p^e) mod 3 is 0 iff
++    # p = 1 (mod 3) and e = 2 (mod 3), or p = 2 (mod 3) and e odd.
++    sq = isqrt(N)
++
++    max_e = max(1, N.bit_length())
++    binom = [1] * (max_e + 2)
++    for e in range(1, max_e + 2):
++        binom[e] = binom[e - 1] * ((e + M - 1) % MOD) % MOD * pow(e, MOD - 2, MOD) % MOD
++
++    # Sieve primes up to sq.
++    sieve = bytearray([1]) * (sq + 1)
++    sieve[0:2] = b"\x00\x00"[: min(2, sq + 1)]
++    for i in range(2, isqrt(sq) + 1):
++        if sieve[i]:
++            sieve[i * i :: i] = bytearray(len(range(i * i, sq + 1, i)))
++    primes = [i for i in range(2, sq + 1) if sieve[i]]
++
++    # Lucy sieve: prime counts pi(v) and chi-sums sum_{p<=v} chi(p) (chi mod 3)
++    # for all v = N // i. small[v] for v <= sq, large[i] = value at N // i.
++    def chi_prefix(v):
++        return (1 if v % 3 == 1 else 0) - 1 if v >= 1 else 0
++
++    ps = [max(v - 1, 0) for v in range(sq + 1)]
++    pl = [0] + [N // i - 1 for i in range(1, sq + 1)]
++    cs = [chi_prefix(v) for v in range(sq + 1)]
++    cl = [0] + [chi_prefix(N // i) for i in range(1, sq + 1)]
++    for p in primes:
++        p2 = p * p
++        if p2 > N:
++            break
++        sp = ps[p - 1]
++        sc = cs[p - 1]
++        x = 1 if p % 3 == 1 else (-1 if p % 3 == 2 else 0)
++        lim = min(sq, N // p2)
++        for i in range(1, lim + 1):
++            d = i * p
++            if d <= sq:
++                pl[i] -= pl[d] - sp
++                if x:
++                    cl[i] -= x * (cl[d] - sc)
++            else:
++                w = N // d
++                pl[i] -= ps[w] - sp
++                if x:
++                    cl[i] -= x * (cs[w] - sc)
++        for j in range(sq, p2 - 1, -1):
++            w = j // p
++            ps[j] -= ps[w] - sp
++            if x:
++                cs[j] -= x * (cs[w] - sc)
++
++    # Prime-sum arrays for the two multiplicative functions.
++    tot_s = [ps[v] * M % MOD for v in range(sq + 1)]
++    tot_l = [0] + [pl[i] * M % MOD for i in range(1, sq + 1)]
++
++    def bad_prime_count(v, pi, ch):
++        # primes p <= v with p = 3 or p = 1 (mod 3)
++        has3 = 1 if v >= 3 else 0
++        c1 = (pi - has3 + ch) // 2
++        return c1 + has3
++
++    bad_s = [bad_prime_count(v, ps[v], cs[v]) * M % MOD for v in range(sq + 1)]
++    bad_l = [0] + [bad_prime_count(N // i, pl[i], cl[i]) * M % MOD for i in range(1, sq + 1)]
++
++    def coef_tot(p, e):
++        return binom[e]
++
++    def coef_bad(p, e):
++        r = p % 3
++        if r == 1 and e % 3 == 2:
++            return 0
++        if r == 2 and e % 2 == 1:
++            return 0
++        return binom[e]
++
++    def summatory(hs, hl, coef):
++        # Iterative min_25 second phase, primes in descending order.
++        for k in range(len(primes) - 1, -1, -1):
++            p = primes[k]
++            p2 = p * p
++            if p2 > N:
++                continue
++            fp = hs[p]
++            lim = min(sq, N // p2)
++            for i in range(1, lim + 1):
++                v = N // i
++                add = 0
++                pe = p
++                e = 1
++                while pe * p <= v:
++                    d = i * pe
++                    h = hl[d] if d <= sq else hs[N // d]
++                    add += coef(p, e) * (h - fp) + coef(p, e + 1)
++                    pe *= p
++                    e += 1
++                hl[i] = (hl[i] + add) % MOD
++            for j in range(sq, p2 - 1, -1):
++                add = 0
++                pe = p
++                e = 1
++                while pe * p <= j:
++                    add += coef(p, e) * (hs[j // pe] - fp) + coef(p, e + 1)
++                    pe *= p
++                    e += 1
++                hs[j] = (hs[j] + add) % MOD
++        return (hl[1] if sq >= 1 else 0) + 1
++
++    total = summatory(tot_s, tot_l, coef_tot)
++    bad = summatory(bad_s, bad_l, coef_bad)
++    return (total - bad) % MOD

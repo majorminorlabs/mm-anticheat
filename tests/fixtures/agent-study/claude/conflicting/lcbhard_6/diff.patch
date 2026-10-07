@@ -1,0 +1,63 @@
+diff --git a/solution.py b/solution.py
+index da85e31..0334ba9 100644
+--- a/solution.py
++++ b/solution.py
+@@ -24,4 +24,57 @@ def can_tile_grid(n: int, h: int, w: int, tiles: List[Tuple[int, int]]) -> bool:
+     >>> can_tile_grid(1, 2, 2, [(1, 1)])
+     False
+     """
+-    raise NotImplementedError
++    grid = [[False] * w for _ in range(h)]
++    used = [False] * n
++
++    def first_empty():
++        for i in range(h):
++            for j in range(w):
++                if not grid[i][j]:
++                    return i, j
++        return None
++
++    def fits(r, c, a, b):
++        if r + a > h or c + b > w:
++            return False
++        return all(not grid[i][j] for i in range(r, r + a) for j in range(c, c + b))
++
++    def fill(r, c, a, b, val):
++        for i in range(r, r + a):
++            for j in range(c, c + b):
++                grid[i][j] = val
++
++    def solve():
++        cell = first_empty()
++        if cell is None:
++            return True
++        r, c = cell
++        tried = set()
++        for k in range(n):
++            if used[k]:
++                continue
++            a, b = tiles[k]
++            # Skip duplicate tile shapes at this position
++            key = (min(a, b), max(a, b))
++            if key in tried:
++                continue
++            tried.add(key)
++            for x, y in {(a, b), (b, a)}:
++                if fits(r, c, x, y):
++                    used[k] = True
++                    fill(r, c, x, y, True)
++                    if solve():
++                        return True
++                    fill(r, c, x, y, False)
++                    used[k] = False
++        return False
++
++    # Prune: some subset of tile areas must sum to exactly h * w
++    target = h * w
++    reachable = {0}
++    for a, b in tiles:
++        reachable |= {s + a * b for s in reachable if s + a * b <= target}
++    if target not in reachable:
++        return False
++
++    return solve()

@@ -1,0 +1,42 @@
+diff --git a/solution.py b/solution.py
+index 0965c01..bb70d32 100644
+--- a/solution.py
++++ b/solution.py
+@@ -22,4 +22,36 @@ def find_palindrome_expression(n: int) -> str:
+     >>> find_palindrome_expression(3)
+     '3'
+     """
+-    raise NotImplementedError
++    from functools import lru_cache
++    from math import isqrt
++
++    # Every outer factor must be paired with its digit reversal. At least
++    # one member of each pair is at most sqrt(n), so this finds all pairs.
++    pairs = []
++    for factor in range(2, isqrt(n) + 1):
++        if n % factor:
++            continue
++        digits = str(factor)
++        if '0' in digits:
++            continue
++        reverse = int(digits[::-1])
++        if reverse < factor:
++            continue
++        product = factor * reverse
++        if n % product == 0:
++            pairs.append((product, digits, digits[::-1]))
++
++    @lru_cache(maxsize=None)
++    def solve(value):
++        digits = str(value)
++        if '0' not in digits and digits == digits[::-1]:
++            return digits
++        for product, left, right in pairs:
++            if value % product == 0:
++                middle = solve(value // product)
++                if middle is not None:
++                    return left + '*' + middle + '*' + right
++        return None
++
++    result = solve(n)
++    return result if result is not None else '-1'

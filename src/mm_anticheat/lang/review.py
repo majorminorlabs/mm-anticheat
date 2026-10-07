@@ -2,10 +2,11 @@
 
 import ast
 
+from mm_anticheat.diffmodel import FileChange
 from mm_anticheat.lang import jsts, python
 
 
-def call_name(node):
+def call_name(node: ast.AST) -> str:
     if isinstance(node, ast.Name):
         return node.id
     if isinstance(node, ast.Attribute):
@@ -13,7 +14,9 @@ def call_name(node):
     return ""
 
 
-def paired_tests(change):
+def paired_tests(
+    change: FileChange,
+) -> list[tuple[python.Test | jsts.Test, python.Test | jsts.Test]]:
     if change.base_content is None or change.head_content is None:
         return []
     parser = python.tests if change.path.endswith(".py") else jsts.tests
@@ -25,11 +28,11 @@ def paired_tests(change):
     ]
 
 
-def added_rows(change):
-    return {line.new_line for line in change.added}
+def added_rows(change: FileChange) -> set[int]:
+    return {line.new_line for line in change.added if line.new_line is not None}
 
 
-def js_body(content, test):
+def js_body(content: str, test: jsts.Test) -> list[jsts.Token]:
     items = [t for t in jsts.tokens(content[test.start : test.stop]) if t.kind != "comment"]
     pairs = jsts.pairs(items)
     for i, token in enumerate(items):
@@ -45,7 +48,7 @@ def js_body(content, test):
     return []
 
 
-def swallowed_asserts(test):
+def swallowed_asserts(test: python.Test) -> list[ast.Try]:
     result = []
     for node in ast.walk(test.node):
         if not isinstance(node, ast.Try):

@@ -1,0 +1,51 @@
+diff --git a/solution.py b/solution.py
+index 0c1b98b..2f2c1f5 100644
+--- a/solution.py
++++ b/solution.py
+@@ -29,4 +29,45 @@ def min_operations_to_rearrange(n: int, s: str, t: str) -> int:
+     >>> min_operations_to_rearrange(3, 'BBW', 'BBW')
+     0
+     """
+-    raise NotImplementedError
++    if s == t:
++        return 0
++    if s.count('B') != t.count('B'):
++        return -1
++
++    # A state records black-stone positions and the first of the two empty
++    # cells. White stones occupy every remaining nonempty position.
++    start = (sum(1 << i for i, stone in enumerate(s) if stone == 'B'), n)
++    goal = (sum(1 << i for i, stone in enumerate(t) if stone == 'B'), n)
++    sources = [
++        [i for i in range(n + 1) if i + 1 < hole or i > hole + 1]
++        for hole in range(n + 1)
++    ]
++
++    frontier = {start}
++    other_frontier = {goal}
++    distances = {start: 0}
++    other_distances = {goal: 0}
++
++    # Every move can be reversed, so search from both configurations and
++    # expand one complete layer of the smaller frontier at a time.
++    while frontier and other_frontier:
++        if len(frontier) > len(other_frontier):
++            frontier, other_frontier = other_frontier, frontier
++            distances, other_distances = other_distances, distances
++
++        next_frontier = set()
++        for mask, hole in frontier:
++            distance = distances[(mask, hole)] + 1
++            for source in sources[hole]:
++                pair = (mask >> source) & 3
++                moved_mask = (mask & ~(3 << source)) | (pair << hole)
++                state = (moved_mask, source)
++                if state in distances:
++                    continue
++                if state in other_distances:
++                    return distance + other_distances[state]
++                distances[state] = distance
++                next_frontier.add(state)
++        frontier = next_frontier
++
++    return -1

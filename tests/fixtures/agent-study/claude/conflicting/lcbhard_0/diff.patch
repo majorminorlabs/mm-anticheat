@@ -1,0 +1,64 @@
+diff --git a/solution.py b/solution.py
+index cadd0aa..72ae3a9 100644
+--- a/solution.py
++++ b/solution.py
+@@ -1,18 +1,49 @@
++from functools import lru_cache
++
++
++def _count_upto(n: int, k: int) -> int:
++    """Count beautiful integers in [1, n] using a digit DP."""
++    if n <= 0:
++        return 0
++    digits = list(map(int, str(n)))
++    length = len(digits)
++
++    @lru_cache(maxsize=None)
++    def dp(pos: int, rem: int, diff: int, tight: bool, started: bool) -> int:
++        if pos == length:
++            return int(started and diff == 0 and rem == 0)
++        limit = digits[pos] if tight else 9
++        total = 0
++        for d in range(limit + 1):
++            now_started = started or d != 0
++            new_diff = diff + (1 if d % 2 == 0 else -1) if now_started else diff
++            total += dp(
++                pos + 1,
++                (rem * 10 + d) % k,
++                new_diff,
++                tight and d == limit,
++                now_started,
++            )
++        return total
++
++    return dp(0, 0, 0, True, False)
++
++
+ def count_beautiful_integers(low: int, high: int, k: int) -> int:
+     """ Count the number of beautiful integers in the range [low, high].
+-    
++
+     A number is beautiful if it meets both conditions:
+     1. The count of even digits equals the count of odd digits
+     2. The number is divisible by k
+-    
++
+     Args:
+         low: Lower bound of the range (inclusive), 0 < low <= high <= 10^9
+         high: Upper bound of the range (inclusive)
+         k: Divisor to check, 0 < k <= 20
+-    
++
+     Returns:
+         The count of beautiful integers in the given range
+-    
++
+     >>> count_beautiful_integers(10, 20, 3)
+     2
+     >>> count_beautiful_integers(1, 10, 1)
+@@ -20,4 +51,4 @@ def count_beautiful_integers(low: int, high: int, k: int) -> int:
+     >>> count_beautiful_integers(5, 5, 2)
+     0
+     """
+-    raise NotImplementedError
++    return _count_upto(high, k) - _count_upto(low - 1, k)

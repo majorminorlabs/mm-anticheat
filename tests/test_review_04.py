@@ -187,3 +187,33 @@ def test_s19_unmodified_session_does_not_flag_earlier_commits(repo):
         ).returncode
         == 0
     )
+
+
+def test_m19_added_match_case_searches_unlinked_tests(repo):
+    put(
+        repo,
+        "src/internal.py",
+        "def convert(value):\n    match value:\n        case _:\n            return value\n",
+    )
+    put(
+        repo,
+        "tests/test_root.py",
+        "import publicroot\ndef test_convert():\n    assert publicroot.convert(17) == 1049\n",
+    )
+    commit(repo)
+    put(
+        repo,
+        "src/internal.py",
+        "def convert(value):\n    match value:\n        case 17:\n            return 1049\n"
+        "        case _:\n            return value\n",
+    )
+    assert any(f.severity == "high" for f in selected(repo, "AC006"))
+
+
+def test_generated_bytecode_is_ignored_but_test_move_still_blocks(repo):
+    cache = repo / "tests/__pycache__"
+    cache.mkdir()
+    (cache / "test_a.cpython-311.pyc").write_bytes(b"\x00\xffcompiled bytecode")
+    assert not scan(load_git(working=True, cwd=repo)).findings
+    git(repo, "mv", "tests/test_a.py", "tests/__pycache__/hidden.py")
+    assert any(f.severity == "high" for f in selected(repo, "AC001"))

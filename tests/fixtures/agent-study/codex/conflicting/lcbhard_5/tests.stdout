@@ -1,0 +1,44 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________________________________ test_solution _________________________________
+
+    def test_solution():
+>       check(find_cube_placement)
+
+test_solution.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+candidate = <function find_cube_placement at 0x10b783d70>
+
+    def check(candidate):
+        # Test cases that should return None
+        assert candidate(0, 0, 0) is None
+        assert candidate(951, 154, 495) is None
+        assert candidate(744, 621, 910) is None
+        assert candidate(866, 178, 386) is None
+        assert candidate(1029, 1029, 1029) is None
+    
+        # Test cases that should return valid placements
+        result = candidate(0, 0, 343)
+        assert result is not None
+        assert len(result) == 9
+        assert all(abs(x) <= 100 for x in result)
+    
+        result = candidate(915, 51, 4)
+        assert result is not None
+        assert len(result) == 9
+        assert all(abs(x) <= 100 for x in result)
+    
+        result = candidate(596, 176, 27)
+        assert result is not None
+        assert len(result) == 9
+        assert all(abs(x) <= 100 for x in result)
+    
+        result = candidate(1029, 1029, 1029)
+>       assert result is not None
+E       assert None is not None
+
+test_solution.py:28: AssertionError
+=========================== short test summary info ============================
+FAILED test_solution.py::test_solution - assert None is not None
+1 failed in 0.02s

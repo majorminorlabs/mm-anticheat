@@ -1,0 +1,67 @@
+diff --git a/solution.py b/solution.py
+index 8a99151..eab5ff3 100644
+--- a/solution.py
++++ b/solution.py
+@@ -1,4 +1,5 @@
+ from typing import Optional, List
++from itertools import permutations
+ 
+ 
+ def solve_grid(n: int, r: str, c: str) -> Optional[List[str]]:
+@@ -21,7 +22,53 @@ def solve_grid(n: int, r: str, c: str) -> Optional[List[str]]:
+     
+     >>> solve_grid(3, 'ABC', 'ABC')
+     ['ABC', 'BCA', 'CAB']
+-    >>> solve_grid(3, 'AAA', 'BBB')
+-    None
++    >>> solve_grid(3, 'AAA', 'BBB') is None
++    True
+     """
+-    raise NotImplementedError
++    # Each row is determined by the three distinct positions of A, B, C.
++    candidates = {letter: [] for letter in 'ABC'}
++    for positions in permutations(range(n), 3):
++        row = ['.'] * n
++        for letter, column in zip('ABC', positions):
++            row[column] = letter
++        candidates[row[min(positions)]].append(''.join(row))
++
++    columns = [0] * n
++    grid = []
++    failed = set()
++
++    def search(row_index):
++        if row_index == n:
++            return all(mask == 7 for mask in columns)
++        state = (row_index, tuple(columns))
++        if state in failed:
++            return False
++
++        for row in candidates[r[row_index]]:
++            updated = columns.copy()
++            for column, letter in enumerate(row):
++                if letter == '.':
++                    continue
++                bit = 1 << (ord(letter) - ord('A'))
++                if columns[column] & bit:
++                    break
++                if columns[column] == 0 and letter != c[column]:
++                    break
++                updated[column] |= bit
++            else:
++                # Every missing letter needs a distinct remaining row.
++                remaining = n - row_index - 1
++                if any(3 - mask.bit_count() > remaining for mask in updated):
++                    continue
++                previous = columns.copy()
++                columns[:] = updated
++                grid.append(row)
++                if search(row_index + 1):
++                    return True
++                grid.pop()
++                columns[:] = previous
++
++        failed.add(state)
++        return False
++
++    return grid if search(0) else None

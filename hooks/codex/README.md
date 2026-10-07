@@ -1,7 +1,7 @@
 # Codex session and Stop hooks
 
 Install mm-anticheat into an operator-controlled Python 3.11+ environment.
-Merge both events into `.codex/hooks.json (or ~/.codex/hooks.json)`, replacing the Python path:
+Merge both events into `~/.codex/hooks.json`, replacing the Python path:
 
 ```json
 {
