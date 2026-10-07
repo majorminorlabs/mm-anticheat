@@ -1,16 +1,16 @@
-"""JSON v2 compatibility contract and human-report presentation boundaries."""
+"""JSON v3 compatibility contract and human-report presentation boundaries."""
 
 import json
 from pathlib import Path
 
 import pytest
 
-from goodhart.config import Allow, Config
-from goodhart.engine import scan
-from goodhart.report import json as json_report
-from goodhart.report import markdown, text
-from goodhart.report.rules import catalog, explain
-from goodhart.rules import all_rules
+from mm_anticheat.config import Allow, Config
+from mm_anticheat.engine import scan
+from mm_anticheat.report import json as json_report
+from mm_anticheat.report import markdown, text
+from mm_anticheat.report.rules import catalog, explain
+from mm_anticheat.rules import all_rules
 
 from .test_rule_edges import run_changes
 
@@ -25,7 +25,7 @@ def result():
 @pytest.mark.parametrize("full", [True, False])
 def test_json_v2_preserves_v1_fields_and_adds_config_source(full):
     result = run_changes([("src/a.py", "", 'flag = os.getenv("PYTEST_CURRENT_TEST")\n')], full=full)
-    result = scan(result.data, Config(allows=[Allow("GH009", "src/**", "Reviewed runner probe")]))
+    result = scan(result.data, Config(allows=[Allow("AC009", "src/**", "Reviewed runner probe")]))
     payload = json.loads(json_report.render(result))
     assert set(payload) == {
         "schema_version",
@@ -38,7 +38,7 @@ def test_json_v2_preserves_v1_fields_and_adds_config_source(full):
         "findings",
         "config",
     }
-    assert payload["schema_version"] == "2" and payload["tool"] == "goodhart-check"
+    assert payload["schema_version"] == "3" and payload["tool"] == "mm-anticheat"
     assert payload["config"] == {"source": "defaults"}
     assert isinstance(payload["tool_version"], str)
     assert payload["mode"] == ("full" if full else "patch")
@@ -106,7 +106,7 @@ def test_markdown_fences_and_html_escape(result):
     finding.file = "src/<probe>.py"
     finding.evidence = "```\n</details><script>\n````"
     output = markdown.render(result)
-    assert "<summary>[high] GH009 Review &lt;script&gt; &amp; quote</summary>" in output
+    assert "<summary>[high] AC009 Review &lt;script&gt; &amp; quote</summary>" in output
     assert "src/&lt;probe&gt;.py" in output
     assert "`````text\n```\n</details><script>\n````\n`````" in output
     assert output.count("<details>") == len(result.findings)

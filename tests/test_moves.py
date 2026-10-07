@@ -2,7 +2,7 @@
 
 import pytest
 
-from goodhart.engine import scan
+from mm_anticheat.engine import scan
 
 from .test_rule_edges import run_changes
 
@@ -17,7 +17,7 @@ def test_stub_rejected_and_explained(full, body):
             ("tests/test_other.py", "", f"def test_slug_basic():\n    {body}\n"),
         ],
         full=full,
-        only={"GH001", "GH002"},
+        only={"AC001", "AC002"},
     )
     finding = result.findings[0]
     assert finding.severity == "high"
@@ -28,7 +28,7 @@ def test_stub_rejected_and_explained(full, body):
     # The same guard applies when the whole source test file was deleted.
     result.data.changes[0].new_path = None
     deleted = scan(result.data)
-    assert next(f for f in deleted.findings if f.rule_id == "GH001").severity == "high"
+    assert next(f for f in deleted.findings if f.rule_id == "AC001").severity == "high"
 
 
 @pytest.mark.parametrize("full", [True, False])
@@ -48,7 +48,7 @@ def test_js_stub_cannot_borrow_next_test_assertions(full):
             ),
         ],
         full=full,
-        only={"GH002"},
+        only={"AC002"},
     )
     assert result.findings[0].severity == "high"
 
@@ -60,6 +60,6 @@ def test_existing_same_name_destination_is_not_reused():
             ("tests/test_text.py", test, ""),
             ("tests/test_other.py", test, test + "\ndef test_slug_basic():\n    pass\n"),
         ],
-        only={"GH002"},
+        only={"AC002"},
     )
     assert result.findings[0].severity == "high"

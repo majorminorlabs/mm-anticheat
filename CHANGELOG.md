@@ -2,12 +2,12 @@
 
 ## 0.1.0 (unreleased)
 
-- Python and JS/TS diff review with GH001–GH012 and GH000 diagnostics.
-- Git range, working tree, staged and patch inputs; text, JSON v2 and Markdown.
+- Python and JS/TS diff review with AC001–AC012 and AC000 diagnostics.
+- Git range, working tree, staged and patch inputs; text, JSON v3 and Markdown.
 - Trusted base-side config and preexisting inline approvals, with audit findings.
 - GitHub Action, pre-commit, Claude Code and Codex session and Stop hooks, isolated from planted packages.
-- Session-base scans include committed work; hidden index edits produce GH007 high.
-- Saved blocked/unresolved scans under .goodhart/captures/, with local ignores.
+- Session-base scans include committed work; hidden index edits produce AC007 high.
+- Saved blocked/unresolved scans under .anticheat/captures/, with local ignores.
 - New-config, skip-gate, deleted-import, same-diff expectation and JS regex repairs.
 - Pinned noise baseline and independently labeled own-history candidates.
 

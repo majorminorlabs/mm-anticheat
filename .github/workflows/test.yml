@@ -27,3 +27,19 @@ jobs:
         with:
           fail-on: high
           comment: 'false'
+  required-checks:
+    name: Checks
+    if: always()
+    needs: [tests, scan-pr]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require tests and the PR scan
+        env:
+          TEST_RESULT: ${{ needs.tests.result }}
+          SCAN_RESULT: ${{ needs.scan-pr.result }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          test "$TEST_RESULT" = success
+          if [ "$EVENT" = pull_request ]; then
+            test "$SCAN_RESULT" = success
+          fi

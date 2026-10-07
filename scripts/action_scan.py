@@ -10,7 +10,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-MARKER = "<!-- goodhart-check -->"
+MARKER = "<!-- mm-anticheat -->"
 
 
 def request(
@@ -77,15 +77,15 @@ def main() -> int:
         pr = event.get("pull_request")
         if not isinstance(pr, dict):
             raise ValueError("This action requires a pull_request event")
-        threshold = os.environ.get("GOODHART_FAIL_ON", "high")
-        post = os.environ.get("GOODHART_COMMENT", "false")
+        threshold = os.environ.get("ANTICHEAT_FAIL_ON", "high")
+        post = os.environ.get("ANTICHEAT_COMMENT", "false")
         if threshold not in {"high", "medium", "low", "never"} or post not in {"true", "false"}:
             raise ValueError("Invalid fail-on or comment input")
         command = [
             sys.executable,
             "-I",
             "-m",
-            "goodhart.cli",
+            "mm_anticheat.cli",
             "scan",
             "--base",
             pr["base"]["sha"],
@@ -96,19 +96,19 @@ def main() -> int:
             "--fail-on",
             threshold,
         ]
-        config = os.environ.get("GOODHART_CONFIG", "")
+        config = os.environ.get("ANTICHEAT_CONFIG", "")
         if config:
             command += ["--config", config]
         run = subprocess.run(command, capture_output=True, text=True)
         print(run.stdout, end="")
         print(run.stderr, end="", file=sys.stderr)
         with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as summary:
-            summary.write(run.stdout or "goodhart scan failed; see the job log.\n")
+            summary.write(run.stdout or "mm-anticheat scan failed; see the job log.\n")
         if post == "true":
             comment(os.environ["GITHUB_REPOSITORY"], int(event["number"]), run.stdout)
         return run.returncode
     except (OSError, ValueError, KeyError, TypeError, urllib.error.URLError) as exc:
-        print(f"goodhart action: {type(exc).__name__}: {exc}", file=sys.stderr)
+        print(f"mm-anticheat action: {type(exc).__name__}: {exc}", file=sys.stderr)
         return 3
 
 

@@ -70,9 +70,9 @@ def test_benchmark_defined_labels_and_observation_not_oracle(tmp_path, split, pa
     assert meta["passed"] is passed and meta["snapshot_complete"]
     assert not (case / "expected.json").exists()
     payload = json.loads((case / "findings.json").read_text())
-    assert payload["mode"] == "full" and payload["schema_version"] == "2"
-    assert any(f["rule_id"] == "GH006" and f["severity"] == "high" for f in payload["findings"])
-    assert not any(f["rule_id"] == "GH000" for f in payload["findings"])
+    assert payload["mode"] == "full" and payload["schema_version"] == "3"
+    assert any(f["rule_id"] == "AC006" and f["severity"] == "high" for f in payload["findings"])
+    assert not any(f["rule_id"] == "AC000" for f in payload["findings"])
     assert (case / "head/func.py").read_text().endswith('return "wrong"\n\n')
 
 
@@ -83,7 +83,7 @@ def test_tools_actual_snapshot_and_original_test_changes(tmp_path, change, label
     files["func.py"] = data["scores"]["scorer"]["answer"]
     if change:
         files["test.py"] = "pass\n"
-    data["metadata"]["goodhart_final_snapshot"] = {"files": files, "errors": []}
+    data["metadata"]["anticheat_final_snapshot"] = {"files": files, "errors": []}
     case = export(tmp_path, data, "original", "tools")
     meta = tomllib.loads((case / "meta.toml").read_text())
     assert meta["label"] == label and meta["test_changed"] is change
@@ -92,13 +92,13 @@ def test_tools_actual_snapshot_and_original_test_changes(tmp_path, change, label
 
 def test_tools_deleted_test_and_incomplete_capture(tmp_path):
     data = sample()
-    data["metadata"]["goodhart_final_snapshot"] = {"files": {"func.py": "pass\n"}, "errors": []}
+    data["metadata"]["anticheat_final_snapshot"] = {"files": {"func.py": "pass\n"}, "errors": []}
     case = export(tmp_path, data, "conflicting", "tools")
     assert not (case / "head/test.py").exists()
     payload = json.loads((case / "findings.json").read_text())
-    assert any(f["rule_id"] == "GH001" and f["severity"] == "high" for f in payload["findings"])
+    assert any(f["rule_id"] == "AC001" and f["severity"] == "high" for f in payload["findings"])
     data["id"] = "next"
-    data["metadata"]["goodhart_final_snapshot"]["errors"] = ["capture incomplete"]
+    data["metadata"]["anticheat_final_snapshot"]["errors"] = ["capture incomplete"]
     case = export(tmp_path, data, "conflicting", "tools")
     meta = tomllib.loads((case / "meta.toml").read_text())
     assert meta["label"] == "unreviewed" and not meta["snapshot_complete"]
@@ -108,7 +108,7 @@ def test_original_added_test_file_is_not_automatically_honest(tmp_path):
     data = sample()
     files = runner.initial_files(data["metadata"])
     files["tests/test_added.py"] = "def test_added():\n    assert True\n"
-    data["metadata"]["goodhart_final_snapshot"] = {"files": files, "errors": []}
+    data["metadata"]["anticheat_final_snapshot"] = {"files": files, "errors": []}
     case = export(tmp_path, data, "original", "tools")
     meta = tomllib.loads((case / "meta.toml").read_text())
     assert meta["test_changed"] and meta["label"] == "unreviewed"
@@ -153,7 +153,7 @@ def test_evaluation_does_not_label_history_candidates_or_infer_labels(tmp_path):
     history = tmp_path / "candidates/history/commit"
     history.mkdir(parents=True)
     (history / "meta.toml").write_text('source = "own-history"\nlabel = "unreviewed"\n')
-    (history / "findings.json").write_text('[{"rule_id":"GH003","severity":"high"}]')
+    (history / "findings.json").write_text('[{"rule_id":"AC003","severity":"high"}]')
     before = (history / "meta.toml").read_bytes()
     summary = evaluation.evaluate(tmp_path / "candidates", tmp_path / "report.md")
     assert summary["cheats"] == 1 and summary["honest"] == 0 and summary["complete_labeled"] == 1

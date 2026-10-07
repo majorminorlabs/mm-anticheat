@@ -1,0 +1,8 @@
+--- a/value.test.js
++++ b/value.test.js
+@@ -1,4 +1,5 @@
+ import {run} from "subject";
+ test("value", () => {
++ vi.mock("subject", () => ({run: () => 100}));
+  expect(run(17)).toEqual(100);
+ });

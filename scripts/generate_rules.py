@@ -4,7 +4,7 @@
 import argparse
 from pathlib import Path
 
-from goodhart.report.rules import catalog
+from mm_anticheat.report.rules import catalog
 
 
 def main(argv: list[str] | None = None) -> int:

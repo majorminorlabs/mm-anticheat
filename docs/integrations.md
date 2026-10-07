@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: OWNER/GOODHART_REPO@PINNED_COMMIT
+      - uses: OWNER/ANTICHEAT_REPO@PINNED_COMMIT
         with:
           fail-on: high
           comment: 'false'
@@ -44,17 +44,17 @@ No comment is sent unless explicitly enabled. The REST implementation follows
 
 The root `.pre-commit-hooks.yaml` registers staged-only scanning, passes no file
 names and runs even when pre-commit's file filters select no files. Blocked
-staged scans also save their diff and findings JSON under .goodhart/captures/. Configure:
+staged scans also save their diff and findings JSON under .anticheat/captures/. Configure:
 
 ```yaml
 repos:
-  - repo: https://github.com/OWNER/GOODHART_REPO
+  - repo: https://github.com/OWNER/ANTICHEAT_REPO
     rev: PINNED_COMMIT
     hooks:
-      - id: goodhart
+      - id: mm-anticheat
 ```
 
-Use `pre-commit try-repo /path/to/cheat-detector goodhart` for local installation
+Use `pre-commit try-repo /path/to/cheat-detector mm-anticheat` for local installation
 validation. The hook exits 1 on unallowed high findings by default; unstaged
 changes are not included. It reads config from HEAD, not the changed index.
 
@@ -64,7 +64,7 @@ Setup: [Claude Code](../hooks/claude-code/README.md) and
 [Codex](../hooks/codex/README.md). Both have native Stop adapters. Findings block
 with exit 2 and text feedback; loop-protected invocations rescan, save unresolved captures and warn the user,
 then permit completion. SessionStart preserves a base covering agent commits.
-Blocked scans save exact diff plus complete JSON under .goodhart/captures/.
+Blocked scans save exact diff plus complete JSON under .anticheat/captures/.
 Captures are automatically excluded from Git ingestion; keep them gitignored too.
 No live agent settings are installed by these examples.
 
@@ -72,7 +72,7 @@ No live agent settings are installed by these examples.
 
 `tests/test_integrations.py` runs actual subprocess scans in fresh scratch repos:
 existing-test skip blocks both adapters with exit 2; captures contain the exact
-untracked and tracked diff plus high GH003 JSON; repeats make distinct captures;
+untracked and tracked diff plus high AC003 JSON; repeats make distinct captures;
 loop-protected invocations capture unresolved highs and emit systemMessage; reverting permits
 completion even with captures left on disk. Codex success output is valid JSON.
 A symlinked capture destination cannot silence a finding: the storage error is
@@ -94,10 +94,10 @@ workflow result. `.github/workflows/test.yml` is ready for that verification.
 ## REVIEW_03 integration regression
 
 The installed hook, both isolated shell wrappers and the Action scanner still
-block with a planted goodhart package. SessionStart preserves its original base
+block with a planted mm-anticheat package. SessionStart preserves its original base
 across resume/compact; a committed skip blocks at Stop. Direct index-flag reads
 block skip-worktree and assume-unchanged edits in working and staged modes.
 Repository fsmonitor commands never execute. Captures create their own gitignore
 and remain absent from git add -A. Repeated Stop warnings use systemMessage on
 both hosts; capture.json records unresolved state while findings.json retains
-schema v2. See tests/test_review_03.py and the hook READMEs.
+schema v3. See tests/test_review_03.py and the hook READMEs.

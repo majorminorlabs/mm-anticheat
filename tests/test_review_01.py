@@ -8,15 +8,15 @@ from pathlib import Path
 
 import pytest
 
-from goodhart.classify import classify
-from goodhart.cli import main
-from goodhart.config import Config
-from goodhart.engine import scan
-from goodhart.git import load_git, load_patch
-from goodhart.lang import jsts
-from goodhart.report.json import render
-from goodhart.rules.base import RuleBase
-from goodhart.util import comment_text
+from mm_anticheat.classify import classify
+from mm_anticheat.cli import main
+from mm_anticheat.config import Config
+from mm_anticheat.engine import scan
+from mm_anticheat.git import load_git, load_patch
+from mm_anticheat.lang import jsts
+from mm_anticheat.report.json import render
+from mm_anticheat.rules.base import RuleBase
+from mm_anticheat.util import comment_text
 
 from .conftest import git
 from .test_rule_edges import run_changes
@@ -86,7 +86,7 @@ def test_js_escape_cli_stderr_empty(tmp_path, capsys):
     assert main(["scan", "--diff", str(patch), "--format", "json"]) in {0, 1}
     assert capsys.readouterr().err == ""
     completed = subprocess.run(
-        [sys.executable, "-m", "goodhart.cli", "scan", "--diff", str(patch)],
+        [sys.executable, "-m", "mm_anticheat.cli", "scan", "--diff", str(patch)],
         capture_output=True,
         text=True,
     )
@@ -97,30 +97,30 @@ def test_js_escape_cli_stderr_empty(tmp_path, capsys):
 @pytest.mark.parametrize("exception", [IndexError, RuntimeError, RecursionError])
 def test_rule_failure_is_diagnostic_and_scan_continues(exception):
     class Broken(RuleBase):
-        id = "GH099"
+        id = "AC099"
         applies_to = {"source"}
 
         def check(self, change, ctx):
             raise exception("hostile input")
 
     data = load_patch("--- a/a.py\n+++ b/a.py\n@@ -1 +1 @@\n-x = 1\n+x = 2\n")
-    from goodhart.rules.gh009_test_environment_detection import TestEnvironmentDetection
+    from mm_anticheat.rules.ac009_test_environment_detection import TestEnvironmentDetection
 
     data.changes.extend(
         load_patch("--- a/b.py\n+++ b/b.py\n@@ -1 +1 @@\n-x = 1\n+x = os.getenv('CI')\n").changes
     )
     result = scan(data, rules=[Broken(), TestEnvironmentDetection()])
-    errors = [f for f in result.findings if f.rule_id == "GH000"]
+    errors = [f for f in result.findings if f.rule_id == "AC000"]
     assert len(errors) == 2
-    assert all(f"GH099: {exception.__name__}: hostile input" in f.evidence for f in errors)
-    assert any(f.rule_id == "GH009" and f.file == "b.py" for f in result.findings)
+    assert all(f"AC099: {exception.__name__}: hostile input" in f.evidence for f in errors)
+    assert any(f.rule_id == "AC009" and f.file == "b.py" for f in result.findings)
 
 
 @pytest.mark.parametrize("text", ["x" * 20_001 + "\n", "x = 1\n" * 170_000])
 def test_oversized_files_are_skipped_with_diagnostic(text):
     findings = run_changes([("src/a.py", "x = 1\n", text)]).findings
     assert len(findings) == 1
-    assert findings[0].rule_id == "GH000"
+    assert findings[0].rule_id == "AC000"
     assert "limit" in findings[0].evidence
 
 
@@ -175,7 +175,7 @@ def test_python_broad_tuple_catch():
     result = run_changes(
         [("src/a.py", "", "try:\n    run()\nexcept (ValueError, Exception):\n    pass\n")]
     )
-    assert any(f.rule_id == "GH008" and f.line == 3 for f in result.findings)
+    assert any(f.rule_id == "AC008" and f.line == 3 for f in result.findings)
 
 
 def test_python_ternary_scalar_output():
@@ -193,7 +193,7 @@ def test_python_ternary_scalar_output():
             ),
         ]
     )
-    assert [(f.rule_id, f.severity) for f in result.findings] == [("GH006", "high")]
+    assert [(f.rule_id, f.severity) for f in result.findings] == [("AC006", "high")]
 
 
 def test_each_named_expectation_column():
@@ -222,7 +222,7 @@ def test_python_match_expectation(full):
             ),
         ],
         full=full,
-        only={"GH006"},
+        only={"AC006"},
     )
     assert [(f.line, f.severity) for f in result.findings] == [(3, "high")]
 

@@ -2,10 +2,10 @@ import io
 
 import pytest
 
-from goodhart.classify import classify
-from goodhart.cli import main
-from goodhart.config import Config
-from goodhart.git import load_git, load_patch
+from mm_anticheat.classify import classify
+from mm_anticheat.cli import main
+from mm_anticheat.config import Config
+from mm_anticheat.git import load_git, load_patch
 
 from .conftest import git
 
@@ -138,7 +138,7 @@ def test_cli_bad_input(monkeypatch, repo):
 def test_untracked_empty_no_newline_and_special_paths(repo):
     (repo / "empty.py").write_text("")
     (repo / 'odd "name" é.py').write_text("value = 42")
-    (repo / "note.md").write_text('// goodhart: allow GH012 reason="reviewed"\n')
+    (repo / "note.md").write_text('// anticheat: allow AC012 reason="reviewed"\n')
     data = load_git(cwd=repo, working=True)
     changes = {change.path: change for change in data.changes}
     assert set(changes) == {"empty.py", 'odd "name" é.py', "note.md"}
@@ -147,7 +147,7 @@ def test_untracked_empty_no_newline_and_special_paths(repo):
 
 
 def test_ignored_files_not_scanned():
-    from goodhart.engine import scan
+    from mm_anticheat.engine import scan
 
     patch = "--- a/vendor/broken.py\n+++ b/vendor/broken.py\n@@ -1 +1 @@\n-x = 3\n+def broken(:\n"
     data = load_patch(patch)

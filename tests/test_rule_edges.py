@@ -6,13 +6,13 @@ import time
 
 import pytest
 
-from goodhart.classify import classify
-from goodhart.config import Config
-from goodhart.engine import scan
-from goodhart.git import load_git, load_patch
-from goodhart.lang import jsts, python
-from goodhart.report.json import render
-from goodhart.rules import all_rules
+from mm_anticheat.classify import classify
+from mm_anticheat.config import Config
+from mm_anticheat.engine import scan
+from mm_anticheat.git import load_git, load_patch
+from mm_anticheat.lang import jsts, python
+from mm_anticheat.report.json import render
+from mm_anticheat.rules import all_rules
 
 from .conftest import git
 
@@ -69,7 +69,7 @@ def test_untouched_importing_tests(repo, mode):
         staged=mode == "staged",
     )
     assert "checks.py" in data.extra_tests
-    assert any(f.rule_id == "GH006" and f.severity == "high" for f in scan(data).findings)
+    assert any(f.rule_id == "AC006" and f.severity == "high" for f in scan(data).findings)
 
 
 def test_untouched_js_importer(repo):
@@ -86,21 +86,21 @@ def test_untouched_js_importer(repo):
     )
     data = load_git(cwd=repo, working=True)
     assert "tests/parser.test.ts" in data.extra_tests
-    assert any(f.rule_id == "GH006" and f.severity == "high" for f in scan(data).findings)
+    assert any(f.rule_id == "AC006" and f.severity == "high" for f in scan(data).findings)
 
 
 @pytest.mark.parametrize("full", [True, False])
 @pytest.mark.parametrize(
     "path,after",
     [
-        ("src/a.py", 'text = "# goodhart: allow GH003"\n'),
+        ("src/a.py", 'text = "# anticheat: allow AC003"\n'),
         ("src/a.py", 'text = "# type: ignore"\n'),
         ("src/a.ts", 'const text = "// @ts-ignore";\n'),
-        ("src/a.ts", 'const text = "// goodhart: allow GH003";\n'),
+        ("src/a.ts", 'const text = "// anticheat: allow AC003";\n'),
     ],
 )
 def test_directive_strings_are_not_comments(full, path, after):
-    assert run_changes([(path, "", after)], full, {"GH000", "GH010", "GH012"}).findings == []
+    assert run_changes([(path, "", after)], full, {"AC000", "AC010", "AC012"}).findings == []
 
 
 @pytest.mark.parametrize("full", [True, False])
@@ -113,7 +113,7 @@ def test_hardcode_comment_not_literal(full):
         ),
         ("tests/test_a.py", "", 'def test_a():\n    assert parse("nested") == 4242\n'),
     ]
-    assert run_changes(files, full, {"GH006"}).findings == []
+    assert run_changes(files, full, {"AC006"}).findings == []
 
 
 def test_python_test_classes_and_async():
@@ -147,7 +147,7 @@ def test_malformed_file_reports_and_continues():
             ("src/env.py", "", 'mode = os.environ.get("CI")\n'),
         ]
     )
-    assert {f.rule_id for f in result.findings} == {"GH000", "GH009"}
+    assert {f.rule_id for f in result.findings} == {"AC000", "AC009"}
 
 
 def test_json_deterministic_and_schema():
@@ -155,7 +155,7 @@ def test_json_deterministic_and_schema():
     first = render(result)
     assert first == render(result)
     payload = json.loads(first)
-    assert payload["schema_version"] == "2"
+    assert payload["schema_version"] == "3"
     assert payload["summary"] == {"high": 0, "medium": 1, "low": 0, "info": 0, "files_scanned": 1}
     assert set(payload["findings"][0]) == {
         "rule_id",
@@ -195,12 +195,12 @@ def test_non_test_ci_step_can_tolerate_failure():
         "      - uses: actions/upload-artifact@v4\n"
     )
     after = before + "        continue-on-error: true\n"
-    result = run_changes([(".github/workflows/test.yml", before, after)], only={"GH007"})
+    result = run_changes([(".github/workflows/test.yml", before, after)], only={"AC007"})
     assert not result.findings
 
 
 def test_selection_moved_on_addopts_line():
     before = "[pytest]\naddopts = -k 'unit' -q\n"
     after = "[pytest]\naddopts = -v -k 'unit'\n"
-    result = run_changes([("pytest.ini", before, after)], only={"GH007"})
+    result = run_changes([("pytest.ini", before, after)], only={"AC007"})
     assert not result.findings

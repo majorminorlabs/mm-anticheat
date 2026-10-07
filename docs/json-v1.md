@@ -1,6 +1,6 @@
 # JSON v1 contract
 
-This is the historical frozen contract. Current scans emit [JSON v2](json-v2.md)
+This is the historical frozen contract. Current scans emit [JSON v3](json-v3.md)
 to add config provenance required by REVIEW_02 M12. All v1 fields retain their
 types and meanings in v2.
 
@@ -12,7 +12,7 @@ no notices or ANSI color codes are mixed into stdout. CLI notices use stderr.
 | Top-level field | Type | Meaning |
 |---|---|---|
 | `schema_version` | string | Always `"1"` for this contract. |
-| `tool` | string | Tool identity, currently `"goodhart-check"`. |
+| `tool` | string | Tool identity, currently `"mm-anticheat"`. |
 | `tool_version` | string | Package version. |
 | `mode` | string | `"full"` or `"patch"`. |
 | `range` | object | Exactly `base` and `head`: strings in full mode, null in patch mode. Full mode resolves commit IDs; working/staged head labels are `WORKTREE`/`INDEX`. |
@@ -32,8 +32,8 @@ Each finding has exactly these fields:
 
 | Field | Type | Meaning |
 |---|---|---|
-| `rule_id` | string | GH000–GH012. |
-| `rule_name` | string | Rule name; GH000 diagnostics use `parse-skipped` or `allow-missing-reason`. |
+| `rule_id` | string | AC000–AC012. |
+| `rule_name` | string | Rule name; AC000 diagnostics use `parse-skipped` or `allow-missing-reason`. |
 | `severity` | string | `high`, `medium`, `low` or `info`. |
 | `confidence` | string | `normal` or `reduced`. Patch counting and hardcode heuristics use reduced confidence. |
 | `file` | string | Repository-relative path, using the head path when available, otherwise the deleted base path. |
@@ -45,8 +45,8 @@ Each finding has exactly these fields:
 | `allowed` | boolean | A matching config or inline allowance with a required reason was applied. |
 
 Allowed findings contribute to the summary but are excluded from exit thresholds.
-An added allow comment still produces GH012; only a config path allowance can
-allow GH012. `--quiet` and `--max-evidence-lines` affect text/Markdown presentation
+An added allow comment still produces AC012; only a config path allowance can
+allow AC012. `--quiet` and `--max-evidence-lines` affect text/Markdown presentation
 only. JSON always retains every finding and the complete evidence.
 
 `tests/test_reports.py` fixes the exact key sets and value types for full and

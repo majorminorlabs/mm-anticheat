@@ -6,11 +6,11 @@ from pathlib import Path
 
 import pytest
 
-from goodhart.classify import classify
-from goodhart.config import Config, parse_config
-from goodhart.engine import scan
-from goodhart.git import load_patch
-from goodhart.rules import all_rules
+from mm_anticheat.classify import classify
+from mm_anticheat.config import Config, parse_config
+from mm_anticheat.engine import scan
+from mm_anticheat.git import load_patch
+from mm_anticheat.rules import all_rules
 
 FIXTURES = Path(__file__).parent / "fixtures"
 CASES = sorted(
@@ -24,7 +24,7 @@ def fixture_input(case: Path):
     meta = tomllib.loads((case / "meta.toml").read_text())
     data = load_patch((case / "diff.patch").read_text())
     data.mode = meta["mode"]
-    settings = case / "base/.goodhart.toml"
+    settings = case / "base/.anticheat.toml"
     if data.mode == "full" and settings.exists():
         data.config = parse_config(settings.read_text(), "base:fixture")
     if data.mode == "full":
@@ -82,7 +82,7 @@ def test_fixture(case):
         assert all(
             item.confidence == "reduced"
             for item in result.findings
-            if item.rule_id in {"GH002", "GH004"}
+            if item.rule_id in {"AC002", "AC004"}
         )
 
 

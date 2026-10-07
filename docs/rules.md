@@ -7,21 +7,27 @@ visible and do not count toward the configured exit threshold.
 
 | ID | Name | Default severity | Applies to |
 |---|---|---|---|
-| GH000 | parse-skipped / allow-missing-reason | info | config, other, snapshot, source, test |
-| GH001 | test-file-deleted | high | test |
-| GH002 | test-count-decreased | high | test |
-| GH003 | skip-marker-added | high | test |
-| GH004 | assertion-count-decreased | medium | test |
-| GH005 | assertion-weakened | medium | test |
-| GH006 | hardcoded-test-expectation | high | source |
-| GH007 | test-config-tampered | high | config |
-| GH008 | exception-swallowed | medium | source |
-| GH009 | test-environment-detection | high | source |
-| GH010 | lint-or-type-suppression-added | low | source, test |
-| GH011 | snapshot-updated-with-source | info | snapshot |
-| GH012 | allow-comment-added | medium | config, other, snapshot, source, test |
+| AC000 | parse-skipped / allow-missing-reason | info | config, other, snapshot, source, test |
+| AC001 | test-file-deleted | high | test |
+| AC002 | test-count-decreased | high | test |
+| AC003 | skip-marker-added | high | test |
+| AC004 | assertion-count-decreased | medium | test |
+| AC005 | assertion-weakened | high | test |
+| AC006 | hardcoded-test-expectation | high | source |
+| AC007 | test-config-tampered | high | config |
+| AC008 | exception-swallowed | medium | source |
+| AC009 | test-environment-detection | high | source |
+| AC010 | lint-or-type-suppression-added | low | source, test |
+| AC011 | snapshot-updated-with-source | info | snapshot |
+| AC012 | allow-comment-added | medium | config, other, snapshot, source, test |
+| AC013 | test-short-circuited | high | test |
+| AC014 | assertion-error-swallowed | high | test |
+| AC015 | collection-or-exit-hook | high | config, source, test |
+| AC016 | always-equal-override | high | source |
+| AC017 | unit-under-test-mocked | medium | test |
+| AC018 | expectation-rewritten | medium | test |
 
-## GH000 parse-skipped / allow-missing-reason
+## AC000 parse-skipped / allow-missing-reason
 
 **Default severity:** info
 
@@ -35,7 +41,7 @@ visible and do not count toward the configured exit threshold.
 
 **Legitimate when:** Add a specific reason documenting the reviewed exception.
 
-## GH001 test-file-deleted
+## AC001 test-file-deleted
 
 **Default severity:** high
 
@@ -49,7 +55,7 @@ visible and do not count toward the configured exit threshold.
 
 **Legitimate when:** The code under test was also deleted, or coverage moved to another test file.
 
-## GH002 test-count-decreased
+## AC002 test-count-decreased
 
 **Default severity:** high
 
@@ -57,13 +63,13 @@ visible and do not count toward the configured exit threshold.
 
 **Patch mode:** supported
 
-**How checked:** Compares per-file test counts, listing removed names. Deleted files belong to GH001. Full mode counts Python tests with AST and JS/TS calls with lexical heuristics; patch mode counts visible definitions with reduced confidence. Added parametrization yields medium. Substantive moves can yield info; weaker destination assertions yield medium; empty stubs preserve high.
+**How checked:** Compares per-file test counts, listing removed names. Deleted files belong to AC001. Full mode counts Python tests with AST and JS/TS calls with lexical heuristics; patch mode counts visible definitions with reduced confidence. Added parametrization yields medium. Substantive moves can yield info; weaker destination assertions yield medium; empty stubs preserve high.
 
 **Why flagged:** Fewer test definitions may leave previously checked behavior untested.
 
 **Legitimate when:** Tests were consolidated into parametrized cases or obsolete behavior was removed.
 
-## GH003 skip-marker-added
+## AC003 skip-marker-added
 
 **Default severity:** high
 
@@ -77,7 +83,7 @@ visible and do not count toward the configured exit threshold.
 
 **Legitimate when:** The test is flaky, obsolete or gated on an unavailable platform/dependency.
 
-## GH004 assertion-count-decreased
+## AC004 assertion-count-decreased
 
 **Default severity:** medium
 
@@ -91,9 +97,9 @@ visible and do not count toward the configured exit threshold.
 
 **Legitimate when:** Redundant checks were removed, or equivalent checks moved into a shared helper.
 
-## GH005 assertion-weakened
+## AC005 assertion-weakened
 
-**Default severity:** medium
+**Default severity:** high
 
 **Applies to:** test
 
@@ -105,7 +111,7 @@ visible and do not count toward the configured exit threshold.
 
 **Legitimate when:** The contract intentionally became less strict, with that change reviewed elsewhere.
 
-## GH006 hardcoded-test-expectation
+## AC006 hardcoded-test-expectation
 
 **Default severity:** high
 
@@ -119,7 +125,7 @@ visible and do not count toward the configured exit threshold.
 
 **Legitimate when:** The value is a legitimate domain constant, lookup table entry, or specified behavior.
 
-## GH007 test-config-tampered
+## AC007 test-config-tampered
 
 **Default severity:** high
 
@@ -127,13 +133,13 @@ visible and do not count toward the configured exit threshold.
 
 **Patch mode:** supported
 
-**How checked:** Flags explicit test exclusions, narrower test paths, lower coverage thresholds, disabled pytest plugins or marker selection, pass-with-no-tests and test scripts or CI steps that remove checks or mask failures. Uses stdlib config parsers in full mode and local heuristics for incomplete patches or computed JS/YAML configuration. Scanner policy changes that add/widen exceptions, skip rules, ignore paths or raise the failure threshold are high; any test_globs change is high. Malformed head TOML adds GH000 info and GH007 medium. The root scanner policy cannot suppress its own modification audit.
+**How checked:** Flags explicit test exclusions, narrower test paths, lower coverage thresholds, disabled pytest plugins or marker selection, pass-with-no-tests and test scripts or CI steps that remove checks or mask failures. Uses stdlib config parsers in full mode and local heuristics for incomplete patches or computed JS/YAML configuration. Scanner policy changes that add/widen exceptions, skip rules, ignore paths or raise the failure threshold are high; any test_globs change is high. Malformed head TOML adds AC000 info and AC007 medium. The root scanner policy cannot suppress its own modification audit.
 
 **Why flagged:** Configuration changes reduce what is tested or let failing checks pass.
 
 **Legitimate when:** The narrower suite or threshold is an intentional, reviewed project policy change.
 
-## GH008 exception-swallowed
+## AC008 exception-swallowed
 
 **Default severity:** medium
 
@@ -147,7 +153,7 @@ visible and do not count toward the configured exit threshold.
 
 **Legitimate when:** The operation is best effort, and discarding this failure is intentional.
 
-## GH009 test-environment-detection
+## AC009 test-environment-detection
 
 **Default severity:** high
 
@@ -161,7 +167,7 @@ visible and do not count toward the configured exit threshold.
 
 **Legitimate when:** Detection configures isolated resources, timeouts or legitimate environment settings.
 
-## GH010 lint-or-type-suppression-added
+## AC010 lint-or-type-suppression-added
 
 **Default severity:** low
 
@@ -175,7 +181,7 @@ visible and do not count toward the configured exit threshold.
 
 **Legitimate when:** The diagnostic is a documented false positive or an intentional typing escape.
 
-## GH011 snapshot-updated-with-source
+## AC011 snapshot-updated-with-source
 
 **Default severity:** info
 
@@ -189,7 +195,7 @@ visible and do not count toward the configured exit threshold.
 
 **Legitimate when:** The reviewed source change intentionally changes this snapshot output.
 
-## GH012 allow-comment-added
+## AC012 allow-comment-added
 
 **Default severity:** medium
 
@@ -197,8 +203,92 @@ visible and do not count toward the configured exit threshold.
 
 **Patch mode:** supported
 
-**How checked:** Reports any actual allow comment added in the scanned diff at medium severity. This finding cannot be allowed inline, including by an inline GH012 directive. An explicit .goodhart.toml path allowance can mark it allowed. Other findings may still be allowed inline with a nonempty reason, but GH012 remains visible.
+**How checked:** Reports any actual allow comment added in the scanned diff at medium severity. This finding cannot be allowed inline, including by an inline AC012 directive. An explicit .anticheat.toml path allowance can mark it allowed. Other findings may still be allowed inline with a nonempty reason, but AC012 remains visible.
 
 **Why flagged:** An added allow directive can suppress a finding in the same agent-produced diff.
 
 **Legitimate when:** A reviewer approved the exception and its recorded reason.
+
+## AC013 test-short-circuited
+
+**Default severity:** high
+
+**Applies to:** test
+
+**Patch mode:** unsupported
+
+**How checked:** Full-file syntax comparison; a review signal, not a verdict about intent.
+
+**Why flagged:** This change can let a test pass without checking the intended behavior.
+
+**Legitimate when:** The behavior is intentional and independently reviewed.
+
+## AC014 assertion-error-swallowed
+
+**Default severity:** high
+
+**Applies to:** test
+
+**Patch mode:** unsupported
+
+**How checked:** Full-file syntax comparison; a review signal, not a verdict about intent.
+
+**Why flagged:** This change can let a test pass without checking the intended behavior.
+
+**Legitimate when:** The behavior is intentional and independently reviewed.
+
+## AC015 collection-or-exit-hook
+
+**Default severity:** high
+
+**Applies to:** config, source, test
+
+**Patch mode:** unsupported
+
+**How checked:** Full-file syntax comparison; a review signal, not a verdict about intent.
+
+**Why flagged:** This change can let a test pass without checking the intended behavior.
+
+**Legitimate when:** The behavior is intentional and independently reviewed.
+
+## AC016 always-equal-override
+
+**Default severity:** high
+
+**Applies to:** source
+
+**Patch mode:** unsupported
+
+**How checked:** Full-file syntax comparison; a review signal, not a verdict about intent.
+
+**Why flagged:** This change can let a test pass without checking the intended behavior.
+
+**Legitimate when:** The behavior is intentional and independently reviewed.
+
+## AC017 unit-under-test-mocked
+
+**Default severity:** medium
+
+**Applies to:** test
+
+**Patch mode:** unsupported
+
+**How checked:** Full-file syntax comparison; a review signal, not a verdict about intent.
+
+**Why flagged:** This change can let a test pass without checking the intended behavior.
+
+**Legitimate when:** The behavior is intentional and independently reviewed.
+
+## AC018 expectation-rewritten
+
+**Default severity:** medium
+
+**Applies to:** test
+
+**Patch mode:** unsupported
+
+**How checked:** Full-file syntax comparison; a review signal, not a verdict about intent.
+
+**Why flagged:** This change can let a test pass without checking the intended behavior.
+
+**Legitimate when:** The behavior is intentional and independently reviewed.

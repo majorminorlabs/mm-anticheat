@@ -4,24 +4,23 @@ import json
 import os
 import subprocess
 import sys
-from pathlib import Path
 
 import pytest
 
-from goodhart.cli import main
-from goodhart.engine import scan
-from goodhart.git import load_git
+from mm_anticheat.cli import main
+from mm_anticheat.engine import scan
+from mm_anticheat.git import load_git
 
 from .conftest import git
 from .test_integrations import ROOT, invoke_hook, weaken
 
 
 def plant(repo):
-    package = repo / "goodhart"
+    package = repo / "mm_anticheat"
     package.mkdir()
     for name in ("__init__", "cli", "hooks"):
         (package / (name + ".py")).write_text("def main(*args):\n    return 0\n")
-    return {**os.environ, "PYTHONPATH": str(repo), "GOODHART_PYTHON": sys.executable}
+    return {**os.environ, "PYTHONPATH": str(repo), "ANTICHEAT_PYTHON": sys.executable}
 
 
 @pytest.mark.parametrize("agent", ["claude", "codex"])
@@ -29,7 +28,7 @@ def plant(repo):
 def test_m14_shadow_package_still_blocks(repo, agent, entry):
     weaken(repo)
     env = plant(repo)
-    command = [str(Path(sys.executable).parent / "goodhart-stop-hook"), "--agent", agent]
+    command = [sys.executable, "-I", "-m", "mm_anticheat.hooks", "--agent", agent]
     if entry == "installed":
         env.pop("PYTHONPATH", None)
     if entry == "shell":
@@ -43,7 +42,7 @@ def test_m14_shadow_package_still_blocks(repo, agent, entry):
         text=True,
         capture_output=True,
     )
-    assert run.returncode == 2 and "GH003" in run.stderr
+    assert run.returncode == 2 and "AC003" in run.stderr
 
 
 def test_m14_action_shadow_package_still_blocks(repo, tmp_path):
@@ -58,9 +57,9 @@ def test_m14_action_shadow_package_still_blocks(repo, tmp_path):
         GITHUB_EVENT_PATH=str(event),
         GITHUB_STEP_SUMMARY=str(tmp_path / "summary.md"),
         GITHUB_SHA=git(repo, "rev-parse", "HEAD"),
-        GOODHART_COMMENT="false",
-        GOODHART_FAIL_ON="high",
-        GOODHART_CONFIG="",
+        ANTICHEAT_COMMENT="false",
+        ANTICHEAT_FAIL_ON="high",
+        ANTICHEAT_CONFIG="",
     )
     run = subprocess.run(
         [sys.executable, str(ROOT / "scripts/action_scan.py")],
@@ -69,7 +68,7 @@ def test_m14_action_shadow_package_still_blocks(repo, tmp_path):
         text=True,
         capture_output=True,
     )
-    assert run.returncode == 1 and "GH003" in run.stdout
+    assert run.returncode == 1 and "AC003" in run.stdout
 
 
 @pytest.mark.parametrize("agent", ["claude", "codex"])
@@ -79,7 +78,7 @@ def test_m17_committed_skip_still_blocks_session(repo, agent):
         sys.executable,
         "-I",
         "-m",
-        "goodhart.hooks",
+        "mm_anticheat.hooks",
         "--agent",
         agent,
         "--event",
@@ -92,8 +91,8 @@ def test_m17_committed_skip_still_blocks_session(repo, agent):
         == 0
     )
     base = git(repo, "rev-parse", "HEAD")
-    saved = repo / ".git/goodhart/session-review-03"
-    assert saved.read_text().strip() == base
+    saved = repo / ".git/anticheat/session-review-03"
+    assert json.loads(saved.read_text())["base"] == base
     weaken(repo)
     git(repo, "add", ".")
     git(repo, "commit", "-m", "stabilize flaky test")
@@ -104,11 +103,11 @@ def test_m17_committed_skip_still_blocks_session(repo, agent):
         ).returncode
         == 0
     )
-    assert saved.read_text().strip() == base
+    assert json.loads(saved.read_text())["base"] == base
     payload["hook_event_name"] = "Stop"
     run = subprocess.run(command[:-2], input=json.dumps(payload), text=True, capture_output=True)
-    assert run.returncode == 2 and "GH003" in run.stderr
-    assert not (repo / ".goodhart/session-review-03").exists()
+    assert run.returncode == 2 and "AC003" in run.stderr
+    assert not (repo / ".anticheat/session-review-03").exists()
 
 
 def test_m17_working_explicit_base_and_branch_fallback(repo, monkeypatch, capsys):
@@ -119,7 +118,7 @@ def test_m17_working_explicit_base_and_branch_fallback(repo, monkeypatch, capsys
     git(repo, "commit", "-m", "skip")
     monkeypatch.chdir(repo)
     assert main(["scan", "--working", "--base", base]) == 1
-    assert "GH003" in capsys.readouterr().out
+    assert "AC003" in capsys.readouterr().out
     run = invoke_hook(repo, "claude")
     assert run.returncode == 2 and "merge base" in run.stderr
 
@@ -132,7 +131,7 @@ def test_m18_hidden_index_edits_block(repo, flag, staged):
     result = scan(load_git(cwd=repo, working=not staged, staged=staged))
     assert result.exit_code() == 1
     assert any(
-        f.rule_id == "GH007" and f.severity == "high" and not f.allowed and "Index flags" in f.title
+        f.rule_id == "AC007" and f.severity == "high" and not f.allowed and "Index flags" in f.title
         for f in result.findings
     )
     assert "pytest.mark.skip" in result.data.patch
@@ -157,12 +156,12 @@ def test_s15_s16_unresolved_warning_and_capture_not_staged(repo, agent):
     run = invoke_hook(repo, agent, True)
     assert run.returncode == 0
     warning = json.loads(run.stdout)["systemMessage"]
-    assert "1 unresolved high findings" in warning and ".goodhart/captures/" in warning
-    captures = list((repo / ".goodhart/captures").iterdir())
+    assert "1 unresolved high findings" in warning and ".anticheat/captures/" in warning
+    captures = list((repo / ".anticheat/captures").iterdir())
     assert len(captures) == 2
     assert sum(json.loads((p / "capture.json").read_text())["unresolved"] for p in captures) == 1
     git(repo, "add", "-A")
-    assert ".goodhart/" not in git(repo, "diff", "--cached", "--name-only")
+    assert ".anticheat/" not in git(repo, "diff", "--cached", "--name-only")
 
 
 def test_b2_labels_imported_exactly():
@@ -193,23 +192,23 @@ def test_b2_labels_imported_exactly():
     ],
 )
 def test_s17_generated_outputs_ignored(path):
-    from goodhart.classify import classify
-    from goodhart.config import Config
+    from mm_anticheat.classify import classify
+    from mm_anticheat.config import Config
 
     assert classify(path, "", Config()) == frozenset({"other"})
 
 
 def test_m18_integrity_flag_cannot_be_allowed_or_skipped(repo):
-    (repo / ".goodhart.toml").write_text(
-        'skip_rules = ["GH007"]\n[[allow]]\nrule="GH007"\npath="**"\nreason="reviewed"\n'
+    (repo / ".anticheat.toml").write_text(
+        'skip_rules = ["AC007"]\n[[allow]]\nrule="AC007"\npath="**"\nreason="reviewed"\n'
     )
     (repo / "tests/test_a.py").write_text(
-        '# goodhart: allow GH007 reason="reviewed"\ndef test_a():\n    assert 3 == 3\n'
+        '# anticheat: allow AC007 reason="reviewed"\ndef test_a():\n    assert 3 == 3\n'
     )
     git(repo, "add", ".")
     git(repo, "commit", "-m", "reviewed baseline")
     (repo / "tests/test_a.py").write_text(
-        '# goodhart: allow GH007 reason="reviewed"\ndef test_a():\n    assert True\n'
+        '# anticheat: allow AC007 reason="reviewed"\ndef test_a():\n    assert True\n'
     )
     git(repo, "update-index", "--assume-unchanged", "tests/test_a.py")
     result = scan(load_git(cwd=repo, working=True))
@@ -218,8 +217,8 @@ def test_m18_integrity_flag_cannot_be_allowed_or_skipped(repo):
 
 
 def test_s17_nonhashed_source_is_not_ignored():
-    from goodhart.classify import classify
-    from goodhart.config import Config
+    from mm_anticheat.classify import classify
+    from mm_anticheat.config import Config
 
     assert classify("public/assets/main.abcdef12source.js", "", Config()) == frozenset({"source"})
 
@@ -228,17 +227,17 @@ def test_m15_added_script_masking_failure_still_flags():
     from .test_review_01 import run_changes
 
     result = run_changes(
-        [("package.json", "", '{"scripts":{"test":"node --test || true"}}\n')], only={"GH007"}
+        [("package.json", "", '{"scripts":{"test":"node --test || true"}}\n')], only={"AC007"}
     )
-    assert any(f.rule_id == "GH007" and f.severity == "high" for f in result.findings)
+    assert any(f.rule_id == "AC007" and f.severity == "high" for f in result.findings)
 
 
 def test_s12_retained_import_prevents_deletion_downgrade():
-    from goodhart.rules.gh001_test_file_deleted import TestFileDeleted
+    from mm_anticheat.rules.ac001_test_file_deleted import TestFileDeleted
 
     from .test_fixtures import fixture_input
 
-    _, data = fixture_input(ROOT / "tests/fixtures/GH001/deleted_imported_subject")
+    _, data = fixture_input(ROOT / "tests/fixtures/AC001/deleted_imported_subject")
     test = next(change for change in data.changes if "test" in change.old_kinds)
     test.base_content = "import {y} from '../src/retained.mjs';\n" + test.base_content
     result = scan(data, rules=[TestFileDeleted()])

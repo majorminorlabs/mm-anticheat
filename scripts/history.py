@@ -7,9 +7,9 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
-from goodhart.classify import classify
-from goodhart.engine import ScanResult, scan
-from goodhart.git import InputError, ScanInput, load_git, load_patch, resolve_ref
+from mm_anticheat.classify import classify
+from mm_anticheat.engine import ScanResult, scan
+from mm_anticheat.git import InputError, ScanInput, load_git, load_patch, resolve_ref
 
 
 @dataclass

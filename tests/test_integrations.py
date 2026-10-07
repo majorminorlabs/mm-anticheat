@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from goodhart.cli import main
+from mm_anticheat.cli import main
 
 from .conftest import git
 
@@ -24,7 +24,7 @@ def weaken(repo):
 
 def invoke_hook(repo, agent, active=False):
     return subprocess.run(
-        [sys.executable, "-m", "goodhart.hooks", "--agent", agent],
+        [sys.executable, "-m", "mm_anticheat.hooks", "--agent", agent],
         input=json.dumps({"cwd": str(repo), "hook_event_name": "Stop", "stop_hook_active": active}),
         text=True,
         capture_output=True,
@@ -37,21 +37,21 @@ def test_stop_blocks_captures_then_passes_after_revert(repo, agent):
     # Include a new source file in the exact captured working diff.
     (repo / "fresh.py").write_text("answer = 42\n")
     run = invoke_hook(repo, agent)
-    assert run.returncode == 2 and "GH003" in run.stderr
+    assert run.returncode == 2 and "AC003" in run.stderr
     assert run.stdout == ""
-    capture = next((repo / ".goodhart/captures").iterdir())
+    capture = next((repo / ".anticheat/captures").iterdir())
     data = json.loads((capture / "findings.json").read_text())
-    assert any(f["rule_id"] == "GH003" and not f["allowed"] for f in data["findings"])
+    assert any(f["rule_id"] == "AC003" and not f["allowed"] for f in data["findings"])
     assert "fresh.py" in (capture / "diff.patch").read_text()
-    assert ".goodhart/captures/" not in (capture / "diff.patch").read_text()
+    assert ".anticheat/captures/" not in (capture / "diff.patch").read_text()
     if os.name == "posix":
         assert (capture / "findings.json").stat().st_mode & 0o777 == 0o600
     # A loop-protected invocation scans and saves unresolved findings.
     assert invoke_hook(repo, agent, True).returncode == 0
-    assert len(list((repo / ".goodhart/captures").iterdir())) == 2
+    assert len(list((repo / ".anticheat/captures").iterdir())) == 2
     # Repeated blocks are distinct, and never include old capture contents.
     assert invoke_hook(repo, agent).returncode == 2
-    assert len(list((repo / ".goodhart/captures").iterdir())) == 3
+    assert len(list((repo / ".anticheat/captures").iterdir())) == 3
     git(repo, "checkout", "--", "tests/test_a.py")
     (repo / "fresh.py").unlink()
     clean = invoke_hook(repo, agent)
@@ -61,7 +61,7 @@ def test_stop_blocks_captures_then_passes_after_revert(repo, agent):
 
 def test_capture_preserves_block_when_write_fails(repo, monkeypatch, capsys):
     weaken(repo)
-    (repo / ".goodhart").symlink_to(repo / "tests", target_is_directory=True)
+    (repo / ".anticheat").symlink_to(repo / "tests", target_is_directory=True)
     monkeypatch.chdir(repo)
     assert main(["scan", "--working", "--capture-on-block"]) == 1
     assert "must not be a symlink" in capsys.readouterr().err
@@ -80,7 +80,7 @@ def test_staged_hook_ignores_unstaged_revert(repo, monkeypatch):
 
 def test_invalid_hook_payload_is_error_not_block(repo):
     run = subprocess.run(
-        [sys.executable, "-m", "goodhart.hooks", "--agent", "codex"],
+        [sys.executable, "-m", "mm_anticheat.hooks", "--agent", "codex"],
         input="[]",
         text=True,
         capture_output=True,
@@ -88,7 +88,7 @@ def test_invalid_hook_payload_is_error_not_block(repo):
     )
     assert run.returncode == 3 and run.stdout == ""
     usage = subprocess.run(
-        [sys.executable, "-m", "goodhart.hooks", "--agent", "unknown"],
+        [sys.executable, "-m", "mm_anticheat.hooks", "--agent", "unknown"],
         text=True,
         capture_output=True,
     )
@@ -107,9 +107,9 @@ def test_action_adapter_summary_and_exit_on_real_pr_range(repo, tmp_path):
         "GITHUB_EVENT_PATH": str(event),
         "GITHUB_SHA": git(repo, "rev-parse", "HEAD"),
         "GITHUB_STEP_SUMMARY": str(summary),
-        "GOODHART_COMMENT": "false",
-        "GOODHART_FAIL_ON": "high",
-        "GOODHART_CONFIG": "",
+        "ANTICHEAT_COMMENT": "false",
+        "ANTICHEAT_FAIL_ON": "high",
+        "ANTICHEAT_CONFIG": "",
     }
     run = subprocess.run(
         [sys.executable, str(ROOT / "scripts/action_scan.py")],
@@ -119,7 +119,7 @@ def test_action_adapter_summary_and_exit_on_real_pr_range(repo, tmp_path):
         capture_output=True,
     )
     assert run.returncode == 1
-    assert "GH003" in summary.read_text()
+    assert "AC003" in summary.read_text()
     env["GITHUB_SHA"] = base
     run = subprocess.run(
         [sys.executable, str(ROOT / "scripts/action_scan.py")],

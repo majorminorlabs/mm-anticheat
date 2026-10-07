@@ -9,7 +9,7 @@ The revised B2 search scanned 393 commits in seven repositories and exported
 See [the corpus run](corpus-run-20261006.md). Current real case counts and metrics
 are in [real-world-eval.md](real-world-eval.md). Phase 5 is authorized; see the current status in PROGRESS.md.
 
-The existing `dist/goodhart-check-gate2.zip` is the historical `aaa9bd8` build
+The existing `dist/mm-anticheat-gate2.zip` is the historical `aaa9bd8` build
 reviewed in REVIEW_02, with 143 fixtures. It has not been rebuilt as a released
 Gate 2 package; the historical 40/15/15 criterion was waived for reduced-scope release. Current source
 has 153 fixtures: 137 individual rule cases and 16 cross-rule cases.
@@ -22,27 +22,27 @@ has 153 fixtures: 137 individual rule cases and 16 cross-rule cases.
    rule explanation:
 
    ```sh
-   .venv/bin/goodhart scan --diff tests/fixtures/cross/classic_cheat/diff.patch --format markdown
-   .venv/bin/goodhart scan --diff tests/fixtures/cross/clean_refactor/diff.patch --format json
-   .venv/bin/goodhart explain GH005
+   .venv/bin/mm-anticheat scan --diff tests/fixtures/cross/classic_cheat/diff.patch --format markdown
+   .venv/bin/mm-anticheat scan --diff tests/fixtures/cross/clean_refactor/diff.patch --format json
+   .venv/bin/mm-anticheat explain AC005
    ```
 
 3. Run `.venv/bin/pytest -q -s -m performance`. Python 3.11 measurements: 0.194s
    for the 5,000-line full Git scan and 0.015s for hostile JS probes; limits are
    2s and 1s. The full suite also tests bounded malformed inline reasons.
-4. Try `.goodhart.toml` from [the example](example-goodhart.toml) in a scratch
+4. Try `.anticheat.toml` from [the example](example-mm_anticheat.toml) in a scratch
    Git repository. Commit it before expecting it to allow findings. Git ranges
    load the resolved merge-base config; working/staged load HEAD. Patch input
-   uses defaults or explicit --config. Config loosening flags high GH007 and
+   uses defaults or explicit --config. Config loosening flags high AC007 and
    cannot suppress its own audit. Integration tests cover all four modes,
    provenance, explicit overrides, malformed head config and tightening changes.
 5. Check Python and JS inline allowances with a reason on the flagged or previous
    line. Preexisting mapped comments allow findings. An added comment gives
-   medium GH012 and leaves its target active, with an explanation that approval
+   medium AC012 and leaves its target active, with an explanation that approval
    applies after merge. Patch input honors only context comments. Missing reasons
    never suppress the flag.
 6. Check text with/without a TTY and --no-color, quiet output, evidence limits,
-   Markdown details and [JSON v2](json-v2.md). JSON retains complete findings even
+   Markdown details and [JSON v3](json-v3.md). JSON retains complete findings even
    with --quiet or a presentation evidence cap. Summary counts include allowed
    findings and show the allowed subset; exit codes exclude them. Config source
    appears in the header and JSON. `--fail-on never` still prints findings.
@@ -69,7 +69,7 @@ if fewer than ten conflicting samples pass, do not switch models or add splits.
 The historical REVIEW_02 exit criteria below are retained for review context;
 Dippo explicitly waived the labeled-corpus requirement for this release:
 
-- M12/M13 fixtures, tests and Ruff pass; noise remains ≤10/680 with GH006 high 0.
+- M12/M13 fixtures, tests and Ruff pass; noise remains ≤10/680 with AC006 high 0.
 - At least 40 complete labeled real cases, with ≥15 cheats and ≥15 honest.
 - Per-case expected/actual and summary recall/FPR at default high; tagged
   out-of-scope cases remain visible and leave the recall denominator.

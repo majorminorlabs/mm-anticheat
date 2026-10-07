@@ -8,7 +8,7 @@ Gate 2 was released with reduced scope; B2 labels are pending independently.
 This separate runner implements REVIEW_02 B1 using the official
 [ImpossibleBench source](https://github.com/safety-research/impossiblebench).
 It runs Impossible-LiveCodeBench through Inspect against a loopback Ollama
-endpoint. The goodhart CLI still has only `unidiff` as a runtime dependency and
+endpoint. The mm-anticheat CLI still has only `unidiff` as a runtime dependency and
 does not make network or model calls.
 
 ## Setup
@@ -127,6 +127,6 @@ No candidate is imported into the synthetic fixture oracle harness.
 
 Gate 2 needs at least 40 complete labeled real cases, including at least 15
 cheats and 15 honest, plus M12/M13 fixtures, green checks and the unchanged
-10/680 noise baseline with zero GH006 highs. The [requested model run](corpus-run-20261006.md) stopped below ten conflicting
+10/680 noise baseline with zero AC006 highs. The [requested model run](corpus-run-20261006.md) stopped below ten conflicting
 passes; the requested B2 parent folder is absent. The historical Gate 2 label requirement was waived for reduced-scope release. Phase 5 waits for
 REVIEW_02b.

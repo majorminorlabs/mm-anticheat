@@ -19,7 +19,7 @@ def git(*args: str) -> bytes:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, default=Path("dist/goodhart-check-gate3.zip"))
+    parser.add_argument("--output", type=Path, default=Path("dist/mm-anticheat-gate3.zip"))
     parser.add_argument("--tests-passed", type=int, required=True)
     args = parser.parse_args()
     if args.tests_passed < 1:
@@ -27,7 +27,7 @@ def main() -> int:
     if git("status", "--porcelain").strip():
         parser.error("Commit all source changes before building")
     commit = git("rev-parse", "HEAD").decode().strip()
-    payload = git("archive", "--format=zip", "--prefix=goodhart-check/", commit)
+    payload = git("archive", "--format=zip", "--prefix=mm-anticheat/", commit)
     buffer = io.BytesIO(payload)
     noise = [json.loads(path.read_text()) for path in Path("docs/noise-results").glob("*.json")]
     history = json.loads(Path("docs/b2-rescan-review03.json").read_text())
@@ -42,7 +42,7 @@ def main() -> int:
             count["count"]
             for row in noise
             for count in row["counts"]
-            if count["rule_id"] == "GH006" and count["severity"] == "high"
+            if count["rule_id"] == "AC006" and count["severity"] == "high"
         ),
         "b2_commits": sum(row["scanned"] for row in history),
         "b2_high_commits": sum(row["high"] for row in history),
@@ -50,7 +50,7 @@ def main() -> int:
         "hosted_action": "pending private remote",
     }
     with zipfile.ZipFile(buffer, "a", compression=zipfile.ZIP_DEFLATED) as archive:
-        archive.writestr("goodhart-check/BUILD_INFO.json", json.dumps(metadata, indent=2) + "\n")
+        archive.writestr("mm-anticheat/BUILD_INFO.json", json.dumps(metadata, indent=2) + "\n")
         bad = archive.testzip()
         if bad:
             raise ValueError("ZIP integrity failure: " + bad)

@@ -4,23 +4,23 @@ import json
 
 import pytest
 
-from goodhart.cli import main
-from goodhart.config import parse_config
-from goodhart.engine import scan
-from goodhart.git import load_git, load_patch
+from mm_anticheat.cli import main
+from mm_anticheat.config import parse_config
+from mm_anticheat.engine import scan
+from mm_anticheat.git import load_git, load_patch
 
 from .conftest import git
 from .test_rule_edges import run_changes
 
 TEST = "def test_a():\n    assert 3 == 3\n"
 SKIPPED = '@pytest.mark.skip(reason="flaky")\n' + TEST
-ALLOW = '[[allow]]\nrule = "GH003"\npath = "**"\nreason = "known flaky"\n'
+ALLOW = '[[allow]]\nrule = "AC003"\npath = "**"\nreason = "known flaky"\n'
 
 
 @pytest.mark.parametrize("mode", ["range", "working", "staged", "patch"])
 def test_untrusted_policy_cannot_hide_skip_in_any_mode(repo, monkeypatch, capsys, mode):
     base = git(repo, "rev-parse", "HEAD")
-    (repo / ".goodhart.toml").write_text('fail_on = "never"\n' + ALLOW)
+    (repo / ".anticheat.toml").write_text('fail_on = "never"\n' + ALLOW)
     (repo / "tests/test_a.py").write_text(SKIPPED)
     git(repo, "add", ".")
     args = ["--working"]
@@ -39,17 +39,17 @@ def test_untrusted_policy_cannot_hide_skip_in_any_mode(repo, monkeypatch, capsys
     payload = json.loads(output.out)
     assert payload["config"] == {"source": "defaults"}
     assert {f["rule_id"] for f in payload["findings"] if f["severity"] == "high"} == {
-        "GH003",
-        "GH007",
+        "AC003",
+        "AC007",
     }
     assert not any(f["allowed"] for f in payload["findings"])
     if mode != "patch":
-        assert "using base-side config; .goodhart.toml changed in this diff" in output.err
+        assert "using base-side config; .anticheat.toml changed in this diff" in output.err
 
 
 @pytest.mark.parametrize("mode", ["range", "working", "staged", "patch"])
 def test_config_provenance_and_preexisting_allow(repo, monkeypatch, capsys, mode):
-    (repo / ".goodhart.toml").write_text(ALLOW)
+    (repo / ".anticheat.toml").write_text(ALLOW)
     git(repo, "add", ".")
     git(repo, "commit", "-m", "trusted approval")
     base = git(repo, "rev-parse", "HEAD")
@@ -73,7 +73,7 @@ def test_config_provenance_and_preexisting_allow(repo, monkeypatch, capsys, mode
 
 
 def test_range_uses_merge_base_not_requested_base_or_checkout(repo):
-    (repo / ".goodhart.toml").write_text('fail_on = "high"\n')
+    (repo / ".anticheat.toml").write_text('fail_on = "high"\n')
     git(repo, "add", ".")
     git(repo, "commit", "-m", "policy base")
     trusted = git(repo, "rev-parse", "HEAD")
@@ -82,7 +82,7 @@ def test_range_uses_merge_base_not_requested_base_or_checkout(repo):
     git(repo, "add", ".")
     git(repo, "commit", "-m", "skip")
     git(repo, "checkout", "main")
-    (repo / ".goodhart.toml").write_text('fail_on = "never"\n')
+    (repo / ".anticheat.toml").write_text('fail_on = "never"\n')
     git(repo, "add", ".")
     git(repo, "commit", "-m", "different checkout policy")
     data = load_git(cwd=repo, base="main", head="feature")
@@ -92,33 +92,33 @@ def test_range_uses_merge_base_not_requested_base_or_checkout(repo):
 
 @pytest.mark.parametrize("full", [True, False])
 def test_existing_allow_maps_across_inserted_lines(full):
-    comment = '# goodhart: allow GH003 reason="reviewed"\n'
+    comment = '# anticheat: allow AC003 reason="reviewed"\n'
     before = "# heading\n" * 12 + comment + TEST
     after = "# new heading\n" * 5 + before.replace(TEST, SKIPPED)
     result = run_changes([("tests/test_a.py", before, after)], full=full)
-    assert result.findings[0].rule_id == "GH003" and result.findings[0].allowed
+    assert result.findings[0].rule_id == "AC003" and result.findings[0].allowed
     assert result.exit_code() == 0
 
 
 def test_preexisting_same_line_comment_checks_full_base_not_added_patch():
-    comment = ' # goodhart: allow GH009 reason="runner integration"\n'
+    comment = ' # anticheat: allow AC009 reason="runner integration"\n'
     before = "flag = False" + comment
     after = 'flag = os.getenv("PYTEST_CURRENT_TEST")' + comment
     for full in (True, False):
         result = run_changes([("src/a.py", before, after)], full=full)
-        target = next(f for f in result.findings if f.rule_id == "GH009")
+        target = next(f for f in result.findings if f.rule_id == "AC009")
         assert target.allowed is full
         assert result.exit_code() == (0 if full else 1)
 
 
 def test_control_policy_audit_cannot_silence_itself():
     before = (
-        'skip_rules = ["GH007"]\n[paths]\nignore_globs = [".goodhart.toml"]\n'
-        '[[allow]]\nrule = "GH007"\npath = "**"\nreason = "reviewed"\n'
+        'skip_rules = ["AC007"]\n[paths]\nignore_globs = [".anticheat.toml"]\n'
+        '[[allow]]\nrule = "AC007"\npath = "**"\nreason = "reviewed"\n'
     )
-    data = run_changes([(".goodhart.toml", before, 'fail_on = "never"\n' + before)]).data
+    data = run_changes([(".anticheat.toml", before, 'fail_on = "never"\n' + before)]).data
     result = scan(data, parse_config(before))
-    assert result.findings[0].rule_id == "GH007" and not result.findings[0].allowed
+    assert result.findings[0].rule_id == "AC007" and not result.findings[0].allowed
     assert result.exit_code() == 1
 
 
@@ -134,14 +134,14 @@ def test_control_policy_audit_cannot_silence_itself():
     ],
 )
 def test_scanner_policy_tightening_and_widening(before, after, flag):
-    result = run_changes([(".goodhart.toml", before + "\n", after + "\n")])
+    result = run_changes([(".anticheat.toml", before + "\n", after + "\n")])
     assert bool(result.findings) is flag
     if flag:
-        assert result.findings[0].rule_id == "GH007" and result.findings[0].severity == "high"
+        assert result.findings[0].rule_id == "AC007" and result.findings[0].severity == "high"
 
 
 def test_patch_config_not_read_from_current_directory(tmp_path, monkeypatch, capsys):
-    (tmp_path / ".goodhart.toml").write_text('fail_on = "never"\n' + ALLOW)
+    (tmp_path / ".anticheat.toml").write_text('fail_on = "never"\n' + ALLOW)
     import difflib
 
     diff = tmp_path / "change.patch"
@@ -158,16 +158,17 @@ def test_patch_config_not_read_from_current_directory(tmp_path, monkeypatch, cap
     monkeypatch.chdir(tmp_path)
     assert main(["scan", "--diff", str(diff)]) == 1
     assert "config: defaults" in capsys.readouterr().out
-    assert main(["scan", "--diff", str(diff), "--config", str(tmp_path / ".goodhart.toml")]) == 0
+    assert main(["scan", "--diff", str(diff), "--config", str(tmp_path / ".anticheat.toml")]) == 0
     assert "config: --config " in capsys.readouterr().out
 
 
 def test_malformed_head_config_has_both_diagnostics():
     data = load_patch(
-        '--- a/.goodhart.toml\n+++ b/.goodhart.toml\n@@ -1 +1 @@\n-fail_on = "high"\n+fail_on = [\n'
+        "--- a/.anticheat.toml\n+++ b/.anticheat.toml\n@@ -1 +1 @@\n"
+        '-fail_on = "high"\n+fail_on = [\n'
     )
     result = scan(data)
     assert {(f.rule_id, f.severity) for f in result.findings} == {
-        ("GH007", "medium"),
-        ("GH000", "info"),
+        ("AC007", "medium"),
+        ("AC000", "info"),
     }

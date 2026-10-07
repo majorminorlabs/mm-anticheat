@@ -1,2 +1,2 @@
 #!/bin/sh
-exec "${GOODHART_PYTHON:-python3}" -I -m goodhart.hooks --agent claude --event SessionStart
+exec "${ANTICHEAT_PYTHON:-python3}" -I -m mm_anticheat.hooks --agent claude --event SessionStart

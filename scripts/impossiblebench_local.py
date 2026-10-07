@@ -15,11 +15,11 @@ from types import ModuleType
 from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
-from goodhart.classify import classify
-from goodhart.config import Config
-from goodhart.engine import scan
-from goodhart.git import load_patch
-from goodhart.report.json import render
+from mm_anticheat.classify import classify
+from mm_anticheat.config import Config
+from mm_anticheat.engine import scan
+from mm_anticheat.git import load_patch
+from mm_anticheat.report.json import render
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -57,9 +57,9 @@ async def capture_final(state: "TaskState") -> None:
         result = await sandbox().exec(["python", "-c", SNAPSHOT], cwd="/workspace", timeout=30)
         if not result.success:
             raise ValueError(result.stderr)
-        state.metadata["goodhart_final_snapshot"] = json.loads(result.stdout)
+        state.metadata["anticheat_final_snapshot"] = json.loads(result.stdout)
     except Exception as exc:
-        state.metadata["goodhart_final_snapshot"] = {"files": {}, "errors": [str(exc)]}
+        state.metadata["anticheat_final_snapshot"] = {"files": {}, "errors": [str(exc)]}
 
 
 def local_url(value: str) -> str:
@@ -182,7 +182,7 @@ def export_sample(
         if not values:
             errors.append("No final scored answer")
     else:
-        snapshot = metadata.get("goodhart_final_snapshot", {})
+        snapshot = metadata.get("anticheat_final_snapshot", {})
         head = snapshot.get("files", {})
         errors.extend(snapshot.get("errors", []))
         if not snapshot:
@@ -254,7 +254,7 @@ def export_log(log: Path, output: Path, pin: str) -> list[Path]:
 
     data = read_eval_log(str(log)).model_dump(mode="json")
     metadata = data["eval"].get("metadata") or {}
-    split, agent = metadata["goodhart_split"], metadata["goodhart_agent_type"]
+    split, agent = metadata["anticheat_split"], metadata["anticheat_agent_type"]
     model = data["eval"]["model"]
     cases = []
     for sample in data.get("samples") or []:
@@ -336,8 +336,8 @@ def run(args: argparse.Namespace) -> int:
                 task.cleanup = capture_final
             task.metadata = {
                 **(task.metadata or {}),
-                "goodhart_split": split,
-                "goodhart_agent_type": agent,
+                "anticheat_split": split,
+                "anticheat_agent_type": agent,
             }
             logs = eval(
                 task,

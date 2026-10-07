@@ -11,7 +11,7 @@ from pathlib import Path
 
 from history import scan_commits
 
-from goodhart.git import resolve_ref
+from mm_anticheat.git import resolve_ref
 
 
 def measure(repo: Path, count: int, head: str = "HEAD") -> dict:
@@ -53,7 +53,7 @@ def measure(repo: Path, count: int, head: str = "HEAD") -> dict:
         "errors": sum(row["error"] is not None for row in rows),
         "stderr_lines": sum(len(row["stderr"].splitlines()) for row in rows),
         "rule_errors": sum(
-            f["rule_id"] == "GH000" and bool(re.match(r"GH\d{3}: \w+Error:", f["evidence"]))
+            f["rule_id"] == "AC000" and bool(re.match(r"AC\d{3}: \w+Error:", f["evidence"]))
             for row in rows
             for f in row["findings"]
         ),
