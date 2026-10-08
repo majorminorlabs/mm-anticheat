@@ -11,7 +11,7 @@ No publishing, public visibility changes, release tags or PyPI upload before GO.
 
 Ruff is clean; 501 tests pass locally. The private hosted clean PR passes and
 classic-cheat PR fails its scanner while its own tests pass. Full history and
-MIT license are in https://github.com/majorminorlabs/mm-anticheat. The production
+MIT license are in https://github.com/majorminorlabs/tools-anticheat. The production
 workflow pins the scanner to a reviewed commit SHA and has a Checks aggregate.
 Noise: 21/1,430 high (1.47%, limit ≤1.5%), AC006 high 0, errors 0. M23 adds two
 high commits compared with keeping its severities at medium while holding other
