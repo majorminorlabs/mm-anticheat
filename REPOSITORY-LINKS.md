@@ -1,6 +1,6 @@
 # Canonical repository links
 
-Current repository: https://github.com/majorminorlabs/tools-anticheat
+Current repository: https://github.com/majorminorlabs/mm-anticheat
 
 [MAJOR//MINOR project map](https://github.com/majorminorlabs) · [Repository conventions](https://github.com/majorminorlabs/.github)
 

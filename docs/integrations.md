@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: majorminorlabs/tools-anticheat@06420c90b49cab2a48abdef64615931be1d74c1a
+      - uses: majorminorlabs/mm-anticheat@06420c90b49cab2a48abdef64615931be1d74c1a
         with:
           fail-on: high
           comment: 'false'
@@ -48,7 +48,7 @@ staged scans also save their diff and findings JSON under .anticheat/captures/. 
 
 ```yaml
 repos:
-  - repo: https://github.com/majorminorlabs/tools-anticheat
+  - repo: https://github.com/majorminorlabs/mm-anticheat
     rev: PINNED_COMMIT
     hooks:
       - id: mm-anticheat
